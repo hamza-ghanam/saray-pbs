@@ -149,6 +149,253 @@
                     }
                 }
             }
+        },
+        "/buildings": {
+            "get": {
+                "tags": [
+                    "Building"
+                ],
+                "summary": "List all buildings",
+                "description": "Display a listing of buildings.",
+                "operationId": "8dbf4d765ceccf748097033980369501",
+                "responses": {
+                    "200": {
+                        "description": "A list of buildings",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Building"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Building"
+                ],
+                "summary": "Create a new building",
+                "description": "Store a newly created building in storage.",
+                "operationId": "91828bb17342458c9c9e1d3382ef3198",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "location",
+                                    "status",
+                                    "ecd"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Building A"
+                                    },
+                                    "location": {
+                                        "type": "string",
+                                        "example": "Downtown"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "active"
+                                    },
+                                    "ecd": {
+                                        "type": "string",
+                                        "example": "Some ECD info"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Building created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Building"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/buildings/{id}": {
+            "get": {
+                "tags": [
+                    "Building"
+                ],
+                "summary": "Get building details",
+                "description": "Display the specified building.",
+                "operationId": "5512ef4690f0e1993ac9401ca1a3dcee",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the building",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Building details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Building"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Building"
+                ],
+                "summary": "Update an existing building",
+                "description": "Update the specified building in storage.",
+                "operationId": "fbc9958f26c4410b19f5b059bec2e49b",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the building to update",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "location",
+                                    "status",
+                                    "ecd"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Building A Updated"
+                                    },
+                                    "location": {
+                                        "type": "string",
+                                        "example": "New Location"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "Off-Plan"
+                                    },
+                                    "ecd": {
+                                        "type": "string",
+                                        "example": "Q4-2026"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Building updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Building"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Building"
+                ],
+                "summary": "Delete a building",
+                "description": "Remove the specified building from storage.",
+                "operationId": "d5e7526ffccb2953f696d47de5b43656",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the building to delete",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Building deleted successfully"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -187,6 +434,54 @@
                     }
                 },
                 "type": "object"
+            },
+            "Building": {
+                "title": "Building",
+                "required": [
+                    "id",
+                    "name",
+                    "location",
+                    "status",
+                    "ecd",
+                    "crm_officer_id"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Building A"
+                    },
+                    "location": {
+                        "type": "string",
+                        "example": "Downtown"
+                    },
+                    "status": {
+                        "type": "string",
+                        "example": "Off-Plan"
+                    },
+                    "ecd": {
+                        "type": "string",
+                        "example": "Q4-2026 (Estimated Completion Date)"
+                    },
+                    "crm_officer_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2025-01-01T00:00:00Z"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2025-01-02T00:00:00Z"
+                    }
+                },
+                "type": "object"
             }
         },
         "securitySchemes": {
@@ -197,5 +492,11 @@
                 "scheme": "bearer"
             }
         }
-    }
+    },
+    "tags": [
+        {
+            "name": "Building",
+            "description": "Building"
+        }
+    ]
 }

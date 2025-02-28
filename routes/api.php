@@ -3,10 +3,21 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BuildingController;
 
+// User Management
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+
+// Building Management
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/buildings', [BuildingController::class, 'index']);
+    Route::post('/buildings', [BuildingController::class, 'store']);
+    Route::get('/buildings/{id}', [BuildingController::class, 'show']);
+    Route::put('/buildings/{id}', [BuildingController::class, 'update']);
+    Route::delete('/buildings/{id}', [BuildingController::class, 'destroy']);
+});
