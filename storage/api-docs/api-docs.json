@@ -1,8 +1,7 @@
 {
     "openapi": "3.0.0",
     "info": {
-        "title": "Saray PBS",
-        "description": "Saray Property Booking System",
+        "title": "Property Booking System",
         "version": "1.0"
     },
     "servers": [
@@ -16,13 +15,11 @@
         }
     ],
     "paths": {
-        "/api/register": {
+        "/register": {
             "post": {
-                "tags": [
-                    "Auth"
-                ],
                 "summary": "Register a new user",
-                "operationId": "8a56853624e025573120a09a4c75d468",
+                "description": "Register a new user and generate an API token",
+                "operationId": "0903f2e0df1a8857bee538fc055417f0",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -41,12 +38,15 @@
                                     "email": {
                                         "type": "string",
                                         "format": "email",
-                                        "example": "john.doe@example.com"
+                                        "example": "johndoe@example.com"
                                     },
                                     "password": {
                                         "type": "string",
-                                        "format": "password",
-                                        "example": "secret123"
+                                        "example": "password123"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string",
+                                        "example": "password123"
                                     }
                                 },
                                 "type": "object"
@@ -61,12 +61,12 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
+                                        "user": {
+                                            "$ref": "#/components/schemas/User"
+                                        },
                                         "token": {
                                             "type": "string",
-                                            "example": "token_here"
-                                        },
-                                        "user": {
-                                            "type": "object"
+                                            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
                                         }
                                     },
                                     "type": "object"
@@ -74,19 +74,16 @@
                             }
                         }
                     },
-                    "422": {
-                        "description": "Validation error"
+                    "400": {
+                        "description": "Validation Error"
                     }
                 }
             }
         },
-        "/api/login": {
+        "/login": {
             "post": {
-                "tags": [
-                    "Auth"
-                ],
-                "summary": "Login an existing user",
-                "operationId": "a3b306d14572d1f4bd6c064b3233e7b8",
+                "summary": "Login a user and generate an API token",
+                "operationId": "2dd578ff7aba2721293dac66833b27d1",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -99,13 +96,11 @@
                                 "properties": {
                                     "email": {
                                         "type": "string",
-                                        "format": "email",
-                                        "example": "john.doe@example.com"
+                                        "example": "john@example.com"
                                     },
                                     "password": {
                                         "type": "string",
-                                        "format": "password",
-                                        "example": "secret123"
+                                        "example": "password123"
                                     }
                                 },
                                 "type": "object"
@@ -115,17 +110,17 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "User logged in successfully",
+                        "description": "User successfully logged in",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
+                                        "user": {
+                                            "$ref": "#/components/schemas/User"
+                                        },
                                         "token": {
                                             "type": "string",
-                                            "example": "token_here"
-                                        },
-                                        "user": {
-                                            "type": "object"
+                                            "example": "some-random-token"
                                         }
                                     },
                                     "type": "object"
@@ -133,14 +128,67 @@
                             }
                         }
                     },
+                    "400": {
+                        "description": "Validation Error"
+                    },
                     "401": {
-                        "description": "Invalid credentials"
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Unauthorized"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
     },
     "components": {
+        "schemas": {
+            "User": {
+                "required": [
+                    "id",
+                    "name",
+                    "email",
+                    "created_at",
+                    "updated_at"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "John Doe"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "johndoe@example.com"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2025-02-22T12:34:56Z"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2025-02-22T12:34:56Z"
+                    }
+                },
+                "type": "object"
+            }
+        },
         "securitySchemes": {
             "bearerAuth": {
                 "type": "http",
@@ -149,11 +197,5 @@
                 "scheme": "bearer"
             }
         }
-    },
-    "tags": [
-        {
-            "name": "Auth",
-            "description": "Auth"
-        }
-    ]
+    }
 }
