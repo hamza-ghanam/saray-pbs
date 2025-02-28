@@ -211,11 +211,11 @@
                                     },
                                     "status": {
                                         "type": "string",
-                                        "example": "active"
+                                        "example": "Off-Plan"
                                     },
                                     "ecd": {
                                         "type": "string",
-                                        "example": "Some ECD info"
+                                        "example": "Q4-2026"
                                     }
                                 },
                                 "type": "object"
@@ -443,7 +443,7 @@
                     "location",
                     "status",
                     "ecd",
-                    "crm_officer_id"
+                    "added_by_id"
                 ],
                 "properties": {
                     "id": {
@@ -466,7 +466,7 @@
                         "type": "string",
                         "example": "Q4-2026 (Estimated Completion Date)"
                     },
-                    "crm_officer_id": {
+                    "added_by_id": {
                         "type": "integer",
                         "example": 1
                     },

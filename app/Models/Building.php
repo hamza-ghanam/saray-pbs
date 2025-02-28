@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Building extends Model
 {
-    protected $fillable = ['name', 'location', 'status', 'ecd', 'crm_officer_id'];
+    protected $fillable = ['name', 'location', 'status', 'ecd', 'added_by_id'];
 
     public function units()
     {

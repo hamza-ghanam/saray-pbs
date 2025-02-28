@@ -20,13 +20,13 @@ use Illuminate\Support\Facades\Validator;
  *     schema="Building",
  *     type="object",
  *     title="Building",
- *     required={"id", "name", "location", "status", "ecd", "crm_officer_id"},
+ *     required={"id", "name", "location", "status", "ecd", "added_by_id"},
  *     @OA\Property(property="id", type="integer", example=1),
  *     @OA\Property(property="name", type="string", example="Building A"),
  *     @OA\Property(property="location", type="string", example="Downtown"),
  *     @OA\Property(property="status", type="string", example="Off-Plan"),
  *     @OA\Property(property="ecd", type="string", example="Q4-2026 (Estimated Completion Date)"),
- *     @OA\Property(property="crm_officer_id", type="integer", example=1),
+ *     @OA\Property(property="added_by_id", type="integer", example=1),
  *     @OA\Property(property="created_at", type="string", format="date-time", example="2025-01-01T00:00:00Z"),
  *     @OA\Property(property="updated_at", type="string", format="date-time", example="2025-01-02T00:00:00Z")
  * )
@@ -76,8 +76,8 @@ class BuildingController extends Controller
      *             required={"name", "location", "status", "ecd"},
      *             @OA\Property(property="name", type="string", example="Building A"),
      *             @OA\Property(property="location", type="string", example="Downtown"),
-     *             @OA\Property(property="status", type="string", example="active"),
-     *             @OA\Property(property="ecd", type="string", example="Some ECD info")
+     *             @OA\Property(property="status", type="string", example="Off-Plan"),
+     *             @OA\Property(property="ecd", type="string", example="Q4-2026")
      *         )
      *     ),
      *     @OA\Response(
@@ -109,13 +109,13 @@ class BuildingController extends Controller
             return response()->json($validator->errors(), 422);
         }
 
-        // Here we set the crm_officer_id to the current user's id.
+        // Here we set the added_by_id to the current user's id.
         $building = Building::create([
             'name' => $request->name,
             'location' => $request->location,
             'status' => $request->status,
             'ecd' => $request->ecd,
-            'crm_officer_id' => $user->id,
+            'added_by_id' => $user->id,
         ]);
 
         return response()->json($building, 201);
