@@ -396,6 +396,408 @@
                     }
                 ]
             }
+        },
+        "/units": {
+            "get": {
+                "tags": [
+                    "Unit"
+                ],
+                "summary": "List all units",
+                "description": "Display a listing of the units.",
+                "operationId": "4fad383f5a5218655d5cc113dc8e9198",
+                "responses": {
+                    "200": {
+                        "description": "A list of units",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Unit"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Unit"
+                ],
+                "summary": "Create a new unit",
+                "description": "Store a newly created unit.",
+                "operationId": "7bf41a2f5d0072edfb27584457c7b88e",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "prop_type",
+                                    "unit_type",
+                                    "unit_no",
+                                    "floor",
+                                    "suite_area",
+                                    "furnished",
+                                    "unit_view",
+                                    "price",
+                                    "building_id",
+                                    "status"
+                                ],
+                                "properties": {
+                                    "prop_type": {
+                                        "type": "string",
+                                        "example": "Residential"
+                                    },
+                                    "unit_type": {
+                                        "type": "string",
+                                        "example": "Apartment"
+                                    },
+                                    "unit_no": {
+                                        "type": "string",
+                                        "example": "A101"
+                                    },
+                                    "floor": {
+                                        "type": "string",
+                                        "example": "1"
+                                    },
+                                    "parking": {
+                                        "type": "string",
+                                        "example": "Covered"
+                                    },
+                                    "pool_jacuzzi": {
+                                        "type": "string",
+                                        "example": "None"
+                                    },
+                                    "suite_area": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 120.5
+                                    },
+                                    "balcony_area": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 15.75
+                                    },
+                                    "furnished": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "unit_view": {
+                                        "type": "string",
+                                        "example": "City View"
+                                    },
+                                    "price": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 350000
+                                    },
+                                    "building_id": {
+                                        "type": "integer",
+                                        "example": 5
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "Pending",
+                                            "Available",
+                                            "Pre-Booked",
+                                            "Booked",
+                                            "Sold",
+                                            "Pre-Hold",
+                                            "Hold",
+                                            "Cancelled"
+                                        ],
+                                        "example": "Pending"
+                                    },
+                                    "floor_plan": {
+                                        "description": "Optional floor plan file (pdf, jpg, jpeg, png)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Unit created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Unit"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/units/{id}": {
+            "get": {
+                "tags": [
+                    "Unit"
+                ],
+                "summary": "Get unit details",
+                "description": "Display the specified unit.",
+                "operationId": "0201776ba8d022899ace833d121df500",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the unit",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Unit details retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Unit"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unit not found"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Unit"
+                ],
+                "summary": "Update an existing unit",
+                "description": "Update the specified unit.",
+                "operationId": "f6dca17eac0ffc5bdba10c3af0a31ad4",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the unit to update",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "prop_type": {
+                                        "type": "string",
+                                        "example": "Residential"
+                                    },
+                                    "unit_type": {
+                                        "type": "string",
+                                        "example": "Apartment"
+                                    },
+                                    "unit_no": {
+                                        "type": "string",
+                                        "example": "A101"
+                                    },
+                                    "floor": {
+                                        "type": "string",
+                                        "example": "1"
+                                    },
+                                    "parking": {
+                                        "type": "string",
+                                        "example": "Covered"
+                                    },
+                                    "pool_jacuzzi": {
+                                        "type": "string",
+                                        "example": "None"
+                                    },
+                                    "suite_area": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 120.5
+                                    },
+                                    "balcony_area": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 15.75
+                                    },
+                                    "furnished": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "unit_view": {
+                                        "type": "string",
+                                        "example": "City View"
+                                    },
+                                    "price": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 350000
+                                    },
+                                    "building_id": {
+                                        "type": "integer",
+                                        "example": 5
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "Pending",
+                                            "Available",
+                                            "Pre-Booked",
+                                            "Booked",
+                                            "Sold",
+                                            "Pre-Hold",
+                                            "Hold",
+                                            "Cancelled"
+                                        ],
+                                        "example": "Available"
+                                    },
+                                    "floor_plan": {
+                                        "description": "Optional floor plan file (pdf, jpg, jpeg, png)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Unit updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Unit"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Unit"
+                ],
+                "summary": "Delete a unit",
+                "description": "Remove the specified unit.",
+                "operationId": "d3e29b865e015d5722ab83f0ff8e6104",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the unit to delete",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Unit deleted successfully"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/units/{id}/approve": {
+            "post": {
+                "tags": [
+                    "Unit"
+                ],
+                "summary": "Approve a unit",
+                "description": "Approve a unit.",
+                "operationId": "2779743f4d741c9b899b7ced0a8fe203",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the unit to approve",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Unit approved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Unit"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid unit status"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -482,6 +884,119 @@
                     }
                 },
                 "type": "object"
+            },
+            "Unit": {
+                "title": "Unit",
+                "required": [
+                    "prop_type",
+                    "unit_type",
+                    "unit_no",
+                    "floor",
+                    "suite_area",
+                    "total_area",
+                    "furnished",
+                    "unit_view",
+                    "price",
+                    "building_id",
+                    "status"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true,
+                        "example": 1
+                    },
+                    "prop_type": {
+                        "type": "string",
+                        "example": "Residential"
+                    },
+                    "unit_type": {
+                        "type": "string",
+                        "example": "Apartment"
+                    },
+                    "unit_no": {
+                        "type": "string",
+                        "example": "A101"
+                    },
+                    "floor": {
+                        "type": "string",
+                        "example": "1"
+                    },
+                    "parking": {
+                        "type": "string",
+                        "example": "Covered"
+                    },
+                    "pool_jacuzzi": {
+                        "type": "string",
+                        "example": "None"
+                    },
+                    "suite_area": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 120.5
+                    },
+                    "balcony_area": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 15.75
+                    },
+                    "total_area": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 136.25
+                    },
+                    "furnished": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "unit_view": {
+                        "type": "string",
+                        "example": "City View"
+                    },
+                    "price": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 350000
+                    },
+                    "building_id": {
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "Pending",
+                            "Available",
+                            "Pre-Booked",
+                            "Booked",
+                            "Sold",
+                            "Pre-Hold",
+                            "Hold",
+                            "Cancelled"
+                        ],
+                        "example": "Pending"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "example": "2025-01-01T00:00:00Z"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "example": "2025-01-02T00:00:00Z"
+                    },
+                    "deleted_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "example": null,
+                        "nullable": true
+                    }
+                },
+                "type": "object"
             }
         },
         "securitySchemes": {
@@ -497,6 +1012,10 @@
         {
             "name": "Building",
             "description": "Building"
+        },
+        {
+            "name": "Unit",
+            "description": "Unit"
         }
     ]
 }
