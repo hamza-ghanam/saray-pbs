@@ -41,6 +41,11 @@ class Unit extends Model
         return $this->hasMany(SalesOffer::class);
     }
 
+    public function paymentPlans()
+    {
+        return $this->hasMany(PaymentPlan::class);
+    }
+
     public function unitUpdates()
     {
         return $this->hasMany(UnitUpdate::class);
