@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BuildingController;
 use App\Http\Controllers\UnitController;
+use App\Http\Controllers\PaymentPlanController;
 
 // User Management
 Route::get('/user', function (Request $request) {
@@ -33,3 +34,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/units/{id}/approve', [UnitController::class, 'approve']);
 });
 
+// Payment Plans
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/payment-plans', [PaymentPlanController::class, 'store']);
+    Route::get('/payment-plans/{id}', [PaymentPlanController::class, 'show']);
+    Route::put('/payment-plans/{id}', [PaymentPlanController::class, 'update']);
+    Route::delete('/payment-plans/{id}', [PaymentPlanController::class, 'destroy']);
+    Route::get('/units/{id}/payment-plans', [PaymentPlanController::class, 'getPlansForUnit']);
+});

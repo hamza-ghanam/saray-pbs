@@ -43,15 +43,15 @@ class PaymentPlanService
 
         // Retrieve unit financial data. (Ensure these fields exist or adjust accordingly.)
         $price = $unit->price;
-        $dldFee = $unit->dld_fee;
+        $dldFee = ($price * ($unit->dld_fee_percentage / 100));
         $adminFee = $unit->admin_fee;
         $EOI = $unit->EOI ?? 100000; // Default EOI if not set.
         $completionDate = Carbon::parse($unit->completion_date);
 
         // Use the unit's provided first_construction_installment_date if available;
         // otherwise, default to 3 months from now.
-        $firstConstructionDate = $unit->first_construction_installment_date
-            ? Carbon::parse($unit->first_construction_installment_date)
+        $firstConstructionDate = $unit->FCID
+            ? Carbon::parse($unit->FCID)
             : Carbon::now()->addMonths(3);
 
         foreach ($defaultPlans as $planName => $data) {
@@ -60,6 +60,7 @@ class PaymentPlanService
                 'unit_id' => $unit->id,
                 'name' => $planName,
                 'selling_price' => $price,
+                'dld_fee_percentage' => $unit->dld_fee_percentage,
                 'dld_fee' => $dldFee,
                 'admin_fee' => $adminFee,
                 'discount' => $unit->discount ?? 0,
@@ -71,8 +72,12 @@ class PaymentPlanService
             ]);
 
             // 1. Booking installment:
-            // Formula: (price * booking_percentage/100) + dld_fee + admin_fee - EOI
-            $bookingAmount = ($price * ($data['booking_percentage'] / 100)) + $dldFee + $adminFee - $EOI;
+            // Formula: (price * booking_percentage/100) + (price * dld_fee/100) + admin_fee - EOI
+            $bookingAmount = ($price * ($data['booking_percentage'] / 100))
+                + $dldFee
+                + $adminFee
+                - $EOI;
+
             Installment::create([
                 'payment_plan_id' => $paymentPlan->id,
                 'description' => 'Booking Installment',

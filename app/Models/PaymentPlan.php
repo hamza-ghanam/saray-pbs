@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PaymentPlan extends Model
 {
+    use SoftDeletes;
+
     /**
      * The attributes that are mass assignable.
      *
@@ -15,6 +18,7 @@ class PaymentPlan extends Model
         'unit_id',
         'name',
         'selling_price',
+        'dld_fee_percentage',
         'dld_fee',
         'admin_fee',
         'discount',

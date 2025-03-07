@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('unit_id')->constrained()->onDelete('cascade');
             $table->string('name'); // e.g., "70/30", "50/50", "60/40", or custom.
             $table->decimal('selling_price', 15, 2);
+            $table->decimal('dld_fee_percentage', 15, 2);
             $table->decimal('dld_fee', 15, 2);
             $table->decimal('admin_fee', 15, 2);
             $table->decimal('discount', 15, 2)->default(0);
@@ -25,6 +26,7 @@ return new class extends Migration
             $table->decimal('construction_percentage', 5, 2); // remainder: 60/30/40 respectively
             $table->date('first_construction_installment_date')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
 
     }

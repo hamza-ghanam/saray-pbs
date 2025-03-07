@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\UnitCreated;
 use App\Models\Unit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Symfony\Component\HttpFoundation\Response;
@@ -21,7 +23,7 @@ use Symfony\Component\HttpFoundation\Response;
  *     schema="Unit",
  *     type="object",
  *     title="Unit",
- *     required={"prop_type", "unit_type", "unit_no", "floor", "suite_area", "total_area", "furnished", "unit_view", "price", "building_id", "status"},
+ *     required={"prop_type", "unit_type", "unit_no", "floor", "suite_area", "total_area", "furnished", "unit_view", "price", "building_id", "status", "completion_date", "dld_fee_percentage", "admin_fee", "EOI", "FCID"},
  *     @OA\Property(property="id", type="integer", readOnly=true, example=1),
  *     @OA\Property(property="prop_type", type="string", example="Residential"),
  *     @OA\Property(property="unit_type", type="string", example="Apartment"),
@@ -37,11 +39,77 @@ use Symfony\Component\HttpFoundation\Response;
  *     @OA\Property(property="price", type="number", format="float", example=350000.00),
  *     @OA\Property(property="building_id", type="integer", example=5),
  *     @OA\Property(property="status", type="string", enum={"Pending", "Available", "Pre-Booked", "Booked", "Sold", "Pre-Hold", "Hold", "Cancelled"}, example="Pending"),
+ *     @OA\Property(property="completion_date", type="string", format="date", example="2025-12-15"),
+ *     @OA\Property(property="floor_plan", type="string", example="floor_plans/abc123.jpg"),
+ *     @OA\Property(property="dld_fee_percentage", type="number", format="float", example=65000.00),
+ *     @OA\Property(property="admin_fee", type="number", format="float", example=4000.00),
+ *     @OA\Property(property="EOI", type="number", format="float", example=100000.00),
+ *     @OA\Property(property="FCID", type="string", format="date", example="2025-03-15"),
  *     @OA\Property(property="created_at", type="string", format="date-time", readOnly=true, example="2025-01-01T00:00:00Z"),
  *     @OA\Property(property="updated_at", type="string", format="date-time", readOnly=true, example="2025-01-02T00:00:00Z"),
  *     @OA\Property(property="deleted_at", type="string", format="date-time", nullable=true, readOnly=true, example=null)
  * )
+ *  * @OA\Schema(
+ *     schema="UnitInput",
+ *     type="object",
+ *     title="Unit Input",
+ *     required={"prop_type", "unit_type", "unit_no", "floor", "suite_area", "furnished", "unit_view", "price", "building_id", "status", "completion_date", "dld_fee_percentage", "admin_fee", "FCID"},
+ *     @OA\Property(property="prop_type", type="string", example="Residential"),
+ *     @OA\Property(property="unit_type", type="string", example="Apartment"),
+ *     @OA\Property(property="unit_no", type="string", example="A101"),
+ *     @OA\Property(property="floor", type="string", example="1"),
+ *     @OA\Property(property="parking", type="string", example="Covered"),
+ *     @OA\Property(property="pool_jacuzzi", type="string", example="None"),
+ *     @OA\Property(property="suite_area", type="number", format="float", example=120.50),
+ *     @OA\Property(property="balcony_area", type="number", format="float", example=15.75),
+ *     @OA\Property(property="furnished", type="boolean", example=true),
+ *     @OA\Property(property="unit_view", type="string", example="City View"),
+ *     @OA\Property(property="price", type="number", format="float", example=350000.00),
+ *     @OA\Property(property="building_id", type="integer", example=5),
+ *     @OA\Property(property="status", type="string", enum={"Pending", "Available", "Pre-Booked", "Booked", "Sold", "Pre-Hold", "Hold", "Cancelled"}, example="Pending"),
+ *     @OA\Property(property="completion_date", type="string", format="date", example="2025-12-15"),
+ *     @OA\Property(property="floor_plan", type="string", format="binary", description="Optional floor plan file (pdf, jpg, jpeg, png)"),
+ *     @OA\Property(property="dld_fee_percentage", type="number", format="float", example=65000.00),
+ *     @OA\Property(property="admin_fee", type="number", format="float", example=4000.00),
+ *     @OA\Property(property="EOI", type="number", format="float", example=100000.00),
+ *     @OA\Property(property="FCID", type="string", format="date", example="2025-03-15")
+ * )
+ *  * @OA\Schema(
+ *     schema="UnitWithPaymentPlans",
+ *     allOf={
+ *         @OA\Schema(ref="#/components/schemas/Unit"),
+ *         @OA\Schema(
+ *             type="object",
+ *             @OA\Property(
+ *                 property="paymentPlans",
+ *                 type="array",
+ *                 @OA\Items(ref="#/components/schemas/PaymentPlan")
+ *             )
+ *         )
+ *     }
+ * )
+ *  * @OA\Schema(
+ *     schema="PaymentPlan",
+ *     type="object",
+ *     title="Payment Plan",
+ *     required={"unit_id", "name", "selling_price", "dld_fee_percentage", "admin_fee", "discount", "EOI", "booking_percentage", "handover_percentage", "construction_percentage", "first_construction_installment_date"},
+ *     @OA\Property(property="id", type="integer", readOnly=true, example=1),
+ *     @OA\Property(property="unit_id", type="integer", example=1),
+ *     @OA\Property(property="name", type="string", example="60/40"),
+ *     @OA\Property(property="selling_price", type="number", format="float", example=350000.00),
+ *     @OA\Property(property="dld_fee_percentage", type="number", format="float", example=65000.00),
+ *     @OA\Property(property="admin_fee", type="number", format="float", example=4000.00),
+ *     @OA\Property(property="discount", type="number", format="float", example=0),
+ *     @OA\Property(property="EOI", type="number", format="float", example=100000.00),
+ *     @OA\Property(property="booking_percentage", type="number", format="float", example=20),
+ *     @OA\Property(property="handover_percentage", type="number", format="float", example=40),
+ *     @OA\Property(property="construction_percentage", type="number", format="float", example=40),
+ *     @OA\Property(property="first_construction_installment_date", type="string", format="date", example="2025-03-15"),
+ *     @OA\Property(property="created_at", type="string", format="date-time", readOnly=true, example="2025-01-01T00:00:00Z"),
+ *     @OA\Property(property="updated_at", type="string", format="date-time", readOnly=true, example="2025-01-02T00:00:00Z")
+ * )
  */
+
 class UnitController extends Controller
 {
     /**
@@ -59,9 +127,6 @@ class UnitController extends Controller
      *     ),
      *     @OA\Response(response=403, description="Forbidden")
      * )
-     *
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
      */
     public function index(Request $request)
     {
@@ -90,30 +155,13 @@ class UnitController extends Controller
      *         required=true,
      *         @OA\MediaType(
      *             mediaType="multipart/form-data",
-     *             @OA\Schema(
-     *                 type="object",
-     *                 required={"prop_type", "unit_type", "unit_no", "floor", "suite_area", "furnished", "unit_view", "price", "building_id", "status"},
-     *                 @OA\Property(property="prop_type", type="string", example="Residential"),
-     *                 @OA\Property(property="unit_type", type="string", example="Apartment"),
-     *                 @OA\Property(property="unit_no", type="string", example="A101"),
-     *                 @OA\Property(property="floor", type="string", example="1"),
-     *                 @OA\Property(property="parking", type="string", example="Covered"),
-     *                 @OA\Property(property="pool_jacuzzi", type="string", example="None"),
-     *                 @OA\Property(property="suite_area", type="number", format="float", example=120.50),
-     *                 @OA\Property(property="balcony_area", type="number", format="float", example=15.75),
-     *                 @OA\Property(property="furnished", type="boolean", example=true),
-     *                 @OA\Property(property="unit_view", type="string", example="City View"),
-     *                 @OA\Property(property="price", type="number", format="float", example=350000.00),
-     *                 @OA\Property(property="building_id", type="integer", example=5),
-     *                 @OA\Property(property="status", type="string", enum={"Pending", "Available", "Pre-Booked", "Booked", "Sold", "Pre-Hold", "Hold", "Cancelled"}, example="Pending"),
-     *                 @OA\Property(property="floor_plan", type="string", format="binary", description="Optional floor plan file (pdf, jpg, jpeg, png)")
-     *             )
+     *             @OA\Schema(ref="#/components/schemas/Unit")
      *         )
      *     ),
      *     @OA\Response(
      *         response=201,
-     *         description="Unit created successfully",
-     *         @OA\JsonContent(ref="#/components/schemas/Unit")
+     *         description="Unit created successfully with its payment plans",
+     *         @OA\JsonContent(ref="#/components/schemas/UnitWithPaymentPlans")
      *     ),
      *     @OA\Response(response=422, description="Validation error"),
      *     @OA\Response(response=403, description="Forbidden")
@@ -121,6 +169,7 @@ class UnitController extends Controller
      */
     public function store(Request $request)
     {
+      //  return response()->json($request->all());
         $user = $request->user();
         Log::info("User {$user->id} is attempting to add a new unit.");
 
@@ -129,20 +178,24 @@ class UnitController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'prop_type' => 'required|string|max:255',
-            'unit_type' => 'required|string|max:255',
-            'unit_no' => 'required|string|unique:units,unit_no',
-            'floor' => 'required|string|max:50',
-            'parking' => 'nullable|string|max:255',
-            'pool_jacuzzi' => 'nullable|string|max:255',
-            'suite_area' => 'required|numeric',
-            'balcony_area' => 'nullable|numeric',
-            'furnished' => 'required|boolean',
-            'unit_view' => 'required|string|max:255',
-            'price' => 'required|numeric',
-            'building_id' => 'required|exists:buildings,id',
-            'status' => 'required|in:Pending,Available,Pre-Booked,Booked,Sold,Pre-Hold,Hold,Cancelled',
-            'floor_plan' => 'nullable|file|mimes:pdf,jpg,jpeg,png'
+            'prop_type'             => 'required|string|max:255',
+            'unit_type'             => 'required|string|max:255',
+            'unit_no'               => 'required|string|max:255',
+            'floor'                 => 'required|string|max:50',
+            'parking'               => 'nullable|string|max:255',
+            'pool_jacuzzi'          => 'nullable|string|max:255',
+            'suite_area'            => 'required|numeric',
+            'balcony_area'          => 'nullable|numeric',
+            'furnished'             => 'required|boolean',
+            'unit_view'             => 'required|string|max:255',
+            'price'                 => 'required|numeric',
+            'completion_date'       => 'required|date|after_or_equal:today',
+            'building_id'           => 'required|exists:buildings,id',
+            'floor_plan'            => 'nullable|file|mimes:pdf,jpg,jpeg,png',
+            'dld_fee_percentage'    => 'required|numeric',
+            'admin_fee'             => 'required|numeric',
+            'EOI'                   => 'nullable|numeric',
+            'FCID'                  => 'required|date',
         ]);
 
         if ($validator->fails()) {
@@ -159,8 +212,32 @@ class UnitController extends Controller
 
         // Auto-calculate total_area = suite_area + (balcony_area or 0)
         $data['total_area'] = $data['suite_area'] + ($data['balcony_area'] ?? 0);
+        $data['status'] = 'Pending';
 
-        $unit = Unit::create($data);
+        DB::beginTransaction();
+
+        try {
+            // Create the Unit record.
+            $unit = Unit::create($data);
+
+            // Update unit with additional payment fields
+            $unit->dld_fee_percentage = $data['dld_fee_percentage'];
+            $unit->admin_fee = $data['admin_fee'];
+            $unit->EOI = $data['EOI'] ?? 100000;
+            $unit->FCID = $data['FCID'];
+
+            // Dispatch an event to generate payment plans for the unit.
+            event(new UnitCreated($unit));
+
+            // Eager-load the payment plans (and their installments) to return them with the unit.
+            $unit->load('paymentPlans.installments');
+        } catch (\Exception $ex) {
+            DB::rollback();
+            return response()->json(['error' => $ex->getMessage()], 500);
+        }
+
+        DB::commit();
+
         return response()->json($unit, Response::HTTP_CREATED);
     }
 
@@ -182,7 +259,7 @@ class UnitController extends Controller
      *     @OA\Response(
      *         response=200,
      *         description="Unit details retrieved successfully",
-     *         @OA\JsonContent(ref="#/components/schemas/Unit")
+     *         @OA\JsonContent(ref="#/components/schemas/UnitWithPaymentPlans")
      *     ),
      *     @OA\Response(response=404, description="Unit not found"),
      *     @OA\Response(response=403, description="Forbidden")
@@ -210,6 +287,9 @@ class UnitController extends Controller
         if ($user->hasRole('Sales') && !in_array($unit->status, ['Available', 'Cancelled'])) {
             return response()->json(['message' => 'Unit not available for sales role'], Response::HTTP_FORBIDDEN);
         }
+
+        // Eager-load the payment plans (and their installments) to return them with the unit.
+        $unit->load('paymentPlans.installments');
 
         return response()->json($unit, Response::HTTP_OK);
     }
@@ -271,20 +351,20 @@ class UnitController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'prop_type' => 'sometimes|required|string|max:255',
-            'unit_type' => 'sometimes|required|string|max:255',
-            'unit_no' => 'sometimes|required|string|unique:units,unit_no,' . $id,
-            'floor' => 'sometimes|required|string|max:50',
-            'parking' => 'nullable|string|max:255',
-            'pool_jacuzzi' => 'nullable|string|max:255',
-            'suite_area' => 'sometimes|required|numeric',
-            'balcony_area' => 'nullable|numeric',
-            'furnished' => 'sometimes|required|boolean',
-            'unit_view' => 'sometimes|required|string|max:255',
-            'price' => 'sometimes|required|numeric',
-            'building_id' => 'sometimes|required|exists:buildings,id',
-            'status' => 'sometimes|required|in:Pending,Available,Pre-Booked,Booked,Sold,Pre-Hold,Hold,Cancelled',
-            'floor_plan' => 'nullable|file|mimes:pdf,jpg,jpeg,png',
+            'prop_type'     => 'sometimes|required|string|max:255',
+            'unit_type'     => 'sometimes|required|string|max:255',
+            'unit_no'       => 'sometimes|required|string|unique:units,unit_no,' . $id,
+            'floor'         => 'sometimes|required|string|max:50',
+            'parking'       => 'nullable|string|max:255',
+            'pool_jacuzzi'  => 'nullable|string|max:255',
+            'suite_area'    => 'sometimes|required|numeric',
+            'balcony_area'  => 'nullable|numeric',
+            'furnished'     => 'sometimes|required|boolean',
+            'unit_view'     => 'sometimes|required|string|max:255',
+            'price'         => 'sometimes|required|numeric',
+            'building_id'   => 'sometimes|required|exists:buildings,id',
+            'status'        => 'sometimes|required|in:Pending,Available,Pre-Booked,Booked,Sold,Pre-Hold,Hold,Cancelled',
+            'floor_plan'    => 'nullable|file|mimes:pdf,jpg,jpeg,png',
         ]);
 
         if ($validator->fails()) {

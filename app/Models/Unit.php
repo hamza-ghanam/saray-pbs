@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Unit extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = [
         'prop_type',
         'unit_type',
@@ -18,7 +21,9 @@ class Unit extends Model
         'total_area',
         'furnished',
         'unit_view',
-        'price'
+        'price',
+        'completion_date',
+        'building_id',
     ];
 
     public function building()

@@ -25,6 +25,7 @@ return new class extends Migration
             $table->boolean('furnished');
             $table->string('unit_view');
             $table->decimal('price', 10, 2);
+            $table->date('completion_date')->nullable();
             // System
             $table->foreignId('building_id')->constrained()->onDelete('cascade');
             $table->enum('status', ['Pending', 'Available', 'Pre-Booked', 'Booked', 'Sold', 'Pre-Hold', 'Hold', 'Cancelled']);

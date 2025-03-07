@@ -397,6 +397,352 @@
                 ]
             }
         },
+        "/payment-plans/{id}": {
+            "get": {
+                "tags": [
+                    "PaymentPlan"
+                ],
+                "summary": "Get a payment plan with its installments",
+                "description": "Get a payment plan with its installments.",
+                "operationId": "2bd95dddb51051f37516160a8ce32461",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the payment plan",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Payment plan retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "payment_plan": {
+                                            "$ref": "#/components/schemas/PaymentPlan"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Payment plan not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "PaymentPlan"
+                ],
+                "summary": "Update a custom payment plan",
+                "description": "Update an existing custom payment plan.",
+                "operationId": "a5c4c2d5a838dc5c3b3c4604ee90e333",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the payment plan to update",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "unit_id",
+                                    "name",
+                                    "dld_fee_percentage",
+                                    "admin_fee",
+                                    "discount",
+                                    "EOI",
+                                    "booking_percentage",
+                                    "handover_percentage",
+                                    "first_construction_installment_date"
+                                ],
+                                "properties": {
+                                    "unit_id": {
+                                        "type": "integer",
+                                        "example": 5
+                                    },
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Custom 60/40 Plan Updated"
+                                    },
+                                    "dld_fee_percentage": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 4
+                                    },
+                                    "admin_fee": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 4000
+                                    },
+                                    "discount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 50000
+                                    },
+                                    "EOI": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 100000
+                                    },
+                                    "booking_percentage": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 20
+                                    },
+                                    "handover_percentage": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 40
+                                    },
+                                    "first_construction_installment_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2025-04-15"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Payment plan updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaymentPlan"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "PaymentPlan"
+                ],
+                "summary": "Delete a payment plan",
+                "description": "Delete a payment plan and its installments.",
+                "operationId": "b747a37bf2263ee4c6da1aaf46814476",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the payment plan to delete",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Payment plan deleted successfully"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/units/{unit_id}/payment-plans": {
+            "get": {
+                "tags": [
+                    "PaymentPlan"
+                ],
+                "summary": "Get all payment plans for a unit",
+                "description": "Get all payment plans for a given unit with their installments.",
+                "operationId": "0d8b27dd64577764fed06157b78b56f7",
+                "parameters": [
+                    {
+                        "name": "unit_id",
+                        "in": "path",
+                        "description": "ID of the unit",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Payment plans retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "payment_plans": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/PaymentPlan"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No payment plans found for this unit"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/payment-plans": {
+            "post": {
+                "tags": [
+                    "PaymentPlan"
+                ],
+                "summary": "Create a custom payment plan",
+                "description": "Store a custom payment plan for a unit.",
+                "operationId": "4336bb8fbca01ddf2a906f591ef0a29b",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "unit_id",
+                                    "name",
+                                    "dld_fee_percentage",
+                                    "admin_fee",
+                                    "discount",
+                                    "EOI",
+                                    "booking_percentage",
+                                    "handover_percentage",
+                                    "first_construction_installment_date"
+                                ],
+                                "properties": {
+                                    "unit_id": {
+                                        "type": "integer",
+                                        "example": 5
+                                    },
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Custom 60/40 Plan"
+                                    },
+                                    "dld_fee_percentage": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 4
+                                    },
+                                    "admin_fee": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 4000
+                                    },
+                                    "discount": {
+                                        "description": "Discount as a percentage",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 10
+                                    },
+                                    "EOI": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 100000
+                                    },
+                                    "booking_percentage": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 20
+                                    },
+                                    "handover_percentage": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 40
+                                    },
+                                    "first_construction_installment_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2025-04-15"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Payment plan created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "payment_plan": {
+                                            "$ref": "#/components/schemas/PaymentPlan"
+                                        },
+                                        "installments": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Installment"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/units": {
             "get": {
                 "tags": [
@@ -441,102 +787,18 @@
                     "content": {
                         "multipart/form-data": {
                             "schema": {
-                                "required": [
-                                    "prop_type",
-                                    "unit_type",
-                                    "unit_no",
-                                    "floor",
-                                    "suite_area",
-                                    "furnished",
-                                    "unit_view",
-                                    "price",
-                                    "building_id",
-                                    "status"
-                                ],
-                                "properties": {
-                                    "prop_type": {
-                                        "type": "string",
-                                        "example": "Residential"
-                                    },
-                                    "unit_type": {
-                                        "type": "string",
-                                        "example": "Apartment"
-                                    },
-                                    "unit_no": {
-                                        "type": "string",
-                                        "example": "A101"
-                                    },
-                                    "floor": {
-                                        "type": "string",
-                                        "example": "1"
-                                    },
-                                    "parking": {
-                                        "type": "string",
-                                        "example": "Covered"
-                                    },
-                                    "pool_jacuzzi": {
-                                        "type": "string",
-                                        "example": "None"
-                                    },
-                                    "suite_area": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 120.5
-                                    },
-                                    "balcony_area": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 15.75
-                                    },
-                                    "furnished": {
-                                        "type": "boolean",
-                                        "example": true
-                                    },
-                                    "unit_view": {
-                                        "type": "string",
-                                        "example": "City View"
-                                    },
-                                    "price": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 350000
-                                    },
-                                    "building_id": {
-                                        "type": "integer",
-                                        "example": 5
-                                    },
-                                    "status": {
-                                        "type": "string",
-                                        "enum": [
-                                            "Pending",
-                                            "Available",
-                                            "Pre-Booked",
-                                            "Booked",
-                                            "Sold",
-                                            "Pre-Hold",
-                                            "Hold",
-                                            "Cancelled"
-                                        ],
-                                        "example": "Pending"
-                                    },
-                                    "floor_plan": {
-                                        "description": "Optional floor plan file (pdf, jpg, jpeg, png)",
-                                        "type": "string",
-                                        "format": "binary"
-                                    }
-                                },
-                                "type": "object"
+                                "$ref": "#/components/schemas/Unit"
                             }
                         }
                     }
                 },
                 "responses": {
                     "201": {
-                        "description": "Unit created successfully",
+                        "description": "Unit created successfully with its payment plans",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/Unit"
+                                    "$ref": "#/components/schemas/UnitWithPaymentPlans"
                                 }
                             }
                         }
@@ -580,7 +842,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/Unit"
+                                    "$ref": "#/components/schemas/UnitWithPaymentPlans"
                                 }
                             }
                         }
@@ -885,6 +1147,47 @@
                 },
                 "type": "object"
             },
+            "Installment": {
+                "title": "Installment",
+                "required": [
+                    "payment_plan_id",
+                    "description",
+                    "percentage",
+                    "date",
+                    "amount"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true,
+                        "example": 1
+                    },
+                    "payment_plan_id": {
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Booking Installment"
+                    },
+                    "percentage": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 20
+                    },
+                    "date": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-01-01"
+                    },
+                    "amount": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 293173.12
+                    }
+                },
+                "type": "object"
+            },
             "Unit": {
                 "title": "Unit",
                 "required": [
@@ -898,7 +1201,12 @@
                     "unit_view",
                     "price",
                     "building_id",
-                    "status"
+                    "status",
+                    "completion_date",
+                    "dld_fee_percentage",
+                    "admin_fee",
+                    "EOI",
+                    "FCID"
                 ],
                 "properties": {
                     "id": {
@@ -976,6 +1284,35 @@
                         ],
                         "example": "Pending"
                     },
+                    "completion_date": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-12-15"
+                    },
+                    "floor_plan": {
+                        "type": "string",
+                        "example": "floor_plans/abc123.jpg"
+                    },
+                    "dld_fee_percentage": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 65000
+                    },
+                    "admin_fee": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 4000
+                    },
+                    "EOI": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 100000
+                    },
+                    "FCID": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-03-15"
+                    },
                     "created_at": {
                         "type": "string",
                         "format": "date-time",
@@ -997,6 +1334,230 @@
                     }
                 },
                 "type": "object"
+            },
+            "UnitInput": {
+                "title": "Unit Input",
+                "required": [
+                    "prop_type",
+                    "unit_type",
+                    "unit_no",
+                    "floor",
+                    "suite_area",
+                    "furnished",
+                    "unit_view",
+                    "price",
+                    "building_id",
+                    "status",
+                    "completion_date",
+                    "dld_fee_percentage",
+                    "admin_fee",
+                    "FCID"
+                ],
+                "properties": {
+                    "prop_type": {
+                        "type": "string",
+                        "example": "Residential"
+                    },
+                    "unit_type": {
+                        "type": "string",
+                        "example": "Apartment"
+                    },
+                    "unit_no": {
+                        "type": "string",
+                        "example": "A101"
+                    },
+                    "floor": {
+                        "type": "string",
+                        "example": "1"
+                    },
+                    "parking": {
+                        "type": "string",
+                        "example": "Covered"
+                    },
+                    "pool_jacuzzi": {
+                        "type": "string",
+                        "example": "None"
+                    },
+                    "suite_area": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 120.5
+                    },
+                    "balcony_area": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 15.75
+                    },
+                    "furnished": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "unit_view": {
+                        "type": "string",
+                        "example": "City View"
+                    },
+                    "price": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 350000
+                    },
+                    "building_id": {
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "Pending",
+                            "Available",
+                            "Pre-Booked",
+                            "Booked",
+                            "Sold",
+                            "Pre-Hold",
+                            "Hold",
+                            "Cancelled"
+                        ],
+                        "example": "Pending"
+                    },
+                    "completion_date": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-12-15"
+                    },
+                    "floor_plan": {
+                        "description": "Optional floor plan file (pdf, jpg, jpeg, png)",
+                        "type": "string",
+                        "format": "binary"
+                    },
+                    "dld_fee_percentage": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 65000
+                    },
+                    "admin_fee": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 4000
+                    },
+                    "EOI": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 100000
+                    },
+                    "FCID": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-03-15"
+                    }
+                },
+                "type": "object"
+            },
+            "UnitWithPaymentPlans": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/Unit"
+                    },
+                    {
+                        "properties": {
+                            "paymentPlans": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/PaymentPlan"
+                                }
+                            }
+                        },
+                        "type": "object"
+                    }
+                ]
+            },
+            "PaymentPlan": {
+                "title": "Payment Plan",
+                "required": [
+                    "unit_id",
+                    "name",
+                    "selling_price",
+                    "dld_fee_percentage",
+                    "admin_fee",
+                    "discount",
+                    "EOI",
+                    "booking_percentage",
+                    "handover_percentage",
+                    "construction_percentage",
+                    "first_construction_installment_date"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true,
+                        "example": 1
+                    },
+                    "unit_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "60/40"
+                    },
+                    "selling_price": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 350000
+                    },
+                    "dld_fee_percentage": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 65000
+                    },
+                    "admin_fee": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 4000
+                    },
+                    "discount": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 0
+                    },
+                    "EOI": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 100000
+                    },
+                    "booking_percentage": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 20
+                    },
+                    "handover_percentage": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 40
+                    },
+                    "construction_percentage": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 40
+                    },
+                    "first_construction_installment_date": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-03-15"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "example": "2025-01-01T00:00:00Z"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "example": "2025-01-02T00:00:00Z"
+                    }
+                },
+                "type": "object"
             }
         },
         "securitySchemes": {
@@ -1012,6 +1573,10 @@
         {
             "name": "Building",
             "description": "Building"
+        },
+        {
+            "name": "PaymentPlan",
+            "description": "PaymentPlan"
         },
         {
             "name": "Unit",
