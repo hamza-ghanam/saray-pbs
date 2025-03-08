@@ -56,8 +56,13 @@ class PaymentPlanController extends Controller
      * @param int $id
      * @return \Illuminate\Http\JsonResponse
      */
-    public function show($id)
+    public function show(Request $request, $id)
     {
+        $user = $request->user();
+        if (!$user->can('show payment plan')) {
+            abort(403, 'Unauthorized');
+        }
+
         $paymentPlan = PaymentPlan::with('installments')->findOrFail($id);
         return response()->json(['payment_plan' => $paymentPlan], Response::HTTP_OK);
     }
@@ -94,8 +99,13 @@ class PaymentPlanController extends Controller
      * @param int $unit_id
      * @return \Illuminate\Http\JsonResponse
      */
-    public function getPlansForUnit($unit_id)
+    public function getPlansForUnit(Request $request, $unit_id)
     {
+        $user = $request->user();
+        if (!$user->can('show payment plan')) {
+            abort(403, 'Unauthorized');
+        }
+
         // Optionally, you may check if the unit exists.
         $unit = Unit::findOrFail($unit_id);
 
@@ -147,6 +157,11 @@ class PaymentPlanController extends Controller
      */
     public function store(Request $request)
     {
+        $user = $request->user();
+        if (!$user->can('add payment plan')) {
+            abort(403, 'Unauthorized');
+        }
+
         Log::info("Creating custom Payment Plan with data: " . json_encode($request->all()));
 
         $validator = Validator::make($request->all(), [
@@ -288,6 +303,11 @@ class PaymentPlanController extends Controller
      */
     public function update(Request $request, $id)
     {
+        $user = $request->user();
+        if (!$user->can('update payment plan')) {
+            abort(403, 'Unauthorized');
+        }
+
         $paymentPlan = PaymentPlan::findOrFail($id);
 
         $validator = Validator::make($request->all(), [
@@ -404,8 +424,13 @@ class PaymentPlanController extends Controller
      * @param int $id
      * @return \Illuminate\Http\JsonResponse
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
+        $user = $request->user();
+        if (!$user->can('delete payment plan')) {
+            abort(403, 'Unauthorized');
+        }
+
         $paymentPlan = PaymentPlan::findOrFail($id);
         $paymentPlan->delete();
 
