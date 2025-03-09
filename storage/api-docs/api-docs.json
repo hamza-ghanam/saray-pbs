@@ -743,6 +743,69 @@
                 ]
             }
         },
+        "/sales-offers/generate": {
+            "post": {
+                "tags": [
+                    "SalesOffer"
+                ],
+                "summary": "Generate a sales offer PDF on the fly",
+                "description": "Generate a Sales Offer PDF on the fly.",
+                "operationId": "2addf401a443c4d76737a537169ff89d",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "unit_id"
+                                ],
+                                "properties": {
+                                    "unit_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "notes": {
+                                        "type": "string",
+                                        "example": "Special discount offer"
+                                    },
+                                    "payment_plan_ids": {
+                                        "description": "Optional array of Payment Plan IDs to include",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer",
+                                            "example": 3
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Sales offer generated successfully",
+                        "content": {
+                            "application/pdf": {}
+                        }
+                    },
+                    "404": {
+                        "description": "Unit not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/units": {
             "get": {
                 "tags": [
@@ -1577,6 +1640,10 @@
         {
             "name": "PaymentPlan",
             "description": "PaymentPlan"
+        },
+        {
+            "name": "SalesOffer",
+            "description": "SalesOffer"
         },
         {
             "name": "Unit",

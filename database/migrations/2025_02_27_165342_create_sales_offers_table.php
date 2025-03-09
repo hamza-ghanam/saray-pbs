@@ -15,8 +15,6 @@ return new class extends Migration {
             $table->foreignId('unit_id')->constrained()->onDelete('cascade');
             $table->foreignId('generated_by_id')->constrained('users'); // Sales or Broker
             $table->timestamp('offer_date');
-            $table->decimal('offer_price', 10, 2);
-            $table->enum('status', ['Pending', 'Accepted', 'Rejected']);
             $table->text('notes')->nullable();
             $table->timestamps();
             $table->softDeletes();

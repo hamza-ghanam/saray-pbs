@@ -10,8 +10,6 @@ class SalesOffer extends Model
         'unit_id',
         'generated_by_id',
         'offer_date',
-        'offer_price',
-        'status',
         'notes'
     ];
 

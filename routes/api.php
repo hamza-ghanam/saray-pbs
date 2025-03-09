@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BuildingController;
 use App\Http\Controllers\UnitController;
 use App\Http\Controllers\PaymentPlanController;
+use App\Http\Controllers\SalesOfferController;
 
 // User Management
 Route::get('/user', function (Request $request) {
@@ -41,4 +42,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/payment-plans/{id}', [PaymentPlanController::class, 'update']);
     Route::delete('/payment-plans/{id}', [PaymentPlanController::class, 'destroy']);
     Route::get('/units/{id}/payment-plans', [PaymentPlanController::class, 'getPlansForUnit']);
+});
+
+// Sales Offer
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/sales-offers/generate', [SalesOfferController::class, 'generate']);
 });
