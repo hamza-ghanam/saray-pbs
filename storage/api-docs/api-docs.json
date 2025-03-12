@@ -150,6 +150,793 @@
                 }
             }
         },
+        "/bookings/{id}": {
+            "get": {
+                "tags": [
+                    "Booking"
+                ],
+                "summary": "Retrieve a booking and its customer info by ID",
+                "description": "Get a booking by its ID, including the related customer info.",
+                "operationId": "4b13c909d897a5edd245741a4aafd9d2",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the booking to retrieve",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 42
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Booking retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer",
+                                            "example": 42
+                                        },
+                                        "unit_id": {
+                                            "type": "integer",
+                                            "example": 12
+                                        },
+                                        "customer_info_id": {
+                                            "type": "integer",
+                                            "example": 7
+                                        },
+                                        "status": {
+                                            "type": "string",
+                                            "example": "Pre-Booked"
+                                        },
+                                        "receipt_path": {
+                                            "type": "string",
+                                            "example": "public/receipts/abc123.pdf",
+                                            "nullable": true
+                                        },
+                                        "customer_info": {
+                                            "description": "Nested customer info",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 7
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "HAMZA GHANAM"
+                                                },
+                                                "passport_number": {
+                                                    "type": "string",
+                                                    "example": "N007047689"
+                                                },
+                                                "birth_date": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "1992-02-05"
+                                                },
+                                                "gender": {
+                                                    "type": "string",
+                                                    "example": "Male"
+                                                },
+                                                "nationality": {
+                                                    "type": "string",
+                                                    "example": "Syrian Arab Republic (the)"
+                                                },
+                                                "document_path": {
+                                                    "type": "string",
+                                                    "example": "public/documents/abcd1234.jpg"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Booking not found"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Booking"
+                ],
+                "summary": "Update a booking (and its customer info) by ID",
+                "description": "Update an existing booking and its related customer info.",
+                "operationId": "6f58c5d17bbc7034b229d97390054811",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the booking to update",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 42
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "description": "Updated customer name",
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "HAMZA GHANAM"
+                                    },
+                                    "passport_number": {
+                                        "description": "Updated passport number",
+                                        "type": "string",
+                                        "maxLength": 50,
+                                        "example": "N007047689"
+                                    },
+                                    "birth_date": {
+                                        "description": "Updated birth date",
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "1992-02-05"
+                                    },
+                                    "gender": {
+                                        "description": "Updated gender",
+                                        "type": "string",
+                                        "maxLength": 10,
+                                        "example": "Male"
+                                    },
+                                    "nationality": {
+                                        "description": "Updated nationality",
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "Syrian Arab Republic (the)"
+                                    },
+                                    "payment_plan_id": {
+                                        "description": "ID of the selected payment plan for this unit",
+                                        "type": "integer",
+                                        "example": 5
+                                    },
+                                    "receipt": {
+                                        "description": "Optional new receipt file (pdf, jpg, jpeg, png)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Booking updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer",
+                                            "example": 42
+                                        },
+                                        "unit_id": {
+                                            "type": "integer",
+                                            "example": 12
+                                        },
+                                        "customer_info_id": {
+                                            "type": "integer",
+                                            "example": 7
+                                        },
+                                        "status": {
+                                            "type": "string",
+                                            "example": "Pre-Booked"
+                                        },
+                                        "confirmed_by": {
+                                            "type": "integer",
+                                            "example": null,
+                                            "nullable": true
+                                        },
+                                        "confirmed_at": {
+                                            "type": "string",
+                                            "format": "date-time",
+                                            "example": null,
+                                            "nullable": true
+                                        },
+                                        "customer_info": {
+                                            "description": "Nested customer info",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 7
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "HAMZA GHANAM"
+                                                },
+                                                "passport_number": {
+                                                    "type": "string",
+                                                    "example": "N007047689"
+                                                },
+                                                "birth_date": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "1992-02-05"
+                                                },
+                                                "gender": {
+                                                    "type": "string",
+                                                    "example": "Male"
+                                                },
+                                                "nationality": {
+                                                    "type": "string",
+                                                    "example": "Syrian Arab Republic (the)"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Booking not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Booking"
+                ],
+                "summary": "Delete a booking by ID",
+                "description": "Delete a booking by its ID.",
+                "operationId": "dc3a5e70d8c1811d5888122376cf81b3",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the booking to delete",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 42
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Booking deleted successfully"
+                    },
+                    "404": {
+                        "description": "Booking not found"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/booking/scan-passport": {
+            "post": {
+                "tags": [
+                    "Booking"
+                ],
+                "summary": "Scan a customer passport to get their information.",
+                "operationId": "9642da1e50c3cd25ec4143a851d537ed",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "document"
+                                ],
+                                "properties": {
+                                    "document": {
+                                        "description": "Passport file to extract data from. Accepted file extensions: pdf, jpg, jpeg, png",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Customer passport data extracted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "description": "Parsed passport data",
+                                    "properties": {
+                                        "type": {
+                                            "type": "string",
+                                            "example": "Passport"
+                                        },
+                                        "card_no": {
+                                            "type": "string",
+                                            "example": "015194164"
+                                        },
+                                        "issuer": {
+                                            "type": "string",
+                                            "example": "Syrian Arab Republic"
+                                        },
+                                        "date_of_expiry": {
+                                            "type": "string",
+                                            "example": "2024-07-05"
+                                        },
+                                        "first_name": {
+                                            "type": "string",
+                                            "example": "JOHN"
+                                        },
+                                        "last_name": {
+                                            "type": "string",
+                                            "example": "SMITH"
+                                        },
+                                        "date_of_birth": {
+                                            "type": "string",
+                                            "example": "1988-10-09"
+                                        },
+                                        "gender": {
+                                            "type": "string",
+                                            "example": "Male"
+                                        },
+                                        "personal_number": {
+                                            "type": "string",
+                                            "example": "01092683756"
+                                        },
+                                        "nationality": {
+                                            "type": "string",
+                                            "example": "Syrian Arab Republic"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "document": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string",
+                                                "example": "The document field is required."
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthorized"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "OCR extraction failed"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/book-unit": {
+            "post": {
+                "tags": [
+                    "Booking"
+                ],
+                "summary": "Book a unit by creating CustomerInfo and Booking with status Pre-Booked",
+                "description": "Book a unit with provided customer information and an optional payment receipt.",
+                "operationId": "aaa866a8927a322b2bdb7d1eb709f9f7",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "upload_token",
+                                    "name",
+                                    "passport_number",
+                                    "birth_date",
+                                    "gender",
+                                    "nationality",
+                                    "unit_id"
+                                ],
+                                "properties": {
+                                    "upload_token": {
+                                        "description": "Token referencing the previously uploaded passport file",
+                                        "type": "string",
+                                        "example": "3d1ad42a-49bb-4171-83af-f67dd83e97c3"
+                                    },
+                                    "name": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "John Smith"
+                                    },
+                                    "passport_number": {
+                                        "type": "string",
+                                        "maxLength": 50,
+                                        "example": "N007832713"
+                                    },
+                                    "birth_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "1992-02-05"
+                                    },
+                                    "gender": {
+                                        "type": "string",
+                                        "maxLength": 10,
+                                        "example": "Male"
+                                    },
+                                    "nationality": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "Syrian Arab Republic"
+                                    },
+                                    "unit_id": {
+                                        "description": "ID of the unit to be booked",
+                                        "type": "integer",
+                                        "example": 12
+                                    },
+                                    "payment_plan_id": {
+                                        "description": "ID of the selected payment plan for this unit",
+                                        "type": "integer",
+                                        "example": 5
+                                    },
+                                    "receipt": {
+                                        "description": "Optional payment receipt (pdf, jpg, jpeg, png)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Booking created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer",
+                                            "example": 42
+                                        },
+                                        "unit_id": {
+                                            "type": "integer",
+                                            "example": 12
+                                        },
+                                        "customer_info_id": {
+                                            "type": "integer",
+                                            "example": 7
+                                        },
+                                        "status": {
+                                            "type": "string",
+                                            "example": "Pre-Booked"
+                                        },
+                                        "confirmed_by": {
+                                            "type": "integer",
+                                            "example": null,
+                                            "nullable": true
+                                        },
+                                        "confirmed_at": {
+                                            "type": "string",
+                                            "format": "date-time",
+                                            "example": null,
+                                            "nullable": true
+                                        },
+                                        "customer_info": {
+                                            "description": "Nested CustomerInfo record",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 7
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "John Smith"
+                                                },
+                                                "passport_number": {
+                                                    "type": "string",
+                                                    "example": "N007832713"
+                                                },
+                                                "birth_date": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "1992-02-05"
+                                                },
+                                                "gender": {
+                                                    "type": "string",
+                                                    "example": "Male"
+                                                },
+                                                "nationality": {
+                                                    "type": "string",
+                                                    "example": "Syrian Arab Republic"
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-03-10T12:00:00Z"
+                                                },
+                                                "updated_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-03-10T12:00:00Z"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "created_at": {
+                                            "type": "string",
+                                            "format": "date-time",
+                                            "example": "2025-03-10T12:00:00Z"
+                                        },
+                                        "updated_at": {
+                                            "type": "string",
+                                            "format": "date-time",
+                                            "example": "2025-03-10T12:00:00Z"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/bookings/{id}/upload-receipt": {
+            "post": {
+                "tags": [
+                    "Booking"
+                ],
+                "summary": "Upload or replace a payment receipt for an existing booking",
+                "description": "Upload (or replace) a payment receipt for an existing booking.",
+                "operationId": "6618a7e2c37fdfd2df93eaab894461c5",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the booking to upload a receipt for",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 42
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "receipt"
+                                ],
+                                "properties": {
+                                    "receipt": {
+                                        "description": "Payment receipt file (pdf, jpg, jpeg, png)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Receipt uploaded successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer",
+                                            "example": 42
+                                        },
+                                        "unit_id": {
+                                            "type": "integer",
+                                            "example": 12
+                                        },
+                                        "customer_info_id": {
+                                            "type": "integer",
+                                            "example": 7
+                                        },
+                                        "status": {
+                                            "type": "string",
+                                            "example": "Pre-Booked"
+                                        },
+                                        "confirmed_by": {
+                                            "type": "integer",
+                                            "example": null,
+                                            "nullable": true
+                                        },
+                                        "confirmed_at": {
+                                            "type": "string",
+                                            "format": "date-time",
+                                            "example": null,
+                                            "nullable": true
+                                        },
+                                        "created_at": {
+                                            "type": "string",
+                                            "format": "date-time",
+                                            "example": "2025-03-10T12:00:00Z"
+                                        },
+                                        "updated_at": {
+                                            "type": "string",
+                                            "format": "date-time",
+                                            "example": "2025-03-10T12:00:00Z"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Booking not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/bookings/{id}/download-document": {
+            "get": {
+                "tags": [
+                    "Booking"
+                ],
+                "summary": "Download receipt or passport file for a booking",
+                "description": "Download either the receipt or the passport document for a specific booking.",
+                "operationId": "f6e22515e5c425f9ba77ed92cd39b7df",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the booking",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 42
+                        }
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "description": "Type of file to download (passport or receipt)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "passport",
+                                "receipt"
+                            ],
+                            "example": "receipt"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "File downloaded successfully",
+                        "content": {
+                            "application/octet-stream": {}
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Booking or file not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/buildings": {
             "get": {
                 "tags": [
@@ -1633,6 +2420,10 @@
         }
     },
     "tags": [
+        {
+            "name": "Booking",
+            "description": "Booking"
+        },
         {
             "name": "Building",
             "description": "Building"

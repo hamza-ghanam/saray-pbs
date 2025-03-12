@@ -3,17 +3,26 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Booking extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = [
         'unit_id',
         'customer_info_id',
         'status',
         'receipt_path',
         'confirmed_by',
-        'confirmed_at'
+        'confirmed_at',
+        'created_by', // Make sure it's fillable
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
 
     public function unit()
     {

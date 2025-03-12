@@ -133,6 +133,10 @@ class UnitController extends Controller
         $user = $request->user();
         Log::info("User {$user->id} called requested unit listing.");
 
+        if (!$user->can('view unit')) {
+            abort(403, 'Unauthorized');
+        }
+
         // If the user has the Sales role, show only available units.
         if ($user->hasRole('Sales')) {
             $units = Unit::whereIn('status', ['Available', 'Cancelled'])->get();

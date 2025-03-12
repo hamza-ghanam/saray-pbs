@@ -7,6 +7,7 @@ use App\Http\Controllers\BuildingController;
 use App\Http\Controllers\UnitController;
 use App\Http\Controllers\PaymentPlanController;
 use App\Http\Controllers\SalesOfferController;
+use App\Http\Controllers\BookingController;
 
 // User Management
 Route::get('/user', function (Request $request) {
@@ -47,4 +48,15 @@ Route::middleware('auth:sanctum')->group(function () {
 // Sales Offer
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/sales-offers/generate', [SalesOfferController::class, 'generate']);
+});
+
+// Bookings
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/bookings/scan-passport', [BookingController::class, 'scanPassport']);
+    Route::post('/bookings/book-unit', [BookingController::class, 'bookUnit']);
+    Route::post('/bookings/{id}/upload-receipt', [BookingController::class, 'uploadReceipt']);
+    Route::put('/bookings/{id}', [BookingController::class, 'update']);
+    Route::delete('/bookings/{id}', [BookingController::class, 'destroy']);
+    Route::get('/bookings/{booking}/download-document', [BookingController::class, 'downloadDocument']);
+    Route::get('/bookings/{id}', [BookingController::class, 'show']);
 });

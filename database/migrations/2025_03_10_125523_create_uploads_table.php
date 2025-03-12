@@ -11,16 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('customer_infos', function (Blueprint $table) {
+        Schema::create('uploads', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('passport_number');
-            $table->date('birth_date');
-            $table->enum('gender', ['male', 'female']);
-            $table->string('nationality');
-            $table->string('document_path');
+            $table->string('token');
+            $table->string('path');
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->timestamps();
-            $table->softDeletes();
         });
     }
 
@@ -29,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('customer_infos');
+        Schema::dropIfExists('uploads');
     }
 };
