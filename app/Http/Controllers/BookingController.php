@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Approval;
 use App\Models\Booking;
 use App\Models\CustomerInfo;
 use App\Models\PaymentPlan;
@@ -848,5 +849,141 @@ class BookingController extends Controller
         // 4. Download the file from storage
         $docPath = $request->type === 'receipt' ? $booking->receipt_path : $booking->customerInfo->document_path;
         return Storage::download($docPath, "{$request->type}_{$booking->id}.pdf");
+    }
+
+    /**
+     * Approve a booking by the currently logged-in user (role-based logic).
+     *
+     * @OA\Post(
+     *     path="/bookings/{id}/approve",
+     *     summary="Approve a booking (CEO can single-approve; CSO & Accountant require two distinct approvals)",
+     *     tags={"Booking"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID of the booking to approve",
+     *         required=true,
+     *         @OA\Schema(type="integer", example=42)
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Booking approved successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Booking approved by role: CSO"),
+     *             @OA\Property(
+     *                 property="approval",
+     *                 type="object",
+     *                 description="Details of the newly created approval record",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="ref_id", type="integer", example=42),
+     *                 @OA\Property(property="ref_type", type="string", example="App\\Models\\Booking"),
+     *                 @OA\Property(property="approved_by", type="integer", example=10),
+     *                 @OA\Property(property="approval_type", type="string", example="CSO"),
+     *                 @OA\Property(property="status", type="string", example="Approved"),
+     *                 @OA\Property(property="created_at", type="string", format="date-time", example="2025-03-10T12:00:00Z"),
+     *                 @OA\Property(property="updated_at", type="string", format="date-time", example="2025-03-10T12:00:00Z")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=403, description="Forbidden"),
+     *     @OA\Response(response=404, description="Booking not found"),
+     *     @OA\Response(response=422, description="Validation error or duplicate approval from the same role")
+     * )
+     */
+    public function approveBooking(Request $request, $id)
+    {
+        $user = $request->user();
+        Log::info("User {$user->id} is attempting to approve booking ID: {$id}");
+
+        // 1. Retrieve the booking
+        $booking = Booking::find($id);
+        if (!$booking) {
+            return response()->json(['error' => 'Booking not found'], 404);
+        }
+
+        // 2. Check if user can approve bookings (adjust if you use a different policy/gate)
+        if (!$user->can('approve booking')) {
+            return response()->json(['error' => 'Forbidden'], 403);
+        }
+
+        // 3. Identify the user's role (assuming each user has exactly one main role)
+        //    If users can have multiple roles, handle that logic here.
+        $role = $user->getRoleNames()->first();
+        if (!$role) {
+            return response()->json(['error' => 'User has no role'], 403);
+        }
+
+        // 4. Check for existing approval from this same role (avoid duplicates)
+        $existingApproval = $booking->approvals()
+            ->where('approval_type', $role)
+            ->where('status', 'Approved')
+            ->first();
+
+        if ($existingApproval) {
+            return response()->json([
+                'error' => "Booking already has an approval from role: {$role}."
+            ], 422);
+        }
+
+        // 5. CEO Flow => Single Approval is Enough OR CEO as Second Approval
+        if ($role === 'CEO' || $role === 'System Maintenance') {
+            // Create CEO approval
+            $approval = Approval::create([
+                'ref_id'        => $booking->id,
+                'ref_type'      => 'App\Models\Booking', // Must match your morphTo
+                'approved_by'   => $user->id,
+                'approval_type' => $role,
+                'status'        => 'Approved',
+            ]);
+
+            $booking->status = 'RF Pending';
+            $booking->save();
+
+            $booking->unit->status = 'Booked';
+            $booking->unit->save();
+
+            return response()->json([
+                'message'  => "Booking approved by {$role}.",
+                'approval' => $approval,
+            ], 201);
+        }
+
+        // 6. Non-CEO Flow => Need 2 Distinct Approvals: CSO & Accountant
+        //    Check if the user's role is either "CSO" or "Accountant"
+        if (!in_array($role, ['CSO','Accountant'])) {
+            return response()->json(['error' => "Role {$role} is not allowed to approve bookings."], 403);
+        }
+
+        // Create the new approval for CSO/Accountant
+        $approval = Approval::create([
+            'ref_id'        => $booking->id,
+            'ref_type'      => 'App\Models\Booking',
+            'approved_by'   => $user->id,
+            'approval_type' => $role,
+            'status'        => 'Approved',
+        ]);
+
+        // 7. Check how many distinct roles have approved so far
+        $rolesApproved = $booking->approvals()
+            ->where('status', 'Approved')
+            ->pluck('approval_type')
+            ->unique();
+
+        // If we have both "CSO" and "Accountant", then the booking is fully approved
+        if ($rolesApproved->contains('CSO') && $rolesApproved->contains('Accountant')) {
+            // e.g., finalize the booking or set status
+             $booking->status = 'RF Pending';
+             $booking->save();
+
+            $booking->unit->status = 'Booked';
+            $booking->unit->save();
+        }
+
+        return response()->json([
+            'message'  => "Booking approved by {$role}",
+            'approval' => $approval,
+        ], 201);
     }
 }

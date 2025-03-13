@@ -937,6 +937,100 @@
                 ]
             }
         },
+        "/bookings/{id}/approve": {
+            "post": {
+                "tags": [
+                    "Booking"
+                ],
+                "summary": "Approve a booking (CEO can single-approve; CSO & Accountant require two distinct approvals)",
+                "description": "Approve a booking by the currently logged-in user (role-based logic).",
+                "operationId": "2a601aaec784bb2f8193653bc4598029",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the booking to approve",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 42
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Booking approved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Booking approved by role: CSO"
+                                        },
+                                        "approval": {
+                                            "description": "Details of the newly created approval record",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "ref_id": {
+                                                    "type": "integer",
+                                                    "example": 42
+                                                },
+                                                "ref_type": {
+                                                    "type": "string",
+                                                    "example": "App\\\\Models\\\\Booking"
+                                                },
+                                                "approved_by": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                },
+                                                "approval_type": {
+                                                    "type": "string",
+                                                    "example": "CSO"
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "Approved"
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-03-10T12:00:00Z"
+                                                },
+                                                "updated_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-03-10T12:00:00Z"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Booking not found"
+                    },
+                    "422": {
+                        "description": "Validation error or duplicate approval from the same role"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/buildings": {
             "get": {
                 "tags": [

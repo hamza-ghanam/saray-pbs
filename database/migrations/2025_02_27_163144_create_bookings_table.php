@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('unit_id')->constrained()->onDelete('cascade');
             $table->foreignId('customer_info_id')->constrained('customer_infos')->onDelete('cascade');
-            $table->enum('status', ['Pre-Booked', 'Booked', 'Cancelled']);
+            $table->enum('status', ['Pre-Booked', 'RF Pending', 'SPA Pending', 'Booked', 'Cancelled']);
             $table->string('receipt_path')->nullable();
             $table->foreignId('confirmed_by')->nullable()->constrained('users');
             $table->timestamp('confirmed_at')->nullable();

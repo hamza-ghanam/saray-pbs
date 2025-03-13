@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Events\UnitCreated;
+use App\Models\Approval;
 use App\Models\Unit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -109,7 +110,6 @@ use Symfony\Component\HttpFoundation\Response;
  *     @OA\Property(property="updated_at", type="string", format="date-time", readOnly=true, example="2025-01-02T00:00:00Z")
  * )
  */
-
 class UnitController extends Controller
 {
     /**
@@ -173,7 +173,7 @@ class UnitController extends Controller
      */
     public function store(Request $request)
     {
-      //  return response()->json($request->all());
+        //  return response()->json($request->all());
         $user = $request->user();
         Log::info("User {$user->id} is attempting to add a new unit.");
 
@@ -182,24 +182,24 @@ class UnitController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'prop_type'             => 'required|string|max:255',
-            'unit_type'             => 'required|string|max:255',
-            'unit_no'               => 'required|string|max:255',
-            'floor'                 => 'required|string|max:50',
-            'parking'               => 'nullable|string|max:255',
-            'pool_jacuzzi'          => 'nullable|string|max:255',
-            'suite_area'            => 'required|numeric',
-            'balcony_area'          => 'nullable|numeric',
-            'furnished'             => 'required|boolean',
-            'unit_view'             => 'required|string|max:255',
-            'price'                 => 'required|numeric',
-            'completion_date'       => 'required|date|after_or_equal:today',
-            'building_id'           => 'required|exists:buildings,id',
-            'floor_plan'            => 'nullable|file|mimes:pdf,jpg,jpeg,png',
-            'dld_fee_percentage'    => 'required|numeric',
-            'admin_fee'             => 'required|numeric',
-            'EOI'                   => 'nullable|numeric',
-            'FCID'                  => 'required|date',
+            'prop_type' => 'required|string|max:255',
+            'unit_type' => 'required|string|max:255',
+            'unit_no' => 'required|string|max:255',
+            'floor' => 'required|string|max:50',
+            'parking' => 'nullable|string|max:255',
+            'pool_jacuzzi' => 'nullable|string|max:255',
+            'suite_area' => 'required|numeric',
+            'balcony_area' => 'nullable|numeric',
+            'furnished' => 'required|boolean',
+            'unit_view' => 'required|string|max:255',
+            'price' => 'required|numeric',
+            'completion_date' => 'required|date|after_or_equal:today',
+            'building_id' => 'required|exists:buildings,id',
+            'floor_plan' => 'nullable|file|mimes:pdf,jpg,jpeg,png',
+            'dld_fee_percentage' => 'required|numeric',
+            'admin_fee' => 'required|numeric',
+            'EOI' => 'nullable|numeric',
+            'FCID' => 'required|date',
         ]);
 
         if ($validator->fails()) {
@@ -355,20 +355,20 @@ class UnitController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'prop_type'     => 'sometimes|required|string|max:255',
-            'unit_type'     => 'sometimes|required|string|max:255',
-            'unit_no'       => 'sometimes|required|string|unique:units,unit_no,' . $id,
-            'floor'         => 'sometimes|required|string|max:50',
-            'parking'       => 'nullable|string|max:255',
-            'pool_jacuzzi'  => 'nullable|string|max:255',
-            'suite_area'    => 'sometimes|required|numeric',
-            'balcony_area'  => 'nullable|numeric',
-            'furnished'     => 'sometimes|required|boolean',
-            'unit_view'     => 'sometimes|required|string|max:255',
-            'price'         => 'sometimes|required|numeric',
-            'building_id'   => 'sometimes|required|exists:buildings,id',
-            'status'        => 'sometimes|required|in:Pending,Available,Pre-Booked,Booked,Sold,Pre-Hold,Hold,Cancelled',
-            'floor_plan'    => 'nullable|file|mimes:pdf,jpg,jpeg,png',
+            'prop_type' => 'sometimes|required|string|max:255',
+            'unit_type' => 'sometimes|required|string|max:255',
+            'unit_no' => 'sometimes|required|string|unique:units,unit_no,' . $id,
+            'floor' => 'sometimes|required|string|max:50',
+            'parking' => 'nullable|string|max:255',
+            'pool_jacuzzi' => 'nullable|string|max:255',
+            'suite_area' => 'sometimes|required|numeric',
+            'balcony_area' => 'nullable|numeric',
+            'furnished' => 'sometimes|required|boolean',
+            'unit_view' => 'sometimes|required|string|max:255',
+            'price' => 'sometimes|required|numeric',
+            'building_id' => 'sometimes|required|exists:buildings,id',
+            'status' => 'sometimes|required|in:Pending,Available,Pre-Booked,Booked,Sold,Pre-Hold,Hold,Cancelled',
+            'floor_plan' => 'nullable|file|mimes:pdf,jpg,jpeg,png',
         ]);
 
         if ($validator->fails()) {
@@ -474,6 +474,11 @@ class UnitController extends Controller
      */
     public function approve(Request $request, $id)
     {
+        $unit = Unit::find($id);
+        if (!$unit) {
+            return response()->json(['message' => 'Unit not found'], Response::HTTP_NOT_FOUND);
+        }
+
         $user = $request->user();
         Log::info("User {$user->id} is attempting to approve unit ID: {$id}");
 
@@ -481,19 +486,31 @@ class UnitController extends Controller
             abort(403, 'Unauthorized');
         }
 
-        $unit = Unit::find($id);
-        if (!$unit) {
-            return response()->json(['message' => 'Unit not found'], Response::HTTP_NOT_FOUND);
-        }
-
         // Ensure the unit is in a state that can be approved (e.g., Pending)
         if ($unit->status !== 'Pending') {
             return response()->json(['message' => 'Unit is not in pending status'], Response::HTTP_BAD_REQUEST);
         }
 
-        // For example, set the unit status to "Available" once approved.
-        $unit->status = 'Available';
-        $unit->save();
+        DB::beginTransaction();
+
+        try {
+            $unit->status = 'Available';
+            $unit->save();
+
+            Approval::create([
+                'ref_id' => $unit->id,
+                'ref_type' => 'App\Models\Unit',
+                'approved_by' => $request->user()->id,
+                'approval_type' => $request->user()->getRoleNames()->first(),
+                'status' => 'Approved',
+            ]);
+
+        } catch (\Exception $ex) {
+            DB::rollback();
+            return response()->json(['error' => $ex->getMessage()], 500);
+        }
+
+        DB::commit();
 
         return response()->json($unit, Response::HTTP_OK);
     }

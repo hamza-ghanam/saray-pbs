@@ -59,4 +59,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/bookings/{id}', [BookingController::class, 'destroy']);
     Route::get('/bookings/{booking}/download-document', [BookingController::class, 'downloadDocument']);
     Route::get('/bookings/{id}', [BookingController::class, 'show']);
+    Route::post('/bookings/{id}/approve', [BookingController::class, 'approveBooking']);
 });
