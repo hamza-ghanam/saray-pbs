@@ -93,7 +93,7 @@ class ReservationFormController extends Controller
         // 1. Retrieve the booking
         $booking = Booking::with('unit')->find($bookingId);
         if (!$booking) {
-            return response()->json(['error' => 'Booking not found'], 404);
+            return response()->json(['error' => 'Booking not found'], Response::HTTP_NOT_FOUND);
         }
 
         Log::info("User {$user->id} generated a Reservation Form for booking {$booking->id}");
@@ -122,12 +122,12 @@ class ReservationFormController extends Controller
                 return response()->json([
                     'reservation_form' => $existingRF,
                     'rf_url' => $pdfUrl
-                ], 200);
+                ], Response::HTTP_OK);
             } else {
                 // If the file is missing, you could re-generate or return an error
                 return response()->json([
                     'error' => 'Existing Reservation Form file not found on disk.'
-                ], 404);
+                ], Response::HTTP_NOT_FOUND);
             }
         }
 
@@ -229,7 +229,7 @@ class ReservationFormController extends Controller
         Log::info("User {$user->id} is uploading a signed RF for ReservationForm ID: {$id}");
 
         if (!$user->can('upload signed reservation form')) {
-            return response()->json(['error' => 'Forbidden'], 403);
+            return response()->json(['error' => 'Forbidden'], Response::HTTP_FORBIDDEN);
         }
 
         // 2. Validate the uploaded file
@@ -238,7 +238,7 @@ class ReservationFormController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
+            return response()->json($validator->errors(), Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
         // 3. Retrieve the ReservationForm record
