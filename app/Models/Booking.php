@@ -17,6 +17,7 @@ class Booking extends Model
         'confirmed_by',
         'confirmed_at',
         'created_by', // Make sure it's fillable
+        'payment_plan_id'
     ];
 
     public function user()
@@ -47,5 +48,11 @@ class Booking extends Model
     public function approvals()
     {
         return $this->hasMany(Approval::class, 'ref_id')->where('ref_type', 'Booking');
+    }
+
+
+    public function paymentPlan()
+    {
+        return $this->belongsTo(PaymentPlan::class, 'payment_plan_id');
     }
 }

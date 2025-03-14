@@ -44,4 +44,12 @@ class PaymentPlan extends Model
     {
         return $this->hasMany(Installment::class);
     }
+
+    /**
+     * A PaymentPlan can be used by many Bookings.
+     */
+    public function bookings()
+    {
+        return $this->hasMany(Booking::class, 'payment_plan_id');
+    }
 }

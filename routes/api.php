@@ -8,6 +8,7 @@ use App\Http\Controllers\UnitController;
 use App\Http\Controllers\PaymentPlanController;
 use App\Http\Controllers\SalesOfferController;
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\ReservationFormController;
 
 // User Management
 Route::get('/user', function (Request $request) {
@@ -60,4 +61,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/bookings/{booking}/download-document', [BookingController::class, 'downloadDocument']);
     Route::get('/bookings/{id}', [BookingController::class, 'show']);
     Route::post('/bookings/{id}/approve', [BookingController::class, 'approveBooking']);
+});
+
+// Reservation Forms
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/bookings/{id}/reservation-form', [ReservationFormController::class, 'generate']);
+    Route::post('/reservation-forms/{id}/upload-signed', [ReservationFormController::class, 'uploadSigned']);
+    Route::post('/reservation-forms/{id}/approve', [ReservationFormController::class, 'approve']);
 });

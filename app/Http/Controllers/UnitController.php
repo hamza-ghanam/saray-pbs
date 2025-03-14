@@ -507,7 +507,7 @@ class UnitController extends Controller
 
         } catch (\Exception $ex) {
             DB::rollback();
-            return response()->json(['error' => $ex->getMessage()], 500);
+            return response()->json(['error' => $ex->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
         DB::commit();
