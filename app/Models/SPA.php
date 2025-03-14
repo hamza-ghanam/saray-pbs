@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class SPA extends Model
 {
+    protected $table = 'spas';
     protected $fillable = ['booking_id', 'file_path', 'status'];
 
     public function booking()

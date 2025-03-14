@@ -86,7 +86,7 @@ class ReservationFormController extends Controller
 
         // Check user permissions (Sales or Broker can generate a sales offer)
         if (!$user->can('generate reservation form')) {
-            abort(403, 'Unauthorized');
+            abort(Response::HTTP_FORBIDDEN, 'Unauthorized');
         }
 
         // 1. Retrieve the booking

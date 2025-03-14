@@ -1977,6 +1977,296 @@
                 ]
             }
         },
+        "/bookings/{bookingId}/spa": {
+            "get": {
+                "tags": [
+                    "SPA"
+                ],
+                "summary": "Generate or retrieve an SPA PDF for a booking",
+                "description": "Generate or retrieve an existing Sales and Purchase Agreement (SPA) for a booking.\n\nIf an SPA already exists, the existing record and its PDF URL are returned (HTTP 200).\nOtherwise, a new PDF is generated, stored, and a new SPA record is created (HTTP 201).",
+                "operationId": "eb8c8cdc34a6f5f1c783c87837771311",
+                "parameters": [
+                    {
+                        "name": "bookingId",
+                        "in": "path",
+                        "description": "ID of the booking for which the SPA is generated",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 42
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "SPA already exists, returning existing PDF URL",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "spa": {
+                                            "description": "Existing SPA record",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                },
+                                                "booking_id": {
+                                                    "type": "integer",
+                                                    "example": 42
+                                                },
+                                                "file_path": {
+                                                    "type": "string",
+                                                    "example": "spa_forms/SPA_42.pdf"
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "Pending"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "spa_url": {
+                                            "type": "string",
+                                            "format": "uri",
+                                            "example": "http://your-domain.test/storage/spa_forms/SPA_42.pdf"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "201": {
+                        "description": "New SPA created and returning new PDF URL",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "spa": {
+                                            "description": "Newly created SPA record",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 11
+                                                },
+                                                "booking_id": {
+                                                    "type": "integer",
+                                                    "example": 42
+                                                },
+                                                "file_path": {
+                                                    "type": "string",
+                                                    "example": "spa_forms/SPA_42.pdf"
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "Pending"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "spa_url": {
+                                            "type": "string",
+                                            "format": "uri",
+                                            "example": "http://your-domain.test/storage/spa_forms/SPA_42.pdf"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden (no permission to generate SPA)"
+                    },
+                    "404": {
+                        "description": "Booking not found or existing PDF file missing"
+                    },
+                    "422": {
+                        "description": "Invalid booking/unit status or other validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/spa/{id}/upload-signed": {
+            "post": {
+                "tags": [
+                    "SPA"
+                ],
+                "summary": "Upload a signed SPA file",
+                "description": "Upload a signed SPA file.\n\nThis endpoint accepts a PDF file for a specific SPA record.\nIf the SPA is no longer \"Pending\", only users with \"CEO\" or \"System Maintenance\" roles\ncan overwrite it. Otherwise, a 409 (Conflict) error is returned.",
+                "operationId": "5435f6bbfa6eb88f9a74563f3a59ebd5",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the SPA to update",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "signed_spa"
+                                ],
+                                "properties": {
+                                    "signed_spa": {
+                                        "description": "The signed SPA file (PDF)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Signed SPA uploaded and record updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "spa": {
+                                            "description": "Updated SPA record",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                },
+                                                "booking_id": {
+                                                    "type": "integer",
+                                                    "example": 42
+                                                },
+                                                "file_path": {
+                                                    "type": "string",
+                                                    "example": "spa_forms/SPA_42_signed.pdf"
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "Signed"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "spa_url": {
+                                            "type": "string",
+                                            "format": "uri",
+                                            "example": "http://your-domain.test/storage/spa_forms/SPA_42_signed.pdf"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "SPA not found"
+                    },
+                    "409": {
+                        "description": "Conflict if the SPA is already uploaded and user isn't CEO/System Maintenance"
+                    },
+                    "422": {
+                        "description": "Validation error (e.g., file not a PDF)"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/spa/{id}/approve": {
+            "post": {
+                "tags": [
+                    "SPA"
+                ],
+                "summary": "Approve a signed SPA",
+                "description": "Approve a signed SPA.\n\nThis endpoint sets the SPA status to \"Approved\" if it is currently \"Signed\".\nIt also updates the associated booking's status to \"Sold\" (or another final status).",
+                "operationId": "295d80b86d4e5e816fd3f92e0fcff727",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the SPA to approve",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "SPA approved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "spa": {
+                                            "description": "Updated SPA record",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                },
+                                                "booking_id": {
+                                                    "type": "integer",
+                                                    "example": 42
+                                                },
+                                                "file_path": {
+                                                    "type": "string",
+                                                    "example": "spa_forms/SPA_42_signed.pdf"
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "Approved"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "spa_url": {
+                                            "description": "Path or URL to the approved SPA file",
+                                            "type": "string",
+                                            "example": "http://your-domain.test/storage/spa_forms/SPA_42_signed.pdf"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden (user lacks 'approve spa' permission)"
+                    },
+                    "404": {
+                        "description": "SPA not found"
+                    },
+                    "422": {
+                        "description": "Cannot approve unless the SPA is Signed or other validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/units": {
             "get": {
                 "tags": [
@@ -2823,6 +3113,10 @@
         {
             "name": "SalesOffer",
             "description": "SalesOffer"
+        },
+        {
+            "name": "SPA",
+            "description": "SPA"
         },
         {
             "name": "Unit",

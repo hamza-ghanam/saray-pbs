@@ -9,6 +9,7 @@ use App\Http\Controllers\PaymentPlanController;
 use App\Http\Controllers\SalesOfferController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\ReservationFormController;
+use App\Http\Controllers\SpaController;
 
 // User Management
 Route::get('/user', function (Request $request) {
@@ -68,4 +69,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/bookings/{id}/reservation-form', [ReservationFormController::class, 'generate']);
     Route::post('/reservation-forms/{id}/upload-signed', [ReservationFormController::class, 'uploadSigned']);
     Route::post('/reservation-forms/{id}/approve', [ReservationFormController::class, 'approve']);
+});
+
+// Sales and Purchase Agreement (SPAs)
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/bookings/{id}/spa', [SpaController::class, 'generate']);
+    Route::post('/spa/{id}/upload-signed', [SpaController::class, 'uploadSigned']);
+    Route::post('/spa/{id}/approve', [SpaController::class, 'approve']);
 });
