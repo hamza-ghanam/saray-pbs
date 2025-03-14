@@ -11,6 +11,7 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\ReservationFormController;
 use App\Http\Controllers\SpaController;
 use App\Http\Controllers\UnitHoldController;
+use App\Http\Controllers\OneTimeLinkController;
 
 // User Management
 Route::get('/user', function (Request $request) {
@@ -84,4 +85,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/units/{id}/hold', [UnitHoldController::class, 'hold']);
     Route::post('/units/{id}/hold/approve', [UnitHoldController::class, 'approveHold']);
     Route::post('/units/{id}/hold/reject', [UnitHoldController::class, 'rejectHold']);
+});
+
+// One-Time Links
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/otls/generate', [OneTimeLinkController::class, 'generateLink']);
+    Route::post('/otls/register', [OneTimeLinkController::class, 'registerUser']);
+    Route::post('/users/{id}/approve', [OneTimeLinkController::class, 'approve']);
 });

@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('token')->unique();
             $table->string('user_type')->comment('Broker, Contractor');
-            $table->timestamp('expired_at'); // OTL expires after a user uses it
+            $table->timestamp('expired_at')->nullable();; // OTL expires after a user uses it
             $table->timestamps();
             $table->softDeletes();
         });
