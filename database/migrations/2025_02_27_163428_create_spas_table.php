@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('booking_id')->constrained()->onDelete('cascade');
             $table->string('file_path');
-            $table->enum('status', ['Pending', 'Signed']);
+            $table->enum('status', ['Pending', 'Signed', 'Approved']);
             $table->timestamps();
             $table->softDeletes();
         });
