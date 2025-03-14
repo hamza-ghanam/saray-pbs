@@ -85,7 +85,7 @@ class ReservationFormController extends Controller
         $user = $request->user();
 
         // Check user permissions (Sales or Broker can generate a sales offer)
-        if (!$user->can('generate sales offer')) {
+        if (!$user->can('generate reservation form')) {
             abort(403, 'Unauthorized');
         }
 
@@ -227,11 +227,9 @@ class ReservationFormController extends Controller
         $user = $request->user();
         Log::info("User {$user->id} is uploading a signed RF for ReservationForm ID: {$id}");
 
-        /*
         if (!$user->can('upload signed reservation form')) {
             return response()->json(['error' => 'Forbidden'], 403);
         }
-        */
 
         // 2. Validate the uploaded file
         $validator = Validator::make($request->all(), [
