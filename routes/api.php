@@ -10,6 +10,7 @@ use App\Http\Controllers\SalesOfferController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\ReservationFormController;
 use App\Http\Controllers\SpaController;
+use App\Http\Controllers\UnitHoldController;
 
 // User Management
 Route::get('/user', function (Request $request) {
@@ -76,4 +77,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/bookings/{id}/spa', [SpaController::class, 'generate']);
     Route::post('/spa/{id}/upload-signed', [SpaController::class, 'uploadSigned']);
     Route::post('/spa/{id}/approve', [SpaController::class, 'approve']);
+});
+
+// Unit Hold
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/units/{id}/hold', [UnitHoldController::class, 'hold']);
+    Route::post('/units/{id}/hold/approve', [UnitHoldController::class, 'approveHold']);
+    Route::post('/units/{id}/hold/reject', [UnitHoldController::class, 'rejectHold']);
 });

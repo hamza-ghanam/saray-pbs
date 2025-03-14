@@ -217,6 +217,7 @@ class UnitController extends Controller
         // Auto-calculate total_area = suite_area + (balcony_area or 0)
         $data['total_area'] = $data['suite_area'] + ($data['balcony_area'] ?? 0);
         $data['status'] = 'Pending';
+        $data['status_changed_at'] = now();
 
         DB::beginTransaction();
 
@@ -495,6 +496,7 @@ class UnitController extends Controller
 
         try {
             $unit->status = 'Available';
+            $unit->status_changed_at = now();
             $unit->save();
 
             Approval::create([

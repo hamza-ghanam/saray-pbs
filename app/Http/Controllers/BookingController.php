@@ -417,6 +417,7 @@ class BookingController extends Controller
 
 
             $unit->status = 'Pre-Booked';
+            $unit->status_changed_at = now();
             $unit->save();
 
         } catch (\Exception $ex) {
@@ -942,6 +943,7 @@ class BookingController extends Controller
             $booking->save();
 
             $booking->unit->status = 'Booked';
+            $booking->unit->status_changed_at = now();
             $booking->unit->save();
 
             return response()->json([

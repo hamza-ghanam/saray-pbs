@@ -356,6 +356,7 @@ class SpaController extends Controller
 
             if ($spa->booking->unit) {
                 $spa->booking->unit->status = 'Sold';
+                $spa->booking->unit->status_changed_at = now();
                 $spa->booking->unit->save();
             }
         }
