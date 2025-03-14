@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Approval;
 use App\Models\Booking;
 use App\Models\ReservationForm;
 use Illuminate\Http\Request;
@@ -356,7 +357,16 @@ class ReservationFormController extends Controller
             $reservationForm->booking->save();
         }
 
-        // 6. Return the updated record
+        // 6. Make approval
+        Approval::create([
+            'ref_id'        => $reservationForm->id,
+            'ref_type'      => 'App\Models\ReservationForm',
+            'approved_by'   => $user->id,
+            'approval_type' => $user->getRoleNames()->first(),
+            'status'        => 'Approved',
+        ]);
+
+        // 7. Return the updated record
         return response()->json([
             'reservation_form' => $reservationForm,
             'rf_url' => $reservationForm->file_path,
