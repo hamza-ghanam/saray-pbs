@@ -13,14 +13,15 @@ use App\Http\Controllers\SpaController;
 use App\Http\Controllers\UnitHoldController;
 use App\Http\Controllers\OneTimeLinkController;
 use App\Http\Controllers\RolePermissionController;
+use App\Http\Controllers\UserManagementController;
 
 // User Management
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
+//Route::post('/register', [AuthController::class, 'register']);
+Route::post('/auth/login', [AuthController::class, 'login']);
 
 // Building Management
 Route::middleware('auth:sanctum')->group(function () {
@@ -102,4 +103,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/roles', [RolePermissionController::class, 'storeRole']);
     Route::put('/users/{user}/role', [RolePermissionController::class, 'changeUserRole']);
     Route::delete('/roles/{role}', [RolePermissionController::class, 'destroy']);
+});
+
+// User Management
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/users', [UserManagementController::class, 'listAllUsers']);
+    Route::get('/users/{id}', [UserManagementController::class, 'getUserDetails']);
+    Route::post('/users/register', [UserManagementController::class, 'registerUser']);
+    Route::put('/users/{id}', [UserManagementController::class, 'updateUser']);
+    Route::delete('/users/{id}', [UserManagementController::class, 'deleteUser']);
+    Route::post('/users/change-password', [UserManagementController::class, 'changePassword']);
+    Route::put('/users/{id}/activate', [UserManagementController::class, 'activate']);
+    Route::put('/users/{id}/deactivate', [UserManagementController::class, 'deactivate']);
 });

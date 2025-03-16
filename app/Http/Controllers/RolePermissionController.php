@@ -160,7 +160,7 @@ class RolePermissionController extends Controller
      * @OA\Put(
      *     path="/users/{user}/role",
      *     summary="Change a user's role",
-     *     tags={"Users"},
+     *     tags={"User Management"},
      *     security={{"sanctum":{}}},
      *     @OA\Parameter(
      *         name="user",
