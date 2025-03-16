@@ -1278,6 +1278,182 @@
                 ]
             }
         },
+        "/otls/generate": {
+            "post": {
+                "tags": [
+                    "OneTimeLink"
+                ],
+                "summary": "Generate a one-time link for Broker or Contractor",
+                "description": "Generate a one-time link for a Broker or Contractor.",
+                "operationId": "32b91526e211b2b1b44b33d0e81627df",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "user_type"
+                                ],
+                                "properties": {
+                                    "user_type": {
+                                        "description": "Either 'Broker' or 'Contractor'",
+                                        "type": "string",
+                                        "example": "Broker"
+                                    },
+                                    "expires_in_hours": {
+                                        "description": "Optional number of hours until link expires",
+                                        "type": "integer",
+                                        "example": 48
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "One-time link created"
+                    },
+                    "403": {
+                        "description": "Forbidden (user lacks permission)"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/otls/register": {
+            "post": {
+                "tags": [
+                    "OneTimeLink"
+                ],
+                "summary": "Register using a one-time link token",
+                "description": "Register a new Broker/Contractor using a one-time link token.\n\nThe user must provide matching password and password_confirmation fields.\nIf the token is already used or invalid, an error is returned.",
+                "operationId": "87156ef694714b46c41827882f5d20e1",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "token",
+                                    "name",
+                                    "email",
+                                    "docs",
+                                    "password",
+                                    "password_confirmation"
+                                ],
+                                "properties": {
+                                    "token": {
+                                        "description": "The OTL token from the link",
+                                        "type": "string",
+                                        "example": "ab12cd34ef56gh78ij90klmn1234op56"
+                                    },
+                                    "name": {
+                                        "description": "User's full name",
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "John Doe"
+                                    },
+                                    "email": {
+                                        "description": "User's email",
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "john.doe@example.com"
+                                    },
+                                    "docs": {
+                                        "description": "Uploaded docs (pdf, zip, jpg, jpeg, png)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "password": {
+                                        "description": "User's password (must be at least 6 chars)",
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "secret123"
+                                    },
+                                    "password_confirmation": {
+                                        "description": "Must match 'password' field",
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "secret123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "User registered successfully, status = Pending",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Broker registered successfully, awaiting approval"
+                                        },
+                                        "user": {
+                                            "description": "Newly created user record",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 15
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "John Doe"
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "format": "email",
+                                                    "example": "john.doe@example.com"
+                                                },
+                                                "docs": {
+                                                    "type": "string",
+                                                    "example": "docs/abc123.pdf"
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "Pending"
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-03-10T12:00:00Z"
+                                                },
+                                                "updated_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-03-10T12:00:00Z"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid or already used token"
+                    },
+                    "422": {
+                        "description": "Validation error (e.g., password mismatch, file not valid, etc.)"
+                    }
+                }
+            }
+        },
         "/payment-plans/{id}": {
             "get": {
                 "tags": [
@@ -1905,6 +2081,253 @@
                     },
                     "422": {
                         "description": "Cannot approve unless the form is Signed or other validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/roles": {
+            "get": {
+                "tags": [
+                    "Roles & Permissions"
+                ],
+                "summary": "List all roles and their permissions",
+                "description": "List all roles and their assigned permissions.",
+                "operationId": "7bd5e36c7ce525e40b6e2cd98e614034",
+                "responses": {
+                    "200": {
+                        "description": "Roles and their permissions",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "role": {
+                                                "type": "string",
+                                                "example": "Admin"
+                                            },
+                                            "permissions": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "string",
+                                                    "example": "create users"
+                                                }
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Roles & Permissions"
+                ],
+                "summary": "Create a new role and assign permissions",
+                "description": "Create a new role and assign permissions.",
+                "operationId": "a36c2c3363ba65329d30ebaca33ef1f6",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "permissions"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Supervisor"
+                                    },
+                                    "permissions": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "example": "view reports"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Role created successfully"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/roles/{role}": {
+            "put": {
+                "tags": [
+                    "Roles & Permissions"
+                ],
+                "summary": "Update a role's permissions",
+                "description": "Update permissions of a role.",
+                "operationId": "e7ab789cf95ec21db354e332147305e8",
+                "parameters": [
+                    {
+                        "name": "role",
+                        "in": "path",
+                        "description": "Role name",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "Manager"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "permissions": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "example": "edit posts"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Permissions updated successfully"
+                    },
+                    "404": {
+                        "description": "Role not found"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Roles & Permissions"
+                ],
+                "summary": "Delete a role",
+                "description": "Delete a role.",
+                "operationId": "b8b9b79b1242c94e493dee203655d330",
+                "parameters": [
+                    {
+                        "name": "role",
+                        "in": "path",
+                        "description": "Role name",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "Manager"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Role deleted successfully"
+                    },
+                    "404": {
+                        "description": "Role not found"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/users/{user}/role": {
+            "put": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Change a user's role",
+                "description": "Change the role of a user.",
+                "operationId": "889e3a04d534eb933ee7624d4bd46ef3",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "description": "User ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 3
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "role"
+                                ],
+                                "properties": {
+                                    "role": {
+                                        "type": "string",
+                                        "example": "Manager"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "User role updated successfully"
+                    },
+                    "404": {
+                        "description": "User or role not found"
+                    },
+                    "403": {
+                        "description": "Forbidden"
                     }
                 },
                 "security": [
@@ -2736,7 +3159,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Unit status changed to Hold, hold_created_at recorded",
+                        "description": "Unit status changed to Hold, status_changed_at recorded",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -2810,7 +3233,7 @@
                                             "type": "string",
                                             "example": "Hold"
                                         },
-                                        "hold_created_at": {
+                                        "status_changed_at": {
                                             "type": "string",
                                             "format": "date-time",
                                             "example": "2025-03-11T12:00:00Z"
@@ -2944,7 +3367,7 @@
                                             "type": "string",
                                             "example": "Available"
                                         },
-                                        "hold_created_at": {
+                                        "status_changed_at": {
                                             "type": "string",
                                             "format": "date-time",
                                             "example": null,
@@ -3501,12 +3924,24 @@
             "description": "Building"
         },
         {
+            "name": "OneTimeLink",
+            "description": "OneTimeLink"
+        },
+        {
             "name": "PaymentPlan",
             "description": "PaymentPlan"
         },
         {
             "name": "ReservationForm",
             "description": "ReservationForm"
+        },
+        {
+            "name": "Roles & Permissions",
+            "description": "Roles & Permissions"
+        },
+        {
+            "name": "Users",
+            "description": "Users"
         },
         {
             "name": "SalesOffer",

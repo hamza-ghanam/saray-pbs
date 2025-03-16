@@ -12,6 +12,7 @@ use App\Http\Controllers\ReservationFormController;
 use App\Http\Controllers\SpaController;
 use App\Http\Controllers\UnitHoldController;
 use App\Http\Controllers\OneTimeLinkController;
+use App\Http\Controllers\RolePermissionController;
 
 // User Management
 Route::get('/user', function (Request $request) {
@@ -92,4 +93,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/otls/generate', [OneTimeLinkController::class, 'generateLink']);
     Route::post('/otls/register', [OneTimeLinkController::class, 'registerUser']);
     Route::post('/users/{id}/approve', [OneTimeLinkController::class, 'approve']);
+});
+
+// Roles & Permissions
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/roles', [RolePermissionController::class, 'index']);
+    Route::put('/roles/{role}', [RolePermissionController::class, 'updateRolePermissions']);
+    Route::post('/roles', [RolePermissionController::class, 'storeRole']);
+    Route::put('/users/{user}/role', [RolePermissionController::class, 'changeUserRole']);
+    Route::delete('/roles/{role}', [RolePermissionController::class, 'destroy']);
 });
