@@ -896,6 +896,82 @@
                 ]
             }
         },
+        "/brokers/upload-signed-agreement": {
+            "post": {
+                "tags": [
+                    "Brokers"
+                ],
+                "summary": "Upload signed agreement for a pending Broker",
+                "description": "Upload a signed agreement for a pending Broker.\n\nThis endpoint allows a user with role=\"Broker\" and status=\"Pending\"\nto authenticate via email/password (minimal check) and upload their\nsigned agreement (doc_type=\"signed_agreement\").",
+                "operationId": "1e49b1d943c9c5996801dae8cbd779ba",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "password",
+                                    "signed_agreement"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "broker@example.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "strongpassword123"
+                                    },
+                                    "signed_agreement": {
+                                        "description": "The signed agreement file (pdf, jpg, jpeg, png, zip)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Signed agreement uploaded successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Signed agreement uploaded successfully"
+                                        },
+                                        "doc_path": {
+                                            "type": "string",
+                                            "example": "agreements/signed/agreement_15.pdf"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid credentials"
+                    },
+                    "403": {
+                        "description": "User is not a pending Broker or account is inactive"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "500": {
+                        "description": "Server error"
+                    }
+                }
+            }
+        },
         "/buildings": {
             "get": {
                 "tags": [
@@ -1199,8 +1275,8 @@
                 "tags": [
                     "OneTimeLink"
                 ],
-                "summary": "Register using a one-time link token",
-                "description": "Register a new Broker/Contractor using a one-time link token.\n\nThe user must provide matching password and password_confirmation fields.\nIf the token is already used or invalid, an error is returned.",
+                "summary": "Register a Broker or Contractor via one-time link token",
+                "description": "Register a new Broker or Contractor using a one-time link token.\n\nThis endpoint requires different documents based on the user_type\nstored in the OneTimeLink (Broker or Contractor).\nFor Broker:\n- rera_cert, trade_license, bank_account, tax_registration (all required).\nFor Contractor:\n- contract, trade_license, scope_of_work (all required).\n\nAn agreement PDF will be generated and returned in the response.",
                 "operationId": "87156ef694714b46c41827882f5d20e1",
                 "requestBody": {
                     "required": true,
@@ -1211,13 +1287,12 @@
                                     "token",
                                     "name",
                                     "email",
-                                    "docs",
                                     "password",
                                     "password_confirmation"
                                 ],
                                 "properties": {
                                     "token": {
-                                        "description": "The OTL token from the link",
+                                        "description": "The OTL token from the link (determines user_type: Broker/Contractor)",
                                         "type": "string",
                                         "example": "ab12cd34ef56gh78ij90klmn1234op56"
                                     },
@@ -1233,22 +1308,47 @@
                                         "format": "email",
                                         "example": "john.doe@example.com"
                                     },
-                                    "docs": {
-                                        "description": "Uploaded docs (pdf, zip, jpg, jpeg, png)",
-                                        "type": "string",
-                                        "format": "binary"
-                                    },
                                     "password": {
-                                        "description": "User's password (must be at least 6 chars)",
+                                        "description": "User's password (min 6 chars), must match password_confirmation",
                                         "type": "string",
                                         "format": "password",
-                                        "example": "secret123"
+                                        "example": "strongpassword123"
                                     },
                                     "password_confirmation": {
                                         "description": "Must match 'password' field",
                                         "type": "string",
                                         "format": "password",
-                                        "example": "secret123"
+                                        "example": "strongpassword123"
+                                    },
+                                    "rera_cert": {
+                                        "description": "Required if user_type is Broker (pdf, zip, jpg, jpeg, png)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "trade_license": {
+                                        "description": "Required if user_type is Broker or Contractor (pdf, zip, jpg, jpeg, png)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "bank_account": {
+                                        "description": "Required if user_type is Broker (pdf, zip, jpg, jpeg, png)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "tax_registration": {
+                                        "description": "Required if user_type is Broker (pdf, zip, jpg, jpeg, png)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "contract": {
+                                        "description": "Required if user_type is Contractor (pdf, zip, jpg, jpeg, png)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "scope_of_work": {
+                                        "description": "Required if user_type is Contractor (pdf, zip, jpg, jpeg, png)",
+                                        "type": "string",
+                                        "format": "binary"
                                     }
                                 },
                                 "type": "object"
@@ -1258,7 +1358,7 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "User registered successfully, status = Pending",
+                        "description": "User registered successfully, awaiting approval, agreement generated",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1283,10 +1383,6 @@
                                                     "format": "email",
                                                     "example": "john.doe@example.com"
                                                 },
-                                                "docs": {
-                                                    "type": "string",
-                                                    "example": "docs/abc123.pdf"
-                                                },
                                                 "status": {
                                                     "type": "string",
                                                     "example": "Pending"
@@ -1303,6 +1399,12 @@
                                                 }
                                             },
                                             "type": "object"
+                                        },
+                                        "agreement_url": {
+                                            "description": "URL to the generated agreement PDF",
+                                            "type": "string",
+                                            "format": "uri",
+                                            "example": "http://your-domain.test/storage/agreements/agreement_15.pdf"
                                         }
                                     },
                                     "type": "object"
@@ -1311,12 +1413,92 @@
                         }
                     },
                     "400": {
-                        "description": "Invalid or already used token"
+                        "description": "Invalid or already used token / Invalid user_type"
                     },
                     "422": {
-                        "description": "Validation error (e.g., password mismatch, file not valid, etc.)"
+                        "description": "Validation error (e.g., missing docs, password mismatch)"
+                    },
+                    "500": {
+                        "description": "Server error while creating user or generating PDF"
                     }
                 }
+            }
+        },
+        "/users/{id}/approve": {
+            "post": {
+                "tags": [
+                    "User Management"
+                ],
+                "summary": "Approve user registration",
+                "description": "Approve a user's registration (from Pending to Active).",
+                "operationId": "d50e77ecba7a153c3bae3b135f3870b6",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the user to approve",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 42
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User approved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "User approved successfully"
+                                        },
+                                        "user": {
+                                            "description": "Approved user record",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 42
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "John Doe"
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "format": "email",
+                                                    "example": "john.doe@example.com"
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "Active"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden (no permission to approve registration)"
+                    },
+                    "404": {
+                        "description": "User not found"
+                    },
+                    "422": {
+                        "description": "User is not in pending status"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
             }
         },
         "/payment-plans/{id}": {
@@ -3276,12 +3458,34 @@
                 "tags": [
                     "User Management"
                 ],
-                "summary": "List all users except those with System Maintenance role",
-                "description": "List all users (except System Maintenance), with each user’s role.",
+                "summary": "List all users, with optional role/status filters",
+                "description": "List all users, with optional filters.\n\nYou can optionally pass `role` and/or `status` as query parameters to filter the results.\nExamples:\n- GET /users?role=Broker\n- GET /users?status=Active\n- GET /users?role=Broker&status=Pending",
                 "operationId": "ac74cfeecb9862313375eee73160ab68",
+                "parameters": [
+                    {
+                        "name": "role",
+                        "in": "query",
+                        "description": "Filter by user role (e.g. 'Broker', 'CFO', 'CEO', etc.)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "Broker"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filter by user status (e.g. 'Active', 'Pending', 'Inactive')",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "Pending"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "List of users",
+                        "description": "List of filtered users",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -3306,7 +3510,7 @@
                                             },
                                             "role": {
                                                 "type": "string",
-                                                "example": "Sales"
+                                                "example": "Broker"
                                             }
                                         },
                                         "type": "object"
@@ -3316,7 +3520,10 @@
                         }
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden (no permission to view users)"
+                    },
+                    "422": {
+                        "description": "Validation error"
                     }
                 },
                 "security": [
@@ -3331,14 +3538,14 @@
                 "tags": [
                     "User Management"
                 ],
-                "summary": "Get user details (excluding System Maintenance) and role permissions",
-                "description": "Get user details (excluding if the user has System Maintenance role),\nplus the role’s permissions.",
+                "summary": "Get user details, with docs download URLs",
+                "description": "Get user details, including role, permissions, and doc download links.",
                 "operationId": "5f84a2bb6f570414aef011f7e9783c3b",
                 "parameters": [
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "User ID",
+                        "description": "ID of the user to retrieve",
                         "required": true,
                         "schema": {
                             "type": "integer",
@@ -3371,13 +3578,31 @@
                                         },
                                         "role": {
                                             "type": "string",
-                                            "example": "Sales"
+                                            "example": "Broker"
                                         },
                                         "permissions": {
                                             "type": "array",
                                             "items": {
                                                 "type": "string",
-                                                "example": "add sales"
+                                                "example": "add broker"
+                                            }
+                                        },
+                                        "docs": {
+                                            "description": "User documents, each with doc_type and download_url",
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "doc_type": {
+                                                        "type": "string",
+                                                        "example": "rera_cert"
+                                                    },
+                                                    "download_url": {
+                                                        "type": "string",
+                                                        "format": "uri",
+                                                        "example": "http://your-domain.test/storage/docs/rera_cert_42.pdf"
+                                                    }
+                                                },
+                                                "type": "object"
                                             }
                                         }
                                     },
@@ -3387,7 +3612,7 @@
                         }
                     },
                     "403": {
-                        "description": "Forbidden or user has System Maintenance role"
+                        "description": "Forbidden"
                     },
                     "404": {
                         "description": "User not found"
@@ -3399,13 +3624,13 @@
                     }
                 ]
             },
-            "put": {
+            "post": {
                 "tags": [
                     "User Management"
                 ],
-                "summary": "Update a user's info (excluding System Maintenance)",
-                "description": "Update a user’s data (excluding System Maintenance).",
-                "operationId": "d37dd0a571d3caa7c9cc1e5881a4b3e3",
+                "summary": "Update a user via method override (PUT) in multipart/form-data",
+                "description": "Update a user (using method override for PUT in multipart/form-data).\n\nThis endpoint is defined as a POST, but you must include `_method=PUT` in the form data,\nso Laravel treats it as a PUT request and parses files correctly.",
+                "operationId": "13679c6f5827cbb1692d9c325d11f235",
                 "parameters": [
                     {
                         "name": "id",
@@ -3421,22 +3646,52 @@
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "application/json": {
+                        "multipart/form-data": {
                             "schema": {
+                                "required": [
+                                    "_method"
+                                ],
                                 "properties": {
-                                    "name": {
+                                    "_method": {
+                                        "description": "Must be 'PUT' so Laravel interprets this as a PUT request",
                                         "type": "string",
-                                        "example": "John Doe Updated"
+                                        "example": "PUT"
+                                    },
+                                    "name": {
+                                        "description": "User's name",
+                                        "type": "string",
+                                        "example": "Hanna Hathway"
                                     },
                                     "email": {
+                                        "description": "User's email address",
                                         "type": "string",
                                         "format": "email",
-                                        "example": "john.doe.updated@example.com"
+                                        "example": "hanna@example.com"
                                     },
-                                    "status": {
-                                        "description": "e.g., 'Active' or 'Inactive'",
+                                    "bank_account": {
+                                        "description": "Optional file upload if needed (Broker) (pdf, jpg, jpeg, png)",
                                         "type": "string",
-                                        "example": "Active"
+                                        "format": "binary"
+                                    },
+                                    "tax_registration": {
+                                        "description": "Optional file upload if needed (Broker) (pdf, jpg, jpeg, png)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "contract": {
+                                        "description": "Optional file upload if needed (Contractor) (pdf, jpg, jpeg, png)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "scope_of_work": {
+                                        "description": "Optional file upload if needed (Contractor) (pdf, jpg, jpeg, png)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "trade_license": {
+                                        "description": "Optional file upload if needed (Broker or Contractor) (pdf, jpg, jpeg, png)",
+                                        "type": "string",
+                                        "format": "binary"
                                     }
                                 },
                                 "type": "object"
@@ -3463,11 +3718,11 @@
                                                 },
                                                 "name": {
                                                     "type": "string",
-                                                    "example": "John Doe Updated"
+                                                    "example": "Hanna Hathway"
                                                 },
                                                 "email": {
                                                     "type": "string",
-                                                    "example": "john.doe.updated@example.com"
+                                                    "example": "hanna@example.com"
                                                 },
                                                 "status": {
                                                     "type": "string",
@@ -3483,13 +3738,16 @@
                         }
                     },
                     "403": {
-                        "description": "Forbidden (user lacks permission or user has System Maintenance role)"
+                        "description": "Forbidden"
                     },
                     "404": {
                         "description": "User not found"
                     },
                     "422": {
                         "description": "Validation error"
+                    },
+                    "500": {
+                        "description": "Server error"
                     }
                 },
                 "security": [
@@ -3502,8 +3760,8 @@
                 "tags": [
                     "User Management"
                 ],
-                "summary": "Delete a user (excluding System Maintenance)",
-                "description": "Delete a user (excluding System Maintenance).",
+                "summary": "Delete a user and their associated docs",
+                "description": "Delete a user and their user_docs.",
                 "operationId": "a5e02a9c7b0f493a68d12eaf67e16985",
                 "parameters": [
                     {
@@ -3535,10 +3793,13 @@
                         }
                     },
                     "403": {
-                        "description": "Forbidden (user lacks permission or user has System Maintenance role)"
+                        "description": "Forbidden"
                     },
                     "404": {
                         "description": "User not found"
+                    },
+                    "500": {
+                        "description": "Server error"
                     }
                 },
                 "security": [
@@ -3553,13 +3814,13 @@
                 "tags": [
                     "User Management"
                 ],
-                "summary": "Register a new user",
-                "description": "Register a new user.\n\nThis endpoint allows an authenticated user to register a new user with a specific role.\nThe authenticated user must have the required permission to assign the selected role.",
+                "summary": "Register a new user with optional docs for Broker/Contractor",
+                "description": "Register a new user with a specific role, optionally uploading docs if Broker/Contractor.",
                 "operationId": "115839ce5e742a6b75b656617d9ad0a3",
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "application/json": {
+                        "multipart/form-data": {
                             "schema": {
                                 "required": [
                                     "name",
@@ -3570,25 +3831,27 @@
                                 ],
                                 "properties": {
                                     "name": {
+                                        "description": "User's full name",
                                         "type": "string",
                                         "example": "John Doe"
                                     },
                                     "email": {
                                         "type": "string",
                                         "format": "email",
-                                        "example": "john.doe@example.com"
+                                        "example": "john@example.com"
                                     },
                                     "password": {
                                         "type": "string",
                                         "format": "password",
-                                        "example": "strongpassword123"
+                                        "example": "secret123"
                                     },
                                     "password_confirmation": {
                                         "type": "string",
                                         "format": "password",
-                                        "example": "strongpassword123"
+                                        "example": "secret123"
                                     },
                                     "role": {
+                                        "description": "Role to assign (e.g., 'Broker', 'Contractor', 'Sales', etc.)",
                                         "type": "string",
                                         "enum": [
                                             "CRM Officer",
@@ -3599,9 +3862,40 @@
                                             "CEO",
                                             "HR Admin",
                                             "Broker",
-                                            "Contractor"
+                                            "Contractor",
+                                            "System Maintenance"
                                         ],
-                                        "example": "Sales"
+                                        "example": "Broker"
+                                    },
+                                    "rera_cert": {
+                                        "description": "Optional doc if role=Broker (pdf, jpg, jpeg, png)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "trade_license": {
+                                        "description": "Optional doc if role=Broker or Contractor (pdf, jpg, jpeg, png)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "bank_account": {
+                                        "description": "Optional doc if role=Broker",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "tax_registration": {
+                                        "description": "Optional doc if role=Broker",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "contract": {
+                                        "description": "Optional doc if role=Contractor",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "scope_of_work": {
+                                        "description": "Optional doc if role=Contractor",
+                                        "type": "string",
+                                        "format": "binary"
                                     }
                                 },
                                 "type": "object"
@@ -3632,18 +3926,35 @@
                                                 },
                                                 "email": {
                                                     "type": "string",
-                                                    "example": "john.doe@example.com"
+                                                    "example": "john@example.com"
                                                 },
                                                 "status": {
                                                     "type": "string",
-                                                    "example": "Active"
+                                                    "example": "Pending"
                                                 },
                                                 "role": {
                                                     "type": "string",
-                                                    "example": "Sales"
+                                                    "example": "Broker"
                                                 }
                                             },
                                             "type": "object"
+                                        },
+                                        "docs": {
+                                            "description": "List of uploaded docs if any",
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "doc_type": {
+                                                        "type": "string",
+                                                        "example": "rera_cert"
+                                                    },
+                                                    "doc_id": {
+                                                        "type": "integer",
+                                                        "example": "53"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
                                         }
                                     },
                                     "type": "object"
@@ -3652,10 +3963,13 @@
                         }
                     },
                     "403": {
-                        "description": "Forbidden - User does not have permission to assign this role"
+                        "description": "Forbidden (no permission to assign this role)"
                     },
                     "422": {
-                        "description": "Validation error (e.g., missing required fields, email already exists, role does not exist)"
+                        "description": "Validation error (e.g., email taken, password mismatch)"
+                    },
+                    "500": {
+                        "description": "Server error"
                     }
                 },
                 "security": [
@@ -4007,6 +4321,53 @@
                     },
                     "422": {
                         "description": "User is already inactive or other validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/docs/{docId}/download": {
+            "get": {
+                "tags": [
+                    "Documents"
+                ],
+                "summary": "Download a user document by docId",
+                "description": "Download a user document from a private disk.\n\nChecks if the current user is authorized via canDownload($doc).",
+                "operationId": "ff0b35f2f8c6c85c89cbb2d749369e40",
+                "parameters": [
+                    {
+                        "name": "docId",
+                        "in": "path",
+                        "description": "ID of the UserDoc to download",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 42
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "File downloaded successfully (binary data)",
+                        "content": {
+                            "application/octet-stream": {
+                                "schema": {
+                                    "description": "The file content is returned as a stream",
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden if the user lacks permission or doc belongs to another user"
+                    },
+                    "404": {
+                        "description": "Document not found"
                     }
                 },
                 "security": [
@@ -4495,12 +4856,20 @@
             "description": "Booking"
         },
         {
+            "name": "Brokers",
+            "description": "Brokers"
+        },
+        {
             "name": "Building",
             "description": "Building"
         },
         {
             "name": "OneTimeLink",
             "description": "OneTimeLink"
+        },
+        {
+            "name": "User Management",
+            "description": "User Management"
         },
         {
             "name": "PaymentPlan",
@@ -4513,10 +4882,6 @@
         {
             "name": "Roles & Permissions",
             "description": "Roles & Permissions"
-        },
-        {
-            "name": "User Management",
-            "description": "User Management"
         },
         {
             "name": "SalesOffer",
@@ -4533,6 +4898,10 @@
         {
             "name": "Authentication",
             "description": "Authentication"
+        },
+        {
+            "name": "Documents",
+            "description": "Documents"
         }
     ]
 }

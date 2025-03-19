@@ -3,9 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\UserDoc;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Spatie\Permission\Models\Role;
 use Symfony\Component\HttpFoundation\Response;
@@ -13,16 +16,36 @@ use Symfony\Component\HttpFoundation\Response;
 class UserManagementController extends Controller
 {
     /**
-     * List all users (except System Maintenance), with each user’s role.
+     * List all users, with optional filters.
+     *
+     * You can optionally pass `role` and/or `status` as query parameters to filter the results.
+     * Examples:
+     *  - GET /users?role=Broker
+     *  - GET /users?status=Active
+     *  - GET /users?role=Broker&status=Pending
      *
      * @OA\Get(
      *     path="/users",
-     *     summary="List all users except those with System Maintenance role",
+     *     summary="List all users, with optional role/status filters",
      *     tags={"User Management"},
      *     security={{"sanctum":{}}},
+     *     @OA\Parameter(
+     *         name="role",
+     *         in="query",
+     *         description="Filter by user role (e.g. 'Broker', 'CFO', 'CEO', etc.)",
+     *         required=false,
+     *         @OA\Schema(type="string", example="Broker")
+     *     ),
+     *     @OA\Parameter(
+     *         name="status",
+     *         in="query",
+     *         description="Filter by user status (e.g. 'Active', 'Pending', 'Inactive')",
+     *         required=false,
+     *         @OA\Schema(type="string", example="Pending")
+     *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="List of users",
+     *         description="List of filtered users",
      *         @OA\JsonContent(
      *             type="array",
      *             @OA\Items(
@@ -30,26 +53,46 @@ class UserManagementController extends Controller
      *                 @OA\Property(property="name", type="string", example="John Doe"),
      *                 @OA\Property(property="email", type="string", example="john@example.com"),
      *                 @OA\Property(property="status", type="string", example="Active"),
-     *                 @OA\Property(property="role", type="string", example="Sales")
+     *                 @OA\Property(property="role", type="string", example="Broker")
      *             )
      *         )
      *     ),
-     *     @OA\Response(response=403, description="Forbidden"),
+     *     @OA\Response(response=403, description="Forbidden (no permission to view users)"),
+     *     @OA\Response(response=422, description="Validation error"),
      * )
      */
     public function listAllUsers(Request $request)
     {
         $authUser = $request->user();
-        Log::info("User {$authUser->id} requested a list of all users (excluding System Maintenance).");
+        Log::info("User {$authUser->id} requested a list of all users.");
 
         if (!$authUser->can('view users')) {
             return response()->json(['error' => 'Forbidden'], Response::HTTP_FORBIDDEN);
         }
 
-        // Retrieve all users who do NOT have the "System Maintenance" role
-        $users = User::whereDoesntHave('roles', function ($query) {
-            $query->where('name', 'System Maintenance');
-        })->get();
+        $query = User::whereDoesntHave('roles', function ($q) {
+            $q->where('name', 'System Maintenance');
+        });
+
+        // Optional role filter
+        // e.g. /users?role=Broker
+        if ($request->filled('role')) {
+            $role = $request->input('role');
+            // We can use Spatie's scope to filter users who have that role
+            $query->whereHas('roles', function ($q) use ($role) {
+                $q->where('name', $role);
+            });
+        }
+
+        // Optional status filter
+        // e.g. /users?status=Active
+        if ($request->filled('status')) {
+            $status = $request->input('status');
+            $query->where('status', $status);
+        }
+
+        // Execute the query
+        $users = $query->get();
 
         // Map each user to a simple array: [id, name, email, status, role]
         $result = $users->map(function ($user) {
@@ -66,18 +109,17 @@ class UserManagementController extends Controller
     }
 
     /**
-     * Get user details (excluding if the user has System Maintenance role),
-     * plus the role’s permissions.
+     * Get user details, including role, permissions, and doc download links.
      *
      * @OA\Get(
      *     path="/users/{id}",
-     *     summary="Get user details (excluding System Maintenance) and role permissions",
+     *     summary="Get user details, with docs download URLs",
      *     tags={"User Management"},
      *     security={{"sanctum":{}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
-     *         description="User ID",
+     *         description="ID of the user to retrieve",
      *         required=true,
      *         @OA\Schema(type="integer", example=42)
      *     ),
@@ -85,20 +127,30 @@ class UserManagementController extends Controller
      *         response=200,
      *         description="User details retrieved successfully",
      *         @OA\JsonContent(
+     *             type="object",
      *             @OA\Property(property="id", type="integer", example=42),
      *             @OA\Property(property="name", type="string", example="John Doe"),
      *             @OA\Property(property="email", type="string", example="john@example.com"),
      *             @OA\Property(property="status", type="string", example="Active"),
-     *             @OA\Property(property="role", type="string", example="Sales"),
+     *             @OA\Property(property="role", type="string", example="Broker"),
      *             @OA\Property(
      *                 property="permissions",
      *                 type="array",
-     *                 @OA\Items(type="string", example="add sales")
+     *                 @OA\Items(type="string", example="add broker")
+     *             ),
+     *             @OA\Property(
+     *                 property="docs",
+     *                 type="array",
+     *                 description="User documents, each with doc_type and download_url",
+     *                 @OA\Items(
+     *                     @OA\Property(property="doc_type", type="string", example="rera_cert"),
+     *                     @OA\Property(property="download_url", type="string", format="uri", example="http://your-domain.test/storage/docs/rera_cert_42.pdf")
+     *                 )
      *             )
      *         )
      *     ),
-     *     @OA\Response(response=403, description="Forbidden or user has System Maintenance role"),
-     *     @OA\Response(response=404, description="User not found"),
+     *     @OA\Response(response=403, description="Forbidden"),
+     *     @OA\Response(response=404, description="User not found")
      * )
      */
     public function getUserDetails(Request $request, $id)
@@ -116,13 +168,14 @@ class UserManagementController extends Controller
             return response()->json(['error' => 'User not found'], Response::HTTP_NOT_FOUND);
         }
 
-        // Check if user has System Maintenance role
         if ($user->roles->pluck('name')->contains('System Maintenance')) {
             return response()->json(['error' => 'Forbidden'], Response::HTTP_FORBIDDEN);
         }
 
         // For one-role-per-user, we can get the single role
-        $roleName = $user->roles->pluck('name')->first(); // e.g. "Sales"
+        $roleName = $user->roles->pluck('name')->first();
+
+        // Retrieve the permissions for that role
         $permissions = [];
         if ($roleName) {
             $role = Role::where('name', $roleName)->with('permissions')->first();
@@ -131,6 +184,17 @@ class UserManagementController extends Controller
             }
         }
 
+        // Map each doc to { doc_type, download_url }
+        $docs = $user->docs->map(function ($doc) {
+            return [
+                'doc_id' => $doc->id,
+                'doc_type' => $doc->doc_type,
+                'created_at' => $doc->created_at,
+                'updated_at' => $doc->updated_at,
+
+            ];
+        });
+
         $result = [
             'id' => $user->id,
             'name' => $user->name,
@@ -138,34 +202,77 @@ class UserManagementController extends Controller
             'status' => $user->status,
             'role' => $roleName,
             'permissions' => $permissions,
+            'docs' => $docs,
         ];
 
         return response()->json($result, Response::HTTP_OK);
     }
 
     /**
-     * Register a new user.
-     *
-     * This endpoint allows an authenticated user to register a new user with a specific role.
-     * The authenticated user must have the required permission to assign the selected role.
+     * Register a new user with a specific role, optionally uploading docs if Broker/Contractor.
      *
      * @OA\Post(
      *     path="/users/register",
-     *     summary="Register a new user",
+     *     summary="Register a new user with optional docs for Broker/Contractor",
      *     tags={"User Management"},
      *     security={{"sanctum":{}}},
      *     @OA\RequestBody(
      *         required=true,
-     *         @OA\JsonContent(
-     *             required={"name", "email", "password", "password_confirmation", "role"},
-     *             @OA\Property(property="name", type="string", example="John Doe"),
-     *             @OA\Property(property="email", type="string", format="email", example="john.doe@example.com"),
-     *             @OA\Property(property="password", type="string", format="password", example="strongpassword123"),
-     *             @OA\Property(property="password_confirmation", type="string", format="password", example="strongpassword123"),
-     *             @OA\Property(property="role", type="string", enum={
-     *                 "CRM Officer", "Sales", "CSO", "Accountant",
-     *                 "CFO", "CEO", "HR Admin", "Broker", "Contractor"
-     *             }, example="Sales")
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 required={"name", "email", "password", "password_confirmation", "role"},
+     *                 @OA\Property(property="name", type="string", example="John Doe", description="User's full name"),
+     *                 @OA\Property(property="email", type="string", format="email", example="john@example.com"),
+     *                 @OA\Property(property="password", type="string", format="password", example="secret123"),
+     *                 @OA\Property(property="password_confirmation", type="string", format="password", example="secret123"),
+     *                 @OA\Property(
+     *                     property="role",
+     *                     type="string",
+     *                     description="Role to assign (e.g., 'Broker', 'Contractor', 'Sales', etc.)",
+     *                     example="Broker",
+     *                     enum={
+     *                         "CRM Officer","Sales","CSO","Accountant","CFO","CEO","HR Admin",
+     *                         "Broker","Contractor","System Maintenance"
+     *                     }
+     *                 ),
+     *                 @OA\Property(
+     *                     property="rera_cert",
+     *                     type="string",
+     *                     format="binary",
+     *                     description="Optional doc if role=Broker (pdf, jpg, jpeg, png)"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="trade_license",
+     *                     type="string",
+     *                     format="binary",
+     *                     description="Optional doc if role=Broker or Contractor (pdf, jpg, jpeg, png)"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="bank_account",
+     *                     type="string",
+     *                     format="binary",
+     *                     description="Optional doc if role=Broker"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="tax_registration",
+     *                     type="string",
+     *                     format="binary",
+     *                     description="Optional doc if role=Broker"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="contract",
+     *                     type="string",
+     *                     format="binary",
+     *                     description="Optional doc if role=Contractor"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="scope_of_work",
+     *                     type="string",
+     *                     format="binary",
+     *                     description="Optional doc if role=Contractor"
+     *                 )
+     *             )
      *         )
      *     ),
      *     @OA\Response(
@@ -179,20 +286,30 @@ class UserManagementController extends Controller
      *                 type="object",
      *                 @OA\Property(property="id", type="integer", example=1),
      *                 @OA\Property(property="name", type="string", example="John Doe"),
-     *                 @OA\Property(property="email", type="string", example="john.doe@example.com"),
-     *                 @OA\Property(property="status", type="string", example="Active"),
-     *                 @OA\Property(property="role", type="string", example="Sales")
+     *                 @OA\Property(property="email", type="string", example="john@example.com"),
+     *                 @OA\Property(property="status", type="string", example="Pending"),
+     *                 @OA\Property(property="role", type="string", example="Broker")
+     *             ),
+     *             @OA\Property(
+     *                 property="docs",
+     *                 type="array",
+     *                 description="List of uploaded docs if any",
+     *                 @OA\Items(
+     *                     @OA\Property(property="doc_type", type="string", example="rera_cert"),
+     *                     @OA\Property(property="doc_id", type="integer", example="53")
+     *                 )
      *             )
      *         )
      *     ),
-     *     @OA\Response(response=403, description="Forbidden - User does not have permission to assign this role"),
-     *     @OA\Response(response=422, description="Validation error (e.g., missing required fields, email already exists, role does not exist)")
+     *     @OA\Response(response=403, description="Forbidden (no permission to assign this role)"),
+     *     @OA\Response(response=422, description="Validation error (e.g., email taken, password mismatch)"),
+     *     @OA\Response(response=500, description="Server error")
      * )
      */
     public function registerUser(Request $request)
     {
-        $user = $request->user();
-        Log::info("User {$user->id} is attempting to register a new user.");
+        $authUser = $request->user();
+        Log::info("User {$authUser->id} is attempting to register a new user.");
 
         // Define role-permission mappings
         $rolePermissions = [
@@ -203,28 +320,37 @@ class UserManagementController extends Controller
             'CFO' => 'add cfo',
             'CEO' => 'add ceo',
             'HR Admin' => 'add hr admin',
-            'Broker' => 'add broker',
-            'Contractor' => 'add contractor',
+            'Broker' => 'manage broker',
+            'Contractor' => 'manage contractor',
             'System Maintenance' => 'add system maintenance',
         ];
 
-        // Validation rules
+        // Basic validation rules
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:6|confirmed',
             'role' => 'required|string|in:' . implode(',', array_keys($rolePermissions)),
+
+            // Optional doc fields (just define them as sometimes|file)
+            'rera_cert' => 'sometimes|file|mimes:pdf,jpg,jpeg,png',
+            'trade_license' => 'sometimes|file|mimes:pdf,jpg,jpeg,png',
+            'bank_account' => 'sometimes|file|mimes:pdf,jpg,jpeg,png',
+            'tax_registration' => 'sometimes|file|mimes:pdf,jpg,jpeg,png',
+            'contract' => 'sometimes|file|mimes:pdf,jpg,jpeg,png',
+            'scope_of_work' => 'sometimes|file|mimes:pdf,jpg,jpeg,png',
         ]);
 
         if ($validator->fails()) {
             return response()->json($validator->errors(), Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        $selectedRole = $request->role;
+        $data = $validator->validated();
+        $selectedRole = $data['role'];
 
-        // **Check if the user has the required permission to assign the selected role**
-        if (!$user->can($rolePermissions[$selectedRole])) {
-            return response()->json(['error' => "Forbidden"], Response::HTTP_FORBIDDEN);
+        // Check if the authenticated user has permission to assign this role
+        if (!$authUser->can($rolePermissions[$selectedRole])) {
+            return response()->json(['error' => $rolePermissions[$selectedRole]], Response::HTTP_FORBIDDEN);
         }
 
         // Ensure the role exists in the database
@@ -233,70 +359,174 @@ class UserManagementController extends Controller
             return response()->json(['error' => 'Role does not exist'], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        // Create the user
-        $newUser = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'status' => !in_array($selectedRole, ['Broker', 'Contractor']) ? 'Active' : 'Pending',
-        ]);
+        DB::beginTransaction();
+        try {
+            // Create the user
+            $newUser = User::create([
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'password' => Hash::make($data['password']),
+                'status' => !in_array($selectedRole, ['Broker', 'Contractor']) ? 'Active' : 'Pending',
+            ]);
 
-        // Assign role (only one role per user)
-        $newUser->syncRoles([$role->name]);
+            // Assign role
+            $newUser->syncRoles([$role->name]);
 
-        return response()->json([
-            'message' => 'User registered successfully',
-            'user' => [
-                'id' => $newUser->id,
-                'name' => $newUser->name,
-                'email' => $newUser->email,
-                'status' => $newUser->status,
-                'role' => $role->name,
-            ],
-        ], Response::HTTP_CREATED);
+            // If role is Broker, we can handle doc fields for rera_cert, etc.
+            // If role is Contractor, handle doc fields for contract, etc.
+            // We'll do it in one pass, but only store if file is present.
+            if ($selectedRole === 'Broker') {
+                $docFields = ['rera_cert', 'trade_license', 'bank_account', 'tax_registration'];
+            } elseif ($selectedRole === 'Contractor') {
+                $docFields = ['contract', 'scope_of_work', 'trade_license'];
+            } else {
+                $docFields = [];
+            }
+
+            $docsCreated = [];
+            foreach ($docFields as $docType) {
+                if ($request->hasFile($docType)) {
+                    $file = $request->file($docType);
+                    $fileName = "{$docType}_{$newUser->id}." . $file->getClientOriginalExtension();
+
+                    // Store in a private disk ("local" or "private" depending on your config)
+                    // e.g. 'private' => ['driver' => 'local', 'root' => storage_path('app/private'), ...]
+                    $filePath = $file->storeAs('docs', $fileName, 'local');
+                    // physically: storage/app/private/docs/<docType>_<userId>.<ext>
+
+                    // Create the doc record in user_docs
+                    $doc = $newUser->docs()->create([
+                        'doc_type' => $docType,
+                        'file_path' => $filePath, // e.g. "docs/rera_cert_15.pdf"
+                    ]);
+
+                    // Return only doc_id and doc_type (no public download link)
+                    $docsCreated[] = [
+                        'doc_type' => $docType,
+                        'doc_id' => $doc->id
+                    ];
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'User registered successfully',
+                'user' => [
+                    'id' => $newUser->id,
+                    'name' => $newUser->name,
+                    'email' => $newUser->email,
+                    'status' => $newUser->status,
+                    'role' => $role->name,
+                ],
+                'docs' => $docsCreated,
+            ], Response::HTTP_CREATED);
+
+        } catch (\Exception $ex) {
+            DB::rollBack();
+            return response()->json([
+                'error' => 'Server error',
+                'message' => $ex->getMessage()
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     /**
-     * Update a user’s data (excluding System Maintenance).
+     * Update a user (using method override for PUT in multipart/form-data).
      *
-     * @OA\Put(
+     * This endpoint is defined as a POST, but you must include `_method=PUT` in the form data,
+     * so Laravel treats it as a PUT request and parses files correctly.
+     *
+     * @OA\Post(
      *     path="/users/{id}",
-     *     summary="Update a user's info (excluding System Maintenance)",
+     *     summary="Update a user via method override (PUT) in multipart/form-data",
      *     tags={"User Management"},
      *     security={{"sanctum":{}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
-     *         description="ID of the user to update",
      *         required=true,
+     *         description="ID of the user to update",
      *         @OA\Schema(type="integer", example=42)
      *     ),
      *     @OA\RequestBody(
      *         required=true,
-     *         @OA\JsonContent(
-     *             @OA\Property(property="name", type="string", example="John Doe Updated"),
-     *             @OA\Property(property="email", type="string", format="email", example="john.doe.updated@example.com"),
-     *             @OA\Property(property="status", type="string", example="Active", description="e.g., 'Active' or 'Inactive'")
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 required={"_method"},
+     *                 @OA\Property(
+     *                     property="_method",
+     *                     type="string",
+     *                     description="Must be 'PUT' so Laravel interprets this as a PUT request",
+     *                     example="PUT"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="name",
+     *                     type="string",
+     *                     description="User's name",
+     *                     example="Hanna Hathway"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="email",
+     *                     type="string",
+     *                     format="email",
+     *                     description="User's email address",
+     *                     example="hanna@example.com"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="bank_account",
+     *                     type="string",
+     *                     format="binary",
+     *                     description="Optional file upload if needed (Broker) (pdf, jpg, jpeg, png)"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="tax_registration",
+     *                     type="string",
+     *                     format="binary",
+     *                     description="Optional file upload if needed (Broker) (pdf, jpg, jpeg, png)"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="contract",
+     *                     type="string",
+     *                     format="binary",
+     *                     description="Optional file upload if needed (Contractor) (pdf, jpg, jpeg, png)"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="scope_of_work",
+     *                     type="string",
+     *                     format="binary",
+     *                     description="Optional file upload if needed (Contractor) (pdf, jpg, jpeg, png)"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="trade_license",
+     *                     type="string",
+     *                     format="binary",
+     *                     description="Optional file upload if needed (Broker or Contractor) (pdf, jpg, jpeg, png)"
+     *                 ),
+     *             )
      *         )
      *     ),
      *     @OA\Response(
      *         response=200,
      *         description="User updated successfully",
      *         @OA\JsonContent(
+     *             type="object",
      *             @OA\Property(property="message", type="string", example="User updated successfully"),
      *             @OA\Property(
      *                 property="user",
      *                 type="object",
      *                 @OA\Property(property="id", type="integer", example=42),
-     *                 @OA\Property(property="name", type="string", example="John Doe Updated"),
-     *                 @OA\Property(property="email", type="string", example="john.doe.updated@example.com"),
+     *                 @OA\Property(property="name", type="string", example="Hanna Hathway"),
+     *                 @OA\Property(property="email", type="string", example="hanna@example.com"),
      *                 @OA\Property(property="status", type="string", example="Active")
      *             )
      *         )
      *     ),
-     *     @OA\Response(response=403, description="Forbidden (user lacks permission or user has System Maintenance role)"),
+     *     @OA\Response(response=403, description="Forbidden"),
      *     @OA\Response(response=404, description="User not found"),
-     *     @OA\Response(response=422, description="Validation error")
+     *     @OA\Response(response=422, description="Validation error"),
+     *     @OA\Response(response=500, description="Server error")
      * )
      */
     public function updateUser(Request $request, $id)
@@ -315,43 +545,116 @@ class UserManagementController extends Controller
             return response()->json(['error' => 'User not found'], Response::HTTP_NOT_FOUND);
         }
 
-        // If user has System Maintenance role, forbid updates
         if ($user->roles->pluck('name')->contains('System Maintenance')) {
-            return response()->json(['error' => 'Forbidden: user has System Maintenance role'], Response::HTTP_FORBIDDEN);
+            return response()->json(['error' => 'Forbidden'], Response::HTTP_FORBIDDEN);
         }
 
-        // Validate the input
-        $validator = Validator::make($request->all(), [
+        // Build validation rules
+        $rules = [
             'name' => 'sometimes|string|max:255',
             'email' => 'sometimes|email|unique:users,email,' . $user->id,
-        ]);
 
+            // Optional doc uploads
+            'rera_cert' => 'sometimes|file|mimes:pdf,jpg,jpeg,png',
+            'trade_license' => 'sometimes|file|mimes:pdf,jpg,jpeg,png',
+            'bank_account' => 'sometimes|file|mimes:pdf,jpg,jpeg,png',
+            'tax_registration' => 'sometimes|file|mimes:pdf,jpg,jpeg,png',
+            'contract' => 'sometimes|file|mimes:pdf,jpg,jpeg,png',
+            'scope_of_work' => 'sometimes|file|mimes:pdf,jpg,jpeg,png',
+
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
             return response()->json($validator->errors(), Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        // Update fields if present
         $data = $validator->validated();
-        $user->fill($data);
-        $user->save();
 
-        return response()->json([
-            'message' => 'User updated successfully',
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'status' => $user->status,
-            ],
-        ], Response::HTTP_OK);
+        DB::beginTransaction();
+        try {
+            // Update fields if present
+            if (isset($data['name'])) {
+                $user->name = $data['name'];
+            }
+            if (isset($data['email'])) {
+                $user->email = $data['email'];
+            }
+            $user->save();
+
+            // Handle doc uploads
+            // We'll define an array of doc field => doc_type
+            $docFields = [
+                'rera_cert' => 'rera_cert',
+                'trade_license' => 'trade_license',
+                'bank_account' => 'bank_account',
+                'tax_registration' => 'tax_registration',
+                'contract' => 'contract',
+                'scope_of_work' => 'scope_of_work',
+            ];
+
+            foreach ($docFields as $field => $docType) {
+                if ($request->hasFile($field)) {
+
+                    $file = $request->file($field);
+                    $fileName = "{$docType}_{$user->id}." . $file->getClientOriginalExtension();
+
+                    // Store in a private disk named "local" or "private" (adjust as per your config)
+                    $filePath = $file->storeAs('docs', $fileName, 'local');
+                    // e.g., physically stored at storage/app/private/docs/<docType>_<userId>.<ext>
+
+                    // Upsert doc in user_docs
+                    $existingDoc = $user->docs()->where('doc_type', $docType)->first();
+                    if ($existingDoc) {
+                        $existingDoc->update(['file_path' => $filePath]);
+                    } else {
+                        $user->docs()->create([
+                            'doc_type' => $docType,
+                            'file_path' => $filePath,
+                        ]);
+                    }
+                }
+            }
+
+            DB::commit();
+
+            $docs = $user->docs->map(function ($doc) {
+                return [
+                    'doc_id' => $doc->id,
+                    'doc_type' => $doc->doc_type,
+                    'created_at' => $doc->created_at,
+                    'updated_at' => $doc->updated_at,
+                ];
+            });
+
+            return response()->json([
+                'message' => 'User updated successfully',
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'role' => $user->getRoleNames()->first(),
+                    'status' => $user->status,
+                ],
+                'docs' => $docs,
+            ], Response::HTTP_OK);
+
+
+        } catch (\Exception $ex) {
+            DB::rollBack();
+            return response()->json([
+                'error' => 'Server error',
+                'message' => $ex->getMessage()
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     /**
-     * Delete a user (excluding System Maintenance).
+     * Delete a user and their user_docs.
      *
      * @OA\Delete(
      *     path="/users/{id}",
-     *     summary="Delete a user (excluding System Maintenance)",
+     *     summary="Delete a user and their associated docs",
      *     tags={"User Management"},
      *     security={{"sanctum":{}}},
      *     @OA\Parameter(
@@ -368,8 +671,9 @@ class UserManagementController extends Controller
      *             @OA\Property(property="message", type="string", example="User deleted successfully")
      *         )
      *     ),
-     *     @OA\Response(response=403, description="Forbidden (user lacks permission or user has System Maintenance role)"),
-     *     @OA\Response(response=404, description="User not found")
+     *     @OA\Response(response=403, description="Forbidden"),
+     *     @OA\Response(response=404, description="User not found"),
+     *     @OA\Response(response=500, description="Server error")
      * )
      */
     public function deleteUser(Request $request, $id)
@@ -388,14 +692,36 @@ class UserManagementController extends Controller
             return response()->json(['error' => 'User not found'], Response::HTTP_NOT_FOUND);
         }
 
-        // If user has System Maintenance role, forbid deletion
         if ($user->roles->pluck('name')->contains('System Maintenance')) {
-            return response()->json(['error' => 'Forbidden: user has System Maintenance role'], Response::HTTP_FORBIDDEN);
+            return response()->json(['error' => 'Forbidden: user cannot be deleted'], Response::HTTP_FORBIDDEN);
         }
 
-        $user->delete();
+        DB::beginTransaction();
+        try {
+            // 1. Delete associated docs (both DB and physical files)
+            $user->docs->each(function ($doc) {
+                // Remove the file from storage if it exists
+                if (Storage::disk('local')->exists($doc->file_path)) {
+                    Storage::disk('local')->delete($doc->file_path);
+                }
+                // Delete the doc record
+                $doc->delete();
+            });
 
-        return response()->json(['message' => 'User deleted successfully'], Response::HTTP_OK);
+            // 2. Delete the user record
+            $user->delete();
+
+            DB::commit();
+
+            return response()->json(['message' => 'User deleted successfully'], Response::HTTP_OK);
+
+        } catch (\Exception $ex) {
+            DB::rollBack();
+            return response()->json([
+                'error' => 'Server error',
+                'message' => $ex->getMessage()
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     /**
@@ -454,6 +780,28 @@ class UserManagementController extends Controller
         }
 
         if ($user->status !== 'Active') {
+            if ($user->status === 'Pending') {
+                // Check user role
+                $role = $user->getRoleNames()->first();
+
+                // If user is a Broker, check if they have doc_type = "signed_agreement"
+                if ($role === 'Broker') {
+                    $hasSignedAgreement = $user->docs()->where('doc_type', 'signed_agreement')->exists();
+
+                    if (!$hasSignedAgreement) {
+                        // They haven't uploaded the signed agreement yet
+                        return response()->json(['error' => 'Please sign the agreement and upload it back'], Response::HTTP_FORBIDDEN);
+                    } else {
+                        // They have uploaded the signed agreement, but still pending admin approval
+                        return response()->json(['error' => 'Your account is pending approval'], Response::HTTP_FORBIDDEN);
+                    }
+                }
+
+                // For other roles with pending status, just return "pending approval" or a similar message
+                return response()->json(['error' => 'Your account is pending approval'], Response::HTTP_FORBIDDEN);
+            }
+
+            // If status is "Inactive"
             return response()->json(['error' => 'Account is inactive'], Response::HTTP_FORBIDDEN);
         }
 
@@ -594,7 +942,6 @@ class UserManagementController extends Controller
         $authUser = $request->user();
         Log::info("User {$authUser->id} is attempting to activate user ID: {$id}");
 
-        // Check permission
         if (!$authUser->can('activate user')) {
             return response()->json(['error' => 'Forbidden'], Response::HTTP_FORBIDDEN);
         }
@@ -604,7 +951,6 @@ class UserManagementController extends Controller
             return response()->json(['error' => 'User not found'], Response::HTTP_NOT_FOUND);
         }
 
-        // Optionally check if already active
         if ($targetUser->status === 'Active') {
             return response()->json(['error' => 'User is already active'], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
@@ -689,5 +1035,55 @@ class UserManagementController extends Controller
         ], Response::HTTP_OK);
     }
 
+    /**
+     * Download a user document from a private disk.
+     *
+     * Checks if the current user is authorized via canDownload($doc).
+     *
+     * @OA\Get(
+     *     path="/docs/{docId}/download",
+     *     summary="Download a user document by docId",
+     *     tags={"Documents"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(
+     *         name="docId",
+     *         in="path",
+     *         required=true,
+     *         description="ID of the UserDoc to download",
+     *         @OA\Schema(type="integer", example=42)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="File downloaded successfully (binary data)",
+     *         @OA\MediaType(
+     *             mediaType="application/octet-stream",
+     *             @OA\Schema(
+     *                 type="string",
+     *                 format="binary",
+     *                 description="The file content is returned as a stream"
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=403, description="Forbidden if the user lacks permission or doc belongs to another user"),
+     *     @OA\Response(response=404, description="Document not found")
+     * )
+     */
+    public function downloadDoc($docId)
+    {
+        $doc = UserDoc::findOrFail($docId);
 
+        if (!$this->canDownload($doc)) {
+            abort(Response::HTTP_FORBIDDEN, 'Forbidden');
+        }
+
+        // Serve file from private/local disk
+        return Storage::disk('local')->download($doc->file_path);
+    }
+
+    private function canDownload(UserDoc $doc)
+    {
+        $user = auth()->user();
+
+        return $user->id === $doc->user_id || $user->can('view users');
+    }
 }

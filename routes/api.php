@@ -14,6 +14,7 @@ use App\Http\Controllers\UnitHoldController;
 use App\Http\Controllers\OneTimeLinkController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\UserManagementController;
+use App\Http\Controllers\BrokerController;
 
 // User Management
 Route::get('/user', function (Request $request) {
@@ -109,10 +110,16 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/users', [UserManagementController::class, 'listAllUsers']);
     Route::get('/users/{id}', [UserManagementController::class, 'getUserDetails']);
-    Route::post('/users/register', [UserManagementController::class, 'registerUser']);
+    Route::post('/users', [UserManagementController::class, 'registerUser']);
     Route::put('/users/{id}', [UserManagementController::class, 'updateUser']);
     Route::delete('/users/{id}', [UserManagementController::class, 'deleteUser']);
     Route::post('/users/change-password', [UserManagementController::class, 'changePassword']);
     Route::put('/users/{id}/activate', [UserManagementController::class, 'activate']);
     Route::put('/users/{id}/deactivate', [UserManagementController::class, 'deactivate']);
+    Route::get('/users/docs/{id}', [UserManagementController::class, 'downloadDoc']);
+});
+
+// Brokers
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/brokers/upload-agreement', [BrokerController::class, 'uploadSignedAgreement']);
 });
