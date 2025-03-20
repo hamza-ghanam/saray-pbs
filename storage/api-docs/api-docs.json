@@ -1,14 +1,10 @@
 {
     "openapi": "3.0.0",
     "info": {
-        "title": "Property Booking System",
+        "title": "Saray Property Booking System",
         "version": "1.0"
     },
     "servers": [
-        {
-            "url": "http://127.0.0.1:8000/api",
-            "description": "IP"
-        },
         {
             "url": "http://localhost:8000/api",
             "description": "URL"
@@ -1215,6 +1211,70 @@
                 "security": [
                     {
                         "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/otls": {
+            "get": {
+                "tags": [
+                    "OneTimeLinks"
+                ],
+                "summary": "List all One-Time Links",
+                "description": "Returns a list of all One-Time Links along with their associated user (if exists).",
+                "operationId": "getOTLs",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer"
+                                            },
+                                            "token": {
+                                                "type": "string"
+                                            },
+                                            "user_type": {
+                                                "type": "string"
+                                            },
+                                            "expired_at": {
+                                                "type": "string",
+                                                "format": "date-time",
+                                                "nullable": true
+                                            },
+                                            "user": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "email": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "type": "object",
+                                                "nullable": true
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
                     }
                 ]
             }
@@ -3055,6 +3115,76 @@
                 ]
             }
         },
+        "/units/{unitId}/assign": {
+            "post": {
+                "tags": [
+                    "Units"
+                ],
+                "summary": "Assign a unit to a contractor",
+                "description": "Assigns a unit to a contractor. The contractor must have the 'Contractor' role.",
+                "operationId": "assignUnitToContractor",
+                "parameters": [
+                    {
+                        "name": "unitId",
+                        "in": "path",
+                        "description": "ID of the unit to assign",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "ID of the contractor to assign the unit to",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "contractor_id"
+                                ],
+                                "properties": {
+                                    "contractor_id": {
+                                        "type": "integer",
+                                        "example": 3
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Unit assigned successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unit assigned to contractor successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/units/{id}/hold": {
             "post": {
                 "tags": [
@@ -3449,6 +3579,381 @@
                 "security": [
                     {
                         "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/unit-updates": {
+            "get": {
+                "tags": [
+                    "UnitUpdates"
+                ],
+                "summary": "List all unit updates",
+                "description": "Returns a list of unit updates. Contractor users will only see updates for units assigned to them.",
+                "operationId": "getUnitUpdates",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer"
+                                            },
+                                            "unit_id": {
+                                                "type": "integer"
+                                            },
+                                            "description": {
+                                                "type": "string"
+                                            },
+                                            "attachment_path": {
+                                                "type": "string",
+                                                "nullable": true
+                                            },
+                                            "created_at": {
+                                                "type": "string",
+                                                "format": "date-time"
+                                            },
+                                            "updated_at": {
+                                                "type": "string",
+                                                "format": "date-time"
+                                            },
+                                            "unit": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "type": "object",
+                                                "nullable": true
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/units/{unitId}/updates": {
+            "get": {
+                "tags": [
+                    "UnitUpdates"
+                ],
+                "summary": "List updates for a specific unit",
+                "description": "Retrieves the list of updates associated with a particular unit. Contractor users can only view updates for units assigned to them.",
+                "operationId": "listUnitUpdatesForUnit",
+                "parameters": [
+                    {
+                        "name": "unitId",
+                        "in": "path",
+                        "description": "ID of the unit",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of unit updates retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer"
+                                            },
+                                            "unit_id": {
+                                                "type": "integer"
+                                            },
+                                            "description": {
+                                                "type": "string"
+                                            },
+                                            "attachment_path": {
+                                                "type": "string",
+                                                "nullable": true
+                                            },
+                                            "created_at": {
+                                                "type": "string",
+                                                "format": "date-time"
+                                            },
+                                            "updated_at": {
+                                                "type": "string",
+                                                "format": "date-time"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Unit not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "UnitUpdates"
+                ],
+                "summary": "Add a new update for a unit",
+                "description": "Adds a UnitUpdate to the specified unit. An optional attachment can be uploaded.",
+                "operationId": "addUnitUpdate",
+                "parameters": [
+                    {
+                        "name": "unitId",
+                        "in": "path",
+                        "description": "ID of the unit to update",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "description"
+                                ],
+                                "properties": {
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Repaired the broken window"
+                                    },
+                                    "attachment": {
+                                        "type": "file",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Unit update created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unit update created successfully"
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Unauthorized"
+                    },
+                    "422": {
+                        "description": "Validation Error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/unit-updates/{updateId}": {
+            "get": {
+                "tags": [
+                    "UnitUpdates"
+                ],
+                "summary": "Get unit update details",
+                "description": "Retrieves the details of a specific unit update (excluding the attachment). Contractor users can only view updates for units assigned to them.",
+                "operationId": "getUnitUpdateDetails",
+                "parameters": [
+                    {
+                        "name": "updateId",
+                        "in": "path",
+                        "description": "ID of the unit update",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Unit update details retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer"
+                                        },
+                                        "unit_id": {
+                                            "type": "integer"
+                                        },
+                                        "description": {
+                                            "type": "string"
+                                        },
+                                        "created_at": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        },
+                                        "updated_at": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        },
+                                        "unit": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "type": "object",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Unit update not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "UnitUpdates"
+                ],
+                "summary": "Delete a unit update",
+                "description": "Deletes a specific unit update. Only authorized users can delete unit updates.",
+                "operationId": "deleteUnitUpdate",
+                "parameters": [
+                    {
+                        "name": "updateId",
+                        "in": "path",
+                        "description": "ID of the unit update to delete",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Unit update deleted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unit update deleted successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Unit update not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/unit-updates/{updateId}/download-attachment": {
+            "get": {
+                "tags": [
+                    "UnitUpdates"
+                ],
+                "summary": "Download unit update attachment",
+                "description": "Downloads the attachment for a specific unit update if the user is authorized.",
+                "operationId": "downloadUnitUpdateAttachment",
+                "parameters": [
+                    {
+                        "name": "updateId",
+                        "in": "path",
+                        "description": "ID of the unit update",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Attachment downloaded successfully"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
                     }
                 ]
             }
@@ -4864,6 +5369,10 @@
             "description": "Building"
         },
         {
+            "name": "OneTimeLinks",
+            "description": "OneTimeLinks"
+        },
+        {
             "name": "OneTimeLink",
             "description": "OneTimeLink"
         },
@@ -4894,6 +5403,14 @@
         {
             "name": "Unit",
             "description": "Unit"
+        },
+        {
+            "name": "Units",
+            "description": "Units"
+        },
+        {
+            "name": "UnitUpdates",
+            "description": "UnitUpdates"
         },
         {
             "name": "Authentication",
