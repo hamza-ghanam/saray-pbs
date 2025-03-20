@@ -9,5 +9,10 @@ class OneTimeLink extends Model
 {
     use SoftDeletes;
 
-    protected $fillable = ['token', 'user_type', 'expired_at'];
+    protected $fillable = ['token', 'user_type', 'expired_at', 'user_id'];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

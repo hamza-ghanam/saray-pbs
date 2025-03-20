@@ -15,10 +15,56 @@ use Illuminate\Support\Facades\Hash;
 use Symfony\Component\HttpFoundation\Response;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 
-// dompdf
 
 class OneTimeLinkController extends Controller
 {
+    /**
+     * @OA\Get(
+     *     path="/otls",
+     *     summary="List all One-Time Links",
+     *     description="Returns a list of all One-Time Links along with their associated user (if exists).",
+     *     operationId="getOTLs",
+     *     tags={"OneTimeLinks"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful operation",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer"),
+     *                 @OA\Property(property="token", type="string"),
+     *                 @OA\Property(property="user_type", type="string"),
+     *                 @OA\Property(property="expired_at", type="string", format="date-time", nullable=true),
+     *                 @OA\Property(property="user", type="object", nullable=true,
+     *                     @OA\Property(property="id", type="integer"),
+     *                     @OA\Property(property="name", type="string"),
+     *                     @OA\Property(property="email", type="string")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Unauthorized"
+     *     )
+     * )
+     */
+    public function index(Request $request)
+    {
+        $user = $request->user();
+        Log::info("User {$user->id} requested OTL listing.");
+
+        if (!$user->can('manage broker') || !$user->can('manage contractor')) {
+            abort(Response::HTTP_FORBIDDEN, 'Unauthorized');
+        }
+
+        $otls = OneTimeLink::with('user')->get();
+
+        return response()->json($otls, Response::HTTP_OK);
+    }
+
     /**
      * Generate a one-time link for a Broker or Contractor.
      *
@@ -71,10 +117,6 @@ class OneTimeLinkController extends Controller
             'user_type' => $data['user_type'], // "Broker" or "Contractor"
             'expired_at' => null, // link is valid until used
         ]);
-
-        // Return the OTL or a URL containing the token
-
-        $url = url("/api/otls/register?token={$token}");
 
         return response()->json([
             'message' => 'One-time link generated successfully',
@@ -307,6 +349,7 @@ class OneTimeLinkController extends Controller
 
             // 7. Mark the OTL as used
             $otl->expired_at = now();
+            $otl->user_id = $user->id;
             $otl->save();
 
             // 8. Generate the agreement PDF

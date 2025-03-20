@@ -54,4 +54,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(UserDoc::class);
     }
+
+    /**
+     * Relationship: The one-time link used by this user.
+     */
+    public function oneTimeLink()
+    {
+        return $this->hasOne(OneTimeLink::class);
+    }
 }

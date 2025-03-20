@@ -92,6 +92,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // One-Time Links
 Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/otls', [OneTimeLinkController::class, 'index']);
     Route::post('/otls/generate', [OneTimeLinkController::class, 'generateLink']);
     Route::post('/otls/register', [OneTimeLinkController::class, 'registerUser']);
     Route::post('/users/{id}/approve', [OneTimeLinkController::class, 'approve']);
