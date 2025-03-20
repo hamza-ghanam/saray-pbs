@@ -210,7 +210,7 @@ class UnitController extends Controller
 
         // Process file upload for floor_plan if provided.
         if ($request->hasFile('floor_plan')) {
-            $path = $request->file('floor_plan')->store('floor_plans', 'public');
+            $path = $request->file('floor_plan')->store('floor_plans', 'local');
             $data['floor_plan'] = $path;
         }
 
@@ -387,7 +387,7 @@ class UnitController extends Controller
 
         // Process file upload for floor_plan if provided.
         if ($request->hasFile('floor_plan')) {
-            $path = $request->file('floor_plan')->store('floor_plans', 'public');
+            $path = $request->file('floor_plan')->store('floor_plans', 'local');
             $data['floor_plan'] = $path;
         }
 

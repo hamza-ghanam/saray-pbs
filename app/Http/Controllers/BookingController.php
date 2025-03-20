@@ -197,7 +197,7 @@ class BookingController extends Controller
             return response()->json(['error' => 'OCR extraction failed'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        $filePath = $file->store('public/passports');
+        $filePath = $file->store('private/passports');
 
         // File path token
         $token = (string)Str::uuid();
@@ -392,7 +392,7 @@ class BookingController extends Controller
             $receiptPath = null;
             if ($request->hasFile('receipt')) {
                 $receiptFile = $request->file('receipt');
-                $receiptPath = $receiptFile->store('public/receipts');
+                $receiptPath = $receiptFile->store('private/receipts');
             }
 
             // Create the CustomerInfo record
@@ -512,7 +512,7 @@ class BookingController extends Controller
 
         // Store the receipt
         $receiptFile = $request->file('receipt');
-        $receiptPath = $receiptFile->store('public/receipts');
+        $receiptPath = $receiptFile->store('private/receipts');
 
         // Update the booking's receipt_path
         $booking->receipt_path = $receiptPath;
@@ -672,7 +672,7 @@ class BookingController extends Controller
             // Handle a new receipt upload if present
             if ($request->hasFile('receipt')) {
                 $receiptFile = $request->file('receipt');
-                $receiptPath = $receiptFile->store('public/receipts');
+                $receiptPath = $receiptFile->store('private/receipts');
                 $booking->receipt_path = $receiptPath;
             }
 
