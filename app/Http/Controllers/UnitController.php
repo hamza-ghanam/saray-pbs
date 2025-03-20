@@ -121,6 +121,41 @@ class UnitController extends Controller
      *     summary="List all units",
      *     tags={"Unit"},
      *     security={{"sanctum":{}}},
+     *     @OA\Parameter(
+     *         name="prop_type",
+     *         in="query",
+     *         description="Filter units by property type",
+     *         required=false,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Parameter(
+     *         name="unit_type",
+     *         in="query",
+     *         description="Filter units by unit type",
+     *         required=false,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Parameter(
+     *         name="unit_no",
+     *         in="query",
+     *         description="Filter units by unit number",
+     *         required=false,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Parameter(
+     *         name="floor",
+     *         in="query",
+     *         description="Filter units by floor",
+     *         required=false,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Parameter(
+     *         name="status",
+     *         in="query",
+     *         description="Filter units by status",
+     *         required=false,
+     *         @OA\Schema(type="string", enum={"Pending", "Available", "Pre-Booked", "Booked", "Sold", "Pre-Hold", "Hold", "Cancelled"})
+     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="A list of units",
@@ -132,21 +167,45 @@ class UnitController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        Log::info("User {$user->id} called requested unit listing.");
+        Log::info("User {$user->id} requested unit listing.");
 
         if (!$user->can('view unit')) {
             abort(Response::HTTP_FORBIDDEN, 'Unauthorized');
         }
 
-        // If the user has the Sales role, show only available units.
+        // If the user has the Sales role, restrict to available/cancelled units.
         if ($user->hasRole('Sales')) {
-            $units = Unit::whereIn('status', ['Available', 'Cancelled'])->get();
+            $query = Unit::whereIn('status', ['Available', 'Cancelled']);
         } else {
-            $units = Unit::all();
+            $query = Unit::query();
         }
+
+        // Apply filtering based on query parameters
+        if ($request->filled('prop_type')) {
+            $query->where('prop_type', 'like', "%" . $request->input('prop_type') . "%");
+        }
+
+        if ($request->filled('unit_type')) {
+            $query->where('unit_type', 'like', "%" . $request->input('unit_type') . "%");
+        }
+
+        if ($request->filled('unit_no')) {
+            $query->where('unit_no', 'like', "%" . $request->input('unit_no') . "%");
+        }
+
+        if ($request->filled('floor')) {
+            $query->where('floor', $request->input('floor'));
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->input('status'));
+        }
+
+        $units = $query->get();
 
         return response()->json($units, Response::HTTP_OK);
     }
+
 
     /**
      * Store a newly created unit.
