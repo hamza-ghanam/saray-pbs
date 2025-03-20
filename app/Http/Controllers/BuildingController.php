@@ -6,6 +6,7 @@ use App\Models\Building;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * @OA\Info(
@@ -41,6 +42,27 @@ class BuildingController extends Controller
      *     summary="List all buildings",
      *     tags={"Building"},
      *     security={{"sanctum":{}}},
+     *     @OA\Parameter(
+     *         name="name",
+     *         in="query",
+     *         description="Filter buildings by name",
+     *         required=false,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Parameter(
+     *         name="location",
+     *         in="query",
+     *         description="Filter buildings by location",
+     *         required=false,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Parameter(
+     *         name="status",
+     *         in="query",
+     *         description="Filter buildings by status",
+     *         required=false,
+     *         @OA\Schema(type="string")
+     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="A list of buildings",
@@ -55,11 +77,31 @@ class BuildingController extends Controller
         Log::info('User ' . $user->id . ' called BuildingController@index');
 
         if (!$user->can('view building')) {
-            abort(403, 'Unauthorized');
+            abort(Response::HTTP_FORBIDDEN, 'Unauthorized');
         }
 
-        $buildings = Building::all();
-        return response()->json($buildings, 200);
+        $query = Building::query();
+
+        // Filter by name if provided
+        if ($request->filled('name')) {
+            $name = $request->input('name');
+            $query->where('name', 'like', "%{$name}%");
+        }
+
+        // Filter by location if provided
+        if ($request->filled('location')) {
+            $location = $request->input('location');
+            $query->where('location', 'like', "%{$location}%");
+        }
+
+        // Filter by status if provided
+        if ($request->filled('status')) {
+            $query->where('status', $request->input('status'));
+        }
+
+        $buildings = $query->get();
+
+        return response()->json($buildings, Response::HTTP_OK);
     }
 
     /**
