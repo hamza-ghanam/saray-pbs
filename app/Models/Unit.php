@@ -56,4 +56,12 @@ class Unit extends Model
     {
         return $this->hasMany(UnitUpdate::class);
     }
+
+    /**
+     * Relationship: Each unit belongs to a contractor (a User).
+     */
+    public function contractor()
+    {
+        return $this->belongsTo(User::class, 'contractor_id');
+    }
 }

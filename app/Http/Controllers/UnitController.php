@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Events\UnitCreated;
 use App\Models\Approval;
 use App\Models\Unit;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -134,7 +135,7 @@ class UnitController extends Controller
         Log::info("User {$user->id} called requested unit listing.");
 
         if (!$user->can('view unit')) {
-            abort(403, 'Unauthorized');
+            abort(Response::HTTP_FORBIDDEN, 'Unauthorized');
         }
 
         // If the user has the Sales role, show only available units.
@@ -178,7 +179,7 @@ class UnitController extends Controller
         Log::info("User {$user->id} is attempting to add a new unit.");
 
         if (!$user->can('add unit')) {
-            abort(403, 'Unauthorized');
+            abort(Response::HTTP_FORBIDDEN, 'Unauthorized');
         }
 
         $validator = Validator::make($request->all(), [
@@ -238,7 +239,7 @@ class UnitController extends Controller
             $unit->load('paymentPlans.installments');
         } catch (\Exception $ex) {
             DB::rollback();
-            return response()->json(['error' => $ex->getMessage()], 500);
+            return response()->json(['error' => $ex->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
         DB::commit();
@@ -280,7 +281,7 @@ class UnitController extends Controller
         Log::info("User {$user->id} requested details for unit ID: {$id}");
 
         if (!$user->can('view unit')) {
-            abort(403, 'Unauthorized');
+            abort(Response::HTTP_FORBIDDEN, 'Unauthorized');
         }
 
         $unit = Unit::find($id);
@@ -352,7 +353,7 @@ class UnitController extends Controller
         Log::info("User {$user->id} is attempting to update unit ID: {$id}");
 
         if (!$user->can('edit unit')) {
-            abort(403, 'Unauthorized');
+            abort(Response::HTTP_FORBIDDEN, 'Unauthorized');
         }
 
         $validator = Validator::make($request->all(), [
@@ -436,7 +437,7 @@ class UnitController extends Controller
         Log::info("User {$user->id} is attempting to delete unit ID: {$id}");
 
         if (!$user->can('delete unit')) {
-            abort(403, 'Unauthorized');
+            abort(Response::HTTP_FORBIDDEN, 'Unauthorized');
         }
 
         $unit = Unit::findOrFail($id);
@@ -484,7 +485,7 @@ class UnitController extends Controller
         Log::info("User {$user->id} is attempting to approve unit ID: {$id}");
 
         if (!$user->can('approve unit')) {
-            abort(403, 'Unauthorized');
+            abort(Response::HTTP_FORBIDDEN, 'Unauthorized');
         }
 
         // Ensure the unit is in a state that can be approved (e.g., Pending)
@@ -515,5 +516,76 @@ class UnitController extends Controller
         DB::commit();
 
         return response()->json($unit, Response::HTTP_OK);
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/units/{unitId}/assign",
+     *     summary="Assign a unit to a contractor",
+     *     description="Assigns a unit to a contractor. The contractor must have the 'Contractor' role.",
+     *     operationId="assignUnitToContractor",
+     *     tags={"Units"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="unitId",
+     *         in="path",
+     *         description="ID of the unit to assign",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="ID of the contractor to assign the unit to",
+     *         @OA\JsonContent(
+     *             required={"contractor_id"},
+     *             @OA\Property(property="contractor_id", type="integer", example=3)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Unit assigned successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unit assigned to contractor successfully")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Bad Request"
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Unauthorized"
+     *     )
+     * )
+     */
+    public function assignUnit(Request $request, $unitId)
+    {
+        $user = $request->user();
+        Log::info("User {$user->id} requested to assign unit {$unitId} to a contractor.");
+
+        // Authorization check for assigning a unit (you can adjust the permission as needed)
+        if (!$user->can('assign unit')) {
+            abort(Response::HTTP_FORBIDDEN, 'Unauthorized');
+        }
+
+        // Validate the contractor_id from the request
+        $data = $request->validate([
+            'contractor_id' => 'required|exists:users,id'
+        ]);
+
+        // Find the unit and the contractor
+        $unit = Unit::findOrFail($unitId);
+        $contractor = User::findOrFail($data['contractor_id']);
+
+        // Ensure that the given user has the Contractor role
+        if (!$contractor->hasRole('Contractor')) {
+            return response()->json(['error' => 'User is not a contractor'], Response::HTTP_BAD_REQUEST);
+        }
+
+        // Assign the unit to the contractor
+        $unit->contractor_id = $contractor->id;
+        $unit->save();
+
+        return response()->json(['message' => 'Unit assigned to contractor successfully'], Response::HTTP_OK);
     }
 }

@@ -78,13 +78,12 @@ class RbacSeeder extends Seeder
         */
 
         $permissions = [
-            'manage contractor',
-            'manage broker',
+            'view unit update',
         ];
 
 
 
-        $role = Role::findByName('CEO');
+        $role = Role::findByName('Contractor');
         $role->givePermissionTo($permissions);
     }
 }

@@ -15,6 +15,7 @@ use App\Http\Controllers\OneTimeLinkController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\BrokerController;
+use App\Http\Controllers\UnitUpdateController;
 
 // User Management
 Route::get('/user', function (Request $request) {
@@ -41,6 +42,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/units/{id}', [UnitController::class, 'update']);
     Route::delete('/units/{id}', [UnitController::class, 'destroy']);
     Route::post('/units/{id}/approve', [UnitController::class, 'approve']);
+    Route::post('/units/{id}/assign', [UnitController::class, 'assignUnit']);
 });
 
 // Payment Plans
@@ -123,4 +125,14 @@ Route::middleware('auth:sanctum')->group(function () {
 // Brokers
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/brokers/upload-agreement', [BrokerController::class, 'uploadSignedAgreement']);
+});
+
+// Unit Updates
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/unit-updates', [UnitUpdateController::class, 'index']);
+    Route::get('/units/{unitId}/updates', [UnitUpdateController::class, 'listUnitUpdates']);
+    Route::get('/unit-updates/{updateId}', [UnitUpdateController::class, 'show']);
+    Route::post('/units/{unitId}/updates', [UnitUpdateController::class, 'store']);
+    Route::delete('/unit-updates/{updateId}', [UnitUpdateController::class, 'destroy']);
+    Route::get('/unit-updates/{updateId}/download-attachment', [UnitUpdateController::class, 'downloadAttachment']);
 });

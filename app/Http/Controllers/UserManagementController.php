@@ -82,6 +82,10 @@ class UserManagementController extends Controller
             $query->whereHas('roles', function ($q) use ($role) {
                 $q->where('name', $role);
             });
+
+            if (strtolower($role) === 'contractor') {
+                $query->with('contractorUnits');
+            }
         }
 
         // Optional status filter
@@ -94,15 +98,28 @@ class UserManagementController extends Controller
         // Execute the query
         $users = $query->get();
 
-        // Map each user to a simple array: [id, name, email, status, role]
         $result = $users->map(function ($user) {
-            return [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
+            $roleName = $user->roles->pluck('name')->first(); // only one role per user
+            $userData = [
+                'id'     => $user->id,
+                'name'   => $user->name,
+                'email'  => $user->email,
                 'status' => $user->status,
-                'role' => $user->roles->pluck('name')->first() // only one role per user
+                'role'   => $roleName,
             ];
+
+            // If user is a contractor, include their assigned units
+            if (strtolower($roleName) === 'contractor') {
+                $userData['units'] = $user->contractorUnits->map(function ($unit) {
+                    return [
+                        'id'     => $unit->id,
+                        'name'   => $unit->name,
+                        'status' => $unit->status,
+                    ];
+                });
+            }
+
+            return $userData;
         });
 
         return response()->json($result, Response::HTTP_OK);

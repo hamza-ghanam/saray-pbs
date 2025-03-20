@@ -62,4 +62,12 @@ class User extends Authenticatable
     {
         return $this->hasOne(OneTimeLink::class);
     }
+
+    /**
+     * Relationship: A contractor (user) can have many units.
+     */
+    public function contractorUnits()
+    {
+        return $this->hasMany(Unit::class, 'contractor_id');
+    }
 }
