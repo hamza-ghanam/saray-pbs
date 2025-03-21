@@ -976,6 +976,35 @@
                 "summary": "List all buildings",
                 "description": "Display a listing of buildings.",
                 "operationId": "8dbf4d765ceccf748097033980369501",
+                "parameters": [
+                    {
+                        "name": "name",
+                        "in": "query",
+                        "description": "Filter buildings by name",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "location",
+                        "in": "query",
+                        "description": "Filter buildings by location",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filter buildings by status",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "A list of buildings",
@@ -2805,6 +2834,63 @@
                 "summary": "List all units",
                 "description": "Display a listing of the units.",
                 "operationId": "4fad383f5a5218655d5cc113dc8e9198",
+                "parameters": [
+                    {
+                        "name": "prop_type",
+                        "in": "query",
+                        "description": "Filter units by property type",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "unit_type",
+                        "in": "query",
+                        "description": "Filter units by unit type",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "unit_no",
+                        "in": "query",
+                        "description": "Filter units by unit number",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "floor",
+                        "in": "query",
+                        "description": "Filter units by floor",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filter units by status",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "Pending",
+                                "Available",
+                                "Pre-Booked",
+                                "Booked",
+                                "Sold",
+                                "Pre-Hold",
+                                "Hold",
+                                "Cancelled"
+                            ]
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "A list of units",
