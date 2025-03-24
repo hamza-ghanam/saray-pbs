@@ -7,6 +7,7 @@ use App\Models\Booking;
 use App\Models\CustomerInfo;
 use App\Models\PaymentPlan;
 use App\Models\Unit;
+use App\Models\User;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -18,10 +19,18 @@ use Rakibdevs\MrzParser\MrzParser;
 use Mindee\Client;
 use Mindee\Product\Passport\PassportV1;
 use Illuminate\Support\Str;
+use App\Services\FCMService;
 
 class BookingController extends Controller
 {
     use AuthorizesRequests;
+
+    protected $fcmService;
+
+    public function __construct(FCMService $fcmService)
+    {
+        $this->fcmService = $fcmService;
+    }
 
     /**
      * Get a booking by its ID, including the related customer info.
@@ -981,11 +990,34 @@ class BookingController extends Controller
 
             $booking->unit->status = 'Booked';
             $booking->unit->save();
+
+            $ceoUsers = User::role('CEO')->with('deviceTokens')->get();
+
+            // Extract tokens into a flat array
+            $ceoTokens = $ceoUsers->pluck('deviceTokens')
+                ->flatten()
+                ->pluck('token')
+                ->toArray();
+
+            $title = "Booking Approved";
+            $body = "Booking ID: {$booking->id} has been approved by {$role}.";
+            $data = [
+                'booking_id'    => (string)$booking->id,
+                'approval_role' => $role,
+                'new_status'    => $booking->status,
+                'timestamp'     => now()->toIso8601String(),
+            ];
+            $this->fcmService->sendPushNotification($ceoTokens, $title, $body, $data);
+
+            return response()->json([
+                'message'  => "Booking approved by {$role}.",
+                'approval' => $approval,
+            ], Response::HTTP_CREATED);
         }
 
         return response()->json([
             'message'  => "Booking approved by {$role}",
             'approval' => $approval,
-        ], 201);
+        ], Response::HTTP_CREATED);
     }
 }

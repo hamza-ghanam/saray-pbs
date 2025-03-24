@@ -16,6 +16,12 @@ use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\BrokerController;
 use App\Http\Controllers\UnitUpdateController;
+use App\Http\Controllers\NotificationController;
+
+//Index
+Route::get('/', function () {
+    return redirect('api/documentation');
+});
 
 // User Management
 Route::get('/user', function (Request $request) {
@@ -23,7 +29,7 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 //Route::post('/register', [AuthController::class, 'register']);
-Route::post('/auth/login', [AuthController::class, 'login']);
+Route::post('/auth/login', [git ::class, 'login']);
 
 // Building Management
 Route::middleware('auth:sanctum')->group(function () {
@@ -135,4 +141,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/units/{unitId}/updates', [UnitUpdateController::class, 'store']);
     Route::delete('/unit-updates/{updateId}', [UnitUpdateController::class, 'destroy']);
     Route::get('/unit-updates/{updateId}/download-attachment', [UnitUpdateController::class, 'downloadAttachment']);
+});
+
+// FCM token
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/device-token', [NotificationController::class, 'storeDeviceToken']);
+    Route::post('/notify', [NotificationController::class, 'sendPushNotification']);
 });

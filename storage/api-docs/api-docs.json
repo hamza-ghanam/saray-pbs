@@ -1244,6 +1244,167 @@
                 ]
             }
         },
+        "/device-token": {
+            "post": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Store or update the device token",
+                "description": "Stores the device token for the authenticated user or updates an existing record.",
+                "operationId": "storeDeviceToken",
+                "requestBody": {
+                    "description": "Device token payload",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "token"
+                                ],
+                                "properties": {
+                                    "token": {
+                                        "type": "string",
+                                        "example": "YOUR_DEVICE_TOKEN"
+                                    },
+                                    "device_type": {
+                                        "type": "string",
+                                        "example": "android"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Device token stored successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Device token stored successfully."
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/notify": {
+            "post": {
+                "tags": [
+                    "Notifications"
+                ],
+                "summary": "Send a test push notification",
+                "description": "Sends a test push notification to a device using its FCM token.",
+                "operationId": "sendPushNotification",
+                "requestBody": {
+                    "description": "Device token payload",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "token"
+                                ],
+                                "properties": {
+                                    "token": {
+                                        "type": "string",
+                                        "example": "YOUR_DEVICE_TOKEN"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Notification sent successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Notification sent successfully."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Device token is required"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "An error occurred while sending the notification."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/otls": {
             "get": {
                 "tags": [
@@ -5453,6 +5614,10 @@
         {
             "name": "Building",
             "description": "Building"
+        },
+        {
+            "name": "Notifications",
+            "description": "Notifications"
         },
         {
             "name": "OneTimeLinks",

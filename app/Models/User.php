@@ -70,4 +70,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Unit::class, 'contractor_id');
     }
+
+    public function deviceTokens()
+    {
+        return $this->hasMany(DeviceToken::class);
+    }
 }
