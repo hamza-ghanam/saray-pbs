@@ -29,7 +29,8 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 //Route::post('/register', [AuthController::class, 'register']);
-Route::post('/auth/login', [git ::class, 'login']);
+Route::post('/auth/login', [AuthController::class, 'login']);
+Route::post('/auth/logout', [AuthController::class, 'logout']);
 
 // Building Management
 Route::middleware('auth:sanctum')->group(function () {
