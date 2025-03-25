@@ -1669,7 +1669,7 @@
         "/otls": {
             "get": {
                 "tags": [
-                    "OneTimeLinks"
+                    "OneTime Links"
                 ],
                 "summary": "List all One-Time Links",
                 "description": "Returns a list of all One-Time Links along with their associated user (if exists).",
@@ -1733,7 +1733,7 @@
         "/otls/generate": {
             "post": {
                 "tags": [
-                    "OneTimeLink"
+                    "OneTime Links"
                 ],
                 "summary": "Generate a one-time link for Broker or Contractor",
                 "description": "Generate a one-time link for a Broker or Contractor.",
@@ -1784,7 +1784,7 @@
         "/otls/register": {
             "post": {
                 "tags": [
-                    "OneTimeLink"
+                    "OneTime Links"
                 ],
                 "summary": "Register a Broker or Contractor via one-time link token",
                 "description": "Register a new Broker or Contractor using a one-time link token.\n\nThis endpoint requires different documents based on the user_type\nstored in the OneTimeLink (Broker or Contractor).\nFor Broker:\n- rera_cert, trade_license, bank_account, tax_registration (all required).\nFor Contractor:\n- contract, trade_license, scope_of_work (all required).\n\nAn agreement PDF will be generated and returned in the response.",
@@ -5403,12 +5403,8 @@
             "description": "Notifications"
         },
         {
-            "name": "OneTimeLinks",
-            "description": "OneTimeLinks"
-        },
-        {
-            "name": "OneTimeLink",
-            "description": "OneTimeLink"
+            "name": "OneTime Links",
+            "description": "OneTime Links"
         },
         {
             "name": "User Management",

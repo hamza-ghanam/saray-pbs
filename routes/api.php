@@ -30,7 +30,7 @@ Route::get('/user', function (Request $request) {
 
 //Route::post('/register', [AuthController::class, 'register']);
 Route::post('/auth/login', [AuthController::class, 'login']);
-Route::post('/auth/logout', [AuthController::class, 'logout']);
+Route::middleware('auth:sanctum')->post('/auth/logout', [AuthController::class, 'logout']);
 
 // Building Management
 Route::middleware('auth:sanctum')->group(function () {

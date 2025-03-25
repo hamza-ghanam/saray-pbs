@@ -24,7 +24,7 @@ class OneTimeLinkController extends Controller
      *     summary="List all One-Time Links",
      *     description="Returns a list of all One-Time Links along with their associated user (if exists).",
      *     operationId="getOTLs",
-     *     tags={"OneTimeLinks"},
+     *     tags={"OneTime Links"},
      *     security={{"bearerAuth":{}}},
      *     @OA\Response(
      *         response=200,
@@ -71,7 +71,7 @@ class OneTimeLinkController extends Controller
      * @OA\Post(
      *     path="/otls/generate",
      *     summary="Generate a one-time link for Broker or Contractor",
-     *     tags={"OneTimeLink"},
+     *     tags={"OneTime Links"},
      *     security={{"sanctum":{}}},
      *     @OA\RequestBody(
      *         required=true,
@@ -139,7 +139,7 @@ class OneTimeLinkController extends Controller
      * @OA\Post(
      *     path="/otls/register",
      *     summary="Register a Broker or Contractor via one-time link token",
-     *     tags={"OneTimeLink"},
+     *     tags={"OneTime Links"},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\MediaType(
