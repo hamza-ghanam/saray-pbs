@@ -1381,6 +1381,130 @@
                 ]
             }
         },
+        "/units/{id}/hold": {
+            "post": {
+                "tags": [
+                    "Unit"
+                ],
+                "summary": "Place a unit on hold (Pre-Hold)",
+                "description": "Sets a unit on hold by creating a holding record and changing its status to Pre-Hold. Only allowed if the unit is Available or Cancelled.",
+                "operationId": "847990b9cd87f953c5f0995937fc5102",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the unit to hold",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Holding created and unit status changed to Pre-Hold",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Holding is created and pending approval."
+                                        },
+                                        "holding": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden (user lacks permission)"
+                    },
+                    "404": {
+                        "description": "Unit not found"
+                    },
+                    "422": {
+                        "description": "Unit not in a valid state to hold (must be Available or Cancelled)"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/units/hold/{id}/respond": {
+            "post": {
+                "tags": [
+                    "Unit"
+                ],
+                "summary": "Respond to hold for a unit (approve or reject)",
+                "description": "Approves or rejects a hold on a unit. The holding and unit must be in Pre-Hold status. Use the 'action' query parameter with values 'approve' or 'reject'.",
+                "operationId": "respondHold",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the holding record",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    },
+                    {
+                        "name": "action",
+                        "in": "query",
+                        "description": "Action to perform: 'approve' or 'reject'",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "approve"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Hold response processed successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Holding approved by CEO."
+                                        },
+                                        "approval": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden (user lacks permission or role)"
+                    },
+                    "404": {
+                        "description": "Holding or Unit not found"
+                    },
+                    "422": {
+                        "description": "Invalid state: Holding/Unit not in Pre-Hold or invalid action"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/device-token": {
             "post": {
                 "tags": [
@@ -3569,404 +3693,6 @@
                 ]
             }
         },
-        "/units/{id}/hold": {
-            "post": {
-                "tags": [
-                    "Unit"
-                ],
-                "summary": "Place a unit on hold (Pre-Hold)",
-                "description": "Place a unit on hold (status set to \"Pre-Hold\").\n\nOnly allowed if the unit is currently \"Available\" or \"Cancelled\".",
-                "operationId": "fe7bcf4af9ef3bd5efb39215d890c947",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID of the unit to hold",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "example": 10
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Unit status changed to Pre-Hold",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "id": {
-                                            "type": "integer",
-                                            "example": 10
-                                        },
-                                        "prop_type": {
-                                            "type": "string",
-                                            "example": "Residential"
-                                        },
-                                        "unit_type": {
-                                            "type": "string",
-                                            "example": "Apartment"
-                                        },
-                                        "unit_no": {
-                                            "type": "string",
-                                            "example": "A101"
-                                        },
-                                        "floor": {
-                                            "type": "string",
-                                            "example": "1"
-                                        },
-                                        "parking": {
-                                            "type": "string",
-                                            "example": "Covered"
-                                        },
-                                        "pool_jacuzzi": {
-                                            "type": "string",
-                                            "example": "None"
-                                        },
-                                        "suite_area": {
-                                            "type": "number",
-                                            "format": "float",
-                                            "example": 120.5
-                                        },
-                                        "balcony_area": {
-                                            "type": "number",
-                                            "format": "float",
-                                            "example": 15.75
-                                        },
-                                        "total_area": {
-                                            "type": "number",
-                                            "format": "float",
-                                            "example": 136.25
-                                        },
-                                        "furnished": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "unit_view": {
-                                            "type": "string",
-                                            "example": "City View"
-                                        },
-                                        "price": {
-                                            "type": "number",
-                                            "format": "float",
-                                            "example": 350000
-                                        },
-                                        "completion_date": {
-                                            "type": "string",
-                                            "format": "date",
-                                            "example": "2025-12-15"
-                                        },
-                                        "building_id": {
-                                            "type": "integer",
-                                            "example": 5
-                                        },
-                                        "status": {
-                                            "type": "string",
-                                            "example": "Pre-Hold"
-                                        },
-                                        "created_at": {
-                                            "type": "string",
-                                            "format": "date-time",
-                                            "example": "2025-03-10T12:00:00Z"
-                                        },
-                                        "updated_at": {
-                                            "type": "string",
-                                            "format": "date-time",
-                                            "example": "2025-03-10T12:00:00Z"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden (user lacks permission)"
-                    },
-                    "404": {
-                        "description": "Unit not found"
-                    },
-                    "422": {
-                        "description": "Unit not in a valid state to hold (must be Available or Cancelled)"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            }
-        },
-        "/units/{id}/hold/approve": {
-            "post": {
-                "tags": [
-                    "Unit"
-                ],
-                "summary": "Approve hold for a unit",
-                "description": "Approve hold for a unit (status set to \"Hold\").\n\nOnly allowed if the unit is currently in \"Pre-Hold\".",
-                "operationId": "3f493cc47a95fed899d4d558946bc561",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID of the unit to approve hold",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "example": 10
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Unit status changed to Hold, status_changed_at recorded",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "id": {
-                                            "type": "integer",
-                                            "example": 10
-                                        },
-                                        "prop_type": {
-                                            "type": "string",
-                                            "example": "Residential"
-                                        },
-                                        "unit_type": {
-                                            "type": "string",
-                                            "example": "Apartment"
-                                        },
-                                        "unit_no": {
-                                            "type": "string",
-                                            "example": "A101"
-                                        },
-                                        "floor": {
-                                            "type": "string",
-                                            "example": "1"
-                                        },
-                                        "parking": {
-                                            "type": "string",
-                                            "example": "Covered"
-                                        },
-                                        "pool_jacuzzi": {
-                                            "type": "string",
-                                            "example": "None"
-                                        },
-                                        "suite_area": {
-                                            "type": "number",
-                                            "format": "float",
-                                            "example": 120.5
-                                        },
-                                        "balcony_area": {
-                                            "type": "number",
-                                            "format": "float",
-                                            "example": 15.75
-                                        },
-                                        "total_area": {
-                                            "type": "number",
-                                            "format": "float",
-                                            "example": 136.25
-                                        },
-                                        "furnished": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "unit_view": {
-                                            "type": "string",
-                                            "example": "City View"
-                                        },
-                                        "price": {
-                                            "type": "number",
-                                            "format": "float",
-                                            "example": 350000
-                                        },
-                                        "completion_date": {
-                                            "type": "string",
-                                            "format": "date",
-                                            "example": "2025-12-15"
-                                        },
-                                        "building_id": {
-                                            "type": "integer",
-                                            "example": 5
-                                        },
-                                        "status": {
-                                            "type": "string",
-                                            "example": "Hold"
-                                        },
-                                        "status_changed_at": {
-                                            "type": "string",
-                                            "format": "date-time",
-                                            "example": "2025-03-11T12:00:00Z"
-                                        },
-                                        "created_at": {
-                                            "type": "string",
-                                            "format": "date-time",
-                                            "example": "2025-03-10T12:00:00Z"
-                                        },
-                                        "updated_at": {
-                                            "type": "string",
-                                            "format": "date-time",
-                                            "example": "2025-03-11T12:00:00Z"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden (user lacks permission)"
-                    },
-                    "404": {
-                        "description": "Unit not found"
-                    },
-                    "422": {
-                        "description": "Cannot approve hold unless the unit is in 'Pre-Hold'"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            }
-        },
-        "/units/{id}/hold/reject": {
-            "post": {
-                "tags": [
-                    "Unit"
-                ],
-                "summary": "Reject hold for a unit",
-                "description": "Reject hold for a unit (resets status to \"Available\").\n\nOnly allowed if the unit is currently in \"Pre-Hold\".",
-                "operationId": "7e6ea205920233ec052395638aa827ce",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID of the unit to reject hold",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "example": 10
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Unit status reset to Available",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "id": {
-                                            "type": "integer",
-                                            "example": 10
-                                        },
-                                        "prop_type": {
-                                            "type": "string",
-                                            "example": "Residential"
-                                        },
-                                        "unit_type": {
-                                            "type": "string",
-                                            "example": "Apartment"
-                                        },
-                                        "unit_no": {
-                                            "type": "string",
-                                            "example": "A101"
-                                        },
-                                        "floor": {
-                                            "type": "string",
-                                            "example": "1"
-                                        },
-                                        "parking": {
-                                            "type": "string",
-                                            "example": "Covered"
-                                        },
-                                        "pool_jacuzzi": {
-                                            "type": "string",
-                                            "example": "None"
-                                        },
-                                        "suite_area": {
-                                            "type": "number",
-                                            "format": "float",
-                                            "example": 120.5
-                                        },
-                                        "balcony_area": {
-                                            "type": "number",
-                                            "format": "float",
-                                            "example": 15.75
-                                        },
-                                        "total_area": {
-                                            "type": "number",
-                                            "format": "float",
-                                            "example": 136.25
-                                        },
-                                        "furnished": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "unit_view": {
-                                            "type": "string",
-                                            "example": "City View"
-                                        },
-                                        "price": {
-                                            "type": "number",
-                                            "format": "float",
-                                            "example": 350000
-                                        },
-                                        "completion_date": {
-                                            "type": "string",
-                                            "format": "date",
-                                            "example": "2025-12-15"
-                                        },
-                                        "building_id": {
-                                            "type": "integer",
-                                            "example": 5
-                                        },
-                                        "status": {
-                                            "type": "string",
-                                            "example": "Available"
-                                        },
-                                        "status_changed_at": {
-                                            "type": "string",
-                                            "format": "date-time",
-                                            "example": null,
-                                            "nullable": true
-                                        },
-                                        "created_at": {
-                                            "type": "string",
-                                            "format": "date-time",
-                                            "example": "2025-03-10T12:00:00Z"
-                                        },
-                                        "updated_at": {
-                                            "type": "string",
-                                            "format": "date-time",
-                                            "example": "2025-03-10T12:00:00Z"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden (user lacks permission)"
-                    },
-                    "404": {
-                        "description": "Unit not found"
-                    },
-                    "422": {
-                        "description": "Cannot reject hold unless the unit is in 'Pre-Hold'"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            }
-        },
         "/unit-updates": {
             "get": {
                 "tags": [
@@ -5669,6 +5395,10 @@
             "description": "Building"
         },
         {
+            "name": "Unit",
+            "description": "Unit"
+        },
+        {
             "name": "Notifications",
             "description": "Notifications"
         },
@@ -5703,10 +5433,6 @@
         {
             "name": "SPA",
             "description": "SPA"
-        },
-        {
-            "name": "Unit",
-            "description": "Unit"
         },
         {
             "name": "Units",

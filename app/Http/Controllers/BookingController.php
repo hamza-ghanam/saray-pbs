@@ -429,6 +429,21 @@ class BookingController extends Controller
             $unit->status_changed_at = now();
             $unit->save();
 
+            $ceoUsers = User::role('CEO')->with('deviceTokens')->get();
+
+            $ceoTokens = $ceoUsers->pluck('deviceTokens')
+                ->flatten()
+                ->pluck('token')
+                ->toArray();
+
+            $title = "Booking Initiating";
+            $body = "User {$user->name} has booked the unit: {$unit->id}";
+            $data = [
+                'booking_id'    => (string)$booking->id,
+                'timestamp'     => now()->toIso8601String(),
+            ];
+            $this->fcmService->sendPushNotification($ceoTokens, $title, $body, $data);
+
         } catch (\Exception $ex) {
             DB::rollback();
             return response()->json(['error' => $ex->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
@@ -994,10 +1009,16 @@ class BookingController extends Controller
             $ceoUsers = User::role('CEO')->with('deviceTokens')->get();
 
             // Extract tokens into a flat array
+            $createdByTokens = $booking->unit->user
+                ? $booking->unit->user->deviceTokens->pluck('token')->toArray()
+                : [];
+
             $ceoTokens = $ceoUsers->pluck('deviceTokens')
                 ->flatten()
                 ->pluck('token')
                 ->toArray();
+
+            $deviceTokens = array_merge($ceoTokens, $createdByTokens);
 
             $title = "Booking Approved";
             $body = "Booking ID: {$booking->id} has been approved by {$role}.";
@@ -1007,7 +1028,7 @@ class BookingController extends Controller
                 'new_status'    => $booking->status,
                 'timestamp'     => now()->toIso8601String(),
             ];
-            $this->fcmService->sendPushNotification($ceoTokens, $title, $body, $data);
+            $this->fcmService->sendPushNotification($deviceTokens, $title, $body, $data);
 
             return response()->json([
                 'message'  => "Booking approved by {$role}.",

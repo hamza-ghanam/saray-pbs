@@ -37,6 +37,11 @@ class Unit extends Model
         return $this->hasMany(Booking::class);
     }
 
+    public function holdings()
+    {
+        return $this->hasMany(Holding::class);
+    }
+
     public function approvals()
     {
         return $this->hasMany(Approval::class, 'ref_id')->where('ref_type', 'Unit');
