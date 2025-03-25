@@ -350,12 +350,12 @@ class UserManagementController extends Controller
             'role' => 'required|string|in:' . implode(',', array_keys($rolePermissions)),
 
             // Optional doc fields (just define them as sometimes|file)
-            'rera_cert' => 'sometimes|file|mimes:pdf,jpg,jpeg,png',
-            'trade_license' => 'sometimes|file|mimes:pdf,jpg,jpeg,png',
-            'bank_account' => 'sometimes|file|mimes:pdf,jpg,jpeg,png',
-            'tax_registration' => 'sometimes|file|mimes:pdf,jpg,jpeg,png',
-            'contract' => 'sometimes|file|mimes:pdf,jpg,jpeg,png',
-            'scope_of_work' => 'sometimes|file|mimes:pdf,jpg,jpeg,png',
+            'rera_cert' => 'sometimes|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'trade_license' => 'sometimes|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'bank_account' => 'sometimes|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'tax_registration' => 'sometimes|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'contract' => 'sometimes|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'scope_of_work' => 'sometimes|file|mimes:pdf,jpg,jpeg,png|max:2048',
         ]);
 
         if ($validator->fails()) {
@@ -572,12 +572,12 @@ class UserManagementController extends Controller
             'email' => 'sometimes|email|unique:users,email,' . $user->id,
 
             // Optional doc uploads
-            'rera_cert' => 'sometimes|file|mimes:pdf,jpg,jpeg,png',
-            'trade_license' => 'sometimes|file|mimes:pdf,jpg,jpeg,png',
-            'bank_account' => 'sometimes|file|mimes:pdf,jpg,jpeg,png',
-            'tax_registration' => 'sometimes|file|mimes:pdf,jpg,jpeg,png',
-            'contract' => 'sometimes|file|mimes:pdf,jpg,jpeg,png',
-            'scope_of_work' => 'sometimes|file|mimes:pdf,jpg,jpeg,png',
+            'rera_cert' => 'sometimes|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'trade_license' => 'sometimes|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'bank_account' => 'sometimes|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'tax_registration' => 'sometimes|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'contract' => 'sometimes|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'scope_of_work' => 'sometimes|file|mimes:pdf,jpg,jpeg,png|max:2048',
 
         ];
 

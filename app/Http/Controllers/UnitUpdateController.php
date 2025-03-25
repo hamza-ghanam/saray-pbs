@@ -274,7 +274,7 @@ class UnitUpdateController extends Controller
         // Validate the request data
         $data = $request->validate([
             'description' => 'required|string',
-            'attachment'  => 'nullable|file|mimes:pdf,jpg,jpeg,png'
+            'attachment'  => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048'
         ]);
 
         // Find the specified unit

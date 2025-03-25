@@ -60,7 +60,7 @@ class BrokerController extends Controller
         $validator = Validator::make($request->all(), [
             'email'            => 'required|email',
             'password'         => 'required|string',
-            'signed_agreement' => 'required|file|mimes:pdf,jpg,jpeg,png,zip',
+            'signed_agreement' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
         ]);
 
         if ($validator->fails()) {

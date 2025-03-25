@@ -284,16 +284,16 @@ class OneTimeLinkController extends Controller
         $additionalRules = [];
         if ($userType === 'Broker') {
             $additionalRules = [
-                'rera_cert' => 'required|file|mimes:pdf,jpg,jpeg,png',
-                'trade_license' => 'required|file|mimes:pdf,jpg,jpeg,png',
-                'bank_account' => 'required|file|mimes:pdf,jpg,jpeg,png',
-                'tax_registration' => 'required|file|mimes:pdf,jpg,jpeg,png',
+                'rera_cert' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
+                'trade_license' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
+                'bank_account' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
+                'tax_registration' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
             ];
         } elseif ($userType === 'Contractor') {
             $additionalRules = [
-                'contract' => 'required|file|mimes:pdf,jpg,jpeg,png',
-                'trade_license' => 'required|file|mimes:pdf,jpg,jpeg,png',
-                'scope_of_work' => 'required|file|mimes:pdf,jpg,jpeg,png',
+                'contract'      => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048|max:2048',
+                'trade_license' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048|max:2048',
+                'scope_of_work' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048|max:2048',
             ];
         } else {
             return response()->json(['error' => 'Invalid user_type in OTL'], Response::HTTP_BAD_REQUEST);

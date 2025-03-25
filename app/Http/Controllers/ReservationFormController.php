@@ -234,7 +234,7 @@ class ReservationFormController extends Controller
 
         // 2. Validate the uploaded file
         $validator = Validator::make($request->all(), [
-            'signed_rf' => 'required|file|mimes:pdf',
+            'signed_rf' => 'required|file|mimes:pdf|max:2048',
         ]);
 
         if ($validator->fails()) {

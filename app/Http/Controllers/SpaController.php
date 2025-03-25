@@ -232,7 +232,7 @@ class SpaController extends Controller
 
         // 1. Validate the uploaded file
         $validator = Validator::make($request->all(), [
-            'signed_spa' => 'required|file|mimes:pdf',
+            'signed_spa' => 'required|file|mimes:pdf|max:2048',
         ]);
 
         if ($validator->fails()) {

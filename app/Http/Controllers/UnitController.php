@@ -255,7 +255,7 @@ class UnitController extends Controller
             'price' => 'required|numeric',
             'completion_date' => 'required|date|after_or_equal:today',
             'building_id' => 'required|exists:buildings,id',
-            'floor_plan' => 'nullable|file|mimes:pdf,jpg,jpeg,png',
+            'floor_plan' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
             'dld_fee_percentage' => 'required|numeric',
             'admin_fee' => 'required|numeric',
             'EOI' => 'nullable|numeric',
@@ -429,7 +429,7 @@ class UnitController extends Controller
             'price' => 'sometimes|required|numeric',
             'building_id' => 'sometimes|required|exists:buildings,id',
             'status' => 'sometimes|required|in:Pending,Available,Pre-Booked,Booked,Sold,Pre-Hold,Hold,Cancelled',
-            'floor_plan' => 'nullable|file|mimes:pdf,jpg,jpeg,png',
+            'floor_plan' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
         ]);
 
         if ($validator->fails()) {

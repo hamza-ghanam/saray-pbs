@@ -178,7 +178,7 @@ class BookingController extends Controller
 
         // Validate file upload (accepting images and PDFs)
         $validator = Validator::make($request->all(), [
-            'document' => 'required|file|mimes:jpg,jpeg,png,pdf',
+            'document' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
 
         if ($validator->fails()) {
@@ -355,7 +355,7 @@ class BookingController extends Controller
             'nationality' => 'required|string|max:255',
             'unit_id' => 'required|integer|exists:units,id',
             'payment_plan_id' => 'required|integer|exists:payment_plans,id',
-            'receipt' => 'nullable|file|mimes:pdf,jpg,jpeg,png'
+            'receipt' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048'
         ]);
 
         if ($validator->fails()) {
@@ -506,7 +506,7 @@ class BookingController extends Controller
 
         // Validate the uploaded file
         $validator = Validator::make($request->all(), [
-            'receipt' => 'required|file|mimes:pdf,jpg,jpeg,png',
+            'receipt' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
         ]);
 
         if ($validator->fails()) {
@@ -645,7 +645,7 @@ class BookingController extends Controller
             'gender'          => 'sometimes|required|string|max:10',
             'nationality'     => 'sometimes|required|string|max:255',
             'payment_plan_id' => 'sometimes|integer|exists:payment_plans,id',
-            'receipt'         => 'nullable|file|mimes:pdf,jpg,jpeg,png'
+            'receipt'         => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048'
         ]);
 
         if ($validator->fails()) {
