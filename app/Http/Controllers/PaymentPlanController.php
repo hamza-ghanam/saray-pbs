@@ -6,6 +6,7 @@ use App\Models\PaymentPlan;
 use App\Models\Installment;
 use App\Models\Unit;
 use Carbon\Carbon;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
@@ -60,7 +61,7 @@ class PaymentPlanController extends Controller
     {
         $user = $request->user();
         if (!$user->can('show payment plan')) {
-            abort(403, 'Unauthorized');
+            abort(Response::HTTP_FORBIDDEN, 'Unauthorized');
         }
 
         $paymentPlan = PaymentPlan::with('installments')->findOrFail($id);
@@ -103,7 +104,7 @@ class PaymentPlanController extends Controller
     {
         $user = $request->user();
         if (!$user->can('show payment plan')) {
-            abort(403, 'Unauthorized');
+            abort(Response::HTTP_FORBIDDEN, 'Unauthorized');
         }
 
         // Optionally, you may check if the unit exists.
@@ -159,53 +160,27 @@ class PaymentPlanController extends Controller
     {
         $user = $request->user();
         if (!$user->can('add payment plan')) {
-            abort(403, 'Unauthorized');
+            abort(Response::HTTP_FORBIDDEN, 'Unauthorized');
         }
 
         Log::info("Creating custom Payment Plan with data: " . json_encode($request->all()));
 
-        $validator = Validator::make($request->all(), [
-            'unit_id'                     => 'required|exists:units,id',
-            'name'                        => 'required|string|max:255',
-            'dld_fee_percentage'          => 'required|numeric',
-            'admin_fee'                   => 'required|numeric',
-            'discount'                    => 'required|numeric',
-            'EOI'                         => 'required|numeric',
-            'booking_percentage'          => 'required|numeric|min:0|max:100',
-            'handover_percentage'         => 'required|numeric|min:0|max:100',
-            'first_construction_installment_date' => 'required|date',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
-        }
-
-        $data = $validator->validated();
-
-        // Retrieve the unit to get its selling price and completion date.
-        $unit = Unit::findOrFail($data['unit_id']);
-        $sellingPrice = $unit->price;
-        // Apply discount (as a percentage).
-        $effectivePrice = $sellingPrice * (1 - ($data['discount'] / 100));
-        // Compute construction percentage.
-        $constructionPercentage = 100 - ($data['booking_percentage'] + $data['handover_percentage']);
-
-        // Compute the DLD Fee amount
-        $dldFee = ($effectivePrice * ($data['dld_fee_percentage'] / 100));
+        $data = $this->validatePaymentPlanData($request);
+        $priceData = $this->computePriceData($data);
 
         // Create Payment Plan record.
         $paymentPlan = PaymentPlan::create([
             'unit_id'                     => $data['unit_id'],
             'name'                        => $data['name'],
-            'selling_price'               => $sellingPrice,
+            'selling_price'               => $priceData['sellingPrice'],
             'dld_fee_percentage'          => $data['dld_fee_percentage'],
-            'dld_fee'                     => $dldFee,
+            'dld_fee'                     => $priceData['dldFee'],
             'admin_fee'                   => $data['admin_fee'],
             'discount'                    => $data['discount'],
             'EOI'                         => $data['EOI'],
             'booking_percentage'          => $data['booking_percentage'],
             'handover_percentage'         => $data['handover_percentage'],
-            'construction_percentage'     => $constructionPercentage,
+            'construction_percentage'     => $priceData['constructionPercentage'],
             'first_construction_installment_date' => Carbon::parse($data['first_construction_installment_date'])->toDateString(),
         ]);
 
@@ -213,48 +188,7 @@ class PaymentPlanController extends Controller
         // Formula: (effectivePrice * booking_percentage/100)
         //          + (effectivePrice * dld_fee_percentage/100)
         //          + admin_fee - EOI
-        $bookingAmount = ($effectivePrice * ($data['booking_percentage'] / 100))
-            + $dldFee
-            + $data['admin_fee']
-            - $data['EOI'];
-
-        Installment::create([
-            'payment_plan_id' => $paymentPlan->id,
-            'description'     => 'Booking Installment',
-            'percentage'      => $data['booking_percentage'],
-            'date'            => Carbon::now()->toDateString(),
-            'amount'          => round($bookingAmount, 2),
-        ]);
-
-        // 2. Handover Installment:
-        $completionDate = Carbon::parse($unit->completion_date);
-        $handoverAmount = $effectivePrice * ($data['handover_percentage'] / 100);
-
-        Installment::create([
-            'payment_plan_id' => $paymentPlan->id,
-            'description'     => 'Handover Installment',
-            'percentage'      => $data['handover_percentage'],
-            'date'            => $completionDate->toDateString(),
-            'amount'          => round($handoverAmount, 2),
-        ]);
-
-        // 3. Construction Installments:
-        $constructionTotal = $effectivePrice * ($constructionPercentage / 100);
-        $firstConstructionDate = Carbon::parse($data['first_construction_installment_date']);
-        $months = $firstConstructionDate->diffInMonths($completionDate) + 1;
-        $monthlyAmount = $constructionTotal / $months;
-
-        for ($i = 0; $i < $months; $i++) {
-            $installmentDate = $firstConstructionDate->copy()->addMonths($i);
-
-            Installment::create([
-                'payment_plan_id' => $paymentPlan->id,
-                'description'     => 'Construction Installment ' . ($i + 1),
-                'percentage'      => round($constructionPercentage / $months, 2),
-                'date'            => $installmentDate->toDateString(),
-                'amount'          => round($monthlyAmount, 2),
-            ]);
-        }
+        $this->calculateInstallments($priceData, $data, $paymentPlan);
 
         return response()->json([
             'payment_plan' => $paymentPlan,
@@ -304,47 +238,27 @@ class PaymentPlanController extends Controller
     public function update(Request $request, $id)
     {
         $user = $request->user();
-        if (!$user->can('update payment plan')) {
-            abort(403, 'Unauthorized');
+        if (!$user->can('edit payment plan')) {
+            abort(Response::HTTP_FORBIDDEN, 'Unauthorized');
         }
 
         $paymentPlan = PaymentPlan::findOrFail($id);
 
-        $validator = Validator::make($request->all(), [
-            'unit_id'                     => 'required|exists:units,id',
-            'name'                        => 'required|string|max:255',
-            'dld_fee_percentage'          => 'required|numeric',
-            'admin_fee'                   => 'required|numeric',
-            'discount'                    => 'required|numeric',
-            'EOI'                         => 'required|numeric',
-            'booking_percentage'          => 'required|numeric|min:0|max:100',
-            'handover_percentage'         => 'required|numeric|min:0|max:100',
-            'first_construction_installment_date' => 'required|date',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
-        }
-
-        $data = $validator->validated();
-        $unit = Unit::findOrFail($data['unit_id']);
-        $sellingPrice = $unit->price;
-        $effectivePrice = $sellingPrice * (1 - ($data['discount'] / 100));
-        $constructionPercentage = 100 - ($data['booking_percentage'] + $data['handover_percentage']);
-        $dldFee = ($effectivePrice * ($data['dld_fee_percentage'] / 100));
+        $data = $this->validatePaymentPlanData($request);
+        $priceData = $this->computePriceData($data);
 
         $paymentPlan->update([
             'unit_id'                     => $data['unit_id'],
             'name'                        => $data['name'],
-            'selling_price'               => $sellingPrice,
+            'selling_price'               => $priceData['sellingPrice'],
             'dld_fee_percentage'          => $data['dld_fee_percentage'],
-            'dld_fee'                     => $dldFee,
+            'dld_fee'                     => $priceData['dldFee'],
             'admin_fee'                   => $data['admin_fee'],
             'discount'                    => $data['discount'],
             'EOI'                         => $data['EOI'],
             'booking_percentage'          => $data['booking_percentage'],
             'handover_percentage'         => $data['handover_percentage'],
-            'construction_percentage'     => $constructionPercentage,
+            'construction_percentage'     => $priceData['constructionPercentage'],
             'first_construction_installment_date' => Carbon::parse($data['first_construction_installment_date'])->toDateString(),
         ]);
 
@@ -353,46 +267,7 @@ class PaymentPlanController extends Controller
 
         // Recalculate installments.
         // 1. Booking Installment:
-        $bookingAmount = ($effectivePrice * ($data['booking_percentage'] / 100))
-            + $dldFee
-            + $data['admin_fee']
-            - $data['EOI'];
-
-        Installment::create([
-            'payment_plan_id' => $paymentPlan->id,
-            'description'     => 'Booking Installment',
-            'percentage'      => $data['booking_percentage'],
-            'date'            => Carbon::now()->toDateString(),
-            'amount'          => round($bookingAmount, 2),
-        ]);
-
-        // 2. Handover Installment:
-        $completionDate = Carbon::parse($unit->completion_date);
-        $handoverAmount = $effectivePrice * ($data['handover_percentage'] / 100);
-
-        Installment::create([
-            'payment_plan_id' => $paymentPlan->id,
-            'description'     => 'Handover Installment',
-            'percentage'      => $data['handover_percentage'],
-            'date'            => $completionDate->toDateString(),
-            'amount'          => round($handoverAmount, 2),
-        ]);
-
-        // 3. Construction Installments:
-        $constructionTotal = $effectivePrice * ($constructionPercentage / 100);
-        $firstConstructionDate = Carbon::parse($data['first_construction_installment_date']);
-        $months = $firstConstructionDate->diffInMonths($completionDate) + 1;
-        $monthlyAmount = $constructionTotal / $months;
-        for ($i = 0; $i < $months; $i++) {
-            $installmentDate = $firstConstructionDate->copy()->addMonths($i);
-            Installment::create([
-                'payment_plan_id' => $paymentPlan->id,
-                'description'     => 'Construction Installment ' . ($i + 1),
-                'percentage'      => round($constructionPercentage / $months, 2),
-                'date'            => $installmentDate->toDateString(),
-                'amount'          => round($monthlyAmount, 2),
-            ]);
-        }
+        $this->calculateInstallments($priceData, $data, $paymentPlan);
 
         return response()->json([
             'payment_plan' => $paymentPlan->fresh('installments'),
@@ -428,12 +303,97 @@ class PaymentPlanController extends Controller
     {
         $user = $request->user();
         if (!$user->can('delete payment plan')) {
-            abort(403, 'Unauthorized');
+            abort(Response::HTTP_FORBIDDEN, 'Unauthorized');
         }
 
         $paymentPlan = PaymentPlan::findOrFail($id);
         $paymentPlan->delete();
 
         return response()->json(null, Response::HTTP_NO_CONTENT);
+    }
+
+    private function validatePaymentPlanData(Request $request): array
+    {
+        $rules = [
+            'unit_id'                     => 'required|exists:units,id',
+            'name'                        => 'required|string|max:255',
+            'dld_fee_percentage'          => 'required|numeric',
+            'admin_fee'                   => 'required|numeric',
+            'discount'                    => 'required|numeric',
+            'EOI'                         => 'required|numeric',
+            'booking_percentage'          => 'required|numeric|min:0|max:100',
+            'handover_percentage'         => 'required|numeric|min:0|max:100',
+            'first_construction_installment_date' => 'required|date',
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails()) {
+            throw new HttpResponseException(response()->json($validator->errors(), Response::HTTP_UNPROCESSABLE_ENTITY));
+        }
+
+        return $validator->validated();
+    }
+
+    private function computePriceData(array $data): array
+    {
+        $unit = Unit::findOrFail($data['unit_id']);
+        $sellingPrice = $unit->price;
+        $effectivePrice = $sellingPrice * (1 - ($data['discount'] / 100));
+        $constructionPercentage = 100 - ($data['booking_percentage'] + $data['handover_percentage']);
+        $dldFee = $effectivePrice * ($data['dld_fee_percentage'] / 100);
+
+        return compact('unit', 'sellingPrice', 'effectivePrice', 'constructionPercentage', 'dldFee');
+    }
+
+    /**
+     * @param array $priceData
+     * @param array $data
+     * @param $paymentPlan
+     * @return void
+     */
+    private function calculateInstallments(array $priceData, array $data, PaymentPlan $paymentPlan): void
+    {
+        $bookingAmount = ($priceData['effectivePrice'] * ($data['booking_percentage'] / 100))
+            + $priceData['dldFee']
+            + $data['admin_fee']
+            - $data['EOI'];
+
+        Installment::create([
+            'payment_plan_id' => $paymentPlan->id,
+            'description' => 'Booking Installment',
+            'percentage' => $data['booking_percentage'],
+            'date' => Carbon::now()->toDateString(),
+            'amount' => round($bookingAmount, 2),
+        ]);
+
+        // 2. Handover Installment:
+        $completionDate = Carbon::parse($priceData['unit']->completion_date);
+        $handoverAmount = $priceData['effectivePrice'] * ($data['handover_percentage'] / 100);
+
+        Installment::create([
+            'payment_plan_id' => $paymentPlan->id,
+            'description' => 'Handover Installment',
+            'percentage' => $data['handover_percentage'],
+            'date' => $completionDate->toDateString(),
+            'amount' => round($handoverAmount, 2),
+        ]);
+
+        // 3. Construction Installments:
+        $constructionTotal = $priceData['effectivePrice'] * ($priceData['constructionPercentage'] / 100);
+        $firstConstructionDate = Carbon::parse($data['first_construction_installment_date']);
+        $months = $firstConstructionDate->diffInMonths($completionDate) + 1;
+        $monthlyAmount = $constructionTotal / $months;
+
+        for ($i = 0; $i < $months; $i++) {
+            $installmentDate = $firstConstructionDate->copy()->addMonths($i);
+
+            Installment::create([
+                'payment_plan_id' => $paymentPlan->id,
+                'description' => 'Construction Installment ' . ($i + 1),
+                'percentage' => round($priceData['constructionPercentage'] / $months, 2),
+                'date' => $installmentDate->toDateString(),
+                'amount' => round($monthlyAmount, 2),
+            ]);
+        }
     }
 }
