@@ -16,29 +16,48 @@ class UnitUpdateController extends Controller
      * @OA\Get(
      *     path="/unit-updates",
      *     summary="List all unit updates",
-     *     description="Returns a list of unit updates. Contractor users will only see updates for units assigned to them.",
+     *     description="Returns a paginated list of unit updates. Contractor users will only see updates for units assigned to them.",
      *     operationId="getUnitUpdates",
      *     tags={"UnitUpdates"},
      *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         description="Page number",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         description="Number of items per page (max 100)",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Successful operation",
      *         @OA\JsonContent(
-     *             type="array",
-     *             @OA\Items(
-     *                 type="object",
-     *                 @OA\Property(property="id", type="integer"),
-     *                 @OA\Property(property="unit_id", type="integer"),
-     *                 @OA\Property(property="description", type="string"),
-     *                 @OA\Property(property="attachment_path", type="string", nullable=true),
-     *                 @OA\Property(property="created_at", type="string", format="date-time"),
-     *                 @OA\Property(property="updated_at", type="string", format="date-time"),
-     *                 @OA\Property(property="unit", type="object", nullable=true,
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(
+     *                     type="object",
      *                     @OA\Property(property="id", type="integer"),
-     *                     @OA\Property(property="name", type="string"),
-     *                     @OA\Property(property="status", type="string")
+     *                     @OA\Property(property="unit_id", type="integer"),
+     *                     @OA\Property(property="description", type="string"),
+     *                     @OA\Property(property="attachment_path", type="string", nullable=true),
+     *                     @OA\Property(property="created_at", type="string", format="date-time"),
+     *                     @OA\Property(property="updated_at", type="string", format="date-time"),
+     *                     @OA\Property(property="unit", type="object", nullable=true,
+     *                         @OA\Property(property="id", type="integer"),
+     *                         @OA\Property(property="name", type="string"),
+     *                         @OA\Property(property="status", type="string")
+     *                     )
      *                 )
-     *             )
+     *             ),
+     *             @OA\Property(property="current_page", type="integer", example=1),
+     *             @OA\Property(property="last_page", type="integer", example=5),
+     *             @OA\Property(property="per_page", type="integer", example=10),
+     *             @OA\Property(property="total", type="integer", example=50)
      *         )
      *     ),
      *     @OA\Response(
@@ -57,17 +76,20 @@ class UnitUpdateController extends Controller
             abort(Response::HTTP_FORBIDDEN, 'Unauthorized');
         }
 
+        // Retrieve dynamic limit, cast to integer, and cap at 100 items per page.
+        $limit = min((int) $request->get('limit', 10), 100);
+
         // For contractor users, restrict the updates to those associated with units assigned to them.
         if ($user->hasRole('Contractor')) {
             $unitUpdates = UnitUpdate::with('unit')
                 ->whereHas('unit', function ($query) use ($user) {
                     $query->where('contractor_id', $user->id);
-                })->get();
+                })->paginate($limit);
         } else {
             // For non-contractor users, return all unit updates.
             $unitUpdates = UnitUpdate::with(['unit' => function ($query) {
                 $query->select('id', 'unit_no');
-            }])->get();
+            }])->paginate($limit);
         }
 
         return response()->json($unitUpdates, Response::HTTP_OK);
@@ -77,7 +99,7 @@ class UnitUpdateController extends Controller
      * @OA\Get(
      *     path="/units/{unitId}/updates",
      *     summary="List updates for a specific unit",
-     *     description="Retrieves the list of updates associated with a particular unit. Contractor users can only view updates for units assigned to them.",
+     *     description="Retrieves a paginated list of updates associated with a particular unit. Contractor users can only view updates for units assigned to them.",
      *     operationId="listUnitUpdatesForUnit",
      *     tags={"UnitUpdates"},
      *     security={{"bearerAuth":{}}},
@@ -88,20 +110,39 @@ class UnitUpdateController extends Controller
      *         required=true,
      *         @OA\Schema(type="integer")
      *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         description="Page number",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         description="Number of items per page (max 100)",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="List of unit updates retrieved successfully",
      *         @OA\JsonContent(
-     *             type="array",
-     *             @OA\Items(
-     *                 type="object",
-     *                 @OA\Property(property="id", type="integer"),
-     *                 @OA\Property(property="unit_id", type="integer"),
-     *                 @OA\Property(property="description", type="string"),
-     *                 @OA\Property(property="attachment_path", type="string", nullable=true),
-     *                 @OA\Property(property="created_at", type="string", format="date-time"),
-     *                 @OA\Property(property="updated_at", type="string", format="date-time")
-     *             )
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="id", type="integer"),
+     *                     @OA\Property(property="unit_id", type="integer"),
+     *                     @OA\Property(property="description", type="string"),
+     *                     @OA\Property(property="attachment_path", type="string", nullable=true),
+     *                     @OA\Property(property="created_at", type="string", format="date-time"),
+     *                     @OA\Property(property="updated_at", type="string", format="date-time")
+     *                 )
+     *             ),
+     *             @OA\Property(property="current_page", type="integer", example=1),
+     *             @OA\Property(property="last_page", type="integer", example=5),
+     *             @OA\Property(property="per_page", type="integer", example=10),
+     *             @OA\Property(property="total", type="integer", example=50)
      *         )
      *     ),
      *     @OA\Response(
@@ -124,7 +165,7 @@ class UnitUpdateController extends Controller
             abort(Response::HTTP_FORBIDDEN, 'Unauthorized');
         }
 
-        // Retrieve the unit with its updates
+        // Retrieve the unit with its updates.
         $unit = Unit::with('unitUpdates')->findOrFail($unitId);
 
         // For contractor users, ensure they only view updates for their assigned units.
@@ -132,8 +173,11 @@ class UnitUpdateController extends Controller
             abort(Response::HTTP_FORBIDDEN, 'Unauthorized');
         }
 
-        // Return the updates for the specified unit
-        $updates = $unit->unitUpdates;
+        // Retrieve dynamic limit, cast to integer, and cap at 100 items per page.
+        $limit = min((int) $request->get('limit', 10), 100);
+
+        // Use the unitUpdates relationship as a query to paginate.
+        $updates = $unit->unitUpdates()->paginate($limit);
 
         return response()->json($updates, Response::HTTP_OK);
     }

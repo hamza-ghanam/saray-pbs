@@ -22,27 +22,46 @@ class OneTimeLinkController extends Controller
      * @OA\Get(
      *     path="/otls",
      *     summary="List all One-Time Links",
-     *     description="Returns a list of all One-Time Links along with their associated user (if exists).",
+     *     description="Returns a paginated list of all One-Time Links along with their associated user (if exists).",
      *     operationId="getOTLs",
      *     tags={"OneTime Links"},
      *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         description="Page number",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         description="Number of items per page",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Successful operation",
      *         @OA\JsonContent(
-     *             type="array",
-     *             @OA\Items(
-     *                 type="object",
-     *                 @OA\Property(property="id", type="integer"),
-     *                 @OA\Property(property="token", type="string"),
-     *                 @OA\Property(property="user_type", type="string"),
-     *                 @OA\Property(property="expired_at", type="string", format="date-time", nullable=true),
-     *                 @OA\Property(property="user", type="object", nullable=true,
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(
+     *                     type="object",
      *                     @OA\Property(property="id", type="integer"),
-     *                     @OA\Property(property="name", type="string"),
-     *                     @OA\Property(property="email", type="string")
+     *                     @OA\Property(property="token", type="string"),
+     *                     @OA\Property(property="user_type", type="string"),
+     *                     @OA\Property(property="expired_at", type="string", format="date-time", nullable=true),
+     *                     @OA\Property(property="user", type="object", nullable=true,
+     *                         @OA\Property(property="id", type="integer"),
+     *                         @OA\Property(property="name", type="string"),
+     *                         @OA\Property(property="email", type="string")
+     *                     )
      *                 )
-     *             )
+     *             ),
+     *             @OA\Property(property="current_page", type="integer", example=1),
+     *             @OA\Property(property="last_page", type="integer", example=5),
+     *             @OA\Property(property="per_page", type="integer", example=10),
+     *             @OA\Property(property="total", type="integer", example=50)
      *         )
      *     ),
      *     @OA\Response(
@@ -60,10 +79,12 @@ class OneTimeLinkController extends Controller
             abort(Response::HTTP_FORBIDDEN, 'Unauthorized');
         }
 
-        $otls = OneTimeLink::with('user')->get();
+        $limit = min((int) $request->get('limit', 10), 100);
+        $otls = OneTimeLink::with('user')->paginate($limit);
 
         return response()->json($otls, Response::HTTP_OK);
     }
+
 
     /**
      * Generate a one-time link for a Broker or Contractor.

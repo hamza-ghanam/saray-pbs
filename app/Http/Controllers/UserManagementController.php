@@ -43,22 +43,46 @@ class UserManagementController extends Controller
      *         required=false,
      *         @OA\Schema(type="string", example="Pending")
      *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         description="Page number",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         description="Number of items per page (max 100)",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="List of filtered users",
      *         @OA\JsonContent(
-     *             type="array",
-     *             @OA\Items(
-     *                 @OA\Property(property="id", type="integer", example=42),
-     *                 @OA\Property(property="name", type="string", example="John Doe"),
-     *                 @OA\Property(property="email", type="string", example="john@example.com"),
-     *                 @OA\Property(property="status", type="string", example="Active"),
-     *                 @OA\Property(property="role", type="string", example="Broker")
-     *             )
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(
+     *                     @OA\Property(property="id", type="integer", example=42),
+     *                     @OA\Property(property="name", type="string", example="John Doe"),
+     *                     @OA\Property(property="email", type="string", example="john@example.com"),
+     *                     @OA\Property(property="status", type="string", example="Active"),
+     *                     @OA\Property(property="role", type="string", example="Broker"),
+     *                     @OA\Property(property="units", type="array", @OA\Items(
+     *                         @OA\Property(property="id", type="integer", example=1),
+     *                         @OA\Property(property="name", type="string", example="Unit 101"),
+     *                         @OA\Property(property="status", type="string", example="Available")
+     *                     ))
+     *                 )
+     *             ),
+     *             @OA\Property(property="current_page", type="integer", example=1),
+     *             @OA\Property(property="last_page", type="integer", example=5),
+     *             @OA\Property(property="per_page", type="integer", example=10),
+     *             @OA\Property(property="total", type="integer", example=50)
      *         )
      *     ),
      *     @OA\Response(response=403, description="Forbidden (no permission to view users)"),
-     *     @OA\Response(response=422, description="Validation error"),
+     *     @OA\Response(response=422, description="Validation error")
      * )
      */
     public function listAllUsers(Request $request)
@@ -74,11 +98,9 @@ class UserManagementController extends Controller
             $q->where('name', 'System Maintenance');
         });
 
-        // Optional role filter
-        // e.g. /users?role=Broker
+        // Optional role filter e.g. /users?role=Broker
         if ($request->filled('role')) {
             $role = $request->input('role');
-            // We can use Spatie's scope to filter users who have that role
             $query->whereHas('roles', function ($q) use ($role) {
                 $q->where('name', $role);
             });
@@ -88,18 +110,19 @@ class UserManagementController extends Controller
             }
         }
 
-        // Optional status filter
-        // e.g. /users?status=Active
+        // Optional status filter e.g. /users?status=Active
         if ($request->filled('status')) {
             $status = $request->input('status');
             $query->where('status', $status);
         }
 
-        // Execute the query
-        $users = $query->get();
+        // Dynamic pagination: retrieve the 'limit' parameter (default 10, capped at 100)
+        $limit = min((int) $request->get('limit', 10), 100);
+        $usersPaginated = $query->paginate($limit);
 
-        $result = $users->map(function ($user) {
-            $roleName = $user->roles->pluck('name')->first(); // only one role per user
+        // Transform each user into the desired output format.
+        $transformedUsers = $usersPaginated->getCollection()->map(function ($user) {
+            $roleName = $user->roles->pluck('name')->first(); // assuming one role per user
             $userData = [
                 'id'     => $user->id,
                 'name'   => $user->name,
@@ -108,7 +131,7 @@ class UserManagementController extends Controller
                 'role'   => $roleName,
             ];
 
-            // If user is a contractor, include their assigned units
+            // If user is a contractor, include their assigned units.
             if (strtolower($roleName) === 'contractor') {
                 $userData['units'] = $user->contractorUnits->map(function ($unit) {
                     return [
@@ -122,8 +145,12 @@ class UserManagementController extends Controller
             return $userData;
         });
 
-        return response()->json($result, Response::HTTP_OK);
+        // Replace the original collection with the transformed data.
+        $usersPaginated->setCollection($transformedUsers);
+
+        return response()->json($usersPaginated, Response::HTTP_OK);
     }
+
 
     /**
      * Get user details, including role, permissions, and doc download links.

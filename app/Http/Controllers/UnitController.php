@@ -114,11 +114,11 @@ use Symfony\Component\HttpFoundation\Response;
 class UnitController extends Controller
 {
     /**
-     * Display a listing of the units.
+     * Display a paginated listing of the units.
      *
      * @OA\Get(
      *     path="/units",
-     *     summary="List all units",
+     *     summary="List all units with optional filters and pagination",
      *     tags={"Unit"},
      *     security={{"sanctum":{}}},
      *     @OA\Parameter(
@@ -154,12 +154,35 @@ class UnitController extends Controller
      *         in="query",
      *         description="Filter units by status",
      *         required=false,
-     *         @OA\Schema(type="string", enum={"Pending", "Available", "Pre-Booked", "Booked", "Sold", "Pre-Hold", "Hold", "Cancelled"})
+     *         @OA\Schema(
+     *             type="string",
+     *             enum={"Pending", "Available", "Pre-Booked", "Booked", "Sold", "Pre-Hold", "Hold", "Cancelled"}
+     *         )
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         description="Page number",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         description="Number of items per page (max 100)",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=10)
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="A list of units",
-     *         @OA\JsonContent(type="array", @OA\Items(ref="#/components/schemas/Unit"))
+     *         description="A paginated list of units",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/Unit")),
+     *             @OA\Property(property="current_page", type="integer", example=1),
+     *             @OA\Property(property="last_page", type="integer", example=5),
+     *             @OA\Property(property="per_page", type="integer", example=10),
+     *             @OA\Property(property="total", type="integer", example=50)
+     *         )
      *     ),
      *     @OA\Response(response=403, description="Forbidden")
      * )
@@ -201,11 +224,12 @@ class UnitController extends Controller
             $query->where('status', $request->input('status'));
         }
 
-        $units = $query->get();
+        // Dynamic pagination: retrieve 'limit', cast to integer, and cap at 100 items per page.
+        $limit = min((int) $request->get('limit', 10), 100);
+        $units = $query->paginate($limit);
 
         return response()->json($units, Response::HTTP_OK);
     }
-
 
     /**
      * Store a newly created unit.

@@ -56,21 +56,38 @@ class RolePermissionController extends Controller
     }
 
     /**
-     * List all permission names.
+     * List all permission names with pagination.
      *
      * @OA\Get(
      *     path="/permissions",
      *     summary="List all permission names",
-     *     description="Returns an array of permission names in the system.",
+     *     description="Returns a paginated list of permission names in the system.",
      *     operationId="listPermissionNames",
      *     tags={"Roles & Permissions"},
      *     security={{"sanctum":{}}},
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         description="Page number",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         description="Number of items per page (max 100)",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="A list of permission names",
+     *         description="A paginated list of permission names",
      *         @OA\JsonContent(
-     *             type="array",
-     *             @OA\Items(type="string", example="edit articles")
+     *             @OA\Property(property="data", type="array", @OA\Items(type="string", example="edit articles")),
+     *             @OA\Property(property="current_page", type="integer", example=1),
+     *             @OA\Property(property="last_page", type="integer", example=5),
+     *             @OA\Property(property="per_page", type="integer", example=10),
+     *             @OA\Property(property="total", type="integer", example=50)
      *         )
      *     ),
      *     @OA\Response(
@@ -88,8 +105,25 @@ class RolePermissionController extends Controller
             return response()->json(['error' => 'Forbidden'], Response::HTTP_FORBIDDEN);
         }
 
-        $permissions = Permission::all()->pluck('name');
-        return response()->json($permissions, Response::HTTP_OK);
+        // Retrieve dynamic limit, cast to integer, and cap at 100 items per page.
+        $limit = min((int) $request->get('limit', 10), 100);
+
+        // Paginate the permissions query.
+        $permissionsPaginated = Permission::query()->paginate($limit);
+
+        // Pluck only the permission names.
+        $permissionNames = $permissionsPaginated->getCollection()->pluck('name');
+
+        // Build a paginated response with the permission names and pagination metadata.
+        $paginatedResponse = [
+            'data' => $permissionNames,
+            'current_page' => $permissionsPaginated->currentPage(),
+            'last_page' => $permissionsPaginated->lastPage(),
+            'per_page' => $permissionsPaginated->perPage(),
+            'total' => $permissionsPaginated->total(),
+        ];
+
+        return response()->json($paginatedResponse, Response::HTTP_OK);
     }
 
     /**

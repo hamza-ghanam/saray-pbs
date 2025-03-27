@@ -35,11 +35,11 @@ use Symfony\Component\HttpFoundation\Response;
 class BuildingController extends Controller
 {
     /**
-     * Display a listing of buildings.
+     * Display a paginated listing of buildings.
      *
      * @OA\Get(
      *     path="/buildings",
-     *     summary="List all buildings",
+     *     summary="List all buildings with optional filters and pagination",
      *     tags={"Building"},
      *     security={{"sanctum":{}}},
      *     @OA\Parameter(
@@ -63,10 +63,30 @@ class BuildingController extends Controller
      *         required=false,
      *         @OA\Schema(type="string")
      *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         description="Page number",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         description="Number of items per page",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="A list of buildings",
-     *         @OA\JsonContent(type="array", @OA\Items(ref="#/components/schemas/Building"))
+     *         description="A paginated list of buildings",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/Building")),
+     *             @OA\Property(property="current_page", type="integer", example=1),
+     *             @OA\Property(property="last_page", type="integer", example=5),
+     *             @OA\Property(property="per_page", type="integer", example=10),
+     *             @OA\Property(property="total", type="integer", example=50)
+     *         )
      *     ),
      *     @OA\Response(response=403, description="Forbidden")
      * )
@@ -82,24 +102,21 @@ class BuildingController extends Controller
 
         $query = Building::query();
 
-        // Filter by name if provided
         if ($request->filled('name')) {
-            $name = $request->input('name');
-            $query->where('name', 'like', "%{$name}%");
+            $query->where('name', 'like', '%' . $request->input('name') . '%');
         }
 
-        // Filter by location if provided
         if ($request->filled('location')) {
-            $location = $request->input('location');
-            $query->where('location', 'like', "%{$location}%");
+            $query->where('location', 'like', '%' . $request->input('location') . '%');
         }
 
-        // Filter by status if provided
         if ($request->filled('status')) {
             $query->where('status', $request->input('status'));
         }
 
-        $buildings = $query->get();
+        // Dynamic pagination
+        $limit = min((int) $request->get('limit', 10), 100);
+        $buildings = $query->paginate($limit);
 
         return response()->json($buildings, Response::HTTP_OK);
     }
