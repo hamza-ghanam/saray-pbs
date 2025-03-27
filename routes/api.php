@@ -98,8 +98,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/units/hold/{id}/respond', [HoldingController::class, 'respondHold']);
 });
 
-
-
 // One-Time Links
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/otls', [OneTimeLinkController::class, 'index']);
@@ -110,7 +108,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // Roles & Permissions
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/roles', [RolePermissionController::class, 'index']);
+    Route::get('/roles', [RolePermissionController::class, 'listRoles']);
+    Route::get('/permissions', [RolePermissionController::class, 'listPermissions']);
     Route::put('/roles/{role}', [RolePermissionController::class, 'updateRolePermissions']);
     Route::post('/roles', [RolePermissionController::class, 'storeRole']);
     Route::put('/users/{user}/role', [RolePermissionController::class, 'changeUserRole']);

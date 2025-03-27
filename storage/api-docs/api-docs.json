@@ -2655,7 +2655,7 @@
                 ],
                 "summary": "List all roles and their permissions",
                 "description": "List all roles and their assigned permissions.",
-                "operationId": "7bd5e36c7ce525e40b6e2cd98e614034",
+                "operationId": "2ab46a9009ef211c8ff5139dc8edd8b5",
                 "responses": {
                     "200": {
                         "description": "Roles and their permissions",
@@ -2736,6 +2736,53 @@
                     },
                     "403": {
                         "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/permissions": {
+            "get": {
+                "tags": [
+                    "Roles & Permissions"
+                ],
+                "summary": "List all permission names",
+                "description": "Returns an array of permission names in the system.",
+                "operationId": "listPermissionNames",
+                "responses": {
+                    "200": {
+                        "description": "A list of permission names",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string",
+                                        "example": "edit articles"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden (user lacks permission)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Forbidden"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [

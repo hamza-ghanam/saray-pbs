@@ -34,8 +34,15 @@ class RolePermissionController extends Controller
      *     @OA\Response(response=403, description="Forbidden")
      * )
      */
-    public function index()
+    public function listRoles(Request $request)
     {
+        $user = $request->user();
+        Log::info("User {$user->id} is listing roles and their permissions.");
+
+        if (!$user->can('manage roles and permissions')) {
+            return response()->json(['message' => 'Forbidden'], Response::HTTP_FORBIDDEN);
+        }
+
         $roles = Role::where('name', '!=', 'System Maintenance')
             ->with('permissions')
             ->get();
@@ -46,6 +53,43 @@ class RolePermissionController extends Controller
                 'permissions' => $role->permissions->pluck('name'),
             ];
         }), Response::HTTP_OK);
+    }
+
+    /**
+     * List all permission names.
+     *
+     * @OA\Get(
+     *     path="/permissions",
+     *     summary="List all permission names",
+     *     description="Returns an array of permission names in the system.",
+     *     operationId="listPermissionNames",
+     *     tags={"Roles & Permissions"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="A list of permission names",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(type="string", example="edit articles")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Forbidden (user lacks permission)",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="Forbidden")
+     *         )
+     *     )
+     * )
+     */
+    public function listPermissions(Request $request)
+    {
+        if (!$request->user()->can('manage roles and permissions')) {
+            return response()->json(['error' => 'Forbidden'], Response::HTTP_FORBIDDEN);
+        }
+
+        $permissions = Permission::all()->pluck('name');
+        return response()->json($permissions, Response::HTTP_OK);
     }
 
     /**
@@ -76,10 +120,19 @@ class RolePermissionController extends Controller
      */
     public function updateRolePermissions(Request $request, $roleName)
     {
+        $user = $request->user();
+
+        // Ensure the authenticated user has permission to view permissions.
+        if (!$user->can('manage roles and permissions')) {
+            return response()->json(['error' => 'Forbidden'], Response::HTTP_FORBIDDEN);
+        }
+
         $role = Role::where('name', $roleName)->first();
         if (!$role) {
             return response()->json(['error' => 'Role not found'], Response::HTTP_NOT_FOUND);
         }
+
+        Log::info("User {$user->id} is attempting to update role {$roleName}.");
 
         if ($roleName === 'System Maintenance') {
             return response()->json(['error' => 'Forbidden'], Response::HTTP_FORBIDDEN);
@@ -127,6 +180,13 @@ class RolePermissionController extends Controller
      */
     public function storeRole(Request $request)
     {
+        $user = $request->user();
+
+        // Ensure the authenticated user has permission to view permissions.
+        if (!$user->can('manage roles and permissions')) {
+            return response()->json(['error' => 'Forbidden'], Response::HTTP_FORBIDDEN);
+        }
+
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|unique:roles,name',
             'permissions' => 'required|array',
@@ -136,6 +196,8 @@ class RolePermissionController extends Controller
         if ($validator->fails()) {
             return response()->json($validator->errors(), Response::HTTP_UNPROCESSABLE_ENTITY);
         }
+
+        Log::info("User {$user->id} is attempting to create a new role {$request->name}.");
 
         if ($request->name === 'System Maintenance') {
             return response()->json(['error' => 'Forbidden'], Response::HTTP_FORBIDDEN);
@@ -188,6 +250,13 @@ class RolePermissionController extends Controller
             return response()->json(['error' => 'User not found'], Response::HTTP_NOT_FOUND);
         }
 
+        $callUser = $request->user();
+        Log::info("User {$callUser->id} is listing roles and their permissions.");
+
+        if (!$callUser->can('manage roles and permissions')) {
+            return response()->json(['message' => 'Forbidden'], Response::HTTP_FORBIDDEN);
+        }
+
         $validator = Validator::make($request->all(), [
             'role' => 'required|string|exists:roles,name'
         ]);
@@ -230,11 +299,19 @@ class RolePermissionController extends Controller
      *     @OA\Response(response=403, description="Forbidden")
      * )
      */
-    public function destroy($roleName)
+    public function destroy(Request $request, $roleName)
     {
+        $callUser = $request->user();
+
+        if (!$callUser->can('manage roles and permissions')) {
+            return response()->json(['message' => 'Forbidden'], Response::HTTP_FORBIDDEN);
+        }
+
         if ($roleName === 'System Maintenance') {
             return response()->json(['error' => 'Forbidden'], Response::HTTP_FORBIDDEN);
         }
+
+        Log::info("User {$callUser->id} is attempting to delete a role {$roleName}.");
 
         $role = Role::where('name', $roleName)->first();
 
