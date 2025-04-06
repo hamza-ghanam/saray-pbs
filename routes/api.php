@@ -39,6 +39,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/buildings/{id}', [BuildingController::class, 'show']);
     Route::put('/buildings/{id}', [BuildingController::class, 'update']);
     Route::delete('/buildings/{id}', [BuildingController::class, 'destroy']);
+    Route::get('/buildings/{buildingId}/units', [BuildingController::class, 'getUnitsByBuilding']);
 });
 
 // Unit Management

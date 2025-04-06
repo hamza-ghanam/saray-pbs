@@ -312,4 +312,93 @@ class BuildingController extends Controller
 
         return response()->json(null, 204);
     }
+
+    /**
+     * Display a paginated listing of units within a specific building.
+     *
+     * @OA\Get(
+     *     path="/buildings/{buildingId}/units",
+     *     summary="List all units for a specific building with optional filters and pagination",
+     *     tags={"Building"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(
+     *         name="buildingId",
+     *         in="path",
+     *         description="ID of the building",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Parameter(
+     *         name="unit_no",
+     *         in="query",
+     *         description="Filter units by unit number",
+     *         required=false,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Parameter(
+     *         name="status",
+     *         in="query",
+     *         description="Filter units by status",
+     *         required=false,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         description="Page number",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         description="Number of items per page (max 100)",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="A paginated list of units for the specified building",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/Unit")),
+     *             @OA\Property(property="current_page", type="integer", example=1),
+     *             @OA\Property(property="last_page", type="integer", example=5),
+     *             @OA\Property(property="per_page", type="integer", example=10),
+     *             @OA\Property(property="total", type="integer", example=50)
+     *         )
+     *     ),
+     *     @OA\Response(response=403, description="Forbidden"),
+     *     @OA\Response(response=404, description="Building not found")
+     * )
+     */
+    public function getUnitsByBuilding(Request $request, $buildingId)
+    {
+        $user = $request->user();
+        Log::info("User {$user->id} requested units for building {$buildingId}.");
+
+        // Check permission: ensure the user can view units.
+        if (!$user->can('view unit')) {
+            abort(Response::HTTP_FORBIDDEN, 'Unauthorized');
+        }
+
+        // Retrieve the building; if not found, Laravel will throw a 404.
+        $building = Building::findOrFail($buildingId);
+
+        // Build the query using the units' relationship.
+        $query = $building->units();
+
+        // Apply optional filters.
+        if ($request->filled('unit_no')) {
+            $query->where('unit_no', 'like', '%' . $request->input('unit_no') . '%');
+        }
+        if ($request->filled('status')) {
+            $query->where('status', $request->input('status'));
+        }
+
+        // Dynamic pagination: get the 'limit' (default 10, capped at 100)
+        $limit = min((int) $request->get('limit', 10), 100);
+        $units = $query->paginate($limit);
+
+        return response()->json($units, Response::HTTP_OK);
+    }
 }
