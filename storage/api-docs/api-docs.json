@@ -3729,7 +3729,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "A paginated list of units",
+                        "description": "A paginated list of units including the building information",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -3784,14 +3784,14 @@
                     "content": {
                         "multipart/form-data": {
                             "schema": {
-                                "$ref": "#/components/schemas/Unit"
+                                "$ref": "#/components/schemas/UnitInput"
                             }
                         }
                     }
                 },
                 "responses": {
                     "201": {
-                        "description": "Unit created successfully with its payment plans",
+                        "description": "Unit created successfully with its payment plans and building information",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -3844,13 +3844,57 @@
                                             "type": "integer",
                                             "example": 1
                                         },
-                                        "name": {
+                                        "prop_type": {
                                             "type": "string",
-                                            "example": "Unit A"
+                                            "example": "Residential"
+                                        },
+                                        "unit_type": {
+                                            "type": "string",
+                                            "example": "Apartment"
+                                        },
+                                        "unit_no": {
+                                            "type": "string",
+                                            "example": "A101"
+                                        },
+                                        "floor": {
+                                            "type": "string",
+                                            "example": "1"
+                                        },
+                                        "suite_area": {
+                                            "type": "number",
+                                            "format": "float",
+                                            "example": 120.5
+                                        },
+                                        "total_area": {
+                                            "type": "number",
+                                            "format": "float",
+                                            "example": 136.25
+                                        },
+                                        "furnished": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "unit_view": {
+                                            "type": "string",
+                                            "example": "City View"
+                                        },
+                                        "price": {
+                                            "type": "number",
+                                            "format": "float",
+                                            "example": 350000
                                         },
                                         "status": {
                                             "type": "string",
                                             "example": "Available"
+                                        },
+                                        "completion_date": {
+                                            "type": "string",
+                                            "format": "date",
+                                            "example": "2025-12-15"
+                                        },
+                                        "floor_plan": {
+                                            "type": "string",
+                                            "example": "floor_plans/abc123.jpg"
                                         },
                                         "paymentPlans": {
                                             "type": "array",
@@ -3903,6 +3947,28 @@
                                                     },
                                                     "type": "object",
                                                     "nullable": true
+                                                }
+                                            },
+                                            "type": "object",
+                                            "nullable": true
+                                        },
+                                        "building": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Building A"
+                                                },
+                                                "location": {
+                                                    "type": "string",
+                                                    "example": "Downtown"
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "Active"
                                                 }
                                             },
                                             "type": "object",

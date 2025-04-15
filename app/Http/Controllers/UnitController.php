@@ -175,7 +175,7 @@ class UnitController extends Controller
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="A paginated list of units",
+     *         description="A paginated list of units including the building information",
      *         @OA\JsonContent(
      *             @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/Unit")),
      *             @OA\Property(property="current_page", type="integer", example=1),
@@ -246,12 +246,12 @@ class UnitController extends Controller
      *         required=true,
      *         @OA\MediaType(
      *             mediaType="multipart/form-data",
-     *             @OA\Schema(ref="#/components/schemas/Unit")
+     *             @OA\Schema(ref="#/components/schemas/UnitInput")
      *         )
      *     ),
      *     @OA\Response(
      *         response=201,
-     *         description="Unit created successfully with its payment plans",
+     *         description="Unit created successfully with its payment plans and building information",
      *         @OA\JsonContent(ref="#/components/schemas/UnitWithPaymentPlans")
      *     ),
      *     @OA\Response(response=422, description="Validation error"),
@@ -354,8 +354,18 @@ class UnitController extends Controller
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(property="id", type="integer", example=1),
-     *             @OA\Property(property="name", type="string", example="Unit A"),
+     *             @OA\Property(property="prop_type", type="string", example="Residential"),
+     *             @OA\Property(property="unit_type", type="string", example="Apartment"),
+     *             @OA\Property(property="unit_no", type="string", example="A101"),
+     *             @OA\Property(property="floor", type="string", example="1"),
+     *             @OA\Property(property="suite_area", type="number", format="float", example=120.50),
+     *             @OA\Property(property="total_area", type="number", format="float", example=136.25),
+     *             @OA\Property(property="furnished", type="boolean", example=true),
+     *             @OA\Property(property="unit_view", type="string", example="City View"),
+     *             @OA\Property(property="price", type="number", format="float", example=350000.00),
      *             @OA\Property(property="status", type="string", example="Available"),
+     *             @OA\Property(property="completion_date", type="string", format="date", example="2025-12-15"),
+     *             @OA\Property(property="floor_plan", type="string", example="floor_plans/abc123.jpg"),
      *             @OA\Property(
      *                 property="paymentPlans",
      *                 type="array",
@@ -379,6 +389,15 @@ class UnitController extends Controller
      *                     @OA\Property(property="name", type="string", example="John Doe"),
      *                     @OA\Property(property="email", type="string", example="john@example.com")
      *                 )
+     *             ),
+     *             @OA\Property(
+     *                 property="building",
+     *                 type="object",
+     *                 nullable=true,
+     *                 @OA\Property(property="id", type="integer", example=5),
+     *                 @OA\Property(property="name", type="string", example="Building A"),
+     *                 @OA\Property(property="location", type="string", example="Downtown"),
+     *                 @OA\Property(property="status", type="string", example="Active")
      *             )
      *         )
      *     ),
