@@ -224,6 +224,9 @@ class UnitController extends Controller
             $query->where('status', $request->input('status'));
         }
 
+        // Eager load the building for each unit.
+        $query->with('building');
+
         // Dynamic pagination: retrieve 'limit', cast to integer, and cap at 100 items per page.
         $limit = min((int) $request->get('limit', 10), 100);
         $units = $query->paginate($limit);
@@ -318,8 +321,8 @@ class UnitController extends Controller
             // Dispatch an event to generate payment plans for the unit.
             event(new UnitCreated($unit));
 
-            // Eager-load the payment plans (and their installments) to return them with the unit.
-            $unit->load('paymentPlans.installments');
+            // Eager-load the payment plans (and their installments) and the building that contains the unit.
+            $unit->load('paymentPlans.installments', 'building');
         } catch (\Exception $ex) {
             DB::rollback();
             return response()->json(['error' => $ex->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
@@ -402,8 +405,8 @@ class UnitController extends Controller
             return response()->json(['message' => 'Unit not available for sales role'], Response::HTTP_FORBIDDEN);
         }
 
-        // Eager-load the payment plans (and their installments)
-        $unit->load('paymentPlans.installments');
+        // Eager-load the payment plans (and their installments) and the building that contains the unit.
+        $unit->load('paymentPlans.installments', 'building');
 
         // Retrieve the current holding for this unit:
         // It must have a status of "Pre-Hold" or "Hold" and we pick the latest one.
@@ -524,6 +527,9 @@ class UnitController extends Controller
         }
 
         $unit->update($data);
+
+        // Eager-load the building relationship to attach the building information.
+        $unit->load('building');
         return response()->json($unit, Response::HTTP_OK);
     }
 
@@ -634,6 +640,8 @@ class UnitController extends Controller
 
         DB::commit();
 
+        // Eager-load the building relationship to attach the building information.
+        $unit->load('building');
         return response()->json($unit, Response::HTTP_OK);
     }
 
