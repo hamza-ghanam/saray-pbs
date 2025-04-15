@@ -119,7 +119,7 @@ class UnitController extends Controller
      * @OA\Get(
      *     path="/units",
      *     summary="List all units with optional filters and pagination",
-     *     tags={"Unit"},
+     *     tags={"Units"},
      *     security={{"sanctum":{}}},
      *     @OA\Parameter(
      *         name="prop_type",
@@ -237,7 +237,7 @@ class UnitController extends Controller
      * @OA\Post(
      *     path="/units",
      *     summary="Create a new unit",
-     *     tags={"Unit"},
+     *     tags={"Units"},
      *     security={{"sanctum":{}}},
      *     @OA\RequestBody(
      *         required=true,
@@ -336,7 +336,7 @@ class UnitController extends Controller
      * @OA\Get(
      *     path="/units/{id}",
      *     summary="Get unit details",
-     *     tags={"Unit"},
+     *     tags={"Units"},
      *     security={{"sanctum":{}}},
      *     @OA\Parameter(
      *         name="id",
@@ -348,15 +348,40 @@ class UnitController extends Controller
      *     @OA\Response(
      *         response=200,
      *         description="Unit details retrieved successfully",
-     *         @OA\JsonContent(ref="#/components/schemas/UnitWithPaymentPlans")
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="id", type="integer", example=1),
+     *             @OA\Property(property="name", type="string", example="Unit A"),
+     *             @OA\Property(property="status", type="string", example="Available"),
+     *             @OA\Property(
+     *                 property="paymentPlans",
+     *                 type="array",
+     *                 @OA\Items(ref="#/components/schemas/PaymentPlan")
+     *             ),
+     *             @OA\Property(
+     *                 property="current_holding",
+     *                 type="object",
+     *                 nullable=true,
+     *                 @OA\Property(property="id", type="integer", example=5),
+     *                 @OA\Property(property="unit_id", type="integer", example=1),
+     *                 @OA\Property(property="status", type="string", example="Pre-Hold"),
+     *                 @OA\Property(property="created_by", type="integer", example=2),
+     *                 @OA\Property(property="created_at", type="string", format="date-time", example="2025-04-15T10:00:00Z"),
+     *                 @OA\Property(property="updated_at", type="string", format="date-time", example="2025-04-15T10:00:00Z"),
+     *                 @OA\Property(
+     *                     property="user",
+     *                     type="object",
+     *                     nullable=true,
+     *                     @OA\Property(property="id", type="integer", example=2),
+     *                     @OA\Property(property="name", type="string", example="John Doe"),
+     *                     @OA\Property(property="email", type="string", example="john@example.com")
+     *                 )
+     *             )
+     *         )
      *     ),
      *     @OA\Response(response=404, description="Unit not found"),
      *     @OA\Response(response=403, description="Forbidden")
      * )
-     *
-     * @param Request $request
-     * @param int $id
-     * @return \Illuminate\Http\JsonResponse
      */
     public function show(Request $request, $id)
     {
@@ -377,8 +402,19 @@ class UnitController extends Controller
             return response()->json(['message' => 'Unit not available for sales role'], Response::HTTP_FORBIDDEN);
         }
 
-        // Eager-load the payment plans (and their installments) to return them with the unit.
+        // Eager-load the payment plans (and their installments)
         $unit->load('paymentPlans.installments');
+
+        // Retrieve the current holding for this unit:
+        // It must have a status of "Pre-Hold" or "Hold" and we pick the latest one.
+        $currentHolding = $unit->holdings()
+            ->with('user')
+            ->whereIn('status', ['Pre-Hold', 'Hold'])
+            ->latest()
+            ->first();
+
+        // Append the current holding to the unit object.
+        $unit->current_holding = $currentHolding;
 
         return response()->json($unit, Response::HTTP_OK);
     }
@@ -389,7 +425,7 @@ class UnitController extends Controller
      * @OA\Put(
      *     path="/units/{id}",
      *     summary="Update an existing unit",
-     *     tags={"Unit"},
+     *     tags={"Units"},
      *     security={{"sanctum":{}}},
      *     @OA\Parameter(
      *         name="id",
@@ -497,7 +533,7 @@ class UnitController extends Controller
      * @OA\Delete(
      *     path="/units/{id}",
      *     summary="Delete a unit",
-     *     tags={"Unit"},
+     *     tags={"Units"},
      *     security={{"sanctum":{}}},
      *     @OA\Parameter(
      *         name="id",
@@ -535,7 +571,7 @@ class UnitController extends Controller
      * @OA\Post(
      *     path="/units/{id}/approve",
      *     summary="Approve a unit",
-     *     tags={"Unit"},
+     *     tags={"Units"},
      *     security={{"sanctum":{}}},
      *     @OA\Parameter(
      *         name="id",

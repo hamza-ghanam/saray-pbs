@@ -99,6 +99,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/units/hold/{id}/respond', [HoldingController::class, 'respondHold']);
 });
 
+// Holdings
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/holdings', [HoldingController::class, 'listHoldings']);
+});
+
 // One-Time Links
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/otls', [OneTimeLinkController::class, 'index']);

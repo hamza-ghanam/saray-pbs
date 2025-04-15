@@ -55,6 +55,15 @@ Schedule::call(function () {
             'hold_created_at' => null,
         ]);
 
+        $holding = $unit->holdings()
+            ->whereNotIn('status', ['Cancelled', 'Rejected'])
+            ->latest()
+            ->first();
+
+        if ($holding) {
+            $holding->update(['status' => 'Cancelled']);
+        }
+
         $creatorTokens = getUnitCreatorTokens($unit);
         $deviceTokens = array_merge($ceoTokens, $creatorTokens);
 

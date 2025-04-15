@@ -14,6 +14,78 @@ use Symfony\Component\HttpFoundation\Response;
 class HoldingController extends Controller
 {
     /**
+     * List all holding requests sorted by their status, with Pre-Hold first.
+     *
+     * @OA\Get(
+     *     path="/holdings",
+     *     summary="List all holding requests sorted by status",
+     *     description="Returns a paginated list of holding requests sorted by status, with 'Pre-Hold' requests appearing first.",
+     *     tags={"Holdings"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         description="Page number",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         description="Number of items per page (max 100)",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="A paginated list of holding requests sorted by status (Pre-Hold first)",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(
+     *                     @OA\Property(property="id", type="integer"),
+     *                     @OA\Property(property="unit_id", type="integer"),
+     *                     @OA\Property(property="status", type="string", example="Pre-Hold"),
+     *                     @OA\Property(property="created_by", type="integer"),
+     *                     @OA\Property(property="created_at", type="string", format="date-time"),
+     *                     @OA\Property(property="updated_at", type="string", format="date-time"),
+     *                     @OA\Property(property="user", type="object", nullable=true,
+     *                         @OA\Property(property="id", type="integer"),
+     *                         @OA\Property(property="name", type="string"),
+     *                         @OA\Property(property="email", type="string")
+     *                     )
+     *                 )
+     *             ),
+     *             @OA\Property(property="current_page", type="integer", example=1),
+     *             @OA\Property(property="last_page", type="integer", example=5),
+     *             @OA\Property(property="per_page", type="integer", example=10),
+     *             @OA\Property(property="total", type="integer", example=50)
+     *         )
+     *     ),
+     *     @OA\Response(response=403, description="Forbidden")
+     * )
+     */
+    public function listHoldings(Request $request)
+    {
+        $user = $request->user();
+        Log::info("User {$user->id} requested listing of holding requests.");
+
+        // Ensure the user has permission to view holding requests.
+        if (!$user->can('approve hold')) {
+            abort(Response::HTTP_FORBIDDEN, 'Unauthorized');
+        }
+
+        // Retrieve the dynamic limit from the request (default: 10, max: 100)
+        $limit = min((int) $request->get('limit', 10), 100);
+
+        // Sort such that "Pre-Hold" statuses appear first. The CASE statement sets Pre-Hold to 0 (highest priority).
+        $holdings = Holding::with(['user', 'unit'])
+            ->orderByRaw("CASE WHEN status = 'Pre-Hold' THEN 0 ELSE 1 END")
+            ->paginate($limit);
+
+        return response()->json($holdings, Response::HTTP_OK);
+    }
+
+    /**
      * Place a unit on hold (status set to "Pre-Hold").
      *
      * Only allowed if the unit is currently "Available" or "Cancelled".
@@ -22,7 +94,7 @@ class HoldingController extends Controller
      *     path="/units/{id}/hold",
      *     summary="Place a unit on hold (Pre-Hold)",
      *     description="Sets a unit on hold by creating a holding record and changing its status to Pre-Hold. Only allowed if the unit is Available or Cancelled.",
-     *     tags={"Unit"},
+     *     tags={"Units"},
      *     security={{"sanctum":{}}},
      *     @OA\Parameter(
      *         name="id",
@@ -107,7 +179,7 @@ class HoldingController extends Controller
      *     summary="Respond to hold for a unit (approve or reject)",
      *     description="Approves or rejects a hold on a unit. The holding and unit must be in Pre-Hold status. Use the 'action' query parameter with values 'approve' or 'reject'.",
      *     operationId="respondHold",
-     *     tags={"Unit"},
+     *     tags={"Holdings"},
      *     security={{"sanctum":{}}},
      *     @OA\Parameter(
      *         name="id",

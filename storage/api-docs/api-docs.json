@@ -1528,10 +1528,124 @@
                 ]
             }
         },
+        "/holdings": {
+            "get": {
+                "tags": [
+                    "Holdings"
+                ],
+                "summary": "List all holding requests sorted by status",
+                "description": "Returns a paginated list of holding requests sorted by status, with 'Pre-Hold' requests appearing first.",
+                "operationId": "5067186b55ab6dc281869fcc3999118f",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Number of items per page (max 100)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A paginated list of holding requests sorted by status (Pre-Hold first)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "unit_id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "Pre-Hold"
+                                                    },
+                                                    "created_by": {
+                                                        "type": "integer"
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "user": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "email": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object",
+                                                        "nullable": true
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "current_page": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "last_page": {
+                                            "type": "integer",
+                                            "example": 5
+                                        },
+                                        "per_page": {
+                                            "type": "integer",
+                                            "example": 10
+                                        },
+                                        "total": {
+                                            "type": "integer",
+                                            "example": 50
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/units/{id}/hold": {
             "post": {
                 "tags": [
-                    "Unit"
+                    "Units"
                 ],
                 "summary": "Place a unit on hold (Pre-Hold)",
                 "description": "Sets a unit on hold by creating a holding record and changing its status to Pre-Hold. Only allowed if the unit is Available or Cancelled.",
@@ -1588,7 +1702,7 @@
         "/units/hold/{id}/respond": {
             "post": {
                 "tags": [
-                    "Unit"
+                    "Holdings"
                 ],
                 "summary": "Respond to hold for a unit (approve or reject)",
                 "description": "Approves or rejects a hold on a unit. The holding and unit must be in Pre-Hold status. Use the 'action' query parameter with values 'approve' or 'reject'.",
@@ -3531,7 +3645,7 @@
         "/units": {
             "get": {
                 "tags": [
-                    "Unit"
+                    "Units"
                 ],
                 "summary": "List all units with optional filters and pagination",
                 "description": "Display a paginated listing of the units.",
@@ -3660,7 +3774,7 @@
             },
             "post": {
                 "tags": [
-                    "Unit"
+                    "Units"
                 ],
                 "summary": "Create a new unit",
                 "description": "Store a newly created unit.",
@@ -3703,7 +3817,7 @@
         "/units/{id}": {
             "get": {
                 "tags": [
-                    "Unit"
+                    "Units"
                 ],
                 "summary": "Get unit details",
                 "description": "Display the specified unit.",
@@ -3725,7 +3839,77 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/UnitWithPaymentPlans"
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "name": {
+                                            "type": "string",
+                                            "example": "Unit A"
+                                        },
+                                        "status": {
+                                            "type": "string",
+                                            "example": "Available"
+                                        },
+                                        "paymentPlans": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/PaymentPlan"
+                                            }
+                                        },
+                                        "current_holding": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "unit_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "Pre-Hold"
+                                                },
+                                                "created_by": {
+                                                    "type": "integer",
+                                                    "example": 2
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-04-15T10:00:00Z"
+                                                },
+                                                "updated_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-04-15T10:00:00Z"
+                                                },
+                                                "user": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 2
+                                                        },
+                                                        "name": {
+                                                            "type": "string",
+                                                            "example": "John Doe"
+                                                        },
+                                                        "email": {
+                                                            "type": "string",
+                                                            "example": "john@example.com"
+                                                        }
+                                                    },
+                                                    "type": "object",
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "type": "object",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
                                 }
                             }
                         }
@@ -3745,7 +3929,7 @@
             },
             "put": {
                 "tags": [
-                    "Unit"
+                    "Units"
                 ],
                 "summary": "Update an existing unit",
                 "description": "Update the specified unit.",
@@ -3869,7 +4053,7 @@
             },
             "delete": {
                 "tags": [
-                    "Unit"
+                    "Units"
                 ],
                 "summary": "Delete a unit",
                 "description": "Remove the specified unit.",
@@ -3903,7 +4087,7 @@
         "/units/{id}/approve": {
             "post": {
                 "tags": [
-                    "Unit"
+                    "Units"
                 ],
                 "summary": "Approve a unit",
                 "description": "Approve a unit.",
@@ -5861,8 +6045,12 @@
             "description": "Building"
         },
         {
-            "name": "Unit",
-            "description": "Unit"
+            "name": "Holdings",
+            "description": "Holdings"
+        },
+        {
+            "name": "Units",
+            "description": "Units"
         },
         {
             "name": "Notifications",
@@ -5895,10 +6083,6 @@
         {
             "name": "SPA",
             "description": "SPA"
-        },
-        {
-            "name": "Units",
-            "description": "Units"
         },
         {
             "name": "UnitUpdates",
