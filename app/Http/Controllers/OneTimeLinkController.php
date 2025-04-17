@@ -80,7 +80,10 @@ class OneTimeLinkController extends Controller
         }
 
         $limit = min((int) $request->get('limit', 10), 100);
-        $otls = OneTimeLink::with('user')->paginate($limit);
+
+        $otls = OneTimeLink::with('user')
+            ->latest()      // defaults to ordering by created_at DESC
+            ->paginate($limit);
 
         return response()->json($otls, Response::HTTP_OK);
     }
