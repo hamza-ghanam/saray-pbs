@@ -108,9 +108,9 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/otls', [OneTimeLinkController::class, 'index']);
     Route::post('/otls/generate', [OneTimeLinkController::class, 'generateLink']);
-    Route::post('/otls/register', [OneTimeLinkController::class, 'registerUser']);
     Route::post('/users/{id}/approve', [OneTimeLinkController::class, 'approve']);
 });
+Route::post('/otls/register', [OneTimeLinkController::class, 'selfRegisterUser']);
 
 // Roles & Permissions
 Route::middleware('auth:sanctum')->group(function () {
@@ -132,12 +132,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/users/change-password', [UserManagementController::class, 'changePassword']);
     Route::put('/users/{id}/activate', [UserManagementController::class, 'activate']);
     Route::put('/users/{id}/deactivate', [UserManagementController::class, 'deactivate']);
+    Route::get('/users/{id}/docs/', [UserManagementController::class, 'listUserDocs']);
     Route::get('/users/docs/{id}', [UserManagementController::class, 'downloadDoc']);
 });
 
 // Brokers
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/brokers/upload-agreement', [BrokerController::class, 'uploadSignedAgreement']);
+    Route::post('/brokers/upload-agreement', [BrokerController::class, 'uploadSignedAgreement']);
 });
 
 // Unit Updates

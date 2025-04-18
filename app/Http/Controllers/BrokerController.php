@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
@@ -13,16 +14,18 @@ class BrokerController extends Controller
 {
 
     /**
-     * Upload a signed agreement for a pending Broker.
+     * Upload or replace a signed agreement for a pending Broker.
      *
      * This endpoint allows a user with role="Broker" and status="Pending"
-     * to authenticate via email/password (minimal check) and upload their
-     * signed agreement (doc_type="signed_agreement").
+     * to authenticate via email/password (minimal check) and upload or replace
+     * their signed agreement (doc_type="signed_agreement"). Only one agreement
+     * record exists per user; uploading again replaces the existing one.
      *
      * @OA\Post(
      *     path="/brokers/upload-signed-agreement",
-     *     summary="Upload signed agreement for a pending Broker",
+     *     summary="Upload or replace signed agreement for a pending Broker",
      *     tags={"Brokers"},
+     *     security={{"sanctum":{}}},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\MediaType(
@@ -42,25 +45,25 @@ class BrokerController extends Controller
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Signed agreement uploaded successfully",
+     *         description="Signed agreement uploaded or replaced successfully",
      *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Signed agreement uploaded successfully"),
-     *             @OA\Property(property="doc_path", type="string", example="agreements/signed/agreement_15.pdf")
+     *             @OA\Property(property="id", type="integer", example=15),
+     *             @OA\Property(property="message", type="string", example="Signed agreement replaced successfully"),
+     *             @OA\Property(property="doc_path", type="string", example="https://yourapp.com/storage/agreements/signed/agreement_15.pdf")
      *         )
      *     ),
      *     @OA\Response(response=401, description="Invalid credentials"),
-     *     @OA\Response(response=403, description="User is not a pending Broker or account is inactive"),
+     *     @OA\Response(response=403, description="User is not a pending Broker"),
      *     @OA\Response(response=422, description="Validation error"),
      *     @OA\Response(response=500, description="Server error")
      * )
      */
     public function uploadSignedAgreement(Request $request)
     {
-        // 1. Validate input
         $validator = Validator::make($request->all(), [
             'email'            => 'required|email',
             'password'         => 'required|string',
-            'signed_agreement' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'signed_agreement' => 'required|file|mimes:pdf,jpg,jpeg,png,zip|max:2048',
         ]);
 
         if ($validator->fails()) {
@@ -68,52 +71,61 @@ class BrokerController extends Controller
         }
 
         DB::beginTransaction();
+
         try {
-            // 2. Attempt minimal authentication
+            // Minimal authentication
             $user = User::where('email', $request->email)->first();
             if (!$user || !Hash::check($request->password, $user->password)) {
                 DB::rollBack();
                 return response()->json(['error' => 'Invalid credentials'], Response::HTTP_UNAUTHORIZED);
             }
 
-            // 3. Check role = Broker and status = Pending
+            // Role & status check
             $role = $user->getRoleNames()->first();
-            if ($role !== 'Broker') {
+            if ($role !== 'Broker' || $user->status !== 'Pending') {
                 DB::rollBack();
-                return response()->json(['error' => 'Forbidden - user is not a Broker'], Response::HTTP_FORBIDDEN);
-            }
-            if ($user->status !== 'Pending') {
-                DB::rollBack();
-                return response()->json(['error' => 'Forbidden - user is not in Pending status'], Response::HTTP_FORBIDDEN);
+                return response()->json(['error' => 'Forbidden - user is not a pending Broker'], Response::HTTP_FORBIDDEN);
             }
 
-            // 4. Store the file
-            $file = $request->file('signed_agreement');
-            $fileName = "signed_agreement_{$user->id}." . $file->getClientOriginalExtension();
-            $filePath = $file->storeAs('agreements/signed', $fileName, 'local');
+            // 1. If there's an existing signed agreement, delete its file first
+            $existing = $user->docs()->where('doc_type', 'signed_agreement')->first();
+            if ($existing) {
+                Storage::disk('local')->delete($existing->file_path);
+            }
 
-            // 5. Create a record in user_docs
-            $user->docs()->create([
-                'doc_type'  => 'signed_agreement',
-                'file_path' => $filePath,
-            ]);
+            // 2. Store the new file
+            $file       = $request->file('signed_agreement');
+            $fileName   = "signed_agreement_{$user->id}." . $file->getClientOriginalExtension();
+            $filePath   = $file->storeAs('agreements/signed', $fileName, 'local');
+
+            // 3. Update or create the record
+            if ($existing) {
+                $existing->update(['file_path' => $filePath]);
+                $doc     = $existing;
+                $message = 'Signed agreement replaced successfully';
+            } else {
+                $doc = $user->docs()->create([
+                    'doc_type'  => 'signed_agreement',
+                    'file_path' => $filePath,
+                ]);
+                $message = 'Signed agreement uploaded successfully';
+            }
 
             DB::commit();
 
-            // 6. Build a public URL to the doc
+            // Build public URL
             $docUrl = asset("storage/{$filePath}");
 
-            // 7. Return success
             return response()->json([
-                'message'  => 'Signed agreement uploaded successfully',
-                'doc_path' => $docUrl
+                'id'       => $doc->id,
+                'message'  => $message,
             ], Response::HTTP_OK);
 
         } catch (\Exception $ex) {
             DB::rollBack();
             return response()->json([
                 'error'   => 'Server error',
-                'message' => $ex->getMessage()
+                'message' => $ex->getMessage(),
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }

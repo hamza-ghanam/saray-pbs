@@ -1034,8 +1034,8 @@
                 "tags": [
                     "Brokers"
                 ],
-                "summary": "Upload signed agreement for a pending Broker",
-                "description": "Upload a signed agreement for a pending Broker.\n\nThis endpoint allows a user with role=\"Broker\" and status=\"Pending\"\nto authenticate via email/password (minimal check) and upload their\nsigned agreement (doc_type=\"signed_agreement\").",
+                "summary": "Upload or replace signed agreement for a pending Broker",
+                "description": "Upload or replace a signed agreement for a pending Broker.\n\nThis endpoint allows a user with role=\"Broker\" and status=\"Pending\"\nto authenticate via email/password (minimal check) and upload or replace\ntheir signed agreement (doc_type=\"signed_agreement\"). Only one agreement\nrecord exists per user; uploading again replaces the existing one.",
                 "operationId": "1e49b1d943c9c5996801dae8cbd779ba",
                 "requestBody": {
                     "required": true,
@@ -1071,18 +1071,22 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Signed agreement uploaded successfully",
+                        "description": "Signed agreement uploaded or replaced successfully",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
+                                        "id": {
+                                            "type": "integer",
+                                            "example": 15
+                                        },
                                         "message": {
                                             "type": "string",
-                                            "example": "Signed agreement uploaded successfully"
+                                            "example": "Signed agreement replaced successfully"
                                         },
                                         "doc_path": {
                                             "type": "string",
-                                            "example": "agreements/signed/agreement_15.pdf"
+                                            "example": "https://yourapp.com/storage/agreements/signed/agreement_15.pdf"
                                         }
                                     },
                                     "type": "object"
@@ -1094,7 +1098,7 @@
                         "description": "Invalid credentials"
                     },
                     "403": {
-                        "description": "User is not a pending Broker or account is inactive"
+                        "description": "User is not a pending Broker"
                     },
                     "422": {
                         "description": "Validation error"
@@ -1102,7 +1106,12 @@
                     "500": {
                         "description": "Server error"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
             }
         },
         "/buildings": {
@@ -2092,7 +2101,7 @@
                 ],
                 "summary": "Register a Broker or Contractor via one-time link token",
                 "description": "Register a new Broker or Contractor using a one-time link token.\n\nThis endpoint requires different documents based on the user_type\nstored in the OneTimeLink (Broker or Contractor).\nFor Broker:\n- rera_cert, trade_license, bank_account, tax_registration (all required).\nFor Contractor:\n- contract, trade_license, scope_of_work (all required).\n\nAn agreement PDF will be generated and returned in the response.",
-                "operationId": "87156ef694714b46c41827882f5d20e1",
+                "operationId": "a536b0d405ab6ffe4eec6df137aeb684",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -5573,14 +5582,130 @@
                 ]
             }
         },
-        "/docs/{docId}/download": {
+        "/users/{userId}/docs": {
             "get": {
                 "tags": [
-                    "Documents"
+                    "UserDocs"
+                ],
+                "summary": "List all user documents",
+                "description": "Returns a paginated list of documents uploaded by the specified user.",
+                "operationId": "b3b8c5cb7b7ff1687624b000ca1aa5b4",
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "description": "ID of the user",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Number of items per page (max 100)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A paginated list of user documents",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "user_id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "doc_type": {
+                                                        "type": "string",
+                                                        "example": "passport"
+                                                    },
+                                                    "path": {
+                                                        "type": "string",
+                                                        "example": "docs/passport.pdf"
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2025-04-10T12:00:00Z"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2025-04-10T12:00:00Z"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "current_page": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "last_page": {
+                                            "type": "integer",
+                                            "example": 5
+                                        },
+                                        "per_page": {
+                                            "type": "integer",
+                                            "example": 10
+                                        },
+                                        "total": {
+                                            "type": "integer",
+                                            "example": 50
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "User not found"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/users/docs/{id}": {
+            "get": {
+                "tags": [
+                    "UserDocs"
                 ],
                 "summary": "Download a user document by docId",
                 "description": "Download a user document from a private disk.\n\nChecks if the current user is authorized via canDownload($doc).",
-                "operationId": "ff0b35f2f8c6c85c89cbb2d749369e40",
+                "operationId": "4550df8df1fa00b3ada8e2badfcd7d31",
                 "parameters": [
                     {
                         "name": "docId",
@@ -6155,8 +6280,8 @@
             "description": "UnitUpdates"
         },
         {
-            "name": "Documents",
-            "description": "Documents"
+            "name": "UserDocs",
+            "description": "UserDocs"
         }
     ]
 }

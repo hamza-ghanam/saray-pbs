@@ -984,14 +984,90 @@ class UserManagementController extends Controller
     }
 
     /**
+     * List all documents for a given user.
+     *
+     * @OA\Get(
+     *     path="/users/{userId}/docs",
+     *     summary="List all user documents",
+     *     description="Returns a paginated list of documents uploaded by the specified user.",
+     *     tags={"UserDocs"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(
+     *         name="userId",
+     *         in="path",
+     *         description="ID of the user",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         description="Page number",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         description="Number of items per page (max 100)",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="A paginated list of user documents",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="user_id", type="integer", example=1),
+     *                     @OA\Property(property="doc_type", type="string", example="passport"),
+     *                     @OA\Property(property="path", type="string", example="docs/passport.pdf"),
+     *                     @OA\Property(property="created_at", type="string", format="date-time", example="2025-04-10T12:00:00Z"),
+     *                     @OA\Property(property="updated_at", type="string", format="date-time", example="2025-04-10T12:00:00Z")
+     *                 )
+     *             ),
+     *             @OA\Property(property="current_page", type="integer", example=1),
+     *             @OA\Property(property="last_page", type="integer", example=5),
+     *             @OA\Property(property="per_page", type="integer", example=10),
+     *             @OA\Property(property="total", type="integer", example=50)
+     *         )
+     *     ),
+     *     @OA\Response(response=404, description="User not found"),
+     *     @OA\Response(response=403, description="Forbidden")
+     * )
+     */
+    public function listUserDocs(Request $request, $userId)
+    {
+        $authUser = $request->user();
+        Log::info("User {$authUser->id} requested documents for user {$userId}.");
+
+        // Ensure the authenticated user has permission to view user documents
+        if (!$authUser->can('view users')) {
+            abort(Response::HTTP_FORBIDDEN, 'Unauthorized');
+        }
+
+        $user = User::findOrFail($userId);
+
+        // Dynamic pagination: retrieve 'limit', cast to integer, and cap at 100 items per page.
+        $limit = min((int) $request->get('limit', 10), 100);
+
+        $docs = $user->docs()->paginate($limit);
+
+        return response()->json($docs, Response::HTTP_OK);
+    }
+
+
+    /**
      * Download a user document from a private disk.
      *
      * Checks if the current user is authorized via canDownload($doc).
      *
      * @OA\Get(
-     *     path="/docs/{docId}/download",
+     *     path="/users/docs/{id}",
      *     summary="Download a user document by docId",
-     *     tags={"Documents"},
+     *     tags={"UserDocs"},
      *     security={{"sanctum":{}}},
      *     @OA\Parameter(
      *         name="docId",

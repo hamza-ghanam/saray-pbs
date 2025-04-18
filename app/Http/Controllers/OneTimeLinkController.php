@@ -274,7 +274,7 @@ class OneTimeLinkController extends Controller
      *     @OA\Response(response=500, description="Server error while creating user or generating PDF")
      * )
      */
-    public function registerUser(Request $request)
+    public function selfRegisterUser(Request $request): \Illuminate\Http\JsonResponse
     {
         // 1. Basic validation (we'll add doc rules after we get user_type from OTL)
         $basicRules = [
@@ -376,42 +376,53 @@ class OneTimeLinkController extends Controller
             $otl->user_id = $user->id;
             $otl->save();
 
-            // 8. Generate the agreement PDF
-            //    (assuming you have a Blade view "pdf.agreement" that needs user data)
-            $pdf = PDF::loadView('pdf.broker_agreement', [
-                'user' => $user,
-                'userType' => $userType
-            ]);
-            $pdfContent = $pdf->output();
-            $pdfName = "agreement_{$user->id}.pdf";
-            $doc = $user->docs()->create([
-                'doc_type'  => 'agreement',
-                'file_path' => "agreements/{$pdfName}", // storing the relative path
-            ]);
-
-            // 2. Store the PDF content in "local" disk
-            //    If your "local" disk is configured to root at storage_path('app/private'),
-            //    this physically goes to storage/app/private/agreements/<pdfName>
-            Storage::disk('local')->put("agreements/{$pdfName}", $pdfContent);
-
-            DB::commit();
-
-            $docs = $user->docs->map(function ($doc) {
-                return [
-                    'doc_id' => $doc->id,
-                    'doc_type' => $doc->doc_type,
-                    'created_at' => $doc->created_at,
-                    'updated_at' => $doc->updated_at,
-                ];
-            });
-
-            // 3. Return success + doc ID
-            return response()->json([
+            $respData = [
                 'message' => "{$userType} registered successfully, awaiting approval",
                 'user'    => $user,
-                'docs'    => $docs,
-                'agreement_id' => $doc->id,
-            ], Response::HTTP_CREATED);
+            ];
+
+            if ($userType === 'Broker') {
+                // 8. Generate the agreement PDF
+                //    (assuming you have a Blade view "pdf.agreement" that needs user data)
+                $pdf = PDF::loadView('pdf.broker_agreement', [
+                    'user' => $user,
+                    'userType' => $userType
+                ]);
+                $pdfContent = $pdf->output();
+                $pdfName = "agreement_{$user->id}.pdf";
+                $doc = $user->docs()->create([
+                    'doc_type' => 'agreement',
+                    'file_path' => "agreements/{$pdfName}", // storing the relative path
+                ]);
+
+                // 2. Store the PDF content in "local" disk
+                //    If your "local" disk is configured to root at storage_path('app/private'),
+                //    this physically goes to storage/app/private/agreements/<pdfName>
+                Storage::disk('local')->put("agreements/{$pdfName}", $pdfContent);
+
+                DB::commit();
+
+                $docs = $user->docs->map(function ($doc) {
+                    return [
+                        'doc_id' => $doc->id,
+                        'doc_type' => $doc->doc_type,
+                        'created_at' => $doc->created_at,
+                        'updated_at' => $doc->updated_at,
+                    ];
+                });
+
+                $respData += [
+                    'docs'         => $docs,
+                    'agreement_id' => $doc->id,
+                ];
+            } else {
+                $respData += [
+                    'docs'         => $user->docs,
+                ];
+            }
+
+            // 3. Return success + doc ID
+            return response()->json($respData, Response::HTTP_CREATED);
 
         } catch (\Exception $ex) {
             DB::rollback();
