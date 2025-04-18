@@ -1065,7 +1065,7 @@ class UserManagementController extends Controller
      * Checks if the current user is authorized via canDownload($doc).
      *
      * @OA\Get(
-     *     path="/users/docs/{id}",
+     *     path="/users/docs/{id}/download",
      *     summary="Download a user document by docId",
      *     tags={"UserDocs"},
      *     security={{"sanctum":{}}},

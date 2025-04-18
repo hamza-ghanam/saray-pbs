@@ -133,7 +133,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/users/{id}/activate', [UserManagementController::class, 'activate']);
     Route::put('/users/{id}/deactivate', [UserManagementController::class, 'deactivate']);
     Route::get('/users/{id}/docs/', [UserManagementController::class, 'listUserDocs']);
-    Route::get('/users/docs/{id}', [UserManagementController::class, 'downloadDoc']);
+    Route::get('/users/docs/{id}/download', [UserManagementController::class, 'downloadDoc']);
 });
 
 // Brokers

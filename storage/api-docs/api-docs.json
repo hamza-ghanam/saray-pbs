@@ -5698,14 +5698,14 @@
                 ]
             }
         },
-        "/users/docs/{id}": {
+        "/users/docs/{id}/download": {
             "get": {
                 "tags": [
                     "UserDocs"
                 ],
                 "summary": "Download a user document by docId",
                 "description": "Download a user document from a private disk.\n\nChecks if the current user is authorized via canDownload($doc).",
-                "operationId": "4550df8df1fa00b3ada8e2badfcd7d31",
+                "operationId": "3c7fbd4f585131dd1d0a10fb0b3e6884",
                 "parameters": [
                     {
                         "name": "docId",
