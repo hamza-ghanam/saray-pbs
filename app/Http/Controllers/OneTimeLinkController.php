@@ -396,9 +396,8 @@ class OneTimeLinkController extends Controller
                 ]);
 
                 // 2. Store the PDF content in "local" disk
-                //    If your "local" disk is configured to root at storage_path('app/private'),
-                //    this physically goes to storage/app/private/agreements/<pdfName>
-                Storage::disk('local')->put("agreements/{$pdfName}", $pdfContent);
+                Storage::disk('public')->put("agreements/{$pdfName}", $pdfContent);
+                $agreementUrl = env('APP_URL') . '/storage/app/public/agreements/' . $pdfName;
 
                 DB::commit();
 
@@ -412,8 +411,8 @@ class OneTimeLinkController extends Controller
                 });
 
                 $respData += [
-                    'docs'         => $docs,
-                    'agreement_id' => $doc->id,
+                    'docs'          => $docs,
+                    'agreement_url' => $agreementUrl,
                 ];
             } else {
                 $respData += [
