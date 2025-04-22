@@ -138,7 +138,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // Brokers
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/brokers/upload-agreement', [BrokerController::class, 'uploadSignedAgreement']);
+    Route::post('/brokers/upload-signed-agreement', [BrokerController::class, 'uploadSignedAgreement']);
 });
 
 // Unit Updates
