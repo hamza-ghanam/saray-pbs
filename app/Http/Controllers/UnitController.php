@@ -198,13 +198,25 @@ class UnitController extends Controller
 
         // If the user has the Sales role, restrict to available/cancelled units.
         if ($user->hasRole('Sales')) {
-            $query = Unit::whereIn('status', ['Available', 'Cancelled']);
+            $salesId = $user->id;
+
+            $query = Unit::where(function ($q) use ($salesId) {
+                $q->whereIn('status', ['Available', 'Cancelled'])
+                    ->orWhereHas('bookings', function ($b) use ($salesId) {
+                        $b->where('created_by', $salesId)
+                            ->where('status', '!=', 'Cancelled');
+                    })
+                    ->orWhereHas('holdings', function ($h) use ($salesId) {
+                        $h->where('created_by', $salesId)
+                            ->whereIn('status', ['Hold', 'Pre-Hold']);
+                    });
+            });
         } elseif ($user->hasRole('Broker')) {
             $brokerId = $user->id;
 
-            $query = Unit::where(function($q) use ($brokerId) {
+            $query = Unit::where(function ($q) use ($brokerId) {
                 $q->where('status', 'Available')
-                    ->orWhereHas('holdings', function($h) use ($brokerId) {
+                    ->orWhereHas('holdings', function ($h) use ($brokerId) {
                         $h->where('created_by', $brokerId)
                             ->whereIn('status', ['Hold', 'Pre-Hold']);
                     });
@@ -238,7 +250,7 @@ class UnitController extends Controller
         $query->with('building');
 
         // Dynamic pagination: retrieve 'limit', cast to integer, and cap at 100 items per page.
-        $limit = min((int) $request->get('limit', 10), 100);
+        $limit = min((int)$request->get('limit', 10), 100);
         $units = $query->paginate($limit);
 
         return response()->json($units, Response::HTTP_OK);
