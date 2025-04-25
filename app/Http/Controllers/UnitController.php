@@ -199,6 +199,16 @@ class UnitController extends Controller
         // If the user has the Sales role, restrict to available/cancelled units.
         if ($user->hasRole('Sales')) {
             $query = Unit::whereIn('status', ['Available', 'Cancelled']);
+        } elseif ($user->hasRole('Broker')) {
+            $brokerId = $user->id;
+
+            $query = Unit::where(function($q) use ($brokerId) {
+                $q->where('status', 'Available')
+                    ->orWhereHas('holdings', function($h) use ($brokerId) {
+                        $h->where('created_by', $brokerId)
+                            ->whereIn('status', ['Hold', 'Pre-Hold']);
+                    });
+            });
         } else {
             $query = Unit::query();
         }
