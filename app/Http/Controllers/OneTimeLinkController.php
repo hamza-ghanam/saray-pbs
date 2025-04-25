@@ -14,7 +14,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
 use Symfony\Component\HttpFoundation\Response;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
-
+use Illuminate\Support\Facades\Mail;
 
 class OneTimeLinkController extends Controller
 {
@@ -484,6 +484,12 @@ class OneTimeLinkController extends Controller
 
         $user->status = 'Active';
         $user->save();
+
+        Mail::send('emails.user_approved', ['user' => $user], function ($message) use ($user) {
+            $message
+                ->to($user->email, $user->name)
+                ->subject('Your account is now active!');
+        });
 
         return response()->json([
             'message' => 'User approved successfully',
