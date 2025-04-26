@@ -186,7 +186,7 @@ class UnitUpdateController extends Controller
      * @OA\Get(
      *     path="/unit-updates/{updateId}",
      *     summary="Get unit update details",
-     *     description="Retrieves the details of a specific unit update (excluding the attachment). Contractor users can only view updates for units assigned to them.",
+     *     description="Retrieves the details of a specific unit update, including the attachment filename. Contractor users can only view updates for units assigned to them.",
      *     operationId="getUnitUpdateDetails",
      *     tags={"UnitUpdates"},
      *     security={{"bearerAuth":{}}},
@@ -195,33 +195,37 @@ class UnitUpdateController extends Controller
      *         in="path",
      *         description="ID of the unit update",
      *         required=true,
-     *         @OA\Schema(type="integer")
+     *         @OA\Schema(type="integer", example=1)
      *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Unit update details retrieved successfully",
      *         @OA\JsonContent(
      *             type="object",
-     *             @OA\Property(property="id", type="integer"),
-     *             @OA\Property(property="unit_id", type="integer"),
-     *             @OA\Property(property="description", type="string"),
-     *             @OA\Property(property="created_at", type="string", format="date-time"),
-     *             @OA\Property(property="updated_at", type="string", format="date-time"),
-     *             @OA\Property(property="unit", type="object", nullable=true,
-     *                 @OA\Property(property="id", type="integer"),
-     *                 @OA\Property(property="name", type="string"),
-     *                 @OA\Property(property="status", type="string")
+     *             @OA\Property(property="id",          type="integer", format="int64", example=7),
+     *             @OA\Property(property="unit_id",     type="integer", format="int64", example=42),
+     *             @OA\Property(property="description", type="string",              example="Replaced the broken window pane."),
+     *             @OA\Property(
+     *                 property="attachment",
+     *                 type="string",
+     *                 nullable=true,
+     *                 description="The filename of the uploaded attachment (if any)",
+     *                 example="7MLc73GhgYVkoelPpXW2dm38vOxwqKFgrA1iIVpY.pdf"
+     *             ),
+     *             @OA\Property(property="created_at",  type="string", format="date-time", example="2025-04-26T12:34:56Z"),
+     *             @OA\Property(property="updated_at",  type="string", format="date-time", example="2025-04-26T12:34:56Z"),
+     *             @OA\Property(
+     *                 property="unit",
+     *                 type="object",
+     *                 nullable=true,
+     *                 @OA\Property(property="id",     type="integer", example=42),
+     *                 @OA\Property(property="name",   type="string",  example="Unit A101"),
+     *                 @OA\Property(property="status", type="string",  example="Available")
      *             )
      *         )
      *     ),
-     *     @OA\Response(
-     *         response=403,
-     *         description="Unauthorized"
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Unit update not found"
-     *     )
+     *     @OA\Response(response=403, description="Unauthorized"),
+     *     @OA\Response(response=404, description="Unit update not found")
      * )
      */
     public function show(Request $request, $updateId)

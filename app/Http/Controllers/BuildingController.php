@@ -136,10 +136,10 @@ class BuildingController extends Controller
      *             mediaType="multipart/form-data",
      *             @OA\Schema(
      *                 required={"name", "location", "status", "ecd"},
-     *                 @OA\Property(property="name", type="string", example="Building A"),
+     *                 @OA\Property(property="name",     type="string", example="Building A"),
      *                 @OA\Property(property="location", type="string", example="Downtown"),
-     *                 @OA\Property(property="status", type="string", example="Off-Plan"),
-     *                 @OA\Property(property="ecd", type="string", example="Q4-2026"),
+     *                 @OA\Property(property="status",   type="string", example="Off-Plan"),
+     *                 @OA\Property(property="ecd",      type="string", example="Q4-2026"),
      *                 @OA\Property(
      *                     property="image",
      *                     type="string",
@@ -152,7 +152,22 @@ class BuildingController extends Controller
      *     @OA\Response(
      *         response=201,
      *         description="Building created successfully",
-     *         @OA\JsonContent(ref="#/components/schemas/Building")
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="id",            type="integer", format="int64", example=123),
+     *             @OA\Property(property="name",          type="string",             example="Building A"),
+     *             @OA\Property(property="location",      type="string",             example="Downtown"),
+     *             @OA\Property(property="status",        type="string",             example="Off-Plan"),
+     *             @OA\Property(property="ecd",           type="string",             example="Q4-2026"),
+     *             @OA\Property(property="added_by_id",   type="integer",            example=45),
+     *             @OA\Property(
+     *                 property="image_url",
+     *                 type="string",
+     *                 format="url",
+     *                 description="Authenticated URL to fetch the building’s image",
+     *                 example="https://your-domain.com/api/buildings/123/image"
+     *             )
+     *         )
      *     ),
      *     @OA\Response(response=422, description="Validation error"),
      *     @OA\Response(response=403, description="Forbidden")
@@ -236,7 +251,7 @@ class BuildingController extends Controller
     }
 
     /**
-     * Update the specified building in storage.
+     * Update an existing building, optionally replacing its image.
      *
      * @OA\Put(
      *     path="/buildings/{id}",
@@ -252,18 +267,41 @@ class BuildingController extends Controller
      *     ),
      *     @OA\RequestBody(
      *         required=true,
-     *         @OA\JsonContent(
-     *             required={"name", "location", "status", "ecd"},
-     *             @OA\Property(property="name", type="string", example="Building A Updated"),
-     *             @OA\Property(property="location", type="string", example="New Location"),
-     *             @OA\Property(property="status", type="string", example="Off-Plan"),
-     *             @OA\Property(property="ecd", type="string", example="Q4-2026")
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 @OA\Property(property="name",     type="string", example="Building A Updated"),
+     *                 @OA\Property(property="location", type="string", example="New Location"),
+     *                 @OA\Property(property="status",   type="string", example="Off-Plan"),
+     *                 @OA\Property(property="ecd",      type="string", example="Q4-2026"),
+     *                 @OA\Property(
+     *                     property="image",
+     *                     type="string",
+     *                     format="binary",
+     *                     description="Optional new building image (jpeg, png, gif)"
+     *                 )
+     *             )
      *         )
      *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Building updated successfully",
-     *         @OA\JsonContent(ref="#/components/schemas/Building")
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="id",          type="integer", example=123),
+     *             @OA\Property(property="name",        type="string",  example="Building A Updated"),
+     *             @OA\Property(property="location",    type="string",  example="New Location"),
+     *             @OA\Property(property="status",      type="string",  example="Off-Plan"),
+     *             @OA\Property(property="ecd",         type="string",  example="Q4-2026"),
+     *             @OA\Property(property="added_by_id", type="integer", example=45),
+     *             @OA\Property(
+     *                 property="image_url",
+     *                 type="string",
+     *                 format="url",
+     *                 description="Authenticated URL to fetch the building’s image",
+     *                 example="https://your-domain.com/api/buildings/123/image"
+     *             )
+     *         )
      *     ),
      *     @OA\Response(response=422, description="Validation error"),
      *     @OA\Response(response=403, description="Forbidden")

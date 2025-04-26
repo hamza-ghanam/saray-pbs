@@ -1221,12 +1221,12 @@
                     "Building"
                 ],
                 "summary": "Create a new building",
-                "description": "Store a newly created building in storage.",
+                "description": "Store a newly created building in storage, optionally with an image.",
                 "operationId": "91828bb17342458c9c9e1d3382ef3198",
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "application/json": {
+                        "multipart/form-data": {
                             "schema": {
                                 "required": [
                                     "name",
@@ -1250,6 +1250,11 @@
                                     "ecd": {
                                         "type": "string",
                                         "example": "Q4-2026"
+                                    },
+                                    "image": {
+                                        "description": "Optional building image (jpeg, png, gif)",
+                                        "type": "string",
+                                        "format": "binary"
                                     }
                                 },
                                 "type": "object"
@@ -1263,7 +1268,40 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/Building"
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer",
+                                            "format": "int64",
+                                            "example": 123
+                                        },
+                                        "name": {
+                                            "type": "string",
+                                            "example": "Building A"
+                                        },
+                                        "location": {
+                                            "type": "string",
+                                            "example": "Downtown"
+                                        },
+                                        "status": {
+                                            "type": "string",
+                                            "example": "Off-Plan"
+                                        },
+                                        "ecd": {
+                                            "type": "string",
+                                            "example": "Q4-2026"
+                                        },
+                                        "added_by_id": {
+                                            "type": "integer",
+                                            "example": 45
+                                        },
+                                        "image_url": {
+                                            "description": "Authenticated URL to fetch the building’s image",
+                                            "type": "string",
+                                            "format": "url",
+                                            "example": "https://your-domain.com/api/buildings/123/image"
+                                        }
+                                    },
+                                    "type": "object"
                                 }
                             }
                         }
@@ -1327,7 +1365,7 @@
                     "Building"
                 ],
                 "summary": "Update an existing building",
-                "description": "Update the specified building in storage.",
+                "description": "Update an existing building, optionally replacing its image.",
                 "operationId": "fbc9958f26c4410b19f5b059bec2e49b",
                 "parameters": [
                     {
@@ -1343,14 +1381,8 @@
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "application/json": {
+                        "multipart/form-data": {
                             "schema": {
-                                "required": [
-                                    "name",
-                                    "location",
-                                    "status",
-                                    "ecd"
-                                ],
                                 "properties": {
                                     "name": {
                                         "type": "string",
@@ -1367,6 +1399,11 @@
                                     "ecd": {
                                         "type": "string",
                                         "example": "Q4-2026"
+                                    },
+                                    "image": {
+                                        "description": "Optional new building image (jpeg, png, gif)",
+                                        "type": "string",
+                                        "format": "binary"
                                     }
                                 },
                                 "type": "object"
@@ -1380,7 +1417,39 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/Building"
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer",
+                                            "example": 123
+                                        },
+                                        "name": {
+                                            "type": "string",
+                                            "example": "Building A Updated"
+                                        },
+                                        "location": {
+                                            "type": "string",
+                                            "example": "New Location"
+                                        },
+                                        "status": {
+                                            "type": "string",
+                                            "example": "Off-Plan"
+                                        },
+                                        "ecd": {
+                                            "type": "string",
+                                            "example": "Q4-2026"
+                                        },
+                                        "added_by_id": {
+                                            "type": "integer",
+                                            "example": 45
+                                        },
+                                        "image_url": {
+                                            "description": "Authenticated URL to fetch the building’s image",
+                                            "type": "string",
+                                            "format": "url",
+                                            "example": "https://your-domain.com/api/buildings/123/image"
+                                        }
+                                    },
+                                    "type": "object"
                                 }
                             }
                         }
@@ -4092,7 +4161,7 @@
                                         "example": "Available"
                                     },
                                     "floor_plan": {
-                                        "description": "Optional floor plan file (pdf, jpg, jpeg, png)",
+                                        "description": "Optional floor plan file (jpg, jpeg, png)",
                                         "type": "string",
                                         "format": "binary"
                                     }
@@ -4578,7 +4647,7 @@
                     "UnitUpdates"
                 ],
                 "summary": "Get unit update details",
-                "description": "Retrieves the details of a specific unit update (excluding the attachment). Contractor users can only view updates for units assigned to them.",
+                "description": "Retrieves the details of a specific unit update, including the attachment filename. Contractor users can only view updates for units assigned to them.",
                 "operationId": "getUnitUpdateDetails",
                 "parameters": [
                     {
@@ -4587,7 +4656,8 @@
                         "description": "ID of the unit update",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "integer",
+                            "example": 1
                         }
                     }
                 ],
@@ -4599,32 +4669,48 @@
                                 "schema": {
                                     "properties": {
                                         "id": {
-                                            "type": "integer"
+                                            "type": "integer",
+                                            "format": "int64",
+                                            "example": 7
                                         },
                                         "unit_id": {
-                                            "type": "integer"
+                                            "type": "integer",
+                                            "format": "int64",
+                                            "example": 42
                                         },
                                         "description": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "example": "Replaced the broken window pane."
+                                        },
+                                        "attachment": {
+                                            "description": "The filename of the uploaded attachment (if any)",
+                                            "type": "string",
+                                            "example": "7MLc73GhgYVkoelPpXW2dm38vOxwqKFgrA1iIVpY.pdf",
+                                            "nullable": true
                                         },
                                         "created_at": {
                                             "type": "string",
-                                            "format": "date-time"
+                                            "format": "date-time",
+                                            "example": "2025-04-26T12:34:56Z"
                                         },
                                         "updated_at": {
                                             "type": "string",
-                                            "format": "date-time"
+                                            "format": "date-time",
+                                            "example": "2025-04-26T12:34:56Z"
                                         },
                                         "unit": {
                                             "properties": {
                                                 "id": {
-                                                    "type": "integer"
+                                                    "type": "integer",
+                                                    "example": 42
                                                 },
                                                 "name": {
-                                                    "type": "string"
+                                                    "type": "string",
+                                                    "example": "Unit A101"
                                                 },
                                                 "status": {
-                                                    "type": "string"
+                                                    "type": "string",
+                                                    "example": "Available"
                                                 }
                                             },
                                             "type": "object",
@@ -6074,7 +6160,7 @@
                         "example": "2025-12-15"
                     },
                     "floor_plan": {
-                        "description": "Optional floor plan file (pdf, jpg, jpeg, png)",
+                        "description": "Optional floor plan file (jpg, jpeg, png)",
                         "type": "string",
                         "format": "binary"
                     },

@@ -72,7 +72,7 @@ use Symfony\Component\HttpFoundation\Response;
  *     @OA\Property(property="building_id", type="integer", example=5),
  *     @OA\Property(property="status", type="string", enum={"Pending", "Available", "Pre-Booked", "Booked", "Sold", "Pre-Hold", "Hold", "Cancelled"}, example="Pending"),
  *     @OA\Property(property="completion_date", type="string", format="date", example="2025-12-15"),
- *     @OA\Property(property="floor_plan", type="string", format="binary", description="Optional floor plan file (pdf, jpg, jpeg, png)"),
+ *     @OA\Property(property="floor_plan", type="string", format="binary", description="Optional floor plan file (jpg, jpeg, png)"),
  *     @OA\Property(property="dld_fee_percentage", type="number", format="float", example=65000.00),
  *     @OA\Property(property="admin_fee", type="number", format="float", example=4000.00),
  *     @OA\Property(property="EOI", type="number", format="float", example=100000.00),
@@ -500,7 +500,7 @@ class UnitController extends Controller
      *                 @OA\Property(property="price", type="number", format="float", example=350000.00),
      *                 @OA\Property(property="building_id", type="integer", example=5),
      *                 @OA\Property(property="status", type="string", enum={"Pending", "Available", "Pre-Booked", "Booked", "Sold", "Pre-Hold", "Hold", "Cancelled"}, example="Available"),
-     *                 @OA\Property(property="floor_plan", type="string", format="binary", description="Optional floor plan file (pdf, jpg, jpeg, png)")
+     *                 @OA\Property(property="floor_plan", type="string", format="binary", description="Optional floor plan file (jpg, jpeg, png)")
      *             )
      *         )
      *     ),
