@@ -462,6 +462,7 @@ class UnitController extends Controller
 
         // Append the current holding to the unit object.
         $unit->current_holding = $currentHolding;
+        $unit->floor_plan = route('units.floor_plan', ['id' => $unit->id]);
 
         return response()->json($unit, Response::HTTP_OK);
     }

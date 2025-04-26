@@ -243,11 +243,14 @@ class BuildingController extends Controller
         Log::info('User ' . $user->id . ' called BuildingController@show for building id: ' . $id);
 
         if (!$user->can('view building')) {
-            abort(403, 'Unauthorized');
+            abort(Response::HTTP_FORBIDDEN, 'Unauthorized');
         }
 
         $building = Building::findOrFail($id);
-        return response()->json($building, 200);
+        $building->image_url = route('buildings.image', ['id' => $building->id]);
+        $building->makeHidden(['image_path']);
+
+        return response()->json($building, Response::HTTP_OK);
     }
 
     /**
