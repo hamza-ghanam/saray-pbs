@@ -9,7 +9,7 @@ class Building extends Model
 {
     use SoftDeletes;
 
-    protected $fillable = ['name', 'location', 'status', 'ecd', 'added_by_id'];
+    protected $fillable = ['name', 'location', 'status', 'ecd', 'added_by_id', 'image_path'];
 
     public function units()
     {

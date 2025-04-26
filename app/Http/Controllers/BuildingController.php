@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Building;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -122,7 +123,7 @@ class BuildingController extends Controller
     }
 
     /**
-     * Store a newly created building in storage.
+     * Store a newly created building in storage, optionally with an image.
      *
      * @OA\Post(
      *     path="/buildings",
@@ -131,12 +132,21 @@ class BuildingController extends Controller
      *     security={{"sanctum":{}}},
      *     @OA\RequestBody(
      *         required=true,
-     *         @OA\JsonContent(
-     *             required={"name", "location", "status", "ecd"},
-     *             @OA\Property(property="name", type="string", example="Building A"),
-     *             @OA\Property(property="location", type="string", example="Downtown"),
-     *             @OA\Property(property="status", type="string", example="Off-Plan"),
-     *             @OA\Property(property="ecd", type="string", example="Q4-2026")
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 required={"name", "location", "status", "ecd"},
+     *                 @OA\Property(property="name", type="string", example="Building A"),
+     *                 @OA\Property(property="location", type="string", example="Downtown"),
+     *                 @OA\Property(property="status", type="string", example="Off-Plan"),
+     *                 @OA\Property(property="ecd", type="string", example="Q4-2026"),
+     *                 @OA\Property(
+     *                     property="image",
+     *                     type="string",
+     *                     format="binary",
+     *                     description="Optional building image (jpeg, png, gif)"
+     *                 )
+     *             )
      *         )
      *     ),
      *     @OA\Response(
@@ -151,33 +161,42 @@ class BuildingController extends Controller
     public function store(Request $request)
     {
         $user = $request->user();
-        Log::info('User ' . $user->id . ' called BuildingController@store');
+        Log::info("User {$user->id} called BuildingController@store");
 
-        if (!$user->can('add building')) {
-            abort(403, 'Unauthorized');
+        if (! $user->can('add building')) {
+            abort(Response::HTTP_FORBIDDEN, 'Unauthorized');
         }
 
+        // Validate inputs including optional image
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
+            'name'     => 'required|string|max:255',
             'location' => 'required|string|max:255',
-            'status' => 'required|string|max:50',
-            'ecd' => 'required|string|max:255',
+            'status'   => 'required|string|max:50',
+            'ecd'      => 'required|string|max:255',
+            'image'    => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
+            return response()->json($validator->errors(), Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        // Here we set the added_by_id to the current user's id.
-        $building = Building::create([
-            'name' => $request->name,
-            'location' => $request->location,
-            'status' => $request->status,
-            'ecd' => $request->ecd,
-            'added_by_id' => $user->id,
-        ]);
+        // Gather validated data
+        $data = $validator->validated();
+        $data['added_by_id'] = $user->id;
 
-        return response()->json($building, 201);
+        // If an image was uploaded, store it on the 'public' disk
+        if ($request->hasFile('image')) {
+            $data['image_path'] = $request->file('image')
+                ->store('building_images', 'local');
+        }
+
+        // Create building record
+        $building = Building::create($data);
+
+        $building->image_url = route('buildings.image', ['id' => $building->id]);
+        $building->makeHidden(['image_path']);
+
+        return response()->json($building, Response::HTTP_CREATED);
     }
 
     /**
@@ -256,24 +275,43 @@ class BuildingController extends Controller
         Log::info('User ' . $user->id . ' called BuildingController@update for building id: ' . $id);
 
         if (!$user->can('edit building')) {
-            abort(403, 'Unauthorized');
+            abort(Response::HTTP_FORBIDDEN, 'Unauthorized');
         }
 
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'location' => 'required|string|max:255',
-            'status' => 'required|string|max:50',
-            'ecd' => 'required|string|max:255',
+            'name' => 'sometimes|string|max:255',
+            'location' => 'sometimes|string|max:255',
+            'status' => 'sometimes|string|max:50',
+            'ecd' => 'sometimes|string|max:255',
+            'image'    => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
+            return response()->json($validator->errors(), Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
         $building = Building::findOrFail($id);
-        $building->update($request->only(['name', 'location', 'status', 'ecd']));
+        $data = $request->only(['name', 'location', 'status', 'ecd']);
 
-        return response()->json($building, 200);
+        // If there's a new image, delete the old one and store the new
+        if ($request->hasFile('image')) {
+            // delete old file if it exists
+            if ($building->image_path
+                && Storage::disk('local')->exists($building->image_path)) {
+                Storage::disk('local')->delete($building->image_path);
+            }
+
+            // store new upload & capture its path
+            $path = $request->file('image')->store('building_images', 'local');
+            $data['image_path'] = $path;
+        }
+
+        $building->update($data);
+
+        $building->image_url = route('buildings.image', ['id' => $building->id]);
+        $building->makeHidden(['image_path']);
+
+        return response()->json($building, Response::HTTP_OK);
     }
 
     /**
@@ -400,5 +438,24 @@ class BuildingController extends Controller
         $units = $query->paginate($limit);
 
         return response()->json($units, Response::HTTP_OK);
+    }
+
+    public function showImage($id): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    {
+        $building = Building::findOrFail($id);
+
+        if (!auth()->user()->can('view building')) {
+            abort(Response::HTTP_FORBIDDEN);
+        }
+
+        $path = $building->image_path; // e.g. "building_images/xyz.png"
+        if (! Storage::disk('local')->exists($path)) {
+            abort(Response::HTTP_NOT_FOUND);
+        }
+
+        return response()->file(
+            Storage::disk('local')->path($path),
+            ['Content-Disposition' => 'inline; filename="'.basename($path).'"']
+        );
     }
 }

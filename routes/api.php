@@ -40,6 +40,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/buildings/{id}', [BuildingController::class, 'update']);
     Route::delete('/buildings/{id}', [BuildingController::class, 'destroy']);
     Route::get('/buildings/{buildingId}/units', [BuildingController::class, 'getUnitsByBuilding']);
+    Route::get('/buildings/{id}/image', [BuildingController::class, 'showImage'])->name('buildings.image');
 });
 
 // Unit Management
@@ -51,6 +52,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/units/{id}', [UnitController::class, 'destroy']);
     Route::post('/units/{id}/approve', [UnitController::class, 'approve']);
     Route::post('/units/{id}/assign', [UnitController::class, 'assignUnit']);
+    Route::get('/units/{id}/floor-plan', [UnitController::class, 'showFloorPlan'])->name('units.floor_plan');
 });
 
 // Payment Plans

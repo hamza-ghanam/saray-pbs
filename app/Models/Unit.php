@@ -24,7 +24,8 @@ class Unit extends Model
         'price',
         'completion_date',
         'building_id',
-        'status_changed_at'
+        'status_changed_at',
+        'floor_plan',
     ];
 
     public function building()

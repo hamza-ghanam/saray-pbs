@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Events\UnitCreated;
 use App\Models\Approval;
+use App\Models\Building;
 use App\Models\Unit;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -304,7 +306,7 @@ class UnitController extends Controller
             'price' => 'required|numeric',
             'completion_date' => 'required|date|after_or_equal:today',
             'building_id' => 'required|exists:buildings,id',
-            'floor_plan' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'floor_plan' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'dld_fee_percentage' => 'required|numeric',
             'admin_fee' => 'required|numeric',
             'EOI' => 'nullable|numeric',
@@ -339,6 +341,7 @@ class UnitController extends Controller
             $unit->admin_fee = $data['admin_fee'];
             $unit->EOI = $data['EOI'] ?? 100000;
             $unit->FCID = $data['FCID'];
+            $unit->floor_plan = route('units.floor_plan', ['id' => $unit->id]);
 
             // Dispatch an event to generate payment plans for the unit.
             event(new UnitCreated($unit));
@@ -533,7 +536,7 @@ class UnitController extends Controller
             'price' => 'sometimes|required|numeric',
             'building_id' => 'sometimes|required|exists:buildings,id',
             'status' => 'sometimes|required|in:Pending,Available,Pre-Booked,Booked,Sold,Pre-Hold,Hold,Cancelled',
-            'floor_plan' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'floor_plan' => 'sometimes|nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
         if ($validator->fails()) {
@@ -568,6 +571,7 @@ class UnitController extends Controller
         }
 
         $unit->update($data);
+        $unit->floor_plan = route('units.floor_plan', ['id' => $unit->id]);
 
         // Eager-load the building relationship to attach the building information.
         $unit->load('building');
@@ -755,5 +759,24 @@ class UnitController extends Controller
         $unit->save();
 
         return response()->json(['message' => 'Unit assigned to contractor successfully'], Response::HTTP_OK);
+    }
+
+    public function showFloorPlan($id): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    {
+        $unit = Unit::findOrFail($id);
+
+        if (!auth()->user()->can('view unit')) {
+            abort(Response::HTTP_FORBIDDEN);
+        }
+
+        $path = $unit->floor_plan; // e.g. "floor_plans/xyz.png"
+        if (! Storage::disk('local')->exists($path)) {
+            abort(Response::HTTP_NOT_FOUND);
+        }
+
+        return response()->file(
+            Storage::disk('local')->path($path),
+            ['Content-Disposition' => 'inline; filename="'.basename($path).'"']
+        );
     }
 }

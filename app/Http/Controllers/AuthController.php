@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+use Spatie\Permission\Models\Role;
 use Symfony\Component\HttpFoundation\Response;
 
 class AuthController extends Controller
@@ -117,6 +118,7 @@ class AuthController extends Controller
 
         // Generate token
         $token = $user->createToken('api-token')->plainTextToken;
+        $role = Role::findByName($user->getRoleNames()->first());
 
         return response()->json([
             'token' => $token,
@@ -124,7 +126,8 @@ class AuthController extends Controller
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
-                'role' => $user->getRoleNames()->first(),
+                'role' => $role?->only(['id', 'name']),
+                'permissions' => $role->permissions->pluck('name')->toArray(),
                 'status' => $user->status,
             ]
         ], Response::HTTP_OK);

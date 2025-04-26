@@ -24,6 +24,7 @@ return new class extends Migration
             $table->decimal('total_area', 10, 2);
             $table->boolean('furnished');
             $table->string('unit_view');
+            $table->string('floor_plan')->nullable();
             $table->decimal('price', 10, 2);
             $table->date('completion_date')->nullable();
             // System

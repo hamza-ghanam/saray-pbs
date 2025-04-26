@@ -77,7 +77,7 @@ class UnitUpdateController extends Controller
         }
 
         // Retrieve dynamic limit, cast to integer, and cap at 100 items per page.
-        $limit = min((int) $request->get('limit', 10), 100);
+        $limit = min((int)$request->get('limit', 10), 100);
 
         // For contractor users, restrict the updates to those associated with units assigned to them.
         if ($user->hasRole('Contractor')) {
@@ -174,7 +174,7 @@ class UnitUpdateController extends Controller
         }
 
         // Retrieve dynamic limit, cast to integer, and cap at 100 items per page.
-        $limit = min((int) $request->get('limit', 10), 100);
+        $limit = min((int)$request->get('limit', 10), 100);
 
         // Use the unitUpdates relationship as a query to paginate.
         $updates = $unit->unitUpdates()->paginate($limit);
@@ -246,16 +246,15 @@ class UnitUpdateController extends Controller
 
         // Prepare the response data without the attachment field.
         $data = [
-            'id'          => $unitUpdate->id,
-            'unit_id'     => $unitUpdate->unit_id,
+            'id' => $unitUpdate->id,
+            'unit_id' => $unitUpdate->unit_id,
             'description' => $unitUpdate->description,
-            'created_at'  => $unitUpdate->created_at,
-            'updated_at'  => $unitUpdate->updated_at,
-            'unit'        => $unitUpdate->unit ? [
-                'id'     => $unitUpdate->unit->id,
-                'name'   => $unitUpdate->unit->name,
-                'status' => $unitUpdate->unit->status,
-            ] : null,
+            'created_at' => $unitUpdate->created_at,
+            'updated_at' => $unitUpdate->updated_at,
+            'attachment' => $unitUpdate->attachment_path
+                            ? basename($unitUpdate->attachment_path)
+                            : null,
+            'unit' => $unitUpdate->unit,
         ];
 
         return response()->json($data, Response::HTTP_OK);
@@ -318,7 +317,7 @@ class UnitUpdateController extends Controller
         // Validate the request data
         $data = $request->validate([
             'description' => 'required|string',
-            'attachment'  => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048'
+            'attachment' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048'
         ]);
 
         // Find the specified unit
