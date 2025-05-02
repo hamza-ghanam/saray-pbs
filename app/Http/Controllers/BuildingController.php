@@ -116,7 +116,7 @@ class BuildingController extends Controller
         }
 
         // Dynamic pagination
-        $limit = min((int) $request->get('limit', 10), 100);
+        $limit = min((int)$request->get('limit', 10), 100);
         $buildings = $query->paginate($limit);
 
         return response()->json($buildings, Response::HTTP_OK);
@@ -178,17 +178,17 @@ class BuildingController extends Controller
         $user = $request->user();
         Log::info("User {$user->id} called BuildingController@store");
 
-        if (! $user->can('add building')) {
+        if (!$user->can('add building')) {
             abort(Response::HTTP_FORBIDDEN, 'Unauthorized');
         }
 
         // Validate inputs including optional image
         $validator = Validator::make($request->all(), [
-            'name'     => 'required|string|max:255',
+            'name' => 'required|string|max:255',
             'location' => 'required|string|max:255',
-            'status'   => 'required|string|max:50',
-            'ecd'      => 'required|string|max:255',
-            'image'    => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'status' => 'required|string|max:50',
+            'ecd' => 'required|string|max:255',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         if ($validator->fails()) {
@@ -208,7 +208,7 @@ class BuildingController extends Controller
         // Create building record
         $building = Building::create($data);
 
-        $building->image_url = route('buildings.image', ['id' => $building->id]);
+        $building->image_url = $building->image_path ? route('buildings.image', ['id' => $building->id]) : null;
         $building->makeHidden(['image_path']);
 
         return response()->json($building, Response::HTTP_CREATED);
@@ -247,7 +247,7 @@ class BuildingController extends Controller
         }
 
         $building = Building::findOrFail($id);
-        $building->image_url = route('buildings.image', ['id' => $building->id]);
+        $building->image_url = $building->image_path ? route('buildings.image', ['id' => $building->id]) : null;
         $building->makeHidden(['image_path']);
 
         return response()->json($building, Response::HTTP_OK);
@@ -324,7 +324,7 @@ class BuildingController extends Controller
             'location' => 'sometimes|string|max:255',
             'status' => 'sometimes|string|max:50',
             'ecd' => 'sometimes|string|max:255',
-            'image'    => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         if ($validator->fails()) {
@@ -349,7 +349,7 @@ class BuildingController extends Controller
 
         $building->update($data);
 
-        $building->image_url = route('buildings.image', ['id' => $building->id]);
+        $building->image_url = $building->image_path ? route('buildings.image', ['id' => $building->id]) : null;
         $building->makeHidden(['image_path']);
 
         return response()->json($building, Response::HTTP_OK);
@@ -475,17 +475,17 @@ class BuildingController extends Controller
         }
 
         // Dynamic pagination: get the 'limit' (default 10, capped at 100)
-        $limit = min((int) $request->get('limit', 10), 100);
+        $limit = min((int)$request->get('limit', 10), 100);
         $units = $query->paginate($limit);
 
         return response()->json($units, Response::HTTP_OK);
     }
 
-    public function showImage($id): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    public function showImage(Request $request, $id)
     {
         $building = Building::findOrFail($id);
 
-        if (!auth()->user()->can('view building')) {
+        if (! auth()->user()->can('view building')) {
             abort(Response::HTTP_FORBIDDEN);
         }
 
@@ -494,9 +494,32 @@ class BuildingController extends Controller
             abort(Response::HTTP_NOT_FOUND);
         }
 
-        return response()->file(
-            Storage::disk('local')->path($path),
-            ['Content-Disposition' => 'inline; filename="'.basename($path).'"']
-        );
+        $fullPath = Storage::disk('local')->path($path);
+
+        // Compute strong validators
+        $lastModified = gmdate('D, d M Y H:i:s', filemtime($fullPath)) . ' GMT';
+        $eTag         = '"' . md5_file($fullPath) . '"';
+
+        // If the client already has the latest, short-circuit with 304
+        if ($request->headers->get('if-none-match') === $eTag ||
+            $request->headers->get('if-modified-since') === $lastModified
+        ) {
+            return response('', 304)
+                ->header('Cache-Control', 'no-cache, must-revalidate, max-age=0, proxy-revalidate')
+                ->header('Pragma', 'no-cache')
+                ->header('Expires', '0')
+                ->header('ETag', $eTag)
+                ->header('Last-Modified', $lastModified);
+        }
+
+        // Otherwise send the file with no-cache + validators
+        return response()->file($fullPath, [
+            'Content-Disposition' => 'inline; filename="' . basename($path) . '"',
+            'Cache-Control'       => 'no-cache, must-revalidate, max-age=0, proxy-revalidate',
+            'Pragma'              => 'no-cache',
+            'Expires'             => '0',
+            'Last-Modified'       => $lastModified,
+            'ETag'                => $eTag,
+        ]);
     }
 }

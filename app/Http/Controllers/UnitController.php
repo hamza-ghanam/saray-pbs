@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -295,7 +296,12 @@ class UnitController extends Controller
         $validator = Validator::make($request->all(), [
             'prop_type' => 'required|string|max:255',
             'unit_type' => 'required|string|max:255',
-            'unit_no' => 'required|string|max:255',
+            'unit_no'     => [
+                'required',
+                'string',
+                Rule::unique('units', 'unit_no')
+                    ->where(fn($query) => $query->where('building_id', $request->building_id))
+            ],
             'floor' => 'required|string|max:50',
             'parking' => 'nullable|string|max:255',
             'pool_jacuzzi' => 'nullable|string|max:255',
@@ -341,7 +347,7 @@ class UnitController extends Controller
             $unit->admin_fee = $data['admin_fee'];
             $unit->EOI = $data['EOI'] ?? 100000;
             $unit->FCID = $data['FCID'];
-            $unit->floor_plan = route('units.floor_plan', ['id' => $unit->id]);
+            $unit->floor_plan = $unit->floor_plan ? route('units.floor_plan', ['id' => $unit->id]) : null;
 
             // Dispatch an event to generate payment plans for the unit.
             event(new UnitCreated($unit));
@@ -430,9 +436,11 @@ class UnitController extends Controller
      *     @OA\Response(response=403, description="Forbidden")
      * )
      */
-    public function show(Request $request, $id)
+    public function show(Request $request, $id): \Illuminate\Http\JsonResponse
     {
         $user = $request->user();
+        $salesId = $user->id;
+
         Log::info("User {$user->id} requested details for unit ID: {$id}");
 
         if (!$user->can('view unit')) {
@@ -444,9 +452,28 @@ class UnitController extends Controller
             return response()->json(['message' => 'Unit not found'], Response::HTTP_NOT_FOUND);
         }
 
-        // Sales users can only view if status is "Available" or "Cancelled"
-        if ($user->hasRole('Sales') && !in_array($unit->status, ['Available', 'Cancelled'])) {
-            return response()->json(['message' => 'Unit not available for sales role'], Response::HTTP_FORBIDDEN);
+        // 2) Always allowed statuses
+        $isOpen = in_array($unit->status, ['Available', 'Cancelled']);
+
+        // 3) Your own booking (non-cancelled) + matching unit status
+        $hasMyBookingHold = $unit->bookings()
+                ->where('created_by', $salesId)
+                ->where('status', '!=', 'Cancelled')
+                ->exists()
+            && in_array($unit->status, ['Pre-Booked', 'Booked']);
+
+        // 4) Your own holding + matching unit status
+        $hasMyHolding = $unit->holdings()
+                ->where('created_by', $salesId)
+                ->whereIn('status', ['Hold', 'Pre-Hold'])
+                ->exists()
+            && in_array($unit->status, ['Hold', 'Pre-Hold']);
+
+        // 5) Final Sales-only guard
+        if ($user->hasRole('Sales') && ! ($isOpen || $hasMyBookingHold || $hasMyHolding)) {
+            return response()->json([
+                'message' => 'Unit not available for you at this stage.'
+            ], Response::HTTP_FORBIDDEN);
         }
 
         // Eager-load the payment plans (and their installments) and the building that contains the unit.
@@ -460,9 +487,23 @@ class UnitController extends Controller
             ->latest()
             ->first();
 
+        $currentBooking = $unit->bookings()
+            ->with('user')
+            ->where('status', '!=', 'Cancelled')
+            ->latest()
+            ->first();
+
         // Append the current holding to the unit object.
         $unit->current_holding = $currentHolding;
-        $unit->floor_plan = route('units.floor_plan', ['id' => $unit->id]);
+        $unit->current_booking = $currentBooking;
+
+        // 2) Turn your stored path into the authenticated URL
+        $unit->floor_plan_url = $unit->floor_plan
+            ? route('units.floor_plan', ['id' => $unit->id])
+            : null;
+
+        // 3) Hide the raw `floor_plan` attribute (the path)
+        $unit->makeHidden(['floor_plan']);
 
         return response()->json($unit, Response::HTTP_OK);
     }
@@ -523,10 +564,18 @@ class UnitController extends Controller
             abort(Response::HTTP_FORBIDDEN, 'Unauthorized');
         }
 
+        $unit = Unit::findOrFail($id);
+
         $validator = Validator::make($request->all(), [
             'prop_type' => 'sometimes|required|string|max:255',
             'unit_type' => 'sometimes|required|string|max:255',
-            'unit_no' => 'sometimes|required|string|unique:units,unit_no,' . $id,
+            'unit_no'     => [
+                'required',
+                'string',
+                Rule::unique('units', 'unit_no')
+                    ->where(fn($q) => $q->where('building_id', $request->building_id))
+                    ->ignore($unit->id)
+            ],
             'floor' => 'sometimes|required|string|max:50',
             'parking' => 'nullable|string|max:255',
             'pool_jacuzzi' => 'nullable|string|max:255',
@@ -543,8 +592,6 @@ class UnitController extends Controller
         if ($validator->fails()) {
             return response()->json($validator->errors(), Response::HTTP_UNPROCESSABLE_ENTITY);
         }
-
-        $unit = Unit::findOrFail($id);
 
         // For Sales role, only allow update if unit status is "Available" or "Cancelled"
         if ($user->hasRole('Sales') && !in_array($unit->status, ['Available', 'Cancelled'])) {
@@ -572,7 +619,7 @@ class UnitController extends Controller
         }
 
         $unit->update($data);
-        $unit->floor_plan = route('units.floor_plan', ['id' => $unit->id]);
+        $unit->floor_plan = $unit->floor_plan ? route('units.floor_plan', ['id' => $unit->id]) : null;
 
         // Eager-load the building relationship to attach the building information.
         $unit->load('building');
@@ -762,7 +809,7 @@ class UnitController extends Controller
         return response()->json(['message' => 'Unit assigned to contractor successfully'], Response::HTTP_OK);
     }
 
-    public function showFloorPlan($id): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    public function showFloorPlan(Request $request, $id)
     {
         $unit = Unit::findOrFail($id);
 
@@ -775,9 +822,30 @@ class UnitController extends Controller
             abort(Response::HTTP_NOT_FOUND);
         }
 
-        return response()->file(
-            Storage::disk('local')->path($path),
-            ['Content-Disposition' => 'inline; filename="'.basename($path).'"']
-        );
+        $fullPath = Storage::disk('local')->path($path);
+        $lastModified = gmdate('D, d M Y H:i:s', filemtime($fullPath)) . ' GMT';
+        $eTag = '"' . md5_file($fullPath) . '"';
+
+        // If the client already has the latest, short-circuit with 304
+        if ($request->headers->get('if-none-match') === $eTag ||
+            $request->headers->get('if-modified-since') === $lastModified
+        ) {
+            return response('', 304)
+                ->header('Cache-Control', 'no-cache, must-revalidate, max-age=0, proxy-revalidate')
+                ->header('Pragma', 'no-cache')
+                ->header('Expires', '0')
+                ->header('ETag', $eTag)
+                ->header('Last-Modified', $lastModified);
+        }
+
+        // Otherwise send the file with no-cache + validators
+        return response()->file($fullPath, [
+            'Content-Disposition' => 'inline; filename="' . basename($path) . '"',
+            'Cache-Control'       => 'no-cache, must-revalidate, max-age=0, proxy-revalidate',
+            'Pragma'              => 'no-cache',
+            'Expires'             => '0',
+            'Last-Modified'       => $lastModified,
+            'ETag'                => $eTag,
+        ]);
     }
 }

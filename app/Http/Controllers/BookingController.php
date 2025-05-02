@@ -25,12 +25,12 @@ class BookingController extends Controller
 {
     use AuthorizesRequests;
 
-    protected $fcmService;
+//    protected $fcmService;
 
-    public function __construct(FCMService $fcmService)
-    {
-        $this->fcmService = $fcmService;
-    }
+//    public function __construct(FCMService $fcmService)
+//    {
+//        $this->fcmService = $fcmService;
+//    }
 
     /**
      * Get a booking by its ID, including the related customer info.
@@ -104,7 +104,7 @@ class BookingController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/booking/scan-passport",
+     *     path="/bookings/scan-passport",
      *     summary="Scan a customer passport to get their information.",
      *     tags={"Booking"},
      *     security={{"sanctum":{}}},
@@ -206,7 +206,7 @@ class BookingController extends Controller
             return response()->json(['error' => 'OCR extraction failed'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        $filePath = $file->store('private/passports');
+        $filePath = $file->store('passports', 'local');
 
         // File path token
         $token = (string)Str::uuid();
@@ -380,6 +380,19 @@ class BookingController extends Controller
             // Check if the unit is Available or Cancelled
             $unit = Unit::findOrFail($request->unit_id);
 
+            // check for an existing “Hold” by *this* user
+            $hasMyHold = $unit->holdings()
+                ->where('created_by', $user->id)
+                ->where('status', 'Hold')
+                ->exists();
+
+            // Unit is not normally bookable, and I don’t already have it on hold
+            if (!in_array($unit->status, ['Available', 'Cancelled']) && !($hasMyHold && $unit->status === 'Hold')) {
+                return response()->json([
+                    'error' => "Unit status must be 'Available' or 'Cancelled' to book (unless you already hold it)."
+                ], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+
             if (!in_array($unit->status, ['Available', 'Cancelled'])) {
                 return response()->json([
                     'error' => "Unit status must be 'Available' or 'Cancelled' to book."
@@ -401,7 +414,7 @@ class BookingController extends Controller
             $receiptPath = null;
             if ($request->hasFile('receipt')) {
                 $receiptFile = $request->file('receipt');
-                $receiptPath = $receiptFile->store('private/receipts');
+                $receiptPath = $receiptFile->store('receipts', 'local');
             }
 
             // Create the CustomerInfo record
@@ -442,7 +455,7 @@ class BookingController extends Controller
                 'booking_id'    => (string)$booking->id,
                 'timestamp'     => now()->toIso8601String(),
             ];
-            $this->fcmService->sendPushNotification($ceoTokens, $title, $body, $data);
+//            $this->fcmService->sendPushNotification($ceoTokens, $title, $body, $data);
 
         } catch (\Exception $ex) {
             DB::rollback();
@@ -536,7 +549,7 @@ class BookingController extends Controller
 
         // Store the receipt
         $receiptFile = $request->file('receipt');
-        $receiptPath = $receiptFile->store('private/receipts');
+        $receiptPath = $receiptFile->store('receipts', 'local');
 
         // Update the booking's receipt_path
         $booking->receipt_path = $receiptPath;
@@ -696,7 +709,7 @@ class BookingController extends Controller
             // Handle a new receipt upload if present
             if ($request->hasFile('receipt')) {
                 $receiptFile = $request->file('receipt');
-                $receiptPath = $receiptFile->store('private/receipts');
+                $receiptPath = $receiptFile->store('receipts', 'local');
                 $booking->receipt_path = $receiptPath;
             }
 
@@ -1028,7 +1041,7 @@ class BookingController extends Controller
                 'new_status'    => $booking->status,
                 'timestamp'     => now()->toIso8601String(),
             ];
-            $this->fcmService->sendPushNotification($deviceTokens, $title, $body, $data);
+        //    $this->fcmService->sendPushNotification($deviceTokens, $title, $body, $data);
 
             return response()->json([
                 'message'  => "Booking approved by {$role}.",

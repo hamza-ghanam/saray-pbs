@@ -256,8 +256,8 @@ class UserManagementController extends Controller
      * Register a new user with a specific role, optionally uploading docs if Broker/Contractor.
      *
      * @OA\Post(
-     *     path="/users/register",
-     *     summary="Register a new user with optional docs for Broker/Contractor",
+     *     path="/users",
+     *     summary="Register a new user (this includes optional docs for Broker/Contractor)",
      *     tags={"User Management"},
      *     security={{"sanctum":{}}},
      *     @OA\RequestBody(

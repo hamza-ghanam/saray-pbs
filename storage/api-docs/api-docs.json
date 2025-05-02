@@ -448,13 +448,13 @@
                 ]
             }
         },
-        "/booking/scan-passport": {
+        "/bookings/scan-passport": {
             "post": {
                 "tags": [
                     "Booking"
                 ],
                 "summary": "Scan a customer passport to get their information.",
-                "operationId": "9642da1e50c3cd25ec4143a851d537ed",
+                "operationId": "084412d9298ee972357b99a73643c7f9",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -4957,6 +4957,174 @@
                         "sanctum": []
                     }
                 ]
+            },
+            "post": {
+                "tags": [
+                    "User Management"
+                ],
+                "summary": "Register a new user (this includes optional docs for Broker/Contractor)",
+                "description": "Register a new user with a specific role, optionally uploading docs if Broker/Contractor.",
+                "operationId": "baa08ff84a21cbbc3a8df83fa6979216",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "email",
+                                    "password",
+                                    "password_confirmation",
+                                    "role"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "description": "User's full name",
+                                        "type": "string",
+                                        "example": "John Doe"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "john@example.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "secret123"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "secret123"
+                                    },
+                                    "role": {
+                                        "description": "Role to assign (e.g., 'Broker', 'Contractor', 'Sales', etc.)",
+                                        "type": "string",
+                                        "enum": [
+                                            "CRM Officer",
+                                            "Sales",
+                                            "CSO",
+                                            "Accountant",
+                                            "CFO",
+                                            "CEO",
+                                            "HR Admin",
+                                            "Broker",
+                                            "Contractor",
+                                            "System Maintenance"
+                                        ],
+                                        "example": "Broker"
+                                    },
+                                    "rera_cert": {
+                                        "description": "Optional doc if role=Broker (pdf, jpg, jpeg, png)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "trade_license": {
+                                        "description": "Optional doc if role=Broker or Contractor (pdf, jpg, jpeg, png)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "bank_account": {
+                                        "description": "Optional doc if role=Broker",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "tax_registration": {
+                                        "description": "Optional doc if role=Broker",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "contract": {
+                                        "description": "Optional doc if role=Contractor",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "scope_of_work": {
+                                        "description": "Optional doc if role=Contractor",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "User registered successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "User registered successfully"
+                                        },
+                                        "user": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "John Doe"
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "example": "john@example.com"
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "Pending"
+                                                },
+                                                "role": {
+                                                    "type": "string",
+                                                    "example": "Broker"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "docs": {
+                                            "description": "List of uploaded docs if any",
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "doc_type": {
+                                                        "type": "string",
+                                                        "example": "rera_cert"
+                                                    },
+                                                    "doc_id": {
+                                                        "type": "integer",
+                                                        "example": "53"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden (no permission to assign this role)"
+                    },
+                    "422": {
+                        "description": "Validation error (e.g., email taken, password mismatch)"
+                    },
+                    "500": {
+                        "description": "Server error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
             }
         },
         "/users/{id}": {
@@ -5223,176 +5391,6 @@
                     },
                     "404": {
                         "description": "User not found"
-                    },
-                    "500": {
-                        "description": "Server error"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            }
-        },
-        "/users/register": {
-            "post": {
-                "tags": [
-                    "User Management"
-                ],
-                "summary": "Register a new user with optional docs for Broker/Contractor",
-                "description": "Register a new user with a specific role, optionally uploading docs if Broker/Contractor.",
-                "operationId": "115839ce5e742a6b75b656617d9ad0a3",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "multipart/form-data": {
-                            "schema": {
-                                "required": [
-                                    "name",
-                                    "email",
-                                    "password",
-                                    "password_confirmation",
-                                    "role"
-                                ],
-                                "properties": {
-                                    "name": {
-                                        "description": "User's full name",
-                                        "type": "string",
-                                        "example": "John Doe"
-                                    },
-                                    "email": {
-                                        "type": "string",
-                                        "format": "email",
-                                        "example": "john@example.com"
-                                    },
-                                    "password": {
-                                        "type": "string",
-                                        "format": "password",
-                                        "example": "secret123"
-                                    },
-                                    "password_confirmation": {
-                                        "type": "string",
-                                        "format": "password",
-                                        "example": "secret123"
-                                    },
-                                    "role": {
-                                        "description": "Role to assign (e.g., 'Broker', 'Contractor', 'Sales', etc.)",
-                                        "type": "string",
-                                        "enum": [
-                                            "CRM Officer",
-                                            "Sales",
-                                            "CSO",
-                                            "Accountant",
-                                            "CFO",
-                                            "CEO",
-                                            "HR Admin",
-                                            "Broker",
-                                            "Contractor",
-                                            "System Maintenance"
-                                        ],
-                                        "example": "Broker"
-                                    },
-                                    "rera_cert": {
-                                        "description": "Optional doc if role=Broker (pdf, jpg, jpeg, png)",
-                                        "type": "string",
-                                        "format": "binary"
-                                    },
-                                    "trade_license": {
-                                        "description": "Optional doc if role=Broker or Contractor (pdf, jpg, jpeg, png)",
-                                        "type": "string",
-                                        "format": "binary"
-                                    },
-                                    "bank_account": {
-                                        "description": "Optional doc if role=Broker",
-                                        "type": "string",
-                                        "format": "binary"
-                                    },
-                                    "tax_registration": {
-                                        "description": "Optional doc if role=Broker",
-                                        "type": "string",
-                                        "format": "binary"
-                                    },
-                                    "contract": {
-                                        "description": "Optional doc if role=Contractor",
-                                        "type": "string",
-                                        "format": "binary"
-                                    },
-                                    "scope_of_work": {
-                                        "description": "Optional doc if role=Contractor",
-                                        "type": "string",
-                                        "format": "binary"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "User registered successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "User registered successfully"
-                                        },
-                                        "user": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "name": {
-                                                    "type": "string",
-                                                    "example": "John Doe"
-                                                },
-                                                "email": {
-                                                    "type": "string",
-                                                    "example": "john@example.com"
-                                                },
-                                                "status": {
-                                                    "type": "string",
-                                                    "example": "Pending"
-                                                },
-                                                "role": {
-                                                    "type": "string",
-                                                    "example": "Broker"
-                                                }
-                                            },
-                                            "type": "object"
-                                        },
-                                        "docs": {
-                                            "description": "List of uploaded docs if any",
-                                            "type": "array",
-                                            "items": {
-                                                "properties": {
-                                                    "doc_type": {
-                                                        "type": "string",
-                                                        "example": "rera_cert"
-                                                    },
-                                                    "doc_id": {
-                                                        "type": "integer",
-                                                        "example": "53"
-                                                    }
-                                                },
-                                                "type": "object"
-                                            }
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden (no permission to assign this role)"
-                    },
-                    "422": {
-                        "description": "Validation error (e.g., email taken, password mismatch)"
                     },
                     "500": {
                         "description": "Server error"
