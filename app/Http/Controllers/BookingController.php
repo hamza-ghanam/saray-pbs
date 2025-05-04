@@ -124,7 +124,10 @@ class BookingController extends Controller
             return response()->json(['message' => 'Booking not found'], Response::HTTP_NOT_FOUND);
         }
 
-        $this->authorize('view', $booking);
+        // Sales-only extra guard
+        if ($user->hasRole('Sales') && $booking->created_by !== $user->id) {
+            return response()->json(['message' => 'Forbidden'], Response::HTTP_FORBIDDEN);
+        }
 
         // (Optional) Hide sensitive fields
         $booking->makeHidden(['receipt_path']);
@@ -569,6 +572,11 @@ class BookingController extends Controller
             return response()->json(['message' => 'Booking not found'], Response::HTTP_NOT_FOUND);
         }
 
+        // Sales-only extra guard
+        if ($user->hasRole('Sales') && $booking->created_by !== $user->id) {
+            return response()->json(['message' => 'Forbidden'], Response::HTTP_FORBIDDEN);
+        }
+
         // Store the receipt
         $receiptFile = $request->file('receipt');
         $receiptPath = $receiptFile->store('receipts', 'local');
@@ -709,6 +717,11 @@ class BookingController extends Controller
         }
 
         if (!$user->can('edit booking', $booking)) {
+            return response()->json(['message' => 'Forbidden'], Response::HTTP_FORBIDDEN);
+        }
+
+        // Sales-only extra guard
+        if ($user->hasRole('Sales') && $booking->created_by !== $user->id) {
             return response()->json(['message' => 'Forbidden'], Response::HTTP_FORBIDDEN);
         }
 
@@ -883,20 +896,20 @@ class BookingController extends Controller
         $validated = Validator::make(
             ['type' => $type],
             ['type' => ['required', Rule::in([
-                'passport','receipt','rf','signed_rf','spa','signed_spa'
+                'passport', 'receipt', 'rf', 'signed_rf', 'spa', 'signed_spa'
             ])]]
         )->validate();
 
         $user = $request->user();
 
         // 2. Permission check
-        if (! $user->can('view booking')) {
+        if (!$user->can('view booking')) {
             return response()->json(['message' => 'Forbidden'], Response::HTTP_FORBIDDEN);
         }
 
         // 3. Load the booking
         $booking = Booking::find($id);
-        if (! $booking) {
+        if (!$booking) {
             return response()->json(['message' => 'Booking not found'], Response::HTTP_NOT_FOUND);
         }
 
@@ -909,23 +922,23 @@ class BookingController extends Controller
 
         // 5. Map `type` → file path
         $getPath = [
-            'passport'   => fn() => optional($booking->customerInfo)->document_path,
-            'receipt'    => fn() => $booking->receipt_path,
-            'rf'         => fn() => optional($booking->reservationForm)->file_path,
-            'signed_rf'  => fn() => optional($booking->signedReservationForm)->signed_file_path,
-            'spa'        => fn() => optional($booking->spa)->file_path,
+            'passport' => fn() => optional($booking->customerInfo)->document_path,
+            'receipt' => fn() => $booking->receipt_path,
+            'rf' => fn() => optional($booking->reservationForm)->file_path,
+            'signed_rf' => fn() => optional($booking->signedReservationForm)->signed_file_path,
+            'spa' => fn() => optional($booking->spa)->file_path,
             'signed_spa' => fn() => optional($booking->signedSpa)->signed_file_path,
         ];
         $path = $getPath[$validated['type']]();
 
-        if (! $path) {
+        if (!$path) {
             return response()->json([
-                'message' => ucfirst(str_replace('_',' ',$validated['type'])) . ' not found'
+                'message' => ucfirst(str_replace('_', ' ', $validated['type'])) . ' not found'
             ], Response::HTTP_NOT_FOUND);
         }
 
         // 6. Stream the download
-        $ext      = pathinfo($path, PATHINFO_EXTENSION);
+        $ext = pathinfo($path, PATHINFO_EXTENSION);
         $filename = "{$validated['type']}_booking_{$booking->id}.{$ext}";
 
         return Storage::disk('local')->download($path, $filename);
