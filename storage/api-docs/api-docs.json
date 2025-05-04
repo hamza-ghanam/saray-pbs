@@ -151,10 +151,10 @@
         "/bookings/{id}": {
             "get": {
                 "tags": [
-                    "Booking"
+                    "Bookings"
                 ],
-                "summary": "Retrieve a booking and its customer info by ID",
-                "description": "Get a booking by its ID, including the related customer info.",
+                "summary": "Retrieve a booking and its related records by ID",
+                "description": "Get a booking by its ID, including related customer info, reservation form, SPA, and approvals.",
                 "operationId": "4b13c909d897a5edd245741a4aafd9d2",
                 "parameters": [
                     {
@@ -191,10 +191,11 @@
                                             "type": "string",
                                             "example": "Pre-Booked"
                                         },
-                                        "receipt_path": {
-                                            "type": "string",
-                                            "example": "public/receipts/abc123.pdf",
-                                            "nullable": true
+                                        "approvals": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Approval"
+                                            }
                                         },
                                         "customer_info": {
                                             "description": "Nested customer info",
@@ -205,11 +206,11 @@
                                                 },
                                                 "name": {
                                                     "type": "string",
-                                                    "example": "HAMZA GHANAM"
+                                                    "example": "John Smith"
                                                 },
                                                 "passport_number": {
                                                     "type": "string",
-                                                    "example": "N007047689"
+                                                    "example": "N001234567"
                                                 },
                                                 "birth_date": {
                                                     "type": "string",
@@ -223,13 +224,71 @@
                                                 "nationality": {
                                                     "type": "string",
                                                     "example": "Syrian Arab Republic (the)"
-                                                },
-                                                "document_path": {
-                                                    "type": "string",
-                                                    "example": "public/documents/abcd1234.jpg"
                                                 }
                                             },
                                             "type": "object"
+                                        },
+                                        "reservation_form": {
+                                            "description": "Associated reservation form",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                },
+                                                "booking_id": {
+                                                    "type": "integer",
+                                                    "example": 42
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "Signed"
+                                                },
+                                                "signed_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-05-03T12:34:56Z",
+                                                    "nullable": true
+                                                },
+                                                "approvals": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/Approval"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object",
+                                            "nullable": true
+                                        },
+                                        "spa": {
+                                            "description": "Associated Sales and Purchase Agreement",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 11
+                                                },
+                                                "booking_id": {
+                                                    "type": "integer",
+                                                    "example": 42
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "Pending"
+                                                },
+                                                "signed_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": null,
+                                                    "nullable": true
+                                                },
+                                                "approvals": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/Approval"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object",
+                                            "nullable": true
                                         }
                                     },
                                     "type": "object"
@@ -237,11 +296,11 @@
                             }
                         }
                     },
-                    "404": {
-                        "description": "Booking not found"
-                    },
                     "403": {
                         "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Booking not found"
                     }
                 },
                 "security": [
@@ -252,7 +311,7 @@
             },
             "put": {
                 "tags": [
-                    "Booking"
+                    "Bookings"
                 ],
                 "summary": "Update a booking (and its customer info) by ID",
                 "description": "Update an existing booking and its related customer info.",
@@ -279,13 +338,13 @@
                                         "description": "Updated customer name",
                                         "type": "string",
                                         "maxLength": 255,
-                                        "example": "HAMZA GHANAM"
+                                        "example": "John Smith"
                                     },
                                     "passport_number": {
                                         "description": "Updated passport number",
                                         "type": "string",
                                         "maxLength": 50,
-                                        "example": "N007047689"
+                                        "example": "N001234567"
                                     },
                                     "birth_date": {
                                         "description": "Updated birth date",
@@ -364,11 +423,11 @@
                                                 },
                                                 "name": {
                                                     "type": "string",
-                                                    "example": "HAMZA GHANAM"
+                                                    "example": "John Smith"
                                                 },
                                                 "passport_number": {
                                                     "type": "string",
-                                                    "example": "N007047689"
+                                                    "example": "N001234567"
                                                 },
                                                 "birth_date": {
                                                     "type": "string",
@@ -413,7 +472,7 @@
             },
             "delete": {
                 "tags": [
-                    "Booking"
+                    "Bookings"
                 ],
                 "summary": "Delete a booking by ID",
                 "description": "Delete a booking by its ID.",
@@ -451,7 +510,7 @@
         "/bookings/scan-passport": {
             "post": {
                 "tags": [
-                    "Booking"
+                    "Bookings"
                 ],
                 "summary": "Scan a customer passport to get their information.",
                 "operationId": "084412d9298ee972357b99a73643c7f9",
@@ -591,7 +650,7 @@
         "/book-unit": {
             "post": {
                 "tags": [
-                    "Booking"
+                    "Bookings"
                 ],
                 "summary": "Book a unit by creating CustomerInfo and Booking with status Pre-Booked",
                 "description": "Book a unit with provided customer information and an optional payment receipt.",
@@ -608,7 +667,8 @@
                                     "birth_date",
                                     "gender",
                                     "nationality",
-                                    "unit_id"
+                                    "unit_id",
+                                    "payment_plan_id"
                                 ],
                                 "properties": {
                                     "upload_token": {
@@ -624,7 +684,7 @@
                                     "passport_number": {
                                         "type": "string",
                                         "maxLength": 50,
-                                        "example": "N007832713"
+                                        "example": "N001234567"
                                     },
                                     "birth_date": {
                                         "type": "string",
@@ -671,11 +731,16 @@
                                     "properties": {
                                         "id": {
                                             "type": "integer",
+                                            "format": "int64",
                                             "example": 42
                                         },
                                         "unit_id": {
                                             "type": "integer",
                                             "example": 12
+                                        },
+                                        "payment_plan_id": {
+                                            "type": "integer",
+                                            "example": 5
                                         },
                                         "customer_info_id": {
                                             "type": "integer",
@@ -685,22 +750,26 @@
                                             "type": "string",
                                             "example": "Pre-Booked"
                                         },
-                                        "confirmed_by": {
+                                        "created_by": {
                                             "type": "integer",
-                                            "example": null,
-                                            "nullable": true
+                                            "example": 3
                                         },
-                                        "confirmed_at": {
+                                        "created_at": {
                                             "type": "string",
                                             "format": "date-time",
-                                            "example": null,
-                                            "nullable": true
+                                            "example": "2025-05-02T16:00:00Z"
+                                        },
+                                        "updated_at": {
+                                            "type": "string",
+                                            "format": "date-time",
+                                            "example": "2025-05-02T16:00:00Z"
                                         },
                                         "customer_info": {
                                             "description": "Nested CustomerInfo record",
                                             "properties": {
                                                 "id": {
                                                     "type": "integer",
+                                                    "format": "int64",
                                                     "example": 7
                                                 },
                                                 "name": {
@@ -709,7 +778,7 @@
                                                 },
                                                 "passport_number": {
                                                     "type": "string",
-                                                    "example": "N007832713"
+                                                    "example": "N001234567"
                                                 },
                                                 "birth_date": {
                                                     "type": "string",
@@ -727,25 +796,15 @@
                                                 "created_at": {
                                                     "type": "string",
                                                     "format": "date-time",
-                                                    "example": "2025-03-10T12:00:00Z"
+                                                    "example": "2025-05-02T15:58:00Z"
                                                 },
                                                 "updated_at": {
                                                     "type": "string",
                                                     "format": "date-time",
-                                                    "example": "2025-03-10T12:00:00Z"
+                                                    "example": "2025-05-02T15:58:00Z"
                                                 }
                                             },
                                             "type": "object"
-                                        },
-                                        "created_at": {
-                                            "type": "string",
-                                            "format": "date-time",
-                                            "example": "2025-03-10T12:00:00Z"
-                                        },
-                                        "updated_at": {
-                                            "type": "string",
-                                            "format": "date-time",
-                                            "example": "2025-03-10T12:00:00Z"
                                         }
                                     },
                                     "type": "object"
@@ -773,7 +832,7 @@
         "/bookings/{id}/upload-receipt": {
             "post": {
                 "tags": [
-                    "Booking"
+                    "Bookings"
                 ],
                 "summary": "Upload or replace a payment receipt for an existing booking",
                 "description": "Upload (or replace) a payment receipt for an existing booking.",
@@ -877,14 +936,14 @@
                 ]
             }
         },
-        "/bookings/{id}/download-document": {
+        "/bookings/{id}/download-document/{type}": {
             "get": {
                 "tags": [
-                    "Booking"
+                    "Bookings"
                 ],
-                "summary": "Download receipt or passport file for a booking",
-                "description": "Download either the receipt or the passport document for a specific booking.",
-                "operationId": "f6e22515e5c425f9ba77ed92cd39b7df",
+                "summary": "Download a specific document for a booking",
+                "description": "Download a booking document.",
+                "operationId": "101e03ae19cc209cdb0853b778b82264",
                 "parameters": [
                     {
                         "name": "id",
@@ -898,14 +957,18 @@
                     },
                     {
                         "name": "type",
-                        "in": "query",
-                        "description": "Type of file to download (passport or receipt)",
+                        "in": "path",
+                        "description": "Which document to download",
                         "required": true,
                         "schema": {
                             "type": "string",
                             "enum": [
                                 "passport",
-                                "receipt"
+                                "receipt",
+                                "rf",
+                                "signed_rf",
+                                "spa",
+                                "signed_spa"
                             ],
                             "example": "receipt"
                         }
@@ -919,13 +982,13 @@
                         }
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — lacking permission or Sales user requesting others’ bookings"
                     },
                     "404": {
-                        "description": "Booking or file not found"
+                        "description": "Booking or requested document not found"
                     },
                     "422": {
-                        "description": "Validation error"
+                        "description": "Invalid document type"
                     }
                 },
                 "security": [
@@ -938,7 +1001,7 @@
         "/bookings/{id}/approve": {
             "post": {
                 "tags": [
-                    "Booking"
+                    "Bookings"
                 ],
                 "summary": "Approve a booking (CEO can single-approve; CSO & Accountant require two distinct approvals)",
                 "description": "Approve a booking by the currently logged-in user (role-based logic).",
@@ -1106,12 +1169,7 @@
                     "500": {
                         "description": "Server error"
                     }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
+                }
             }
         },
         "/buildings": {
@@ -1515,7 +1573,8 @@
                         "description": "ID of the building",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "integer",
+                            "example": 1
                         }
                     },
                     {
@@ -1524,7 +1583,8 @@
                         "description": "Filter units by unit number",
                         "required": false,
                         "schema": {
-                            "type": "string"
+                            "type": "string",
+                            "example": "A101"
                         }
                     },
                     {
@@ -1533,7 +1593,18 @@
                         "description": "Filter units by status",
                         "required": false,
                         "schema": {
-                            "type": "string"
+                            "type": "string",
+                            "enum": [
+                                "Pending",
+                                "Available",
+                                "Pre-Booked",
+                                "Booked",
+                                "Sold",
+                                "Pre-Hold",
+                                "Hold",
+                                "Cancelled"
+                            ],
+                            "example": "Available"
                         }
                     },
                     {
@@ -2740,19 +2811,19 @@
                 ]
             }
         },
-        "/bookings/{bookingId}/reservation-form": {
+        "/bookings/{bookingId}/rf": {
             "get": {
                 "tags": [
-                    "ReservationForm"
+                    "Bookings/RF"
                 ],
-                "summary": "Generate or retrieve a Reservation Form PDF for a booking",
-                "description": "Generate or retrieve an existing Reservation Form for a booking.\n\nIf a Reservation Form already exists, the existing record and its PDF URL are returned (HTTP 200).\nOtherwise, a new PDF is generated, stored, and a new ReservationForm record is created (HTTP 201).",
-                "operationId": "2b3ce868af14deed5e979c0b2804bbc3",
+                "summary": "Generate or download a Reservation Form PDF for a booking",
+                "description": "Generate or retrieve a Reservation Form for a booking.\n\nIf a Reservation Form already exists (and its PDF file is present on disk), the existing PDF is streamed back (HTTP 200).\nOtherwise, a new PDF is generated, stored, and streamed back (HTTP 201).",
+                "operationId": "36d25ffa3e42fe2dffe9c0b092fee08b",
                 "parameters": [
                     {
                         "name": "bookingId",
                         "in": "path",
-                        "description": "ID of the booking for which the Reservation Form is generated",
+                        "description": "ID of the booking for which to generate or retrieve the RF",
                         "required": true,
                         "schema": {
                             "type": "integer",
@@ -2762,91 +2833,25 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Reservation Form already exists, returning existing PDF URL",
+                        "description": "Existing Reservation Form PDF streamed successfully",
                         "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "reservation_form": {
-                                            "description": "Existing ReservationForm record",
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 10
-                                                },
-                                                "booking_id": {
-                                                    "type": "integer",
-                                                    "example": 42
-                                                },
-                                                "file_path": {
-                                                    "type": "string",
-                                                    "example": "reservation_forms/RF_42.pdf"
-                                                },
-                                                "status": {
-                                                    "type": "string",
-                                                    "example": "Pending"
-                                                }
-                                            },
-                                            "type": "object"
-                                        },
-                                        "rf_url": {
-                                            "type": "string",
-                                            "format": "uri",
-                                            "example": "http://your-domain.test/storage/reservation_forms/RF_42.pdf"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
+                            "application/pdf": {}
                         }
                     },
                     "201": {
-                        "description": "New Reservation Form created and returning new PDF URL",
+                        "description": "New Reservation Form PDF generated and streamed successfully",
                         "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "reservation_form": {
-                                            "description": "Newly created ReservationForm record",
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 11
-                                                },
-                                                "booking_id": {
-                                                    "type": "integer",
-                                                    "example": 42
-                                                },
-                                                "file_path": {
-                                                    "type": "string",
-                                                    "example": "reservation_forms/RF_42.pdf"
-                                                },
-                                                "status": {
-                                                    "type": "string",
-                                                    "example": "Pending"
-                                                }
-                                            },
-                                            "type": "object"
-                                        },
-                                        "rf_url": {
-                                            "type": "string",
-                                            "format": "uri",
-                                            "example": "http://your-domain.test/storage/reservation_forms/RF_42.pdf"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
+                            "application/pdf": {}
                         }
                     },
                     "403": {
-                        "description": "Forbidden (no permission to generate sales offer)"
+                        "description": "Forbidden (no permission to generate reservation form)"
                     },
                     "404": {
-                        "description": "Booking not found or existing PDF file missing"
+                        "description": "Booking not found or existing PDF file missing on disk"
                     },
                     "422": {
-                        "description": "Invalid booking/unit status or other validation error"
+                        "description": "Validation or business-rule error (e.g. unit/booking status invalid)"
                     }
                 },
                 "security": [
@@ -2856,23 +2861,23 @@
                 ]
             }
         },
-        "/reservation-forms/{id}/upload-signed": {
+        "/bookings/{bookingId}/rf/upload-signed": {
             "post": {
                 "tags": [
-                    "ReservationForm"
+                    "Bookings/RF"
                 ],
-                "summary": "Upload a signed Reservation Form file",
-                "description": "Upload a signed Reservation Form (RF) file.\n\nThis endpoint accepts a PDF file for a specific ReservationForm record.\nIf the RF is no longer \"Pending\", only users with \"CEO\" or \"System Maintenance\" roles\ncan overwrite it. Otherwise, a 409 (Conflict) error is returned.",
-                "operationId": "31d96965a8fdbd8f79f270ed3767da94",
+                "summary": "Upload a signed Reservation Form for a booking",
+                "description": "Upload a signed Reservation Form (RF) file for a booking.\n\nThis endpoint accepts a PDF file for the ReservationForm associated with the given booking.\nIf the RF is no longer \"Pending\", only users with the \"CEO\" or \"System Maintenance\" roles\nmay overwrite it; otherwise a 409 Conflict is returned.",
+                "operationId": "41f0ef977afba81d2bcd873237ceae0f",
                 "parameters": [
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "ID of the ReservationForm to update",
+                        "description": "ID of the booking whose ReservationForm will be updated",
                         "required": true,
                         "schema": {
                             "type": "integer",
-                            "example": 10
+                            "example": 42
                         }
                     }
                 ],
@@ -2886,7 +2891,7 @@
                                 ],
                                 "properties": {
                                     "signed_rf": {
-                                        "description": "The signed Reservation Form file (PDF)",
+                                        "description": "The signed Reservation Form file (PDF, max 2 MB)",
                                         "type": "string",
                                         "format": "binary"
                                     }
@@ -2898,37 +2903,14 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Signed RF uploaded and record updated",
+                        "description": "Signed RF successfully uploaded",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "reservation_form": {
-                                            "description": "Updated ReservationForm record",
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 10
-                                                },
-                                                "booking_id": {
-                                                    "type": "integer",
-                                                    "example": 42
-                                                },
-                                                "file_path": {
-                                                    "type": "string",
-                                                    "example": "reservation_forms/signed/RF_42_signed.pdf"
-                                                },
-                                                "status": {
-                                                    "type": "string",
-                                                    "example": "Signed"
-                                                }
-                                            },
-                                            "type": "object"
-                                        },
-                                        "rf_url": {
+                                        "message": {
                                             "type": "string",
-                                            "format": "uri",
-                                            "example": "http://your-domain.test/storage/reservation_forms/signed/RF_42_signed.pdf"
+                                            "example": "Signed RF successfully uploaded"
                                         }
                                     },
                                     "type": "object"
@@ -2936,14 +2918,17 @@
                             }
                         }
                     },
+                    "403": {
+                        "description": "Forbidden – missing permission to upload signed RF"
+                    },
                     "404": {
-                        "description": "Reservation Form not found"
+                        "description": "Reservation Form not found for the given booking"
                     },
                     "409": {
-                        "description": "Conflict if the RF is already uploaded and user isn't CEO/System Maintenance"
+                        "description": "Conflict – RF already signed and user lacks override role"
                     },
                     "422": {
-                        "description": "Validation error (e.g., file not a PDF)"
+                        "description": "Validation error (e.g., no file or wrong MIME type)"
                     }
                 },
                 "security": [
@@ -2953,19 +2938,19 @@
                 ]
             }
         },
-        "/reservation-forms/{id}/approve": {
+        "/bookings/{bookingId}/rf/approve": {
             "post": {
                 "tags": [
-                    "ReservationForm"
+                    "Bookings/RF"
                 ],
                 "summary": "Approve a signed Reservation Form",
-                "description": "Approve a Reservation Form (RF).\n\nThis endpoint sets the Reservation Form status to \"Approved\" if it is currently \"Signed\".\nIt also updates the associated booking's status to \"SPA Pending\".",
-                "operationId": "3a8f5ecf4e3c779d16cb1ff9737fbba9",
+                "description": "Approve a signed Reservation Form.\n\nSets the Reservation Form status to \"Approved\", updates the related Booking status to \"SPA Pending\",\nand records an Approval entry.",
+                "operationId": "e177cd036e0c775cebf445a2d6c923b5",
                 "parameters": [
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "ID of the ReservationForm to approve",
+                        "description": "ID of the booking whose ReservationForm will be approved",
                         "required": true,
                         "schema": {
                             "type": "integer",
@@ -2980,32 +2965,9 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "reservation_form": {
-                                            "description": "Updated ReservationForm record",
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 10
-                                                },
-                                                "booking_id": {
-                                                    "type": "integer",
-                                                    "example": 42
-                                                },
-                                                "file_path": {
-                                                    "type": "string",
-                                                    "example": "reservation_forms/signed/RF_42_signed.pdf"
-                                                },
-                                                "status": {
-                                                    "type": "string",
-                                                    "example": "Approved"
-                                                }
-                                            },
-                                            "type": "object"
-                                        },
-                                        "rf_url": {
-                                            "description": "Path or URL to the approved Reservation Form file",
+                                        "message": {
                                             "type": "string",
-                                            "example": "http://your-domain.test/storage/reservation_forms/signed/RF_42_signed.pdf"
+                                            "example": "Reservation form has been approved"
                                         }
                                     },
                                     "type": "object"
@@ -3014,10 +2976,10 @@
                         }
                     },
                     "403": {
-                        "description": "Forbidden (user lacks 'approve reservation form' permission)"
+                        "description": "Forbidden – user lacks 'approve reservation form' permission"
                     },
                     "404": {
-                        "description": "Reservation Form not found"
+                        "description": "Reservation Form not found for the given booking"
                     },
                     "422": {
                         "description": "Cannot approve unless the form is Signed or other validation error"
@@ -3433,16 +3395,16 @@
         "/bookings/{bookingId}/spa": {
             "get": {
                 "tags": [
-                    "SPA"
+                    "Bookings/SPA"
                 ],
-                "summary": "Generate or retrieve an SPA PDF for a booking",
-                "description": "Generate or retrieve an existing Sales and Purchase Agreement (SPA) for a booking.\n\nIf an SPA already exists, the existing record and its PDF URL are returned (HTTP 200).\nOtherwise, a new PDF is generated, stored, and a new SPA record is created (HTTP 201).",
+                "summary": "Generate or download an SPA PDF for a booking",
+                "description": "Generate or download an SPA PDF for a booking.\n\nIf an SPA already exists (and its PDF file is present on disk), the existing PDF is streamed back (HTTP 200).\nOtherwise, a new PDF is generated, stored, and streamed back (HTTP 201).",
                 "operationId": "eb8c8cdc34a6f5f1c783c87837771311",
                 "parameters": [
                     {
                         "name": "bookingId",
                         "in": "path",
-                        "description": "ID of the booking for which the SPA is generated",
+                        "description": "ID of the booking for which to generate or retrieve the SPA",
                         "required": true,
                         "schema": {
                             "type": "integer",
@@ -3452,91 +3414,25 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "SPA already exists, returning existing PDF URL",
+                        "description": "Existing SPA PDF streamed successfully",
                         "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "spa": {
-                                            "description": "Existing SPA record",
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 10
-                                                },
-                                                "booking_id": {
-                                                    "type": "integer",
-                                                    "example": 42
-                                                },
-                                                "file_path": {
-                                                    "type": "string",
-                                                    "example": "spa_forms/SPA_42.pdf"
-                                                },
-                                                "status": {
-                                                    "type": "string",
-                                                    "example": "Pending"
-                                                }
-                                            },
-                                            "type": "object"
-                                        },
-                                        "spa_url": {
-                                            "type": "string",
-                                            "format": "uri",
-                                            "example": "http://your-domain.test/storage/spa_forms/SPA_42.pdf"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
+                            "application/pdf": {}
                         }
                     },
                     "201": {
-                        "description": "New SPA created and returning new PDF URL",
+                        "description": "New SPA PDF generated and streamed successfully",
                         "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "spa": {
-                                            "description": "Newly created SPA record",
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 11
-                                                },
-                                                "booking_id": {
-                                                    "type": "integer",
-                                                    "example": 42
-                                                },
-                                                "file_path": {
-                                                    "type": "string",
-                                                    "example": "spa_forms/SPA_42.pdf"
-                                                },
-                                                "status": {
-                                                    "type": "string",
-                                                    "example": "Pending"
-                                                }
-                                            },
-                                            "type": "object"
-                                        },
-                                        "spa_url": {
-                                            "type": "string",
-                                            "format": "uri",
-                                            "example": "http://your-domain.test/storage/spa_forms/SPA_42.pdf"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
+                            "application/pdf": {}
                         }
                     },
                     "403": {
                         "description": "Forbidden (no permission to generate SPA)"
                     },
                     "404": {
-                        "description": "Booking not found or existing PDF file missing"
+                        "description": "Booking not found or existing SPA file missing on disk"
                     },
                     "422": {
-                        "description": "Invalid booking/unit status or other validation error"
+                        "description": "Validation or business-rule error (e.g. unit/booking status invalid)"
                     }
                 },
                 "security": [
@@ -3546,14 +3442,14 @@
                 ]
             }
         },
-        "/spa/{id}/upload-signed": {
+        "/bookings/{bookingId}/spa/upload-signed": {
             "post": {
                 "tags": [
-                    "SPA"
+                    "Bookings/SPA"
                 ],
                 "summary": "Upload a signed SPA file",
                 "description": "Upload a signed SPA file.\n\nThis endpoint accepts a PDF file for a specific SPA record.\nIf the SPA is no longer \"Pending\", only users with \"CEO\" or \"System Maintenance\" roles\ncan overwrite it. Otherwise, a 409 (Conflict) error is returned.",
-                "operationId": "5435f6bbfa6eb88f9a74563f3a59ebd5",
+                "operationId": "d1edf58fc13494ce92fdabe154bcdfc8",
                 "parameters": [
                     {
                         "name": "id",
@@ -3576,7 +3472,7 @@
                                 ],
                                 "properties": {
                                     "signed_spa": {
-                                        "description": "The signed SPA file (PDF)",
+                                        "description": "The signed SPA file (PDF, max 2 MB)",
                                         "type": "string",
                                         "format": "binary"
                                     }
@@ -3604,21 +3500,21 @@
                                                     "type": "integer",
                                                     "example": 42
                                                 },
-                                                "file_path": {
-                                                    "type": "string",
-                                                    "example": "spa_forms/SPA_42_signed.pdf"
-                                                },
                                                 "status": {
                                                     "type": "string",
                                                     "example": "Signed"
+                                                },
+                                                "signed_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-05-03T12:34:56Z"
+                                                },
+                                                "signed_file_path": {
+                                                    "type": "string",
+                                                    "example": "spa_forms/SPA_42_signed.pdf"
                                                 }
                                             },
                                             "type": "object"
-                                        },
-                                        "spa_url": {
-                                            "type": "string",
-                                            "format": "uri",
-                                            "example": "http://your-domain.test/storage/spa_forms/SPA_42_signed.pdf"
                                         }
                                     },
                                     "type": "object"
@@ -3626,14 +3522,17 @@
                             }
                         }
                     },
+                    "403": {
+                        "description": "Forbidden – missing permission to upload final SPA"
+                    },
                     "404": {
                         "description": "SPA not found"
                     },
                     "409": {
-                        "description": "Conflict if the SPA is already uploaded and user isn't CEO/System Maintenance"
+                        "description": "Conflict – SPA already signed and user lacks override role"
                     },
                     "422": {
-                        "description": "Validation error (e.g., file not a PDF)"
+                        "description": "Validation error (e.g., no file or wrong MIME type)"
                     }
                 },
                 "security": [
@@ -3643,19 +3542,19 @@
                 ]
             }
         },
-        "/spa/{id}/approve": {
+        "/bookings/{bookingId}/spa/approve": {
             "post": {
                 "tags": [
-                    "SPA"
+                    "Bookings/SPA"
                 ],
-                "summary": "Approve a signed SPA",
-                "description": "Approve a signed SPA.\n\nThis endpoint sets the SPA status to \"Approved\" if it is currently \"Signed\".\nIt also updates the associated booking's status to \"Sold\" (or another final status).",
-                "operationId": "295d80b86d4e5e816fd3f92e0fcff727",
+                "summary": "Approve a signed SPA for a booking",
+                "description": "Approve a signed SPA.\n\nSets the SPA status to \"Approved\", updates the related Booking and Unit to \"Sold\",\nand records an Approval entry.",
+                "operationId": "9b22b05660f2fa2282ae7dce8b21400e",
                 "parameters": [
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "ID of the SPA to approve",
+                        "description": "ID of the booking whose SPA will be approved",
                         "required": true,
                         "schema": {
                             "type": "integer",
@@ -3665,37 +3564,14 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "SPA approved successfully",
+                        "description": "SPA approved and Unit marked as Sold",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "spa": {
-                                            "description": "Updated SPA record",
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 10
-                                                },
-                                                "booking_id": {
-                                                    "type": "integer",
-                                                    "example": 42
-                                                },
-                                                "file_path": {
-                                                    "type": "string",
-                                                    "example": "spa_forms/SPA_42_signed.pdf"
-                                                },
-                                                "status": {
-                                                    "type": "string",
-                                                    "example": "Approved"
-                                                }
-                                            },
-                                            "type": "object"
-                                        },
-                                        "spa_url": {
-                                            "description": "Path or URL to the approved SPA file",
+                                        "message": {
                                             "type": "string",
-                                            "example": "http://your-domain.test/storage/spa_forms/SPA_42_signed.pdf"
+                                            "example": "SPA has been approved and Unit is now Sold!"
                                         }
                                     },
                                     "type": "object"
@@ -3704,10 +3580,10 @@
                         }
                     },
                     "403": {
-                        "description": "Forbidden (user lacks 'approve spa' permission)"
+                        "description": "Forbidden – user lacks 'approve spa' permission"
                     },
                     "404": {
-                        "description": "SPA not found"
+                        "description": "SPA not found for the given booking"
                     },
                     "422": {
                         "description": "Cannot approve unless the SPA is Signed or other validation error"
@@ -3807,7 +3683,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "A paginated list of units including the building information",
+                        "description": "A paginated list of units",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -3815,24 +3691,201 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/components/schemas/Unit"
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "format": "int64",
+                                                        "example": 1
+                                                    },
+                                                    "prop_type": {
+                                                        "type": "string",
+                                                        "example": "Residential"
+                                                    },
+                                                    "unit_type": {
+                                                        "type": "string",
+                                                        "example": "3 Bedroom"
+                                                    },
+                                                    "unit_no": {
+                                                        "type": "string",
+                                                        "example": "203"
+                                                    },
+                                                    "floor": {
+                                                        "type": "string",
+                                                        "example": "2"
+                                                    },
+                                                    "suite_area": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 102.04
+                                                    },
+                                                    "balcony_area": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 38.15
+                                                    },
+                                                    "total_area": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 140.19
+                                                    },
+                                                    "furnished": {
+                                                        "type": "boolean",
+                                                        "example": true
+                                                    },
+                                                    "unit_view": {
+                                                        "type": "string",
+                                                        "example": "-"
+                                                    },
+                                                    "price": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 1621554.74
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "Booked"
+                                                    },
+                                                    "completion_date": {
+                                                        "type": "string",
+                                                        "format": "date",
+                                                        "example": "2025-12-15"
+                                                    },
+                                                    "floor_plan_url": {
+                                                        "type": "string",
+                                                        "format": "url",
+                                                        "example": "https://your-domain.com/api/units/1/floor_plan",
+                                                        "nullable": true
+                                                    },
+                                                    "approvals": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "$ref": "#/components/schemas/Approval"
+                                                        }
+                                                    },
+                                                    "latest_holding": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "format": "int64",
+                                                                "example": 2
+                                                            },
+                                                            "status": {
+                                                                "type": "string",
+                                                                "example": "Hold"
+                                                            },
+                                                            "created_by": {
+                                                                "type": "integer",
+                                                                "format": "int64",
+                                                                "example": 17
+                                                            },
+                                                            "created_at": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": "2025-05-02T15:58:33Z"
+                                                            },
+                                                            "user": {
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "integer",
+                                                                        "format": "int64",
+                                                                        "example": 17
+                                                                    },
+                                                                    "name": {
+                                                                        "type": "string",
+                                                                        "example": "Sales"
+                                                                    },
+                                                                    "email": {
+                                                                        "type": "string",
+                                                                        "example": "sales@test.com"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "approvals": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "$ref": "#/components/schemas/Approval"
+                                                                }
+                                                            }
+                                                        },
+                                                        "type": "object",
+                                                        "nullable": true
+                                                    },
+                                                    "latest_booking": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "format": "int64",
+                                                                "example": 6
+                                                            },
+                                                            "status": {
+                                                                "type": "string",
+                                                                "example": "RF Pending"
+                                                            },
+                                                            "created_by": {
+                                                                "type": "integer",
+                                                                "format": "int64",
+                                                                "example": 17
+                                                            },
+                                                            "created_at": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": "2025-05-02T16:08:40Z"
+                                                            },
+                                                            "user": {
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "integer",
+                                                                        "format": "int64",
+                                                                        "example": 17
+                                                                    },
+                                                                    "name": {
+                                                                        "type": "string",
+                                                                        "example": "Sales"
+                                                                    },
+                                                                    "email": {
+                                                                        "type": "string",
+                                                                        "example": "sales@test.com"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "approvals": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "$ref": "#/components/schemas/Approval"
+                                                                }
+                                                            }
+                                                        },
+                                                        "type": "object",
+                                                        "nullable": true
+                                                    },
+                                                    "building": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "format": "int64",
+                                                                "example": 1
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "Cove Edition Residence"
+                                                            },
+                                                            "location": {
+                                                                "type": "string",
+                                                                "example": "Dubailand Residential Complex"
+                                                            },
+                                                            "status": {
+                                                                "type": "string",
+                                                                "example": "Off-Plan"
+                                                            }
+                                                        },
+                                                        "type": "object",
+                                                        "nullable": true
+                                                    }
+                                                },
+                                                "type": "object"
                                             }
-                                        },
-                                        "current_page": {
-                                            "type": "integer",
-                                            "example": 1
-                                        },
-                                        "last_page": {
-                                            "type": "integer",
-                                            "example": 5
-                                        },
-                                        "per_page": {
-                                            "type": "integer",
-                                            "example": 10
-                                        },
-                                        "total": {
-                                            "type": "integer",
-                                            "example": 50
                                         }
                                     },
                                     "type": "object"
@@ -3907,7 +3960,8 @@
                         "description": "ID of the unit",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "integer",
+                            "example": 1
                         }
                     }
                 ],
@@ -3943,6 +3997,11 @@
                                             "format": "float",
                                             "example": 120.5
                                         },
+                                        "balcony_area": {
+                                            "type": "number",
+                                            "format": "float",
+                                            "example": 15.75
+                                        },
                                         "total_area": {
                                             "type": "number",
                                             "format": "float",
@@ -3970,32 +4029,47 @@
                                             "format": "date",
                                             "example": "2025-12-15"
                                         },
-                                        "floor_plan": {
+                                        "floor_plan_url": {
+                                            "description": "Authenticated URL to fetch the unit’s floor plan",
                                             "type": "string",
-                                            "example": "floor_plans/abc123.jpg"
+                                            "format": "url",
+                                            "example": "https://your-domain.com/api/units/1/floor_plan",
+                                            "nullable": true
                                         },
-                                        "paymentPlans": {
+                                        "approvals": {
+                                            "description": "All approvals directly on this unit",
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Approval"
+                                            }
+                                        },
+                                        "payment_plans": {
+                                            "description": "Payment plans with nested installments",
                                             "type": "array",
                                             "items": {
                                                 "$ref": "#/components/schemas/PaymentPlan"
                                             }
                                         },
-                                        "current_holding": {
+                                        "latest_holding": {
+                                            "description": "The most recent holding by the authenticated user",
                                             "properties": {
                                                 "id": {
                                                     "type": "integer",
+                                                    "format": "int64",
                                                     "example": 5
                                                 },
                                                 "unit_id": {
                                                     "type": "integer",
+                                                    "format": "int64",
                                                     "example": 1
                                                 },
                                                 "status": {
                                                     "type": "string",
-                                                    "example": "Pre-Hold"
+                                                    "example": "Hold"
                                                 },
                                                 "created_by": {
                                                     "type": "integer",
+                                                    "format": "int64",
                                                     "example": 2
                                                 },
                                                 "created_at": {
@@ -4003,37 +4077,99 @@
                                                     "format": "date-time",
                                                     "example": "2025-04-15T10:00:00Z"
                                                 },
-                                                "updated_at": {
-                                                    "type": "string",
-                                                    "format": "date-time",
-                                                    "example": "2025-04-15T10:00:00Z"
-                                                },
                                                 "user": {
+                                                    "description": "User who created the hold",
                                                     "properties": {
                                                         "id": {
                                                             "type": "integer",
+                                                            "format": "int64",
                                                             "example": 2
                                                         },
                                                         "name": {
                                                             "type": "string",
-                                                            "example": "John Doe"
+                                                            "example": "Jane Sales"
                                                         },
                                                         "email": {
                                                             "type": "string",
-                                                            "example": "john@example.com"
+                                                            "example": "jane.sales@example.com"
                                                         }
                                                     },
-                                                    "type": "object",
-                                                    "nullable": true
+                                                    "type": "object"
+                                                },
+                                                "approvals": {
+                                                    "description": "Approvals for this holding",
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/Approval"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object",
+                                            "nullable": true
+                                        },
+                                        "latest_booking": {
+                                            "description": "The most recent booking by the authenticated user",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "format": "int64",
+                                                    "example": 6
+                                                },
+                                                "unit_id": {
+                                                    "type": "integer",
+                                                    "format": "int64",
+                                                    "example": 1
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "Booked"
+                                                },
+                                                "created_by": {
+                                                    "type": "integer",
+                                                    "format": "int64",
+                                                    "example": 2
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-04-15T11:00:00Z"
+                                                },
+                                                "user": {
+                                                    "description": "User who created the booking",
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "format": "int64",
+                                                            "example": 2
+                                                        },
+                                                        "name": {
+                                                            "type": "string",
+                                                            "example": "Jane Sales"
+                                                        },
+                                                        "email": {
+                                                            "type": "string",
+                                                            "example": "jane.sales@example.com"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "approvals": {
+                                                    "description": "Approvals for this booking",
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/Approval"
+                                                    }
                                                 }
                                             },
                                             "type": "object",
                                             "nullable": true
                                         },
                                         "building": {
+                                            "description": "Building to which the unit belongs",
                                             "properties": {
                                                 "id": {
                                                     "type": "integer",
+                                                    "format": "int64",
                                                     "example": 5
                                                 },
                                                 "name": {
@@ -4058,11 +4194,11 @@
                             }
                         }
                     },
-                    "404": {
-                        "description": "Unit not found"
-                    },
                     "403": {
                         "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Unit not found"
                     }
                 },
                 "security": [
@@ -6291,6 +6427,54 @@
                     }
                 },
                 "type": "object"
+            },
+            "Approval": {
+                "title": "Approval",
+                "required": [
+                    "id",
+                    "ref_id",
+                    "ref_type",
+                    "approved_by",
+                    "approval_type",
+                    "status",
+                    "created_at"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64",
+                        "example": 1
+                    },
+                    "ref_id": {
+                        "type": "integer",
+                        "format": "int64",
+                        "example": 42
+                    },
+                    "ref_type": {
+                        "description": "Model class name",
+                        "type": "string",
+                        "example": "App\\\\Models\\\\Unit"
+                    },
+                    "approved_by": {
+                        "type": "integer",
+                        "format": "int64",
+                        "example": 17
+                    },
+                    "approval_type": {
+                        "type": "string",
+                        "example": "Sales"
+                    },
+                    "status": {
+                        "type": "string",
+                        "example": "Approved"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2025-05-02T15:58:33Z"
+                    }
+                },
+                "type": "object"
             }
         },
         "securitySchemes": {
@@ -6308,8 +6492,8 @@
             "description": "Authentication"
         },
         {
-            "name": "Booking",
-            "description": "Booking"
+            "name": "Bookings",
+            "description": "Bookings"
         },
         {
             "name": "Brokers",
@@ -6344,8 +6528,8 @@
             "description": "PaymentPlan"
         },
         {
-            "name": "ReservationForm",
-            "description": "ReservationForm"
+            "name": "Bookings/RF",
+            "description": "Bookings/RF"
         },
         {
             "name": "Roles & Permissions",
@@ -6356,8 +6540,8 @@
             "description": "SalesOffer"
         },
         {
-            "name": "SPA",
-            "description": "SPA"
+            "name": "Bookings/SPA",
+            "description": "Bookings/SPA"
         },
         {
             "name": "UnitUpdates",

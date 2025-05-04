@@ -25,7 +25,6 @@ class BrokerController extends Controller
      *     path="/brokers/upload-signed-agreement",
      *     summary="Upload or replace signed agreement for a pending Broker",
      *     tags={"Brokers"},
-     *     security={{"sanctum":{}}},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\MediaType(

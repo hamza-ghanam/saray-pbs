@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\Response;
 use Rakibdevs\MrzParser\MrzParser;
 use Mindee\Client;
@@ -33,12 +34,12 @@ class BookingController extends Controller
 //    }
 
     /**
-     * Get a booking by its ID, including the related customer info.
+     * Get a booking by its ID, including related customer info, reservation form, SPA, and approvals.
      *
      * @OA\Get(
      *     path="/bookings/{id}",
-     *     summary="Retrieve a booking and its customer info by ID",
-     *     tags={"Booking"},
+     *     summary="Retrieve a booking and its related records by ID",
+     *     tags={"Bookings"},
      *     security={{"sanctum":{}}},
      *     @OA\Parameter(
      *         name="id",
@@ -52,29 +53,61 @@ class BookingController extends Controller
      *         description="Booking retrieved successfully",
      *         @OA\JsonContent(
      *             type="object",
-     *             @OA\Property(property="id", type="integer", example=42),
-     *             @OA\Property(property="unit_id", type="integer", example=12),
-     *             @OA\Property(property="customer_info_id", type="integer", example=7),
-     *             @OA\Property(property="status", type="string", example="Pre-Booked"),
-     *             @OA\Property(property="receipt_path", type="string", nullable=true, example="public/receipts/abc123.pdf"),
+     *             @OA\Property(property="id",                type="integer", example=42),
+     *             @OA\Property(property="unit_id",           type="integer", example=12),
+     *             @OA\Property(property="customer_info_id",  type="integer", example=7),
+     *             @OA\Property(property="status",            type="string",  example="Pre-Booked"),
+     *             @OA\Property(
+     *                 property="approvals",
+     *                 type="array",
+     *                 @OA\Items(ref="#/components/schemas/Approval")
+     *             ),
      *             @OA\Property(
      *                 property="customer_info",
      *                 type="object",
      *                 description="Nested customer info",
-     *                 @OA\Property(property="id", type="integer", example=7),
-     *                 @OA\Property(property="name", type="string", example="HAMZA GHANAM"),
-     *                 @OA\Property(property="passport_number", type="string", example="N007047689"),
-     *                 @OA\Property(property="birth_date", type="string", format="date", example="1992-02-05"),
-     *                 @OA\Property(property="gender", type="string", example="Male"),
-     *                 @OA\Property(property="nationality", type="string", example="Syrian Arab Republic (the)"),
-     *                 @OA\Property(property="document_path", type="string", example="public/documents/abcd1234.jpg")
+     *                 @OA\Property(property="id",              type="integer", example=7),
+     *                 @OA\Property(property="name",            type="string",  example="John Smith"),
+     *                 @OA\Property(property="passport_number", type="string",  example="N001234567"),
+     *                 @OA\Property(property="birth_date",      type="string",  format="date", example="1992-02-05"),
+     *                 @OA\Property(property="gender",          type="string",  example="Male"),
+     *                 @OA\Property(property="nationality",     type="string",  example="Syrian Arab Republic (the)")
+     *             ),
+     *             @OA\Property(
+     *                 property="reservation_form",
+     *                 type="object",
+     *                 nullable=true,
+     *                 description="Associated reservation form",
+     *                 @OA\Property(property="id",         type="integer", example=10),
+     *                 @OA\Property(property="booking_id", type="integer", example=42),
+     *                 @OA\Property(property="status",     type="string",  example="Signed"),
+     *                 @OA\Property(property="signed_at",  type="string",  format="date-time", nullable=true, example="2025-05-03T12:34:56Z"),
+     *                 @OA\Property(
+     *                     property="approvals",
+     *                     type="array",
+     *                     @OA\Items(ref="#/components/schemas/Approval")
+     *                 )
+     *             ),
+     *             @OA\Property(
+     *                 property="spa",
+     *                 type="object",
+     *                 nullable=true,
+     *                 description="Associated Sales and Purchase Agreement",
+     *                 @OA\Property(property="id",         type="integer", example=11),
+     *                 @OA\Property(property="booking_id", type="integer", example=42),
+     *                 @OA\Property(property="status",     type="string",  example="Pending"),
+     *                 @OA\Property(property="signed_at",  type="string",  format="date-time", nullable=true, example=null),
+     *                 @OA\Property(
+     *                     property="approvals",
+     *                     type="array",
+     *                     @OA\Items(ref="#/components/schemas/Approval")
+     *                 )
      *             )
      *         )
      *     ),
-     *     @OA\Response(response=404, description="Booking not found"),
-     *     @OA\Response(response=403, description="Forbidden")
+     *     @OA\Response(response=403, description="Forbidden"),
+     *     @OA\Response(response=404, description="Booking not found")
      * )
-     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function show(Request $request, $id)
     {
@@ -95,6 +128,21 @@ class BookingController extends Controller
 
         // (Optional) Hide sensitive fields
         $booking->makeHidden(['receipt_path']);
+        $booking->load([
+            'approvals',
+            'reservationForm.approvals',
+            'spa.approvals',
+        ]);
+
+        if ($booking->reservationForm) {
+            $booking->reservationForm->makeHidden(['file_path', 'signed_file_path']);
+        }
+
+        // If spa() is a hasOne / belongsTo:
+        if ($booking->spa) {
+            $booking->spa->makeHidden(['file_path', 'signed_file_path']);
+        }
+
         if ($booking->customerInfo) {
             $booking->customerInfo->makeHidden(['document_path']);
         }
@@ -106,7 +154,7 @@ class BookingController extends Controller
      * @OA\Post(
      *     path="/bookings/scan-passport",
      *     summary="Scan a customer passport to get their information.",
-     *     tags={"Booking"},
+     *     tags={"Bookings"},
      *     security={{"sanctum":{}}},
      *     @OA\RequestBody(
      *         required=true,
@@ -231,7 +279,7 @@ class BookingController extends Controller
      * @OA\Post(
      *     path="/book-unit",
      *     summary="Book a unit by creating CustomerInfo and Booking with status Pre-Booked",
-     *     tags={"Booking"},
+     *     tags={"Bookings"},
      *     security={{"sanctum":{}}},
      *     @OA\RequestBody(
      *         required=true,
@@ -245,7 +293,8 @@ class BookingController extends Controller
      *                     "birth_date",
      *                     "gender",
      *                     "nationality",
-     *                     "unit_id"
+     *                     "unit_id",
+     *                     "payment_plan_id"
      *                 },
      *                 @OA\Property(
      *                     property="upload_token",
@@ -253,36 +302,11 @@ class BookingController extends Controller
      *                     description="Token referencing the previously uploaded passport file",
      *                     example="3d1ad42a-49bb-4171-83af-f67dd83e97c3"
      *                 ),
-     *                 @OA\Property(
-     *                     property="name",
-     *                     type="string",
-     *                     maxLength=255,
-     *                     example="John Smith"
-     *                 ),
-     *                 @OA\Property(
-     *                     property="passport_number",
-     *                     type="string",
-     *                     maxLength=50,
-     *                     example="N007832713"
-     *                 ),
-     *                 @OA\Property(
-     *                     property="birth_date",
-     *                     type="string",
-     *                     format="date",
-     *                     example="1992-02-05"
-     *                 ),
-     *                 @OA\Property(
-     *                     property="gender",
-     *                     type="string",
-     *                     maxLength=10,
-     *                     example="Male"
-     *                 ),
-     *                 @OA\Property(
-     *                     property="nationality",
-     *                     type="string",
-     *                     maxLength=255,
-     *                     example="Syrian Arab Republic"
-     *                 ),
+     *                 @OA\Property(property="name",            type="string", maxLength=255, example="John Smith"),
+     *                 @OA\Property(property="passport_number", type="string", maxLength=50,  example="N001234567"),
+     *                 @OA\Property(property="birth_date",      type="string", format="date", example="1992-02-05"),
+     *                 @OA\Property(property="gender",          type="string", maxLength=10,  example="Male"),
+     *                 @OA\Property(property="nationality",     type="string", maxLength=255, example="Syrian Arab Republic"),
      *                 @OA\Property(
      *                     property="unit_id",
      *                     type="integer",
@@ -309,27 +333,27 @@ class BookingController extends Controller
      *         description="Booking created successfully",
      *         @OA\JsonContent(
      *             type="object",
-     *             @OA\Property(property="id", type="integer", example=42),
-     *             @OA\Property(property="unit_id", type="integer", example=12),
-     *             @OA\Property(property="customer_info_id", type="integer", example=7),
-     *             @OA\Property(property="status", type="string", example="Pre-Booked"),
-     *             @OA\Property(property="confirmed_by", type="integer", nullable=true, example=null),
-     *             @OA\Property(property="confirmed_at", type="string", format="date-time", nullable=true, example=null),
+     *             @OA\Property(property="id",                type="integer", format="int64", example=42),
+     *             @OA\Property(property="unit_id",           type="integer", example=12),
+     *             @OA\Property(property="payment_plan_id",   type="integer", example=5),
+     *             @OA\Property(property="customer_info_id",  type="integer", example=7),
+     *             @OA\Property(property="status",            type="string",  example="Pre-Booked"),
+     *             @OA\Property(property="created_by",        type="integer", example=3),
+     *             @OA\Property(property="created_at",        type="string",  format="date-time", example="2025-05-02T16:00:00Z"),
+     *             @OA\Property(property="updated_at",        type="string",  format="date-time", example="2025-05-02T16:00:00Z"),
      *             @OA\Property(
      *                 property="customer_info",
      *                 type="object",
      *                 description="Nested CustomerInfo record",
-     *                 @OA\Property(property="id", type="integer", example=7),
-     *                 @OA\Property(property="name", type="string", example="John Smith"),
-     *                 @OA\Property(property="passport_number", type="string", example="N007832713"),
-     *                 @OA\Property(property="birth_date", type="string", format="date", example="1992-02-05"),
-     *                 @OA\Property(property="gender", type="string", example="Male"),
-     *                 @OA\Property(property="nationality", type="string", example="Syrian Arab Republic"),
-     *                 @OA\Property(property="created_at", type="string", format="date-time", example="2025-03-10T12:00:00Z"),
-     *                 @OA\Property(property="updated_at", type="string", format="date-time", example="2025-03-10T12:00:00Z")
-     *             ),
-     *             @OA\Property(property="created_at", type="string", format="date-time", example="2025-03-10T12:00:00Z"),
-     *             @OA\Property(property="updated_at", type="string", format="date-time", example="2025-03-10T12:00:00Z")
+     *                 @OA\Property(property="id",              type="integer", format="int64", example=7),
+     *                 @OA\Property(property="name",            type="string",             example="John Smith"),
+     *                 @OA\Property(property="passport_number", type="string",             example="N001234567"),
+     *                 @OA\Property(property="birth_date",      type="string", format="date", example="1992-02-05"),
+     *                 @OA\Property(property="gender",          type="string",             example="Male"),
+     *                 @OA\Property(property="nationality",     type="string",             example="Syrian Arab Republic"),
+     *                 @OA\Property(property="created_at",      type="string", format="date-time", example="2025-05-02T15:58:00Z"),
+     *                 @OA\Property(property="updated_at",      type="string", format="date-time", example="2025-05-02T15:58:00Z")
+     *             )
      *         )
      *     ),
      *     @OA\Response(response=422, description="Validation error"),
@@ -381,21 +405,15 @@ class BookingController extends Controller
             $unit = Unit::findOrFail($request->unit_id);
 
             // check for an existing “Hold” by *this* user
-            $hasMyHold = $unit->holdings()
+            $myHold = $unit->holdings()
                 ->where('created_by', $user->id)
                 ->where('status', 'Hold')
-                ->exists();
+                ->first();
 
             // Unit is not normally bookable, and I don’t already have it on hold
-            if (!in_array($unit->status, ['Available', 'Cancelled']) && !($hasMyHold && $unit->status === 'Hold')) {
+            if (!in_array($unit->status, ['Available', 'Cancelled']) && !($myHold && $unit->status === 'Hold')) {
                 return response()->json([
                     'error' => "Unit status must be 'Available' or 'Cancelled' to book (unless you already hold it)."
-                ], Response::HTTP_UNPROCESSABLE_ENTITY);
-            }
-
-            if (!in_array($unit->status, ['Available', 'Cancelled'])) {
-                return response()->json([
-                    'error' => "Unit status must be 'Available' or 'Cancelled' to book."
                 ], Response::HTTP_UNPROCESSABLE_ENTITY);
             }
 
@@ -430,17 +448,21 @@ class BookingController extends Controller
             // Create the Booking record with status "Pre-Booked"
             $booking = Booking::create([
                 'unit_id' => $request->unit_id,
-                'payment_plan_id'  => $paymentPlan->id,
+                'payment_plan_id' => $paymentPlan->id,
                 'customer_info_id' => $customerInfo->id,
                 'status' => 'Pre-Booked',
                 'receipt_path' => $receiptPath,
                 'created_by' => $request->user()->id,
             ]);
 
-
             $unit->status = 'Pre-Booked';
             $unit->status_changed_at = now();
             $unit->save();
+
+            if ($myHold) {
+                $myHold->status = 'Processed';
+                $myHold->save();
+            }
 
             $ceoUsers = User::role('CEO')->with('deviceTokens')->get();
 
@@ -452,8 +474,8 @@ class BookingController extends Controller
             $title = "Booking Initiating";
             $body = "User {$user->name} has booked the unit: {$unit->id}";
             $data = [
-                'booking_id'    => (string)$booking->id,
-                'timestamp'     => now()->toIso8601String(),
+                'booking_id' => (string)$booking->id,
+                'timestamp' => now()->toIso8601String(),
             ];
 //            $this->fcmService->sendPushNotification($ceoTokens, $title, $body, $data);
 
@@ -479,7 +501,7 @@ class BookingController extends Controller
      * @OA\Post(
      *     path="/bookings/{id}/upload-receipt",
      *     summary="Upload or replace a payment receipt for an existing booking",
-     *     tags={"Booking"},
+     *     tags={"Bookings"},
      *     security={{"sanctum":{}}},
      *     @OA\Parameter(
      *         name="id",
@@ -566,7 +588,7 @@ class BookingController extends Controller
      * @OA\Put(
      *     path="/bookings/{id}",
      *     summary="Update a booking (and its customer info) by ID",
-     *     tags={"Booking"},
+     *     tags={"Bookings"},
      *     security={{"sanctum":{}}},
      *     @OA\Parameter(
      *         name="id",
@@ -585,14 +607,14 @@ class BookingController extends Controller
      *                     type="string",
      *                     maxLength=255,
      *                     description="Updated customer name",
-     *                     example="HAMZA GHANAM"
+     *                     example="John Smith"
      *                 ),
      *                 @OA\Property(
      *                     property="passport_number",
      *                     type="string",
      *                     maxLength=50,
      *                     description="Updated passport number",
-     *                     example="N007047689"
+     *                     example="N001234567"
      *                 ),
      *                 @OA\Property(
      *                     property="birth_date",
@@ -646,8 +668,8 @@ class BookingController extends Controller
      *                 type="object",
      *                 description="Nested customer info",
      *                 @OA\Property(property="id", type="integer", example=7),
-     *                 @OA\Property(property="name", type="string", example="HAMZA GHANAM"),
-     *                 @OA\Property(property="passport_number", type="string", example="N007047689"),
+     *                 @OA\Property(property="name", type="string", example="John Smith"),
+     *                 @OA\Property(property="passport_number", type="string", example="N001234567"),
      *                 @OA\Property(property="birth_date", type="string", format="date", example="1992-02-05"),
      *                 @OA\Property(property="gender", type="string", example="Male"),
      *                 @OA\Property(property="nationality", type="string", example="Syrian Arab Republic (the)"),
@@ -667,13 +689,13 @@ class BookingController extends Controller
 
         // Validation for optional (partial) updates: 'sometimes'
         $validator = Validator::make($request->all(), [
-            'name'            => 'sometimes|required|string|max:255',
+            'name' => 'sometimes|required|string|max:255',
             'passport_number' => 'sometimes|required|string|max:50',
-            'birth_date'      => 'sometimes|required|date',
-            'gender'          => 'sometimes|required|string|max:10',
-            'nationality'     => 'sometimes|required|string|max:255',
+            'birth_date' => 'sometimes|required|date',
+            'gender' => 'sometimes|required|string|max:10',
+            'nationality' => 'sometimes|required|string|max:255',
             'payment_plan_id' => 'sometimes|integer|exists:payment_plans,id',
-            'receipt'         => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048'
+            'receipt' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048'
         ]);
 
         if ($validator->fails()) {
@@ -686,9 +708,9 @@ class BookingController extends Controller
             return response()->json(['message' => 'Booking not found'], Response::HTTP_NOT_FOUND);
         }
 
-         if (!$user->can('edit booking', $booking)) {
-             return response()->json(['message' => 'Forbidden'], Response::HTTP_FORBIDDEN);
-         }
+        if (!$user->can('edit booking', $booking)) {
+            return response()->json(['message' => 'Forbidden'], Response::HTTP_FORBIDDEN);
+        }
 
         DB::beginTransaction();
 
@@ -711,6 +733,7 @@ class BookingController extends Controller
                 $receiptFile = $request->file('receipt');
                 $receiptPath = $receiptFile->store('receipts', 'local');
                 $booking->receipt_path = $receiptPath;
+                $booking->save();
             }
 
             // Update the related CustomerInfo fields if provided
@@ -755,7 +778,7 @@ class BookingController extends Controller
      * @OA\Delete(
      *     path="/bookings/{id}",
      *     summary="Delete a booking by ID",
-     *     tags={"Booking"},
+     *     tags={"Bookings"},
      *     security={{"sanctum":{}}},
      *     @OA\Parameter(
      *         name="id",
@@ -789,9 +812,9 @@ class BookingController extends Controller
             return response()->json(['message' => 'Booking not found'], Response::HTTP_NOT_FOUND);
         }
 
-         if (!$user->can('delete booking')) {
-             return response()->json(['message' => 'Forbidden'], Response::HTTP_FORBIDDEN);
-         }
+        if (!$user->can('delete booking')) {
+            return response()->json(['message' => 'Forbidden'], Response::HTTP_FORBIDDEN);
+        }
 
         // (Optional) Delete associated receipt file from storage
         // if ($booking->receipt_path) {
@@ -800,7 +823,7 @@ class BookingController extends Controller
 
         // (Optional) Delete associated CustomerInfo or the customer's passport file:
         // if you want to remove the entire customer record:
-         $booking->customerInfo()->delete();
+        $booking->customerInfo()->delete();
         // or if you only want to remove the file:
         // if ($booking->customerInfo && $booking->customerInfo->document_path) {
         //     Storage::delete($booking->customerInfo->document_path);
@@ -819,12 +842,12 @@ class BookingController extends Controller
     }
 
     /**
-     * Download either the receipt or the passport document for a specific booking.
+     * Download a booking document.
      *
      * @OA\Get(
-     *     path="/bookings/{id}/download-document",
-     *     summary="Download receipt or passport file for a booking",
-     *     tags={"Booking"},
+     *     path="/bookings/{id}/download-document/{type}",
+     *     summary="Download a specific document for a booking",
+     *     tags={"Bookings"},
      *     security={{"sanctum":{}}},
      *     @OA\Parameter(
      *         name="id",
@@ -835,58 +858,77 @@ class BookingController extends Controller
      *     ),
      *     @OA\Parameter(
      *         name="type",
-     *         in="query",
-     *         description="Type of file to download (passport or receipt)",
+     *         in="path",
+     *         description="Which document to download",
      *         required=true,
-     *         @OA\Schema(type="string", enum={"passport","receipt"}, example="receipt")
+     *         @OA\Schema(
+     *             type="string",
+     *             enum={"passport","receipt","rf","signed_rf","spa","signed_spa"},
+     *             example="receipt"
+     *         )
      *     ),
      *     @OA\Response(
      *         response=200,
      *         description="File downloaded successfully",
-     *         @OA\MediaType(
-     *             mediaType="application/octet-stream"
-     *         )
+     *         @OA\MediaType(mediaType="application/octet-stream")
      *     ),
-     *     @OA\Response(response=403, description="Forbidden"),
-     *     @OA\Response(response=404, description="Booking or file not found"),
-     *     @OA\Response(response=422, description="Validation error")
+     *     @OA\Response(response=403, description="Forbidden — lacking permission or Sales user requesting others’ bookings"),
+     *     @OA\Response(response=404, description="Booking or requested document not found"),
+     *     @OA\Response(response=422, description="Invalid document type")
      * )
      */
-    public function downloadDocument(Request $request, $id)
+    public function downloadDocument(Request $request, int $id, string $type)
     {
-        $validator = Validator::make($request->all(), [
-            'type' => 'required|string|in:passport,receipt',
-        ]);
+        // 1. Validate the `type` path parameter
+        $validated = Validator::make(
+            ['type' => $type],
+            ['type' => ['required', Rule::in([
+                'passport','receipt','rf','signed_rf','spa','signed_spa'
+            ])]]
+        )->validate();
 
         $user = $request->user();
-        if (!$user->can('view booking')) {
+
+        // 2. Permission check
+        if (! $user->can('view booking')) {
             return response()->json(['message' => 'Forbidden'], Response::HTTP_FORBIDDEN);
         }
 
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
-        }
-
-        $user = $request->user();
-        Log::info("User {$user->id} is attempting to download the {$request->type} for booking {$id}.");
-
-        // 1. Retrieve the booking
+        // 3. Load the booking
         $booking = Booking::find($id);
-        if (!$booking) {
+        if (! $booking) {
             return response()->json(['message' => 'Booking not found'], Response::HTTP_NOT_FOUND);
         }
 
-        if ($request->type === 'receipt' && !$booking->receipt_path) {
-            return response()->json(['message' => 'No receipt found for this booking'], Response::HTTP_NOT_FOUND);
+        // 4. Sales-only extra guard
+        if ($user->hasRole('Sales') && $booking->created_by !== $user->id) {
+            return response()->json(['message' => 'Forbidden'], Response::HTTP_FORBIDDEN);
         }
 
-        if ($request->type === 'passport' && !$booking->customerInfo->document_path) {
-            return response()->json(['message' => 'No passport found for this booking customer'], Response::HTTP_NOT_FOUND);
+        Log::info("User {$user->id} downloading {$type} for booking {$id}");
+
+        // 5. Map `type` → file path
+        $getPath = [
+            'passport'   => fn() => optional($booking->customerInfo)->document_path,
+            'receipt'    => fn() => $booking->receipt_path,
+            'rf'         => fn() => optional($booking->reservationForm)->file_path,
+            'signed_rf'  => fn() => optional($booking->signedReservationForm)->signed_file_path,
+            'spa'        => fn() => optional($booking->spa)->file_path,
+            'signed_spa' => fn() => optional($booking->signedSpa)->signed_file_path,
+        ];
+        $path = $getPath[$validated['type']]();
+
+        if (! $path) {
+            return response()->json([
+                'message' => ucfirst(str_replace('_',' ',$validated['type'])) . ' not found'
+            ], Response::HTTP_NOT_FOUND);
         }
 
-        // 4. Download the file from storage
-        $docPath = $request->type === 'receipt' ? $booking->receipt_path : $booking->customerInfo->document_path;
-        return Storage::download($docPath, "{$request->type}_{$booking->id}.pdf");
+        // 6. Stream the download
+        $ext      = pathinfo($path, PATHINFO_EXTENSION);
+        $filename = "{$validated['type']}_booking_{$booking->id}.{$ext}";
+
+        return Storage::disk('local')->download($path, $filename);
     }
 
     /**
@@ -895,7 +937,7 @@ class BookingController extends Controller
      * @OA\Post(
      *     path="/bookings/{id}/approve",
      *     summary="Approve a booking (CEO can single-approve; CSO & Accountant require two distinct approvals)",
-     *     tags={"Booking"},
+     *     tags={"Bookings"},
      *     security={{"sanctum":{}}},
      *     @OA\Parameter(
      *         name="id",
@@ -969,11 +1011,11 @@ class BookingController extends Controller
         if ($role === 'CEO' || $role === 'System Maintenance') {
             // Create CEO approval
             $approval = Approval::create([
-                'ref_id'        => $booking->id,
-                'ref_type'      => 'App\Models\Booking', // Must match your morphTo
-                'approved_by'   => $user->id,
+                'ref_id' => $booking->id,
+                'ref_type' => 'App\Models\Booking', // Must match your morphTo
+                'approved_by' => $user->id,
                 'approval_type' => $role,
-                'status'        => 'Approved',
+                'status' => 'Approved',
             ]);
 
             $booking->status = 'RF Pending';
@@ -984,24 +1026,24 @@ class BookingController extends Controller
             $booking->unit->save();
 
             return response()->json([
-                'message'  => "Booking approved by {$role}.",
+                'message' => "Booking approved by {$role}.",
                 'approval' => $approval,
             ], 201);
         }
 
         // 6. Non-CEO Flow => Need 2 Distinct Approvals: CSO & Accountant
         //    Check if the user's role is either "CSO" or "Accountant"
-        if (!in_array($role, ['CSO','Accountant'])) {
+        if (!in_array($role, ['CSO', 'Accountant'])) {
             return response()->json(['error' => "Role {$role} is not allowed to approve bookings."], 403);
         }
 
         // Create the new approval for CSO/Accountant
         $approval = Approval::create([
-            'ref_id'        => $booking->id,
-            'ref_type'      => 'App\Models\Booking',
-            'approved_by'   => $user->id,
+            'ref_id' => $booking->id,
+            'ref_type' => 'App\Models\Booking',
+            'approved_by' => $user->id,
             'approval_type' => $role,
-            'status'        => 'Approved',
+            'status' => 'Approved',
         ]);
 
         // 7. Check how many distinct roles have approved so far
@@ -1013,8 +1055,8 @@ class BookingController extends Controller
         // If we have both "CSO" and "Accountant", then the booking is fully approved
         if ($rolesApproved->contains('CSO') && $rolesApproved->contains('Accountant')) {
             // e.g., finalize the booking or set status
-             $booking->status = 'RF Pending';
-             $booking->save();
+            $booking->status = 'RF Pending';
+            $booking->save();
 
             $booking->unit->status = 'Booked';
             $booking->unit->save();
@@ -1036,21 +1078,21 @@ class BookingController extends Controller
             $title = "Booking Approved";
             $body = "Booking ID: {$booking->id} has been approved by {$role}.";
             $data = [
-                'booking_id'    => (string)$booking->id,
+                'booking_id' => (string)$booking->id,
                 'approval_role' => $role,
-                'new_status'    => $booking->status,
-                'timestamp'     => now()->toIso8601String(),
+                'new_status' => $booking->status,
+                'timestamp' => now()->toIso8601String(),
             ];
-        //    $this->fcmService->sendPushNotification($deviceTokens, $title, $body, $data);
+            //    $this->fcmService->sendPushNotification($deviceTokens, $title, $body, $data);
 
             return response()->json([
-                'message'  => "Booking approved by {$role}.",
+                'message' => "Booking approved by {$role}.",
                 'approval' => $approval,
             ], Response::HTTP_CREATED);
         }
 
         return response()->json([
-            'message'  => "Booking approved by {$role}",
+            'message' => "Booking approved by {$role}",
             'approval' => $approval,
         ], Response::HTTP_CREATED);
     }

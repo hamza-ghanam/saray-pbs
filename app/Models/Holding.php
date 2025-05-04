@@ -27,6 +27,11 @@ class Holding extends Model
 
     public function approvals()
     {
-        return $this->hasMany(Approval::class, 'ref_id')->where('ref_type', 'Booking');
+        return $this->morphMany(
+            Approval::class,
+            'approvalable',
+            'ref_type',
+            'ref_id'
+        );
     }
 }

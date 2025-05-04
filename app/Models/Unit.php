@@ -45,7 +45,12 @@ class Unit extends Model
 
     public function approvals()
     {
-        return $this->hasMany(Approval::class, 'ref_id')->where('ref_type', 'Unit');
+        return $this->morphMany(
+            \App\Models\Approval::class,
+            'approvalable', // must match your Approval::morphTo() method name
+            'ref_type',     // the column that holds the class name
+            'ref_id'        // the column that holds the unit's ID
+        );
     }
 
     public function salesOffers()
@@ -69,5 +74,25 @@ class Unit extends Model
     public function contractor()
     {
         return $this->belongsTo(User::class, 'contractor_id');
+    }
+
+    /**
+     * The most recent Holding in Pre-Hold or Hold.
+     */
+    public function latestHolding()
+    {
+        return $this->hasOne(Holding::class)
+            ->whereIn('status', ['Pre-Hold','Hold', 'Processed'])
+            ->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * The most recent Booking not cancelled.
+     */
+    public function latestBooking()
+    {
+        return $this->hasOne(Booking::class)
+            ->where('status', '!=', 'Cancelled')
+            ->orderBy('created_at', 'desc');
     }
 }

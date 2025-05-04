@@ -159,7 +159,7 @@ class UnitController extends Controller
      *         required=false,
      *         @OA\Schema(
      *             type="string",
-     *             enum={"Pending", "Available", "Pre-Booked", "Booked", "Sold", "Pre-Hold", "Hold", "Cancelled"}
+     *             enum={"Pending","Available","Pre-Booked","Booked","Sold","Pre-Hold","Hold","Cancelled"}
      *         )
      *     ),
      *     @OA\Parameter(
@@ -178,14 +178,97 @@ class UnitController extends Controller
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="A paginated list of units including the building information",
+     *         description="A paginated list of units",
      *         @OA\JsonContent(
-     *             @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/Unit")),
-     *             @OA\Property(property="current_page", type="integer", example=1),
-     *             @OA\Property(property="last_page", type="integer", example=5),
-     *             @OA\Property(property="per_page", type="integer", example=10),
-     *             @OA\Property(property="total", type="integer", example=50)
-     *         )
+     *             type="object",
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="id",               type="integer", format="int64", example=1),
+     *                     @OA\Property(property="prop_type",        type="string",                example="Residential"),
+     *                     @OA\Property(property="unit_type",        type="string",                example="3 Bedroom"),
+     *                     @OA\Property(property="unit_no",          type="string",                example="203"),
+     *                     @OA\Property(property="floor",            type="string",                example="2"),
+     *                     @OA\Property(property="suite_area",       type="number", format="float", example=102.04),
+     *                     @OA\Property(property="balcony_area",     type="number", format="float", example=38.15),
+     *                     @OA\Property(property="total_area",       type="number", format="float", example=140.19),
+     *                     @OA\Property(property="furnished",        type="boolean",               example=true),
+     *                     @OA\Property(property="unit_view",        type="string",                example="-"),
+     *                     @OA\Property(property="price",            type="number", format="float", example=1621554.74),
+     *                     @OA\Property(property="status",           type="string",                example="Booked"),
+     *                     @OA\Property(property="completion_date",  type="string", format="date",  example="2025-12-15"),
+     *                     @OA\Property(
+     *                         property="floor_plan_url",
+     *                         type="string",
+     *                         format="url",
+     *                         nullable=true,
+     *                         example="https://your-domain.com/api/units/1/floor_plan"
+     *                     ),
+     *                     @OA\Property(
+     *                         property="approvals",
+     *                         type="array",
+     *                         @OA\Items(ref="#/components/schemas/Approval")
+     *                     ),
+     *                     @OA\Property(
+     *                         property="latest_holding",
+     *                         type="object",
+     *                         nullable=true,
+     *                         @OA\Property(property="id",          type="integer", format="int64", example=2),
+     *                         @OA\Property(property="status",      type="string",                example="Hold"),
+     *                         @OA\Property(property="created_by",  type="integer", format="int64", example=17),
+     *                         @OA\Property(property="created_at",  type="string", format="date-time", example="2025-05-02T15:58:33Z"),
+     *                         @OA\Property(
+     *                             property="user",
+     *                             type="object",
+     *                             @OA\Property(property="id",    type="integer", format="int64", example=17),
+     *                             @OA\Property(property="name",  type="string",                example="Sales"),
+     *                             @OA\Property(property="email", type="string",                example="sales@test.com")
+     *                         ),
+     *                         @OA\Property(
+     *                             property="approvals",
+     *                             type="array",
+     *                             @OA\Items(ref="#/components/schemas/Approval")
+     *                         )
+     *                     ),
+     *                     @OA\Property(
+     *                         property="latest_booking",
+     *                         type="object",
+     *                         nullable=true,
+     *                         @OA\Property(property="id",          type="integer", format="int64", example=6),
+     *                         @OA\Property(property="status",      type="string",                example="RF Pending"),
+     *                         @OA\Property(property="created_by",  type="integer", format="int64", example=17),
+     *                         @OA\Property(property="created_at",  type="string", format="date-time", example="2025-05-02T16:08:40Z"),
+     *                         @OA\Property(
+     *                             property="user",
+     *                             type="object",
+     *                             @OA\Property(property="id",    type="integer", format="int64", example=17),
+     *                             @OA\Property(property="name",  type="string",                example="Sales"),
+     *                             @OA\Property(property="email", type="string",                example="sales@test.com")
+     *                         ),
+     *                         @OA\Property(
+     *                             property="approvals",
+     *                             type="array",
+     *                             @OA\Items(ref="#/components/schemas/Approval")
+     *                         )
+     *                     ),
+     *                     @OA\Property(
+     *                         property="building",
+     *                         type="object",
+     *                         nullable=true,
+     *                         @OA\Property(property="id",       type="integer", format="int64", example=1),
+     *                         @OA\Property(property="name",     type="string",                example="Cove Edition Residence"),
+     *                         @OA\Property(property="location", type="string",                example="Dubailand Residential Complex"),
+     *                         @OA\Property(property="status",   type="string",                example="Off-Plan")
+     *                     )
+     *                 )
+     *             )
+     *         ),
+     *         @OA\Property(property="current_page", type="integer", example=1),
+     *         @OA\Property(property="last_page",    type="integer", example=5),
+     *         @OA\Property(property="per_page",     type="integer", example=10),
+     *         @OA\Property(property="total",        type="integer", example=50)
      *     ),
      *     @OA\Response(response=403, description="Forbidden")
      * )
@@ -211,7 +294,7 @@ class UnitController extends Controller
                     })
                     ->orWhereHas('holdings', function ($h) use ($salesId) {
                         $h->where('created_by', $salesId)
-                            ->whereIn('status', ['Hold', 'Pre-Hold']);
+                            ->whereIn('status', ['Hold', 'Pre-Hold', 'Processed']);
                     });
             });
         } elseif ($user->hasRole('Broker')) {
@@ -221,7 +304,7 @@ class UnitController extends Controller
                 $q->where('status', 'Available')
                     ->orWhereHas('holdings', function ($h) use ($brokerId) {
                         $h->where('created_by', $brokerId)
-                            ->whereIn('status', ['Hold', 'Pre-Hold']);
+                            ->whereIn('status', ['Hold', 'Pre-Hold', 'Processed']);
                     });
             });
         } else {
@@ -249,12 +332,19 @@ class UnitController extends Controller
             $query->where('status', $request->input('status'));
         }
 
-        // Eager load the building for each unit.
-        $query->with('building');
-
         // Dynamic pagination: retrieve 'limit', cast to integer, and cap at 100 items per page.
         $limit = min((int)$request->get('limit', 10), 100);
-        $units = $query->paginate($limit);
+        $units = $query
+            ->with([
+                'building',
+                'approvals',
+                'paymentPlans.installments',
+                'latestHolding.user',
+                'latestHolding.approvals',
+                'latestBooking.user',
+                'latestBooking.approvals',
+            ])
+            ->paginate($limit);
 
         return response()->json($units, Response::HTTP_OK);
     }
@@ -294,13 +384,14 @@ class UnitController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
+            'building_id' => 'required|exists:buildings,id',
             'prop_type' => 'required|string|max:255',
             'unit_type' => 'required|string|max:255',
             'unit_no'     => [
                 'required',
                 'string',
-                Rule::unique('units', 'unit_no')
-                    ->where(fn($query) => $query->where('building_id', $request->building_id))
+                Rule::unique('units','unit_no')
+                    ->where(fn($q) => $q->where('building_id', $request->building_id)),
             ],
             'floor' => 'required|string|max:50',
             'parking' => 'nullable|string|max:255',
@@ -311,7 +402,6 @@ class UnitController extends Controller
             'unit_view' => 'required|string|max:255',
             'price' => 'required|numeric',
             'completion_date' => 'required|date|after_or_equal:today',
-            'building_id' => 'required|exists:buildings,id',
             'floor_plan' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'dld_fee_percentage' => 'required|numeric',
             'admin_fee' => 'required|numeric',
@@ -353,7 +443,7 @@ class UnitController extends Controller
             event(new UnitCreated($unit));
 
             // Eager-load the payment plans (and their installments) and the building that contains the unit.
-            $unit->load('paymentPlans.installments', 'building');
+            $unit->load('paymentPlans.installments', 'building', 'approvals');
         } catch (\Exception $ex) {
             DB::rollback();
             return response()->json(['error' => $ex->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
@@ -377,63 +467,110 @@ class UnitController extends Controller
      *         in="path",
      *         description="ID of the unit",
      *         required=true,
-     *         @OA\Schema(type="integer")
+     *         @OA\Schema(type="integer", example=1)
      *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Unit details retrieved successfully",
      *         @OA\JsonContent(
      *             type="object",
-     *             @OA\Property(property="id", type="integer", example=1),
-     *             @OA\Property(property="prop_type", type="string", example="Residential"),
-     *             @OA\Property(property="unit_type", type="string", example="Apartment"),
-     *             @OA\Property(property="unit_no", type="string", example="A101"),
-     *             @OA\Property(property="floor", type="string", example="1"),
-     *             @OA\Property(property="suite_area", type="number", format="float", example=120.50),
-     *             @OA\Property(property="total_area", type="number", format="float", example=136.25),
-     *             @OA\Property(property="furnished", type="boolean", example=true),
-     *             @OA\Property(property="unit_view", type="string", example="City View"),
-     *             @OA\Property(property="price", type="number", format="float", example=350000.00),
-     *             @OA\Property(property="status", type="string", example="Available"),
-     *             @OA\Property(property="completion_date", type="string", format="date", example="2025-12-15"),
-     *             @OA\Property(property="floor_plan", type="string", example="floor_plans/abc123.jpg"),
+     *             @OA\Property(property="id",              type="integer",               example=1),
+     *             @OA\Property(property="prop_type",       type="string",                example="Residential"),
+     *             @OA\Property(property="unit_type",       type="string",                example="Apartment"),
+     *             @OA\Property(property="unit_no",         type="string",                example="A101"),
+     *             @OA\Property(property="floor",           type="string",                example="1"),
+     *             @OA\Property(property="suite_area",      type="number", format="float", example=120.50),
+     *             @OA\Property(property="balcony_area",    type="number", format="float", example=15.75),
+     *             @OA\Property(property="total_area",      type="number", format="float", example=136.25),
+     *             @OA\Property(property="furnished",       type="boolean",               example=true),
+     *             @OA\Property(property="unit_view",       type="string",                example="City View"),
+     *             @OA\Property(property="price",           type="number", format="float", example=350000.00),
+     *             @OA\Property(property="status",          type="string",                example="Available"),
+     *             @OA\Property(property="completion_date", type="string", format="date",  example="2025-12-15"),
      *             @OA\Property(
-     *                 property="paymentPlans",
+     *                 property="floor_plan_url",
+     *                 type="string",
+     *                 format="url",
+     *                 nullable=true,
+     *                 description="Authenticated URL to fetch the unit’s floor plan",
+     *                 example="https://your-domain.com/api/units/1/floor_plan"
+     *             ),
+     *             @OA\Property(
+     *                 property="approvals",
      *                 type="array",
+     *                 description="All approvals directly on this unit",
+     *                 @OA\Items(ref="#/components/schemas/Approval")
+     *             ),
+     *             @OA\Property(
+     *                 property="payment_plans",
+     *                 type="array",
+     *                 description="Payment plans with nested installments",
      *                 @OA\Items(ref="#/components/schemas/PaymentPlan")
      *             ),
      *             @OA\Property(
-     *                 property="current_holding",
+     *                 property="latest_holding",
      *                 type="object",
      *                 nullable=true,
-     *                 @OA\Property(property="id", type="integer", example=5),
-     *                 @OA\Property(property="unit_id", type="integer", example=1),
-     *                 @OA\Property(property="status", type="string", example="Pre-Hold"),
-     *                 @OA\Property(property="created_by", type="integer", example=2),
+     *                 description="The most recent holding by the authenticated user",
+     *                 @OA\Property(property="id",         type="integer", format="int64", example=5),
+     *                 @OA\Property(property="unit_id",    type="integer", format="int64", example=1),
+     *                 @OA\Property(property="status",     type="string",                example="Hold"),
+     *                 @OA\Property(property="created_by", type="integer", format="int64", example=2),
      *                 @OA\Property(property="created_at", type="string", format="date-time", example="2025-04-15T10:00:00Z"),
-     *                 @OA\Property(property="updated_at", type="string", format="date-time", example="2025-04-15T10:00:00Z"),
      *                 @OA\Property(
      *                     property="user",
      *                     type="object",
-     *                     nullable=true,
-     *                     @OA\Property(property="id", type="integer", example=2),
-     *                     @OA\Property(property="name", type="string", example="John Doe"),
-     *                     @OA\Property(property="email", type="string", example="john@example.com")
+     *                     description="User who created the hold",
+     *                     @OA\Property(property="id",    type="integer", format="int64", example=2),
+     *                     @OA\Property(property="name",  type="string",                example="Jane Sales"),
+     *                     @OA\Property(property="email", type="string",                example="jane.sales@example.com")
+     *                 ),
+     *                 @OA\Property(
+     *                     property="approvals",
+     *                     type="array",
+     *                     description="Approvals for this holding",
+     *                     @OA\Items(ref="#/components/schemas/Approval")
+     *                 )
+     *             ),
+     *             @OA\Property(
+     *                 property="latest_booking",
+     *                 type="object",
+     *                 nullable=true,
+     *                 description="The most recent booking by the authenticated user",
+     *                 @OA\Property(property="id",         type="integer", format="int64", example=6),
+     *                 @OA\Property(property="unit_id",    type="integer", format="int64", example=1),
+     *                 @OA\Property(property="status",     type="string",                example="Booked"),
+     *                 @OA\Property(property="created_by", type="integer", format="int64", example=2),
+     *                 @OA\Property(property="created_at", type="string", format="date-time", example="2025-04-15T11:00:00Z"),
+     *                 @OA\Property(
+     *                     property="user",
+     *                     type="object",
+     *                     description="User who created the booking",
+     *                     @OA\Property(property="id",    type="integer", format="int64", example=2),
+     *                     @OA\Property(property="name",  type="string",                example="Jane Sales"),
+     *                     @OA\Property(property="email", type="string",                example="jane.sales@example.com")
+     *                 ),
+     *                 @OA\Property(
+     *                     property="approvals",
+     *                     type="array",
+     *                     description="Approvals for this booking",
+     *                     @OA\Items(ref="#/components/schemas/Approval")
      *                 )
      *             ),
      *             @OA\Property(
      *                 property="building",
      *                 type="object",
      *                 nullable=true,
-     *                 @OA\Property(property="id", type="integer", example=5),
-     *                 @OA\Property(property="name", type="string", example="Building A"),
-     *                 @OA\Property(property="location", type="string", example="Downtown"),
-     *                 @OA\Property(property="status", type="string", example="Active")
+     *                 description="Building to which the unit belongs",
+     *                 @OA\Property(property="id",       type="integer", format="int64", example=5),
+     *                 @OA\Property(property="name",     type="string",                example="Building A"),
+     *                 @OA\Property(property="location", type="string",                example="Downtown"),
+     *                 @OA\Property(property="status",   type="string",                example="Active")
      *             )
      *         )
      *     ),
-     *     @OA\Response(response=404, description="Unit not found"),
-     *     @OA\Response(response=403, description="Forbidden")
+     *     @OA\Response(response=403, description="Forbidden"),
+     *     @OA\Response(response=404, description="Unit not found")
      * )
      */
     public function show(Request $request, $id): \Illuminate\Http\JsonResponse
@@ -452,50 +589,35 @@ class UnitController extends Controller
             return response()->json(['message' => 'Unit not found'], Response::HTTP_NOT_FOUND);
         }
 
-        // 2) Always allowed statuses
-        $isOpen = in_array($unit->status, ['Available', 'Cancelled']);
+        // Sales‐only guard
+        if ($user->hasRole('Sales')) {
+            $isOpen = in_array($unit->status, ['Available', 'Cancelled']);
+            $hasMyBooking = $unit->bookings()
+                    ->where('created_by', $salesId)
+                    ->where('status', '!=', 'Cancelled')
+                    ->exists() && in_array($unit->status, ['Pre-Booked','Booked']);
+            $hasMyHolding = $unit->holdings()
+                    ->where('created_by', $salesId)
+                    ->whereIn('status',['Hold','Pre-Hold', 'Processed'])
+                    ->exists() && in_array($unit->status, ['Hold','Pre-Hold', 'Processed']);
 
-        // 3) Your own booking (non-cancelled) + matching unit status
-        $hasMyBookingHold = $unit->bookings()
-                ->where('created_by', $salesId)
-                ->where('status', '!=', 'Cancelled')
-                ->exists()
-            && in_array($unit->status, ['Pre-Booked', 'Booked']);
-
-        // 4) Your own holding + matching unit status
-        $hasMyHolding = $unit->holdings()
-                ->where('created_by', $salesId)
-                ->whereIn('status', ['Hold', 'Pre-Hold'])
-                ->exists()
-            && in_array($unit->status, ['Hold', 'Pre-Hold']);
-
-        // 5) Final Sales-only guard
-        if ($user->hasRole('Sales') && ! ($isOpen || $hasMyBookingHold || $hasMyHolding)) {
-            return response()->json([
-                'message' => 'Unit not available for you at this stage.'
-            ], Response::HTTP_FORBIDDEN);
+            if (! ($isOpen || $hasMyBooking || $hasMyHolding)) {
+                return response()->json([
+                    'message' => 'Unit not available for you at this stage.'
+                ], Response::HTTP_FORBIDDEN);
+            }
         }
 
-        // Eager-load the payment plans (and their installments) and the building that contains the unit.
-        $unit->load('paymentPlans.installments', 'building');
-
-        // Retrieve the current holding for this unit:
-        // It must have a status of "Pre-Hold" or "Hold" and we pick the latest one.
-        $currentHolding = $unit->holdings()
-            ->with('user')
-            ->whereIn('status', ['Pre-Hold', 'Hold'])
-            ->latest()
-            ->first();
-
-        $currentBooking = $unit->bookings()
-            ->with('user')
-            ->where('status', '!=', 'Cancelled')
-            ->latest()
-            ->first();
-
-        // Append the current holding to the unit object.
-        $unit->current_holding = $currentHolding;
-        $unit->current_booking = $currentBooking;
+        // Eager-load only what you actually return
+        $unit->load([
+            'building',
+            'approvals',
+            'paymentPlans.installments',
+            'latestHolding.user',
+            'latestHolding.approvals',
+            'latestBooking.user',
+            'latestBooking.approvals',
+        ]);
 
         // 2) Turn your stored path into the authenticated URL
         $unit->floor_plan_url = $unit->floor_plan
@@ -565,6 +687,7 @@ class UnitController extends Controller
         }
 
         $unit = Unit::findOrFail($id);
+        $buildingId = $request->input('building_id', $unit->building_id);
 
         $validator = Validator::make($request->all(), [
             'prop_type' => 'sometimes|required|string|max:255',
@@ -573,8 +696,10 @@ class UnitController extends Controller
                 'required',
                 'string',
                 Rule::unique('units', 'unit_no')
-                    ->where(fn($q) => $q->where('building_id', $request->building_id))
                     ->ignore($unit->id)
+                    ->where(fn($query) =>
+                        $query->where('building_id', $buildingId)
+                    ),
             ],
             'floor' => 'sometimes|required|string|max:50',
             'parking' => 'nullable|string|max:255',

@@ -75,23 +75,24 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/bookings/{id}/upload-receipt', [BookingController::class, 'uploadReceipt']);
     Route::put('/bookings/{id}', [BookingController::class, 'update']);
     Route::delete('/bookings/{id}', [BookingController::class, 'destroy']);
-    Route::get('/bookings/{booking}/download-document', [BookingController::class, 'downloadDocument']);
+    Route::get('/bookings/{booking}/download-document/{type}', [BookingController::class, 'downloadDocument'])
+        ->where('type', 'passport|receipt|rf|signed_rf|spa|signed_spa');
     Route::get('/bookings/{id}', [BookingController::class, 'show']);
     Route::post('/bookings/{id}/approve', [BookingController::class, 'approveBooking']);
 });
 
 // Reservation Forms
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/bookings/{id}/reservation-form', [ReservationFormController::class, 'generate']);
-    Route::post('/reservation-forms/{id}/upload-signed', [ReservationFormController::class, 'uploadSigned']);
-    Route::post('/reservation-forms/{id}/approve', [ReservationFormController::class, 'approve']);
+    Route::get('/bookings/{id}/rf', [ReservationFormController::class, 'generate']);
+    Route::post('/bookings/{id}/rf/upload-signed', [ReservationFormController::class, 'uploadSigned']);
+    Route::post('/bookings/{id}/rf/approve', [ReservationFormController::class, 'approve']);
 });
 
 // Sales and Purchase Agreement (SPAs)
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/bookings/{id}/spa', [SpaController::class, 'generate']);
-    Route::post('/spa/{id}/upload-signed', [SpaController::class, 'uploadSigned']);
-    Route::post('/spa/{id}/approve', [SpaController::class, 'approve']);
+    Route::post('/bookings/{id}/spa/upload-signed', [SpaController::class, 'uploadSigned']);
+    Route::post('/bookings/{id}/spa/approve', [SpaController::class, 'approve']);
 });
 
 // Unit Hold
@@ -138,9 +139,7 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 // Brokers
-Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/brokers/upload-signed-agreement', [BrokerController::class, 'uploadSignedAgreement']);
-});
+Route::post('/brokers/upload-signed-agreement', [BrokerController::class, 'uploadSignedAgreement']);
 
 // Unit Updates
 Route::middleware('auth:sanctum')->group(function () {

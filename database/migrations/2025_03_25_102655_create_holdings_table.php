@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('unit_id')->constrained()->onDelete('cascade');
             $table->foreignId('created_by')->constrained()->on('users')->onDelete('cascade');
-            $table->enum('status', ['Pre-Hold', 'Hold', 'Cancelled']);
+            $table->enum('status', ['Pre-Hold', 'Hold', 'Cancelled', 'Processed']);
             $table->timestamps();
             $table->softDeletes();
         });

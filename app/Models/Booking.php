@@ -17,7 +17,7 @@ class Booking extends Model
         'confirmed_by',
         'confirmed_at',
         'created_by', // Make sure it's fillable
-        'payment_plan_id'
+        'payment_plan_id',
     ];
 
     public function user()
@@ -40,6 +40,20 @@ class Booking extends Model
         return $this->hasOne(ReservationForm::class);
     }
 
+    // returns the signed form
+    public function signedReservationForm()
+    {
+        return $this->hasOne(ReservationForm::class)
+            ->whereNotNull('signed_at');
+    }
+
+    // returns the signed SPA
+    public function signedSpa()
+    {
+        return $this->hasOne(SPA::class)
+            ->whereNotNull('signed_at');
+    }
+
     public function spa()
     {
         return $this->hasOne(SPA::class);
@@ -47,7 +61,12 @@ class Booking extends Model
 
     public function approvals()
     {
-        return $this->hasMany(Approval::class, 'ref_id')->where('ref_type', 'Booking');
+        return $this->morphMany(
+            Approval::class,
+            'approvalable',  // matches the morphTo() name in Approval
+            'ref_type',      // column holding the class name
+            'ref_id'         // column holding the ID
+        );
     }
 
 

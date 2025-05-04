@@ -15,70 +15,36 @@ use Symfony\Component\HttpFoundation\Response;
 class ReservationFormController extends Controller
 {
     /**
-     * Generate or retrieve an existing Reservation Form for a booking.
+     * Generate or retrieve a Reservation Form for a booking.
      *
-     * If a Reservation Form already exists, the existing record and its PDF URL are returned (HTTP 200).
-     * Otherwise, a new PDF is generated, stored, and a new ReservationForm record is created (HTTP 201).
+     * If a Reservation Form already exists (and its PDF file is present on disk), the existing PDF is streamed back (HTTP 200).
+     * Otherwise, a new PDF is generated, stored, and streamed back (HTTP 201).
      *
      * @OA\Get(
-     *     path="/bookings/{bookingId}/reservation-form",
-     *     summary="Generate or retrieve a Reservation Form PDF for a booking",
-     *     tags={"ReservationForm"},
+     *     path="/bookings/{bookingId}/rf",
+     *     summary="Generate or download a Reservation Form PDF for a booking",
+     *     tags={"Bookings/RF"},
      *     security={{"sanctum":{}}},
      *     @OA\Parameter(
      *         name="bookingId",
      *         in="path",
-     *         description="ID of the booking for which the Reservation Form is generated",
+     *         description="ID of the booking for which to generate or retrieve the RF",
      *         required=true,
      *         @OA\Schema(type="integer", example=42)
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Reservation Form already exists, returning existing PDF URL",
-     *         @OA\JsonContent(
-     *             type="object",
-     *             @OA\Property(
-     *                 property="reservation_form",
-     *                 type="object",
-     *                 description="Existing ReservationForm record",
-     *                 @OA\Property(property="id", type="integer", example=10),
-     *                 @OA\Property(property="booking_id", type="integer", example=42),
-     *                 @OA\Property(property="file_path", type="string", example="reservation_forms/RF_42.pdf"),
-     *                 @OA\Property(property="status", type="string", example="Pending")
-     *             ),
-     *             @OA\Property(
-     *                 property="rf_url",
-     *                 type="string",
-     *                 format="uri",
-     *                 example="http://your-domain.test/storage/reservation_forms/RF_42.pdf"
-     *             )
-     *         )
+     *         description="Existing Reservation Form PDF streamed successfully",
+     *         @OA\MediaType(mediaType="application/pdf")
      *     ),
      *     @OA\Response(
      *         response=201,
-     *         description="New Reservation Form created and returning new PDF URL",
-     *         @OA\JsonContent(
-     *             type="object",
-     *             @OA\Property(
-     *                 property="reservation_form",
-     *                 type="object",
-     *                 description="Newly created ReservationForm record",
-     *                 @OA\Property(property="id", type="integer", example=11),
-     *                 @OA\Property(property="booking_id", type="integer", example=42),
-     *                 @OA\Property(property="file_path", type="string", example="reservation_forms/RF_42.pdf"),
-     *                 @OA\Property(property="status", type="string", example="Pending")
-     *             ),
-     *             @OA\Property(
-     *                 property="rf_url",
-     *                 type="string",
-     *                 format="uri",
-     *                 example="http://your-domain.test/storage/reservation_forms/RF_42.pdf"
-     *             )
-     *         )
+     *         description="New Reservation Form PDF generated and streamed successfully",
+     *         @OA\MediaType(mediaType="application/pdf")
      *     ),
-     *     @OA\Response(response=403, description="Forbidden (no permission to generate sales offer)"),
-     *     @OA\Response(response=404, description="Booking not found or existing PDF file missing"),
-     *     @OA\Response(response=422, description="Invalid booking/unit status or other validation error")
+     *     @OA\Response(response=403, description="Forbidden (no permission to generate reservation form)"),
+     *     @OA\Response(response=404, description="Booking not found or existing PDF file missing on disk"),
+     *     @OA\Response(response=422, description="Validation or business-rule error (e.g. unit/booking status invalid)")
      * )
      */
     public function generate(Request $request, $bookingId)
@@ -96,9 +62,14 @@ class ReservationFormController extends Controller
             return response()->json(['error' => 'Booking not found'], Response::HTTP_NOT_FOUND);
         }
 
+        // 2. Sales users may only act on bookings they created
+        if ($user->hasRole('Sales') && $booking->created_by !== $user->id) {
+            return response()->json(['error' => 'Forbidden'], Response::HTTP_FORBIDDEN);
+        }
+
         Log::info("User {$user->id} generated a Reservation Form for booking {$booking->id}");
 
-        // 2. Check the booking and unit status logic
+        // 3. Check the booking and unit status logic
         //    e.g., only generate RF if:
         //        - the unit has status "Booked"
         //        - the booking status is "RF Pending", "SPA Pending", or "Booked"
@@ -110,19 +81,16 @@ class ReservationFormController extends Controller
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        // 3. Ensure only one Reservation Form per booking (or per unit)
+        $fileName = 'RF_' . $booking->id . '.pdf';
+
+        // 4. Ensure only one Reservation Form per booking (or per unit)
         //    If you want exactly one RF per booking:
         $existingRF = ReservationForm::where('booking_id', $booking->id)->first();
         if ($existingRF) {
-            if (Storage::disk('public')->exists($existingRF->file_path)) {
-                // Build a publicly accessible URL if you ran `php artisan storage:link`
-                // e.g., /storage/reservation_forms/RF_123.pdf
-                $pdfUrl = asset('storage/' . $existingRF->file_path);
-
-                return response()->json([
-                    'reservation_form' => $existingRF,
-                    'rf_url' => $pdfUrl
-                ], Response::HTTP_OK);
+            if (Storage::disk('local')->exists($existingRF->file_path)) {
+                return Storage::disk('local')->download($existingRF->file_path, $fileName, [
+                    'Content-Type' => 'application/pdf',
+                ]);
             } else {
                 // If the file is missing, you could re-generate or return an error
                 return response()->json([
@@ -131,7 +99,7 @@ class ReservationFormController extends Controller
             }
         }
 
-        // 4. Generate the PDF (using your Blade view)
+        // 5. Generate the PDF (using your Blade view)
         $pdf = PDF::loadView('pdf.reservation_form', [
             'booking' => $booking,
             'customerInfo' => $booking->customerInfo,
@@ -142,44 +110,42 @@ class ReservationFormController extends Controller
         // Get the raw PDF content
         $pdfContent = $pdf->output();
 
-        // 5. Store the PDF file on disk
-        $fileName = 'RF_' . $booking->id . '.pdf';
+        // 6. Store the PDF file on disk
         $filePath = 'reservation_forms/' . $fileName; // relative to "public" disk
-        Storage::disk('public')->put($filePath, $pdfContent);
+        Storage::disk('local')->put($filePath, $pdfContent);
 
-        // 6. Create a new ReservationForm record with status = "Pending"
-        $rf = ReservationForm::create([
+        // 7. Create a new ReservationForm record with status = "Pending"
+        ReservationForm::create([
             'booking_id' => $booking->id,
             'file_path' => $filePath,
             'status' => 'Pending',
         ]);
 
-        $pdfUrl = asset('storage/' . $filePath);
-
-        return response()->json([
-            'reservation_form' => $rf,
-            'rf_url' => $pdfUrl,
-        ], 201);
+        // 8. Stream the newly created PDF
+        return response($pdfContent, Response::HTTP_CREATED, [
+            'Content-Type'        => 'application/pdf',
+            'Content-Disposition' => "attachment; filename=\"{$fileName}\"",
+        ]);
     }
 
     /**
-     * Upload a signed Reservation Form (RF) file.
+     * Upload a signed Reservation Form (RF) file for a booking.
      *
-     * This endpoint accepts a PDF file for a specific ReservationForm record.
-     * If the RF is no longer "Pending", only users with "CEO" or "System Maintenance" roles
-     * can overwrite it. Otherwise, a 409 (Conflict) error is returned.
+     * This endpoint accepts a PDF file for the ReservationForm associated with the given booking.
+     * If the RF is no longer "Pending", only users with the "CEO" or "System Maintenance" roles
+     * may overwrite it; otherwise a 409 Conflict is returned.
      *
      * @OA\Post(
-     *     path="/reservation-forms/{id}/upload-signed",
-     *     summary="Upload a signed Reservation Form file",
-     *     tags={"ReservationForm"},
+     *     path="/bookings/{bookingId}/rf/upload-signed",
+     *     summary="Upload a signed Reservation Form for a booking",
+     *     tags={"Bookings/RF"},
      *     security={{"sanctum":{}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
-     *         description="ID of the ReservationForm to update",
+     *         description="ID of the booking whose ReservationForm will be updated",
      *         required=true,
-     *         @OA\Schema(type="integer", example=10)
+     *         @OA\Schema(type="integer", example=42)
      *     ),
      *     @OA\RequestBody(
      *         required=true,
@@ -191,48 +157,51 @@ class ReservationFormController extends Controller
      *                     property="signed_rf",
      *                     type="string",
      *                     format="binary",
-     *                     description="The signed Reservation Form file (PDF)"
+     *                     description="The signed Reservation Form file (PDF, max 2 MB)"
      *                 )
      *             )
      *         )
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Signed RF uploaded and record updated",
+     *         description="Signed RF successfully uploaded",
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(
-     *                 property="reservation_form",
-     *                 type="object",
-     *                 description="Updated ReservationForm record",
-     *                 @OA\Property(property="id", type="integer", example=10),
-     *                 @OA\Property(property="booking_id", type="integer", example=42),
-     *                 @OA\Property(property="file_path", type="string", example="reservation_forms/signed/RF_42_signed.pdf"),
-     *                 @OA\Property(property="status", type="string", example="Signed")
-     *             ),
-     *             @OA\Property(
-     *                 property="rf_url",
+     *                 property="message",
      *                 type="string",
-     *                 format="uri",
-     *                 example="http://your-domain.test/storage/reservation_forms/signed/RF_42_signed.pdf"
+     *                 example="Signed RF successfully uploaded"
      *             )
      *         )
      *     ),
-     *     @OA\Response(response=404, description="Reservation Form not found"),
-     *     @OA\Response(response=409, description="Conflict if the RF is already uploaded and user isn't CEO/System Maintenance"),
-     *     @OA\Response(response=422, description="Validation error (e.g., file not a PDF)")
+     *     @OA\Response(
+     *         response=403,
+     *         description="Forbidden – missing permission to upload signed RF"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Reservation Form not found for the given booking"
+     *     ),
+     *     @OA\Response(
+     *         response=409,
+     *         description="Conflict – RF already signed and user lacks override role"
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error (e.g., no file or wrong MIME type)"
+     *     )
      * )
      */
     public function uploadSigned(Request $request, $id)
     {
         $user = $request->user();
-        Log::info("User {$user->id} is uploading a signed RF for ReservationForm ID: {$id}");
+        Log::info("User {$user->id} is uploading a signed RF for ReservationForm of booking ID: {$id}");
 
         if (!$user->can('upload signed reservation form')) {
             return response()->json(['error' => 'Forbidden'], Response::HTTP_FORBIDDEN);
         }
 
-        // 2. Validate the uploaded file
+        // 1. Validate the uploaded file
         $validator = Validator::make($request->all(), [
             'signed_rf' => 'required|file|mimes:pdf|max:2048',
         ]);
@@ -241,13 +210,17 @@ class ReservationFormController extends Controller
             return response()->json($validator->errors(), Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        // 3. Retrieve the ReservationForm record
-        $reservationForm = ReservationForm::find($id);
-        if (!$reservationForm) {
-            return response()->json(['error' => 'Reservation Form not found'], Response::HTTP_NOT_FOUND);
-        }
+        // 2. Retrieve the Booking and reservationForm records
+        $booking = Booking::findOrFail($id);
+        $reservationForm = $booking
+            ->reservationForm()   // relation query
+            ->firstOrFail();      // throws ModelNotFound → JSON 404
 
         $role = $user->getRoleNames()->first();
+
+        if ($role === 'Sales' && $booking->created_by !== $user->id) {
+            return response()->json(['error' => 'Forbidden'], Response::HTTP_FORBIDDEN);
+        }
 
         if ($reservationForm->status !== 'Pending' && !in_array($role, ['CEO', 'System Maintenance'])) {
             return response()->json(
@@ -255,41 +228,38 @@ class ReservationFormController extends Controller
                 Response::HTTP_CONFLICT);
         }
 
-        // 4. Store the signed RF file
+        // 3. Store the signed RF file
         $file = $request->file('signed_rf');
-        $originalName = $file->getClientOriginalName();
         $fileName = 'RF_' . $reservationForm->booking_id . '_signed.' . $file->getClientOriginalExtension();
         $filePath = 'reservation_forms/signed/' . $fileName;
+        Storage::disk('local')->putFileAs('reservation_forms/signed', $file, $fileName);
 
-        Storage::disk('public')->putFileAs('reservation_forms/signed', $file, $fileName);
+        // 4. Update the ReservationForm record
+        $reservationForm->update([
+            'status'             => 'Signed',
+            'signed_at'          => now(),
+            'signed_file_path'   => $filePath,
+        ]);
 
-        // 5. Update the ReservationForm record
-        $reservationForm->file_path = $filePath;
-        $reservationForm->status = 'Signed';
-        $reservationForm->save();
-        $pdfUrl = asset('storage/' . $filePath);
 
-        return response()->json([
-            'reservation_form' => $reservationForm,
-            'rf_url' => $pdfUrl,
-        ], Response::HTTP_OK);
+        return response()->json(['message' => 'Signed reservation form has been successfully uploaded'], Response::HTTP_OK);
     }
 
     /**
-     * Approve a Reservation Form (RF).
+     * Approve a signed Reservation Form.
      *
-     * This endpoint sets the Reservation Form status to "Approved" if it is currently "Signed".
-     * It also updates the associated booking's status to "SPA Pending".
+     * Sets the Reservation Form status to "Approved", updates the related Booking status to "SPA Pending",
+     * and records an Approval entry.
      *
      * @OA\Post(
-     *     path="/reservation-forms/{id}/approve",
+     *     path="/bookings/{bookingId}/rf/approve",
      *     summary="Approve a signed Reservation Form",
-     *     tags={"ReservationForm"},
+     *     tags={"Bookings/RF"},
      *     security={{"sanctum":{}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
-     *         description="ID of the ReservationForm to approve",
+     *         description="ID of the booking whose ReservationForm will be approved",
      *         required=true,
      *         @OA\Schema(type="integer", example=10)
      *     ),
@@ -299,24 +269,20 @@ class ReservationFormController extends Controller
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(
-     *                 property="reservation_form",
-     *                 type="object",
-     *                 description="Updated ReservationForm record",
-     *                 @OA\Property(property="id", type="integer", example=10),
-     *                 @OA\Property(property="booking_id", type="integer", example=42),
-     *                 @OA\Property(property="file_path", type="string", example="reservation_forms/signed/RF_42_signed.pdf"),
-     *                 @OA\Property(property="status", type="string", example="Approved")
-     *             ),
-     *             @OA\Property(
-     *                 property="rf_url",
+     *                 property="message",
      *                 type="string",
-     *                 example="http://your-domain.test/storage/reservation_forms/signed/RF_42_signed.pdf",
-     *                 description="Path or URL to the approved Reservation Form file"
+     *                 example="Reservation form has been approved"
      *             )
      *         )
      *     ),
-     *     @OA\Response(response=403, description="Forbidden (user lacks 'approve reservation form' permission)"),
-     *     @OA\Response(response=404, description="Reservation Form not found"),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Forbidden – user lacks 'approve reservation form' permission"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Reservation Form not found for the given booking"
+     *     ),
      *     @OA\Response(
      *         response=422,
      *         description="Cannot approve unless the form is Signed or other validation error"
@@ -326,7 +292,7 @@ class ReservationFormController extends Controller
     public function approve(Request $request, $id)
     {
         $user = $request->user();
-        Log::info("User {$user->id} is attempting to approve ReservationForm ID: {$id}");
+        Log::info("User {$user->id} is attempting to approve ReservationForm of booking ID: {$id}");
 
         // 1. Check user permission (adjust the ability name as needed)
         if (!$user->can('approve reservation form')) {
@@ -334,10 +300,9 @@ class ReservationFormController extends Controller
         }
 
         // 2. Retrieve the ReservationForm record
-        $reservationForm = ReservationForm::find($id);
-        if (!$reservationForm) {
-            return response()->json(['error' => 'Reservation Form not found'], Response::HTTP_NOT_FOUND);
-        }
+        $reservationForm = Booking::findOrFail($id)
+            ->reservationForm()
+            ->firstOrFail();
 
         // 3. Check if it's in a state that can be approved
         //    e.g., only "Signed" forms can be approved
@@ -367,9 +332,6 @@ class ReservationFormController extends Controller
         ]);
 
         // 7. Return the updated record
-        return response()->json([
-            'reservation_form' => $reservationForm,
-            'rf_url' => $reservationForm->file_path,
-        ], Response::HTTP_OK);
+        return response()->json(['message' => 'Reservation form has been approved'], Response::HTTP_OK);
     }
 }

@@ -405,21 +405,25 @@ class BuildingController extends Controller
      *         in="path",
      *         description="ID of the building",
      *         required=true,
-     *         @OA\Schema(type="integer")
+     *         @OA\Schema(type="integer", example=1)
      *     ),
      *     @OA\Parameter(
      *         name="unit_no",
      *         in="query",
      *         description="Filter units by unit number",
      *         required=false,
-     *         @OA\Schema(type="string")
+     *         @OA\Schema(type="string", example="A101")
      *     ),
      *     @OA\Parameter(
      *         name="status",
      *         in="query",
      *         description="Filter units by status",
      *         required=false,
-     *         @OA\Schema(type="string")
+     *         @OA\Schema(
+     *             type="string",
+     *             enum={"Pending","Available","Pre-Booked","Booked","Sold","Pre-Hold","Hold","Cancelled"},
+     *             example="Available"
+     *         )
      *     ),
      *     @OA\Parameter(
      *         name="page",
@@ -439,11 +443,16 @@ class BuildingController extends Controller
      *         response=200,
      *         description="A paginated list of units for the specified building",
      *         @OA\JsonContent(
-     *             @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/Unit")),
+     *             type="object",
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="array",
+     *                 @OA\Items(ref="#/components/schemas/Unit")
+     *             ),
      *             @OA\Property(property="current_page", type="integer", example=1),
-     *             @OA\Property(property="last_page", type="integer", example=5),
-     *             @OA\Property(property="per_page", type="integer", example=10),
-     *             @OA\Property(property="total", type="integer", example=50)
+     *             @OA\Property(property="last_page",    type="integer", example=5),
+     *             @OA\Property(property="per_page",     type="integer", example=10),
+     *             @OA\Property(property="total",        type="integer", example=50)
      *         )
      *     ),
      *     @OA\Response(response=403, description="Forbidden"),
@@ -455,31 +464,80 @@ class BuildingController extends Controller
         $user = $request->user();
         Log::info("User {$user->id} requested units for building {$buildingId}.");
 
-        // Check permission: ensure the user can view units.
-        if (!$user->can('view unit')) {
+        // Permission check
+        if (! $user->can('view unit')) {
             abort(Response::HTTP_FORBIDDEN, 'Unauthorized');
         }
 
-        // Retrieve the building; if not found, Laravel will throw a 404.
+        // Load the building or 404
         $building = Building::findOrFail($buildingId);
 
-        // Build the query using the units' relationship.
+        // Start from the building's units relation
         $query = $building->units();
 
-        // Apply optional filters.
+        // Role‐based scoping
+        if ($user->hasRole('Sales')) {
+            $salesId = $user->id;
+            $query->where(function($q) use ($salesId) {
+                $q->whereIn('status', ['Available', 'Cancelled'])
+                    ->orWhereHas('bookings', function($b) use ($salesId) {
+                        $b->where('created_by', $salesId)
+                            ->where('status', '!=', 'Cancelled');
+                    })
+                    ->orWhereHas('holdings', function($h) use ($salesId) {
+                        $h->where('created_by', $salesId)
+                            ->whereIn('status', ['Hold', 'Pre-Hold', 'Processed']);
+                    });
+            });
+        } elseif ($user->hasRole('Broker')) {
+            $brokerId = $user->id;
+            $query->where(function($q) use ($brokerId) {
+                $q->where('status', 'Available')
+                    ->orWhereHas('holdings', function($h) use ($brokerId) {
+                        $h->where('created_by', $brokerId)
+                            ->whereIn('status', ['Hold', 'Pre-Hold', 'Processed']);
+                    });
+            });
+        }
+
+        // Optional filters - Apply filtering based on query parameters
+        if ($request->filled('prop_type')) {
+            $query->where('prop_type', 'like', "%" . $request->input('prop_type') . "%");
+        }
+
+        if ($request->filled('unit_type')) {
+            $query->where('unit_type', 'like', "%" . $request->input('unit_type') . "%");
+        }
+
         if ($request->filled('unit_no')) {
             $query->where('unit_no', 'like', '%' . $request->input('unit_no') . '%');
         }
+
+        if ($request->filled('floor')) {
+            $query->where('floor', $request->input('floor'));
+        }
+
         if ($request->filled('status')) {
             $query->where('status', $request->input('status'));
         }
 
-        // Dynamic pagination: get the 'limit' (default 10, capped at 100)
+        // Paginate (default 10, cap 100)
         $limit = min((int)$request->get('limit', 10), 100);
-        $units = $query->paginate($limit);
+        $units = $query
+            ->with([
+                'building',
+                'approvals',
+                'paymentPlans.installments',
+                'latestHolding.user',
+                'latestHolding.approvals',
+                'latestBooking.user',
+                'latestBooking.approvals',
+            ])
+            ->paginate($limit);
 
         return response()->json($units, Response::HTTP_OK);
     }
+
 
     public function showImage(Request $request, $id)
     {

@@ -15,70 +15,45 @@ use Symfony\Component\HttpFoundation\Response;
 class SpaController extends Controller
 {
     /**
-     * Generate or retrieve an existing Sales and Purchase Agreement (SPA) for a booking.
+     * Generate or download an SPA PDF for a booking.
      *
-     * If an SPA already exists, the existing record and its PDF URL are returned (HTTP 200).
-     * Otherwise, a new PDF is generated, stored, and a new SPA record is created (HTTP 201).
+     * If an SPA already exists (and its PDF file is present on disk), the existing PDF is streamed back (HTTP 200).
+     * Otherwise, a new PDF is generated, stored, and streamed back (HTTP 201).
      *
      * @OA\Get(
      *     path="/bookings/{bookingId}/spa",
-     *     summary="Generate or retrieve an SPA PDF for a booking",
-     *     tags={"SPA"},
+     *     summary="Generate or download an SPA PDF for a booking",
+     *     tags={"Bookings/SPA"},
      *     security={{"sanctum":{}}},
      *     @OA\Parameter(
      *         name="bookingId",
      *         in="path",
-     *         description="ID of the booking for which the SPA is generated",
+     *         description="ID of the booking for which to generate or retrieve the SPA",
      *         required=true,
      *         @OA\Schema(type="integer", example=42)
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="SPA already exists, returning existing PDF URL",
-     *         @OA\JsonContent(
-     *             type="object",
-     *             @OA\Property(
-     *                 property="spa",
-     *                 type="object",
-     *                 description="Existing SPA record",
-     *                 @OA\Property(property="id", type="integer", example=10),
-     *                 @OA\Property(property="booking_id", type="integer", example=42),
-     *                 @OA\Property(property="file_path", type="string", example="spa_forms/SPA_42.pdf"),
-     *                 @OA\Property(property="status", type="string", example="Pending")
-     *             ),
-     *             @OA\Property(
-     *                 property="spa_url",
-     *                 type="string",
-     *                 format="uri",
-     *                 example="http://your-domain.test/storage/spa_forms/SPA_42.pdf"
-     *             )
-     *         )
+     *         description="Existing SPA PDF streamed successfully",
+     *         @OA\MediaType(mediaType="application/pdf")
      *     ),
      *     @OA\Response(
      *         response=201,
-     *         description="New SPA created and returning new PDF URL",
-     *         @OA\JsonContent(
-     *             type="object",
-     *             @OA\Property(
-     *                 property="spa",
-     *                 type="object",
-     *                 description="Newly created SPA record",
-     *                 @OA\Property(property="id", type="integer", example=11),
-     *                 @OA\Property(property="booking_id", type="integer", example=42),
-     *                 @OA\Property(property="file_path", type="string", example="spa_forms/SPA_42.pdf"),
-     *                 @OA\Property(property="status", type="string", example="Pending")
-     *             ),
-     *             @OA\Property(
-     *                 property="spa_url",
-     *                 type="string",
-     *                 format="uri",
-     *                 example="http://your-domain.test/storage/spa_forms/SPA_42.pdf"
-     *             )
-     *         )
+     *         description="New SPA PDF generated and streamed successfully",
+     *         @OA\MediaType(mediaType="application/pdf")
      *     ),
-     *     @OA\Response(response=403, description="Forbidden (no permission to generate SPA)"),
-     *     @OA\Response(response=404, description="Booking not found or existing PDF file missing"),
-     *     @OA\Response(response=422, description="Invalid booking/unit status or other validation error")
+     *     @OA\Response(
+     *         response=403,
+     *         description="Forbidden (no permission to generate SPA)"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Booking not found or existing SPA file missing on disk"
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation or business-rule error (e.g. unit/booking status invalid)"
+     *     )
      * )
      */
     public function generate(Request $request, $bookingId)
@@ -110,18 +85,16 @@ class SpaController extends Controller
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
+        $fileName = 'SPA_' . $booking->id . '.pdf';
+
         // 3. Ensure only one SPA per booking
         $existingSPA = SPA::where('booking_id', $booking->id)->first();
         if ($existingSPA) {
             // If file exists, return existing
-            if (Storage::disk('public')->exists($existingSPA->file_path)) {
-                $spaUrl = asset('storage/' . $existingSPA->file_path);
-                $existingSPA->makeHidden(['file_path']);
-
-                return response()->json([
-                    'spa' => $existingSPA,
-                    'spa_url' => $spaUrl
-                ], Response::HTTP_OK);
+            if (Storage::disk('local')->exists($existingSPA->file_path)) {
+                return Storage::disk('local')->download($existingSPA->file_path, $fileName, [
+                    'Content-Type' => 'application/pdf',
+                ]);
             } else {
                 return response()->json([
                     'error' => 'Existing SPA file not found on disk.'
@@ -140,24 +113,20 @@ class SpaController extends Controller
         $pdfContent = $pdf->output();
 
         // 5. Store the PDF file on disk
-        $fileName = 'SPA_' . $booking->id . '.pdf';
         $filePath = 'spa_forms/' . $fileName;
-        Storage::disk('public')->put($filePath, $pdfContent);
+        Storage::disk('local')->put($filePath, $pdfContent);
 
         // 6. Create a new SPA record with status = "Pending"
-        $spa = SPA::create([
+        SPA::create([
             'booking_id' => $booking->id,
             'file_path'  => $filePath,
             'status'     => 'Pending',
         ]);
 
-        $spaUrl = asset('storage/' . $filePath);
-        $spa->makeHidden(['file_path']);
-
-        return response()->json([
-            'spa' => $spa,
-            'spa_url' => $spaUrl,
-        ], Response::HTTP_CREATED);
+        return response($pdfContent, Response::HTTP_CREATED, [
+            'Content-Type'        => 'application/pdf',
+            'Content-Disposition' => "attachment; filename=\"{$fileName}\"",
+        ]);
     }
 
     /**
@@ -168,9 +137,9 @@ class SpaController extends Controller
      * can overwrite it. Otherwise, a 409 (Conflict) error is returned.
      *
      * @OA\Post(
-     *     path="/spa/{id}/upload-signed",
+     *     path="/bookings/{bookingId}/spa/upload-signed",
      *     summary="Upload a signed SPA file",
-     *     tags={"SPA"},
+     *     tags={"Bookings/SPA"},
      *     security={{"sanctum":{}}},
      *     @OA\Parameter(
      *         name="id",
@@ -189,7 +158,7 @@ class SpaController extends Controller
      *                     property="signed_spa",
      *                     type="string",
      *                     format="binary",
-     *                     description="The signed SPA file (PDF)"
+     *                     description="The signed SPA file (PDF, max 2 MB)"
      *                 )
      *             )
      *         )
@@ -203,22 +172,18 @@ class SpaController extends Controller
      *                 property="spa",
      *                 type="object",
      *                 description="Updated SPA record",
-     *                 @OA\Property(property="id", type="integer", example=10),
-     *                 @OA\Property(property="booking_id", type="integer", example=42),
-     *                 @OA\Property(property="file_path", type="string", example="spa_forms/SPA_42_signed.pdf"),
-     *                 @OA\Property(property="status", type="string", example="Signed")
-     *             ),
-     *             @OA\Property(
-     *                 property="spa_url",
-     *                 type="string",
-     *                 format="uri",
-     *                 example="http://your-domain.test/storage/spa_forms/SPA_42_signed.pdf"
+     *                 @OA\Property(property="id",                type="integer",   example=10),
+     *                 @OA\Property(property="booking_id",        type="integer",   example=42),
+     *                 @OA\Property(property="status",            type="string",    example="Signed"),
+     *                 @OA\Property(property="signed_at",         type="string",    format="date-time", example="2025-05-03T12:34:56Z"),
+     *                 @OA\Property(property="signed_file_path",  type="string",    example="spa_forms/SPA_42_signed.pdf")
      *             )
      *         )
      *     ),
+     *     @OA\Response(response=403, description="Forbidden – missing permission to upload final SPA"),
      *     @OA\Response(response=404, description="SPA not found"),
-     *     @OA\Response(response=409, description="Conflict if the SPA is already uploaded and user isn't CEO/System Maintenance"),
-     *     @OA\Response(response=422, description="Validation error (e.g., file not a PDF)")
+     *     @OA\Response(response=409, description="Conflict – SPA already signed and user lacks override role"),
+     *     @OA\Response(response=422, description="Validation error (e.g., no file or wrong MIME type)")
      * )
      */
     public function uploadSigned(Request $request, $id)
@@ -240,13 +205,11 @@ class SpaController extends Controller
         }
 
         // 2. Retrieve the SPA record
-        $spa = SPA::find($id);
-        if (!$spa) {
-            return response()->json(['error' => 'SPA not found'], Response::HTTP_NOT_FOUND);
-        }
+        $spa = Booking::findOrFail($id)
+            ->spa()
+            ->firstOrFail();
 
         $role = $user->getRoleNames()->first();
-
         if ($spa->status !== 'Pending' && !in_array($role, ['CEO', 'System Maintenance'])) {
             return response()->json(
                 ['error' => 'The signed SPA was already uploaded'],
@@ -258,65 +221,56 @@ class SpaController extends Controller
         $file = $request->file('signed_spa');
         $fileName = 'SPA_' . $spa->booking_id . '_signed.' . $file->getClientOriginalExtension();
         $filePath = 'spa_forms/' . $fileName;
-
-        Storage::disk('public')->putFileAs('spa_forms', $file, $fileName);
+        Storage::disk('local')->putFileAs('spa_forms', $file, $fileName);
 
         // 4. Update the SPA record
-        $spa->file_path = $filePath;
-        $spa->status = 'Signed';
-        $spa->save();
+        $spa->update([
+            'status'             => 'Signed',
+            'signed_at'          => now(),
+            'signed_file_path'   => $filePath,
+        ]);
 
-        $spaUrl = asset('storage/' . $filePath);
-        $spa->makeHidden(['file_path']);
-
-        return response()->json([
-            'spa' => $spa,
-            'spa_url' => $spaUrl,
-        ], 200);
+        return response()->json(['message' => 'Signed SPA has been successfully uploaded'], Response::HTTP_OK);
     }
 
     /**
      * Approve a signed SPA.
      *
-     * This endpoint sets the SPA status to "Approved" if it is currently "Signed".
-     * It also updates the associated booking's status to "Sold" (or another final status).
+     * Sets the SPA status to "Approved", updates the related Booking and Unit to "Sold",
+     * and records an Approval entry.
      *
      * @OA\Post(
-     *     path="/spa/{id}/approve",
-     *     summary="Approve a signed SPA",
-     *     tags={"SPA"},
+     *     path="/bookings/{bookingId}/spa/approve",
+     *     summary="Approve a signed SPA for a booking",
+     *     tags={"Bookings/SPA"},
      *     security={{"sanctum":{}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
-     *         description="ID of the SPA to approve",
+     *         description="ID of the booking whose SPA will be approved",
      *         required=true,
      *         @OA\Schema(type="integer", example=10)
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="SPA approved successfully",
+     *         description="SPA approved and Unit marked as Sold",
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(
-     *                 property="spa",
-     *                 type="object",
-     *                 description="Updated SPA record",
-     *                 @OA\Property(property="id", type="integer", example=10),
-     *                 @OA\Property(property="booking_id", type="integer", example=42),
-     *                 @OA\Property(property="file_path", type="string", example="spa_forms/SPA_42_signed.pdf"),
-     *                 @OA\Property(property="status", type="string", example="Approved")
-     *             ),
-     *             @OA\Property(
-     *                 property="spa_url",
+     *                 property="message",
      *                 type="string",
-     *                 example="http://your-domain.test/storage/spa_forms/SPA_42_signed.pdf",
-     *                 description="Path or URL to the approved SPA file"
+     *                 example="SPA has been approved and Unit is now Sold!"
      *             )
      *         )
      *     ),
-     *     @OA\Response(response=403, description="Forbidden (user lacks 'approve spa' permission)"),
-     *     @OA\Response(response=404, description="SPA not found"),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Forbidden – user lacks 'approve spa' permission"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="SPA not found for the given booking"
+     *     ),
      *     @OA\Response(
      *         response=422,
      *         description="Cannot approve unless the SPA is Signed or other validation error"
@@ -333,10 +287,9 @@ class SpaController extends Controller
          }
 
         // 1. Retrieve the SPA record
-        $spa = SPA::with('booking')->find($id);
-        if (!$spa) {
-            return response()->json(['error' => 'SPA not found'], 404);
-        }
+        $spa = Booking::findOrFail($id)
+            ->spa()
+            ->firstOrFail();
 
         // 2. Must be "Signed" to approve
         if ($spa->status !== 'Signed') {
@@ -370,12 +323,6 @@ class SpaController extends Controller
             'status'        => 'Approved',
         ]);
 
-        $spaUrl = asset('storage/' . $spa->file_path);
-        $spa->makeHidden(['file_path']);
-
-        return response()->json([
-            'spa' => $spa,
-            'spa_url' => $spaUrl,
-        ], Response::HTTP_OK);
+        return response()->json(['message' => 'SPA has been approved and Unit is now Sold!'], Response::HTTP_OK);
     }
 }
