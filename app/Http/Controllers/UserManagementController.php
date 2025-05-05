@@ -360,6 +360,7 @@ class UserManagementController extends Controller
             'CRM Officer' => 'add crm officer',
             'Sales' => 'add sales',
             'CSO' => 'add cso',
+            'COO' => 'add coo',
             'Accountant' => 'add accountant',
             'CFO' => 'add cfo',
             'CEO' => 'add ceo',
