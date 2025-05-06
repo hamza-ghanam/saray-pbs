@@ -1,76 +1,109 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Sales Offer</title>
     <style>
-        /* Basic styling for the PDF */
-        body { font-family: Arial, sans-serif; font-size: 14px; }
-        .header { text-align: center; margin-bottom: 20px; }
-        .section { margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        table, th, td { border: 1px solid #000; }
-        th, td { padding: 8px; text-align: left; }
+        @page {
+            margin: 150px 45px 100px 45px;
+            size: A4 portrait;
+        }
+
+        body {
+            font-family: DejaVu Sans, sans-serif; font-size: 14px;
+        }
+
+        header {
+            position: fixed;
+            /* shift it up by exactly its own height so its bottom edge lands at the top of the page */
+            top: -1in;
+            left: -45px;
+            width: calc(100% + 45px);
+            /* make it 0.8in tall */
+            height: 0.8in;
+            line-height: 35px;
+        }
+
+        footer {
+            position: fixed;
+            bottom: -65px;
+            left:   -45px;   /* pull into the left margin */
+            right:  -45px;   /* pull into the right margin */
+            height: 50px;
+            text-align: center;
+            line-height: 35px;
+        }
+
+        .footer-bar {
+            background-color: #404040;
+        }
     </style>
+    <title>Reservation Form</title>
 </head>
 <body>
+<header>
+    <img src="{{ public_path('images/Saray_Header.png') }}" alt="Company Header" style="width: 50%;">
+</header>
 
-<h1>Reservation Form</h1>
+<footer>
+    <img src="{{ public_path('images/tail_img.png') }}" alt="Company Footer" style="width: 95%;">
+    <div class="footer-bar">&nbsp;</div>
+</footer>
 
-<!-- Booking Details -->
-<div class="section">
-    <h2>Booking Information</h2>
-    <p><span class="label">Booking ID:</span><span class="value">{{ $booking->id }}</span></p>
-    <p><span class="label">Booking Status:</span><span class="value">{{ $booking->status }}</span></p>
-</div>
+<main>
+    <h1 style="text-align: center;">Reservation Form</h1>
+    {{-- Booking Information --}}
+    <div class="section">
+        <h2>Booking Information</h2>
+        <p><span class="label">Booking ID:</span> {{ $booking->id }}</p>
+        <p><span class="label">Booking Status:</span> {{ $booking->status }}</p>
+    </div>
 
-<!-- Unit Details -->
-<div class="section">
-    <h2>Unit Information</h2>
-    @if($unit)
-        <p><span class="label">Unit #:</span><span class="value">{{ $unit->unit_no }}</span></p>
-        <p><span class="label">Unit Status:</span><span class="value">{{ $unit->status }}</span></p>
-        <p><span class="label">Price:</span><span class="value">{{ number_format($unit->price, 2) }}</span></p>
-        <!-- Add more unit fields as needed -->
-    @else
-        <p>No unit data available.</p>
-    @endif
-</div>
+    {{-- Unit Information --}}
+    <div class="section">
+        <h2>Unit Information</h2>
+        @if($unit)
+            <p><span class="label">Unit #:</span> {{ $unit->unit_no }}</p>
+            <p><span class="label">Unit Status:</span> {{ $unit->status }}</p>
+            <p><span class="label">Price:</span> {{ number_format($unit->price, 2) }}</p>
+        @else
+            <p>No unit data available.</p>
+        @endif
+    </div>
 
-<!-- Customer Info -->
-<div class="section">
-    <h2>Customer Information</h2>
-    @if($customerInfo)
-        <p><span class="label">Name:</span><span class="value">{{ $customerInfo->name }}</span></p>
-        <p><span class="label">Passport Number:</span><span class="value">{{ $customerInfo->passport_number }}</span></p>
-        <p><span class="label">Birth Date:</span><span class="value">{{ $customerInfo->birth_date }}</span></p>
-        <p><span class="label">Nationality:</span><span class="value">{{ $customerInfo->nationality }}</span></p>
-        <!-- Add more customer fields as needed -->
-    @else
-        <p>No customer data available.</p>
-    @endif
-</div>
+    {{-- Customer Information --}}
+    <div class="section">
+        <h2>Customer Information</h2>
+        @if($customerInfo)
+            <p><span class="label">Name:</span> {{ $customerInfo->name }}</p>
+            <p><span class="label">Passport #:</span> {{ $customerInfo->passport_number }}</p>
+            <p><span class="label">Birth Date:</span> {{ $customerInfo->birth_date }}</p>
+            <p><span class="label">Nationality:</span> {{ $customerInfo->nationality }}</p>
+        @else
+            <p>No customer data available.</p>
+        @endif
+    </div>
 
-<!-- Payment Plan -->
-<div class="section">
-    <h2>Payment Plan</h2>
-    @if($paymentPlan)
-        <p><span class="label">Plan Name:</span><span class="value">{{ $paymentPlan->name }}</span></p>
-        <p><span class="label">Selling Price:</span><span class="value">{{ number_format($paymentPlan->selling_price, 2) }}</span></p>
-        <p><span class="label">DLD Fee Percentage:</span><span class="value">{{ $paymentPlan->dld_fee_percentage }}%</span></p>
-        <p><span class="label">Booking Percentage:</span><span class="value">{{ $paymentPlan->booking_percentage }}%</span></p>
-        <!-- Add more payment plan fields or installments as needed -->
-    @else
-        <p>No payment plan assigned.</p>
-    @endif
-</div>
+    {{-- Payment Plan --}}
+    <div class="section">
+        <h2>Payment Plan</h2>
+        @if($paymentPlan)
+            <p><span class="label">Plan Name:</span> {{ $paymentPlan->name }}</p>
+            <p><span class="label">Selling Price:</span> {{ number_format($paymentPlan->selling_price, 2) }}</p>
+            <p><span class="label">DLD Fee %:</span> {{ $paymentPlan->dld_fee_percentage }}%</p>
+            <p><span class="label">Booking %:</span> {{ $paymentPlan->booking_percentage }}%</p>
+        @else
+            <p>No payment plan assigned.</p>
+        @endif
+    </div>
 
-<!-- Signature / Footer -->
-<div class="section">
-    <h3>Signatures</h3>
-    <p>Sales Signature: __________________________</p>
-    <p>Customer Signature: ________________________</p>
-</div>
+    {{-- Signatures --}}
+    <div class="section">
+        <h3>Signatures</h3>
+        <p>Sales Signature: __________________________</p>
+        <p>Customer Signature: ________________________</p>
+    </div>
 
+</main>
 </body>
 </html>
+

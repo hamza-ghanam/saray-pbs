@@ -1,75 +1,150 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Sales Offer</title>
     <style>
-        /* Basic styling for the PDF */
-        body { font-family: Arial, sans-serif; font-size: 14px; }
-        .header { text-align: center; margin-bottom: 20px; }
-        .section { margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        table, th, td { border: 1px solid #000; }
-        th, td { padding: 8px; text-align: left; }
+        @page {
+            margin: 150px 45px 100px 45px;
+            size: A4 portrait;
+        }
+
+        body {
+            font-family: DejaVu Sans, sans-serif; font-size: 14px;
+        }
+
+        header {
+            position: fixed;
+            /* shift it up by exactly its own height so its bottom edge lands at the top of the page */
+            top: -1in;
+            left: -45px;
+            width: calc(100% + 45px);
+            /* make it 0.8in tall */
+            height: 0.8in;
+            line-height: 35px;
+        }
+
+        footer {
+            position: fixed;
+            bottom: -65px;
+            left:   -45px;   /* pull into the left margin */
+            right:  -45px;   /* pull into the right margin */
+            height: 50px;
+            text-align: center;
+            line-height: 35px;
+        }
+
+        .footer-bar {
+            background-color: #404040;
+        }
+
+        .page-break {
+            /* force a page break before (or after) this element */
+            page-break-before: always;
+            /* optional newer syntax */
+            break-before: page;
+        }
     </style>
+    <title>Sales Offer</title>
 </head>
 <body>
 <!-- TODO: Customize the final PDF file -->
-<div class="header">
-    <h1>Sales Offer</h1>
-    <p>Offer Date: {{ $offer_date->format('Y-m-d H:i') }}</p>
-</div>
+<header>
+    <img src="{{ public_path('images/Saray_Header.png') }}" alt="Company Header" style="width: 50%;">
+</header>
 
-<div class="section">
-    <h2>Unit Details</h2>
-    <p><strong>Unit No:</strong> {{ $unit->unit_no }}</p>
-    <p><strong>Unit Type:</strong> {{ $unit->unit_type }}</p>
-    <p><strong>Building:</strong> {{ $unit->building->name ?? 'N/A' }}</p>
-    <p><strong>Price:</strong> ${{ number_format($unit->price, 2) }}</p>
-</div>
+<footer>
+    <img src="{{ public_path('images/tail_img.png') }}" alt="Company Footer" style="width: 95%;">
+    <div class="footer-bar">&nbsp;</div>
+</footer>
 
-@if($notes)
-    <div class="section">
-        <h2>Notes</h2>
-        <p>{{ $notes }}</p>
+<main>
+
+    <div>
+        <h1 style="text-align: center">Sales Offer</h1>
+        <p style="text-align: center">Offer Date: {{ $offer_date->format('Y-m-d H:i') }}</p>
     </div>
-@endif
 
-<div class="section">
-    <h2>Payment Plans</h2>
-    @foreach($paymentPlans as $plan)
-        <h3>{{ $plan->name }}</h3>
-        <p><strong>Selling Price:</strong> ${{ number_format($plan->selling_price, 2) }}</p>
-        <p><strong>Admin Fee:</strong> ${{ number_format($plan->admin_fee, 2) }}</p>
-        <p><strong>EOI:</strong> ${{ number_format($plan->EOI, 2) }}</p>
-        @if($plan->installments->count())
-            <table>
-                <thead>
-                <tr>
-                    <th>Description</th>
-                    <th>Percentage</th>
-                    <th>Date</th>
-                    <th>Amount</th>
-                </tr>
-                </thead>
-                <tbody>
-                @foreach($plan->installments as $installment)
+    <div class="section">
+        <h2>Unit Details</h2>
+        <p><strong>Unit No:</strong> {{ $unit->unit_no }}</p>
+        <p><strong>Unit Type:</strong> {{ $unit->unit_type }}</p>
+        <p><strong>Building:</strong> {{ $unit->building->name ?? 'N/A' }}</p>
+        <p><strong>Price:</strong> ${{ number_format($unit->price, 2) }}</p>
+    </div>
+
+    @if($notes)
+        <div class="section">
+            <h2>Notes</h2>
+            <p>{{ $notes }}</p>
+        </div>
+    @endif
+
+    <div class="section">
+        <h2>Payment Plans</h2>
+        @foreach($paymentPlans as $plan)
+            <h3>Plan: {{ $plan->name }}</h3>
+            <p><strong>Selling Price:</strong> ${{ number_format($plan->selling_price, 2) }}</p>
+            <p><strong>Admin Fee:</strong> ${{ number_format($plan->admin_fee, 2) }}</p>
+            <p><strong>EOI:</strong> ${{ number_format($plan->EOI, 2) }}</p>
+            @if($plan->installments->count())
+                <table>
+                    <thead>
                     <tr>
-                        <td>{{ $installment->description }}</td>
-                        <td>{{ $installment->percentage }}%</td>
-                        <td>{{ \Carbon\Carbon::parse($installment->date)->format('Y-m-d') }}</td>
-                        <td>${{ number_format($installment->amount, 2) }}</td>
+                        <th>Description</th>
+                        <th>Percentage</th>
+                        <th>Date</th>
+                        <th>Amount</th>
                     </tr>
-                @endforeach
-                </tbody>
-            </table>
-        @endif
-    @endforeach
-</div>
+                    </thead>
+                    <tbody>
+                    @foreach($plan->installments as $installment)
+                        <tr>
+                            <td>{{ $installment->description }}</td>
+                            <td>{{ $installment->percentage }}%</td>
+                            <td>{{ \Carbon\Carbon::parse($installment->date)->format('Y-m-d') }}</td>
+                            <td>${{ number_format($installment->amount, 2) }}</td>
+                        </tr>
+                    @endforeach
+                    </tbody>
+                </table>
+            @endif
+        @endforeach
+    </div>
 
-<div class="section">
-    <h2>Generated By</h2>
-    <p>{{ $generated_by->name }} ({{ $generated_by->email }})</p>
-</div>
+    <div class="section">
+        <h2>Generated By</h2>
+        <p>{{ $generated_by->name }} ({{ $generated_by->email }})</p>
+    </div>
+
+    <!-- insert this where you want a clean new page -->
+    <div class="page-break"></div>
+
+    <section>
+        <h1 style="text-align: center;">{{ $unit->unit_type }}</h1>
+        <h3 style="text-align: center;">UNIT NO: {{ $unit->unit_no }}</h3>
+
+        @php
+            $full = storage_path('app/private/' . $unit->floor_plan);
+            $data = base64_encode(file_get_contents($full));
+            $ext  = pathinfo($full, PATHINFO_EXTENSION);
+
+            $fullB =  storage_path('app/private/' . $unit->building->image_path);
+            $dataB = base64_encode(file_get_contents($fullB));
+            $extB  = pathinfo($fullB, PATHINFO_EXTENSION);
+        @endphp
+
+        <img
+            src="data:image/{{ $ext }};base64,{{ $data }}"
+            alt="Floor Plan"
+            style="width:90%; height:auto; margin-bottom: 30px;"
+        >
+        <br/>
+        <img
+            src="data:image/{{ $extB }};base64,{{ $dataB }}"
+            alt="Building image"
+            style="width:90%; height:auto;"
+        >
+    </section>
+</main>
 </body>
 </html>

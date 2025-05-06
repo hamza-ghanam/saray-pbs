@@ -89,6 +89,8 @@ class SalesOfferController extends Controller
             $paymentPlans = $unit->paymentPlans()->with('installments')->get();
         }
 
+        $unit->load('building');
+
         // Prepare the data array for the PDF view.
         $salesOfferData = [
             'unit'         => $unit,

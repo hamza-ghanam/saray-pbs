@@ -1,27 +1,77 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Broker Agreement</title>
     <style>
-        body {
-            font-family: DejaVu Sans, sans-serif;
-            margin: 20px;
-            color: #333;
-            line-height: 1.4;
+        @page {
+            margin: 150px 45px 100px 45px;
+            size: A4 portrait;
         }
-        h1 {
+
+        body {
+            font-family: DejaVu Sans, sans-serif; font-size: 14px;
+        }
+
+        header {
+            position: fixed;
+            /* shift it up by exactly its own height so its bottom edge lands at the top of the page */
+            top: -1in;
+            left: -45px;
+            width: calc(100% + 45px);
+            /* make it 0.8in tall */
+            height: 0.8in;
+            line-height: 35px;
+        }
+
+        footer {
+            position: fixed;
+            bottom: -65px;
+            left:   -45px;   /* pull into the left margin */
+            right:  -45px;   /* pull into the right margin */
+            height: 50px;
+            text-align: center;
+            line-height: 35px;
+        }
+
+        .footer-bar {
+            background-color: #404040;
+        }
+
+        h1, h2, h3 {
             margin-bottom: 10px;
         }
-        .section {
-            margin-bottom: 20px;
-        }
+
         .label {
             font-weight: bold;
         }
+        .value {
+            margin-left: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        th, td {
+            text-align: left;
+            padding: 6px;
+            border: 1px solid #ccc;
+        }
     </style>
+    <title>Broker Agreement</title>
 </head>
 <body>
+<!-- TODO: Customize the final PDF file -->
+<header>
+    <img src="{{ public_path('images/Saray_Header.png') }}" alt="Company Header" style="width: 50%;">
+</header>
+
+<footer>
+    <img src="{{ public_path('images/tail_img.png') }}" alt="Company Footer" style="width: 95%;">
+    <div class="footer-bar">&nbsp;</div>
+</footer>
+
+<main>
 
 <h1>Broker Agreement</h1>
 
@@ -62,6 +112,6 @@
 <div class="section">
     <p>Once we receive your signed agreement, your account will remain in <strong>Pending</strong> status until an administrator reviews and approves it.</p>
 </div>
-
+</main>
 </body>
 </html>
