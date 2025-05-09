@@ -69,7 +69,6 @@ class Booking extends Model
         );
     }
 
-
     public function paymentPlan()
     {
         return $this->belongsTo(PaymentPlan::class, 'payment_plan_id');

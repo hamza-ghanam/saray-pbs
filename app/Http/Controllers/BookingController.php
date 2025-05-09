@@ -381,7 +381,7 @@ class BookingController extends Controller
             'gender' => 'required|string|max:10',
             'nationality' => 'required|string|max:255',
             'unit_id' => 'required|integer|exists:units,id',
-            'payment_plan_id' => 'required|integer|exists:payment_plans,id',
+            'payment_plan_id' => 'sometimes|integer|exists:payment_plans,id',
             'receipt' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048'
         ]);
 
@@ -420,9 +420,15 @@ class BookingController extends Controller
                 ], Response::HTTP_UNPROCESSABLE_ENTITY);
             }
 
-            $paymentPlan = PaymentPlan::where('id', $request->payment_plan_id)
-                ->where('unit_id', $request->unit_id)
-                ->first();
+            if($request->has('payment_plan_id')) {
+                $paymentPlan = PaymentPlan::where('id', $request->payment_plan_id)
+                    ->where('unit_id', $request->unit_id)
+                    ->first();
+            } else {
+                $paymentPlan = PaymentPlan::where('isDefault', true)
+                    ->where('unit_id', $request->unit_id)
+                    ->first();
+            }
 
             if (!$paymentPlan) {
                 throw new \Exception('Selected payment plan does not belong to this unit.');
@@ -493,6 +499,12 @@ class BookingController extends Controller
         $booking->load('customerInfo');
         $booking->makeHidden(['receipt_path']);
         $booking->customerInfo->makeHidden(['document_path']);
+
+        // No need for the passport upload anymore!
+        DB::table('uploads')
+            ->where('token', $request->upload_token)
+            ->where('user_id', $user->id)
+            ->delete();
 
         // Return the newly created booking (with nested customerInfo)
         return response()->json($booking, Response::HTTP_CREATED);

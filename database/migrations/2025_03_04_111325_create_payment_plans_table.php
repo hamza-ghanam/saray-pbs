@@ -25,6 +25,7 @@ return new class extends Migration
             $table->decimal('handover_percentage', 5, 2);   // e.g., 30, 50, or 40
             $table->decimal('construction_percentage', 5, 2); // remainder: 60/30/40 respectively
             $table->date('first_construction_installment_date')->nullable();
+            $table->boolean('isDefault')->default(false);
             $table->timestamps();
             $table->softDeletes();
         });

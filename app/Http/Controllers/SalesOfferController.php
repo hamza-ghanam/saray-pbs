@@ -3,14 +3,23 @@
 namespace App\Http\Controllers;
 
 use App\Models\Unit;
+use App\Services\PaymentPlanService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Symfony\Component\HttpFoundation\Response;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
+use Illuminate\Support\Collection;
 
 class SalesOfferController extends Controller
 {
+    protected PaymentPlanService $paymentPlanService;
+
+    public function __construct(PaymentPlanService $paymentPlanService)
+    {
+        $this->paymentPlanService = $paymentPlanService;
+    }
+
     /**
      * Generate a Sales Offer PDF on the fly.
      *
@@ -52,7 +61,7 @@ class SalesOfferController extends Controller
 
         // Check user permissions (Sales or Broker can generate a sales offer)
         if (!$user->can('generate sales offer')) {
-            abort(403, 'Unauthorized');
+            abort(Response::HTTP_FORBIDDEN, 'Unauthorized');
         }
 
         // Validate incoming request data.
@@ -69,8 +78,6 @@ class SalesOfferController extends Controller
 
         $data = $validator->validated();
 
-        /* TODO: Customize the final PDF file */
-
         // Retrieve the unit along with its building.
         $unit = Unit::with('building')->find($data['unit_id']);
         if (!$unit) {
@@ -85,17 +92,36 @@ class SalesOfferController extends Controller
                 ->with('installments')
                 ->get();
         } else {
-            // Load all payment plans for the unit.
-            $paymentPlans = $unit->paymentPlans()->with('installments')->get();
+            // Load the default payment plan of the unit.
+            $paymentPlans = $unit
+                ->paymentPlans()
+                ->where('isDefault', true)
+                ->with('installments')
+                ->get();
         }
 
         $unit->load('building');
+
+        $allPlans = collect();
+
+        foreach ($paymentPlans as $paymentPlan) {
+            // Generate the installments for this plan
+            $installments = $this->paymentPlanService
+                ->generateInstallmentsForPaymentPlan($unit, $paymentPlan);
+
+            // Attach the freshly‐created Installment collection as the "installments" relation
+            $paymentPlan->setRelation('installments', $installments);
+
+            // Push the plan (with its new installments) onto our master collection
+            $allPlans->push($paymentPlan);
+        }
+
 
         // Prepare the data array for the PDF view.
         $salesOfferData = [
             'unit'         => $unit,
             'notes'        => $data['notes'] ?? null,
-            'paymentPlans' => $paymentPlans,
+            'paymentPlans' => $allPlans,
             'generated_by' => $user,
             'offer_date'   => now(),
         ];

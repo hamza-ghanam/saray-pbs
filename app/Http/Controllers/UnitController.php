@@ -28,7 +28,7 @@ use Symfony\Component\HttpFoundation\Response;
  *     schema="Unit",
  *     type="object",
  *     title="Unit",
- *     required={"prop_type", "unit_type", "unit_no", "floor", "suite_area", "total_area", "furnished", "unit_view", "price", "building_id", "status", "completion_date", "dld_fee_percentage", "admin_fee", "EOI", "FCID"},
+ *     required={"prop_type", "unit_type", "unit_no", "floor", "suite_area", "total_area", "furnished", "unit_view", "price", "building_id", "status", "completion_date", "dld_fee_percentage", "admin_fee", "EOI"},
  *     @OA\Property(property="id", type="integer", readOnly=true, example=1),
  *     @OA\Property(property="prop_type", type="string", example="Residential"),
  *     @OA\Property(property="unit_type", type="string", example="Apartment"),
@@ -49,7 +49,6 @@ use Symfony\Component\HttpFoundation\Response;
  *     @OA\Property(property="dld_fee_percentage", type="number", format="float", example=65000.00),
  *     @OA\Property(property="admin_fee", type="number", format="float", example=4000.00),
  *     @OA\Property(property="EOI", type="number", format="float", example=100000.00),
- *     @OA\Property(property="FCID", type="string", format="date", example="2025-03-15"),
  *     @OA\Property(property="created_at", type="string", format="date-time", readOnly=true, example="2025-01-01T00:00:00Z"),
  *     @OA\Property(property="updated_at", type="string", format="date-time", readOnly=true, example="2025-01-02T00:00:00Z"),
  *     @OA\Property(property="deleted_at", type="string", format="date-time", nullable=true, readOnly=true, example=null)
@@ -58,7 +57,7 @@ use Symfony\Component\HttpFoundation\Response;
  *     schema="UnitInput",
  *     type="object",
  *     title="Unit Input",
- *     required={"prop_type", "unit_type", "unit_no", "floor", "suite_area", "furnished", "unit_view", "price", "building_id", "status", "completion_date", "dld_fee_percentage", "admin_fee", "FCID"},
+ *     required={"prop_type", "unit_type", "unit_no", "floor", "suite_area", "furnished", "unit_view", "price", "building_id", "status", "completion_date", "dld_fee_percentage", "admin_fee"},
  *     @OA\Property(property="prop_type", type="string", example="Residential"),
  *     @OA\Property(property="unit_type", type="string", example="Apartment"),
  *     @OA\Property(property="unit_no", type="string", example="A101"),
@@ -77,7 +76,6 @@ use Symfony\Component\HttpFoundation\Response;
  *     @OA\Property(property="dld_fee_percentage", type="number", format="float", example=65000.00),
  *     @OA\Property(property="admin_fee", type="number", format="float", example=4000.00),
  *     @OA\Property(property="EOI", type="number", format="float", example=100000.00),
- *     @OA\Property(property="FCID", type="string", format="date", example="2025-03-15")
  * )
  *  * @OA\Schema(
  *     schema="UnitWithPaymentPlans",
@@ -401,12 +399,12 @@ class UnitController extends Controller
             'furnished' => 'required|boolean',
             'unit_view' => 'required|string|max:255',
             'price' => 'required|numeric',
-            'completion_date' => 'required|date|after_or_equal:today',
+            'completion_date' => 'nullable|date|after_or_equal:today',
             'floor_plan' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'dld_fee_percentage' => 'required|numeric',
             'admin_fee' => 'required|numeric',
             'EOI' => 'nullable|numeric',
-            'FCID' => 'required|date',
+            'FCID' => 'nullable|date',
         ]);
 
         if ($validator->fails()) {
@@ -436,7 +434,7 @@ class UnitController extends Controller
             $unit->dld_fee_percentage = $data['dld_fee_percentage'];
             $unit->admin_fee = $data['admin_fee'];
             $unit->EOI = $data['EOI'] ?? 100000;
-            $unit->FCID = $data['FCID'];
+            //$unit->FCID = $data['FCID'];
             $unit->floor_plan = $unit->floor_plan ? route('units.floor_plan', ['id' => $unit->id]) : null;
 
             // Dispatch an event to generate payment plans for the unit.

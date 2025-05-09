@@ -43,6 +43,21 @@
             /* optional newer syntax */
             break-before: page;
         }
+
+        .striped-table {
+            width: 100%;
+
+            border-collapse: collapse;
+        }
+        .striped-table th,
+        .striped-table td {
+            padding: 8px;
+            border-bottom: 1px solid #ccc;    /* gray line */
+            text-align: left;
+        }
+        .striped-table tr:nth-child(even) {
+            background-color: #f9f9f9;        /* subtle stripe */
+        }
     </style>
     <title>Sales Offer</title>
 </head>
@@ -66,10 +81,10 @@
 
     <div class="section">
         <h2>Unit Details</h2>
-        <p><strong>Unit No:</strong> {{ $unit->unit_no }}</p>
+        <h4>Unit No:{{ $unit->unit_no }}</h4>
         <p><strong>Unit Type:</strong> {{ $unit->unit_type }}</p>
         <p><strong>Building:</strong> {{ $unit->building->name ?? 'N/A' }}</p>
-        <p><strong>Price:</strong> ${{ number_format($unit->price, 2) }}</p>
+        <p><strong>Price:</strong> AED {{ number_format($unit->price, 2) }}</p>
     </div>
 
     @if($notes)
@@ -83,11 +98,17 @@
         <h2>Payment Plans</h2>
         @foreach($paymentPlans as $plan)
             <h3>Plan: {{ $plan->name }}</h3>
-            <p><strong>Selling Price:</strong> ${{ number_format($plan->selling_price, 2) }}</p>
-            <p><strong>Admin Fee:</strong> ${{ number_format($plan->admin_fee, 2) }}</p>
-            <p><strong>EOI:</strong> ${{ number_format($plan->EOI, 2) }}</p>
+            <p><strong>Selling Price:</strong> AED {{ number_format($plan->selling_price, 2) }}</p>
+            <p><strong>Admin Fee:</strong> AED {{ number_format($plan->admin_fee, 2) }}</p>
+            <p><strong>DLD fee:</strong> {{ (int) $plan->dld_fee_percentage }}% | AED {{ $plan->dld_fee }}</p>
             @if($plan->installments->count())
-                <table>
+                <table class="striped-table">
+                    <colgroup>
+                        <col>
+                        <col style="width:5%">
+                        <col><
+                        <col>
+                    </colgroup>
                     <thead>
                     <tr>
                         <th>Description</th>
@@ -97,12 +118,23 @@
                     </tr>
                     </thead>
                     <tbody>
+                    <tr>
+                        <td>Expression of interest (EOI)</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>AED {{ number_format($plan->EOI, 2) }}</td>
+                    </tr>
                     @foreach($plan->installments as $installment)
                         <tr>
-                            <td>{{ $installment->description }}</td>
+                            <td>
+                                {{ $installment->description }}
+                                @if($loop->first)
+                                    <br/><small>({{ (int) $installment->percentage }}% + {{ (int) $plan->dld_fee_percentage }}% DLD fee + Admin fee - EOI)</small>
+                                @endif
+                            </td>
                             <td>{{ $installment->percentage }}%</td>
                             <td>{{ \Carbon\Carbon::parse($installment->date)->format('Y-m-d') }}</td>
-                            <td>${{ number_format($installment->amount, 2) }}</td>
+                            <td>AED {{ number_format($installment->amount, 2) }}</td>
                         </tr>
                     @endforeach
                     </tbody>
@@ -123,27 +155,23 @@
         <h1 style="text-align: center;">{{ $unit->unit_type }}</h1>
         <h3 style="text-align: center;">UNIT NO: {{ $unit->unit_no }}</h3>
 
-        @php
-            $full = storage_path('app/private/' . $unit->floor_plan);
-            $data = base64_encode(file_get_contents($full));
-            $ext  = pathinfo($full, PATHINFO_EXTENSION);
+        @if($unit->floor_plan)
+            <img
+                src="file:///{{ str_replace('\\','/', storage_path('app/private/' . $unit->floor_plan)) }}"
+                alt="Floor Plan"
+                style="width:90%; height:auto; margin-bottom: 30px;"
+            >
+        @endif
 
-            $fullB =  storage_path('app/private/' . $unit->building->image_path);
-            $dataB = base64_encode(file_get_contents($fullB));
-            $extB  = pathinfo($fullB, PATHINFO_EXTENSION);
-        @endphp
-
-        <img
-            src="data:image/{{ $ext }};base64,{{ $data }}"
-            alt="Floor Plan"
-            style="width:90%; height:auto; margin-bottom: 30px;"
-        >
         <br/>
-        <img
-            src="data:image/{{ $extB }};base64,{{ $dataB }}"
-            alt="Building image"
-            style="width:90%; height:auto;"
-        >
+
+        @if($unit->building->image_path)
+            <img
+                src="file:///{{ str_replace('\\','/', storage_path('app/private/' . $unit->building->image_path)) }}"
+                alt="Building image"
+                style="width:90%; height:auto;"
+            >
+        @endif
     </section>
 </main>
 </body>

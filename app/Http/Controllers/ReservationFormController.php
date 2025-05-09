@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Approval;
 use App\Models\Booking;
 use App\Models\ReservationForm;
+use App\Services\PaymentPlanService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
@@ -14,6 +15,13 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ReservationFormController extends Controller
 {
+    protected PaymentPlanService $paymentPlanService;
+
+    public function __construct(PaymentPlanService $paymentPlanService)
+    {
+        $this->paymentPlanService = $paymentPlanService;
+    }
+
     /**
      * Generate or retrieve a Reservation Form for a booking.
      *
@@ -80,6 +88,11 @@ class ReservationFormController extends Controller
                 'error' => 'Cannot generate RF unless unit is "Booked" and booking is in "RF Pending", "SPA Pending", or "Booked" status.'
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
+
+        // Generate installments
+        $installments = $this->paymentPlanService
+            ->generateInstallmentsForPaymentPlan($booking->unit, $booking->paymentPlan);
+        $booking->paymentPlan->setRelation('installments', $installments);
 
         $fileName = 'RF_' . $booking->id . '.pdf';
 

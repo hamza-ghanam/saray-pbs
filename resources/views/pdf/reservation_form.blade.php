@@ -36,6 +36,21 @@
         .footer-bar {
             background-color: #404040;
         }
+
+        .striped-table {
+            width: 100%;
+
+            border-collapse: collapse;
+        }
+        .striped-table th,
+        .striped-table td {
+            padding: 8px;
+            border-bottom: 1px solid #ccc;    /* gray line */
+            text-align: left;
+        }
+        .striped-table tr:nth-child(even) {
+            background-color: #f9f9f9;        /* subtle stripe */
+        }
     </style>
     <title>Reservation Form</title>
 </head>
@@ -88,13 +103,56 @@
         <h2>Payment Plan</h2>
         @if($paymentPlan)
             <p><span class="label">Plan Name:</span> {{ $paymentPlan->name }}</p>
-            <p><span class="label">Selling Price:</span> {{ number_format($paymentPlan->selling_price, 2) }}</p>
-            <p><span class="label">DLD Fee %:</span> {{ $paymentPlan->dld_fee_percentage }}%</p>
-            <p><span class="label">Booking %:</span> {{ $paymentPlan->booking_percentage }}%</p>
+            <p><span class="label">Selling Price:</span> AED {{ number_format($paymentPlan->selling_price, 2) }}</p>
+            <p><strong>Admin Fee:</strong> AED {{ number_format($paymentPlan->admin_fee, 2) }}</p>
+            <p><span class="label">DLD Fee:</span> {{ (int) $paymentPlan->dld_fee_percentage }}% | AED {{ $paymentPlan->dld_fee }}</p>
+            <p><span class="label">Booking:</span> {{ $paymentPlan->booking_percentage }}%</p>
         @else
             <p>No payment plan assigned.</p>
         @endif
+
+        @if($paymentPlan->installments->count())
+            <table class="striped-table">
+                <colgroup>
+                    <col>
+                    <col style="width:5%">
+                    <col><
+                    <col>
+                </colgroup>
+                <thead>
+                <tr>
+                    <th>Description</th>
+                    <th>Percentage</th>
+                    <th>Date</th>
+                    <th>Amount</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>Expression of interest (EOI)</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>AED {{ number_format($paymentPlan->EOI, 2) }}</td>
+                </tr>
+                @foreach($paymentPlan->installments as $installment)
+                    <tr>
+                        <td>
+                            {{ $installment->description }}
+                            @if($loop->first)
+                                <br/><small>({{ (int) $installment->percentage }}% + {{ (int) $plan->dld_fee_percentage }}% DLD fee + Admin fee - EOI)</small>
+                            @endif
+                        </td>
+                        <td>{{ $installment->percentage }}%</td>
+                        <td>{{ \Carbon\Carbon::parse($installment->date)->format('Y-m-d') }}</td>
+                        <td>AED {{ number_format($installment->amount, 2) }}</td>
+                    </tr>
+                @endforeach
+                </tbody>
+            </table>
+        @endif
     </div>
+
+
 
     {{-- Signatures --}}
     <div class="section">

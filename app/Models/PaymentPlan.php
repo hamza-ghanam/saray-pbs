@@ -27,6 +27,7 @@ class PaymentPlan extends Model
         'handover_percentage',
         'construction_percentage',
         'first_construction_installment_date',
+        'isDefault'
     ];
 
     /**
@@ -42,7 +43,8 @@ class PaymentPlan extends Model
      */
     public function installments()
     {
-        return $this->hasMany(Installment::class);
+        return $this->hasMany(Installment::class)
+            ->orderBy('date');
     }
 
     /**

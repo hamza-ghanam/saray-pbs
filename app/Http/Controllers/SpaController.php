@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Approval;
 use App\Models\Booking;
 use App\Models\SPA; // Your SPA model
+use App\Services\PaymentPlanService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
@@ -14,6 +15,13 @@ use Symfony\Component\HttpFoundation\Response;
 
 class SpaController extends Controller
 {
+    protected PaymentPlanService $paymentPlanService;
+
+    public function __construct(PaymentPlanService $paymentPlanService)
+    {
+        $this->paymentPlanService = $paymentPlanService;
+    }
+
     /**
      * Generate or download an SPA PDF for a booking.
      *
@@ -84,6 +92,11 @@ class SpaController extends Controller
                 'error' => 'Cannot generate SPA unless unit is "Booked" and booking is in "SPA Pending" or "Booked" status.'
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
+
+        // Generate installments
+        $installments = $this->paymentPlanService
+            ->generateInstallmentsForPaymentPlan($booking->unit, $booking->paymentPlan);
+        $booking->paymentPlan->setRelation('installments', $installments);
 
         $fileName = 'SPA_' . $booking->id . '.pdf';
 
