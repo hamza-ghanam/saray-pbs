@@ -13,9 +13,9 @@ class Booking extends Model
         'unit_id',
         'customer_info_id',
         'status',
+        'discount',
+        'price',
         'receipt_path',
-        'confirmed_by',
-        'confirmed_at',
         'created_by', // Make sure it's fillable
         'payment_plan_id',
     ];
@@ -72,5 +72,14 @@ class Booking extends Model
     public function paymentPlan()
     {
         return $this->belongsTo(PaymentPlan::class, 'payment_plan_id');
+    }
+
+    /**
+     * Each booking gets its own set of installments
+     */
+    public function installments()
+    {
+        return $this->hasMany(Installment::class)
+            ->orderBy('date');
     }
 }

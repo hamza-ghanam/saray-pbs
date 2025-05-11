@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StorePaymentPlanRequest;
 use App\Models\PaymentPlan;
 use App\Models\Installment;
 use App\Models\Unit;
+use App\Services\PaymentPlanService;
 use Carbon\Carbon;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
@@ -115,48 +117,114 @@ class PaymentPlanController extends Controller
     }
 
     /**
-     * Store a custom payment plan for a unit.
-     *
      * @OA\Post(
-     *     path="/payment-plans",
-     *     summary="Create a custom payment plan",
-     *     tags={"PaymentPlan"},
-     *     security={{"sanctum":{}}},
+     *     path="/api/units/{unit}/payment-plans",
+     *     summary="Persist a payment‐plan definition (blocks) for a unit",
+     *     tags={"PaymentPlans"},
+     *
+     *     @OA\Parameter(
+     *         name="unit",
+     *         in="path",
+     *         description="ID of the unit",
+     *         required=true,
+     *         @OA\Schema(type="integer", format="int64")
+     *     ),
+     *
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={
-     *                  "unit_id", "name", "dld_fee_percentage", "admin_fee", "discount", "EOI",
-     *                  "booking_percentage", "handover_percentage", "first_construction_installment_date"
-     *             },
-     *             @OA\Property(property="unit_id", type="integer", example=5),
-     *             @OA\Property(property="name", type="string", example="Custom 60/40 Plan"),
-     *             @OA\Property(property="dld_fee_percentage", type="number", format="float", example=4),
-     *             @OA\Property(property="admin_fee", type="number", format="float", example=4000.00),
-     *             @OA\Property(property="discount", type="number", format="float", example=10, description="Discount as a percentage"),
-     *             @OA\Property(property="EOI", type="number", format="float", example=100000.00),
-     *             @OA\Property(property="booking_percentage", type="number", format="float", example=20),
-     *             @OA\Property(property="handover_percentage", type="number", format="float", example=40),
-     *             @OA\Property(property="first_construction_installment_date", type="string", format="date", example="2025-04-15")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=201,
-     *         description="Payment plan created successfully",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="payment_plan", ref="#/components/schemas/PaymentPlan"),
+     *             required={"name","dld_fee_percentage","admin_fee","EOI","blocks"},
+     *             @OA\Property(property="name", type="string", example="Custom Plan A"),
+     *             @OA\Property(property="dld_fee_percentage", type="number", format="float", example=2),
+     *             @OA\Property(property="admin_fee", type="number", format="float", example=500),
+     *             @OA\Property(property="EOI", type="number", format="float", example=10000),
      *             @OA\Property(
-     *                 property="installments",
+     *                 property="blocks",
      *                 type="array",
-     *                 @OA\Items(ref="#/components/schemas/Installment")
+     *                 @OA\Items(
+     *                     type="object",
+     *                     required={"type","description","percentage"},
+     *                     @OA\Property(property="type", type="string", enum={"single","repeat"}, example="single"),
+     *                     @OA\Property(property="description", type="string", example="Booking Deposit"),
+     *                     @OA\Property(property="percentage", type="number", format="float", example=10),
+     *                     @OA\Property(property="date", type="string", format="date", nullable=true, example="2025-06-01"),
+     *                     @OA\Property(
+     *                         property="offset",
+     *                         type="object",
+     *                         nullable=true,
+     *                         @OA\Property(property="months", type="integer", example=0),
+     *                         @OA\Property(property="years", type="integer", example=0)
+     *                     ),
+     *                     @OA\Property(
+     *                         property="start_offset",
+     *                         type="object",
+     *                         nullable=true,
+     *                         @OA\Property(property="months", type="integer", example=2),
+     *                         @OA\Property(property="years", type="integer", example=0)
+     *                     ),
+     *                     @OA\Property(
+     *                         property="frequency",
+     *                         type="object",
+     *                         nullable=true,
+     *                         @OA\Property(property="months", type="integer", example=1),
+     *                         @OA\Property(property="years", type="integer", example=0)
+     *                     ),
+     *                     @OA\Property(property="count", type="integer", nullable=true, example=30)
+     *                 )
      *             )
      *         )
      *     ),
-     *     @OA\Response(response=422, description="Validation error"),
-     *     @OA\Response(response=403, description="Forbidden")
+     *
+     *     @OA\Response(
+     *         response=201,
+     *         description="Payment plan definition stored",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="id", type="integer", example=123),
+     *             @OA\Property(property="unit_id", type="integer", example=15),
+     *             @OA\Property(property="name", type="string", example="Custom Plan A"),
+     *             @OA\Property(property="blocks", type="array",
+     *                 @OA\Items(type="object")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="The given data was invalid."),
+     *             @OA\Property(
+     *                 property="errors",
+     *                 type="object",
+     *                 additionalProperties=@OA\Schema(type="array", @OA\Items(type="string"))
+     *             )
+     *         )
+     *     )
      * )
      */
-    public function store(Request $request)
+    public function store(
+        StorePaymentPlanRequest $request,
+        PaymentPlanService $builder
+    ) {
+        // 1) Grab the validated data
+        $data = $request->validated();
+
+        // 3) Create the plan header _and_ persist the blocks JSON
+        $plan = $builder->createFromDefinition([
+            'name'               => $data['name'],
+            'dld_fee_percentage' => $data['dld_fee_percentage'],
+            'admin_fee'          => $data['admin_fee'],
+            'EOI'                => $data['EOI'],
+            'blocks'             => $data['blocks'],   // <— store the blocks definition
+        ]);
+
+        // 4) Return the saved plan (including the blocks field)
+        return response()->json(
+            $plan->fresh(),               // reload to include any casts/defaults
+            Response::HTTP_CREATED
+        );
+    }
+
+    public function storeOLD(Request $request)
     {
         $user = $request->user();
         if (!$user->can('add payment plan')) {
@@ -172,11 +240,9 @@ class PaymentPlanController extends Controller
         $paymentPlan = PaymentPlan::create([
             'unit_id'                     => $data['unit_id'],
             'name'                        => $data['name'],
-            'selling_price'               => $priceData['sellingPrice'],
             'dld_fee_percentage'          => $data['dld_fee_percentage'],
             'dld_fee'                     => $priceData['dldFee'],
             'admin_fee'                   => $data['admin_fee'],
-            'discount'                    => $data['discount'],
             'EOI'                         => $data['EOI'],
             'booking_percentage'          => $data['booking_percentage'],
             'handover_percentage'         => $data['handover_percentage'],
@@ -214,12 +280,11 @@ class PaymentPlanController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"unit_id", "name", "dld_fee_percentage", "admin_fee", "discount", "EOI", "booking_percentage", "handover_percentage", "first_construction_installment_date"},
+     *             required={"unit_id", "name", "dld_fee_percentage", "admin_fee", "EOI", "booking_percentage", "handover_percentage", "first_construction_installment_date"},
      *             @OA\Property(property="unit_id", type="integer", example=5),
      *             @OA\Property(property="name", type="string", example="Custom 60/40 Plan Updated"),
      *             @OA\Property(property="dld_fee_percentage", type="number", format="float", example=4),
      *             @OA\Property(property="admin_fee", type="number", format="float", example=4000.00),
-     *             @OA\Property(property="discount", type="number", format="float", example=50000.00),
      *             @OA\Property(property="EOI", type="number", format="float", example=100000.00),
      *             @OA\Property(property="booking_percentage", type="number", format="float", example=20),
      *             @OA\Property(property="handover_percentage", type="number", format="float", example=40),
@@ -250,11 +315,9 @@ class PaymentPlanController extends Controller
         $paymentPlan->update([
             'unit_id'                     => $data['unit_id'],
             'name'                        => $data['name'],
-            'selling_price'               => $priceData['sellingPrice'],
             'dld_fee_percentage'          => $data['dld_fee_percentage'],
             'dld_fee'                     => $priceData['dldFee'],
             'admin_fee'                   => $data['admin_fee'],
-            'discount'                    => $data['discount'],
             'EOI'                         => $data['EOI'],
             'booking_percentage'          => $data['booking_percentage'],
             'handover_percentage'         => $data['handover_percentage'],
@@ -319,7 +382,6 @@ class PaymentPlanController extends Controller
             'name'                        => 'required|string|max:255',
             'dld_fee_percentage'          => 'required|numeric',
             'admin_fee'                   => 'required|numeric',
-            'discount'                    => 'required|numeric',
             'EOI'                         => 'required|numeric',
             'booking_percentage'          => 'required|numeric|min:0|max:100',
             'handover_percentage'         => 'required|numeric|min:0|max:100',
@@ -338,7 +400,7 @@ class PaymentPlanController extends Controller
     {
         $unit = Unit::findOrFail($data['unit_id']);
         $sellingPrice = $unit->price;
-        $effectivePrice = $sellingPrice * (1 - ($data['discount'] / 100));
+        $effectivePrice = $sellingPrice;
         $constructionPercentage = 100 - ($data['booking_percentage'] + $data['handover_percentage']);
         $dldFee = $effectivePrice * ($data['dld_fee_percentage'] / 100);
 

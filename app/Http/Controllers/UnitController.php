@@ -95,14 +95,12 @@ use Symfony\Component\HttpFoundation\Response;
  *     schema="PaymentPlan",
  *     type="object",
  *     title="Payment Plan",
- *     required={"unit_id", "name", "selling_price", "dld_fee_percentage", "admin_fee", "discount", "EOI", "booking_percentage", "handover_percentage", "construction_percentage", "first_construction_installment_date"},
+ *     required={"unit_id", "name", "dld_fee_percentage", "admin_fee", "EOI", "booking_percentage", "handover_percentage", "construction_percentage", "first_construction_installment_date"},
  *     @OA\Property(property="id", type="integer", readOnly=true, example=1),
  *     @OA\Property(property="unit_id", type="integer", example=1),
  *     @OA\Property(property="name", type="string", example="60/40"),
- *     @OA\Property(property="selling_price", type="number", format="float", example=350000.00),
  *     @OA\Property(property="dld_fee_percentage", type="number", format="float", example=65000.00),
  *     @OA\Property(property="admin_fee", type="number", format="float", example=4000.00),
- *     @OA\Property(property="discount", type="number", format="float", example=0),
  *     @OA\Property(property="EOI", type="number", format="float", example=100000.00),
  *     @OA\Property(property="booking_percentage", type="number", format="float", example=20),
  *     @OA\Property(property="handover_percentage", type="number", format="float", example=40),
@@ -399,12 +397,7 @@ class UnitController extends Controller
             'furnished' => 'required|boolean',
             'unit_view' => 'required|string|max:255',
             'price' => 'required|numeric',
-            'completion_date' => 'nullable|date|after_or_equal:today',
             'floor_plan' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'dld_fee_percentage' => 'required|numeric',
-            'admin_fee' => 'required|numeric',
-            'EOI' => 'nullable|numeric',
-            'FCID' => 'nullable|date',
         ]);
 
         if ($validator->fails()) {
@@ -430,15 +423,11 @@ class UnitController extends Controller
             // Create the Unit record.
             $unit = Unit::create($data);
 
-            // Update unit with additional payment fields
-            $unit->dld_fee_percentage = $data['dld_fee_percentage'];
-            $unit->admin_fee = $data['admin_fee'];
-            $unit->EOI = $data['EOI'] ?? 100000;
-            //$unit->FCID = $data['FCID'];
             $unit->floor_plan = $unit->floor_plan ? route('units.floor_plan', ['id' => $unit->id]) : null;
 
             // Dispatch an event to generate payment plans for the unit.
-            event(new UnitCreated($unit));
+            // No need to link unit with PP
+            // event(new UnitCreated($unit));
 
             // Eager-load the payment plans (and their installments) and the building that contains the unit.
             $unit->load('paymentPlans.installments', 'building', 'approvals');

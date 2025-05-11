@@ -30,13 +30,13 @@ class GenerateInstallmentsForPaymentPlans
      */
     public function handle(SalesOfferBookingCreated $event)
     {
-        // Generate the three default payment plans for the unit.
-        $installments = $this->paymentPlanService->generateInstallmentsForPaymentPlan($event->unit, $event->payment_plan);
+        // Generate the three default payment plans for the unit.up
+       // $installments = $this->paymentPlanService->generateInstallmentsDefaultPaymentPlan($event->unit, $event->payment_plan);
 
         // Example: log the IDs of the installments
-        Log::info('Default installments generated', [
-            'payment_plan_id' => $event->payment_plan->id,
-            'installment_ids' => $installments->pluck('id')->all(),
-        ]);
+//        Log::info('Default installments generated', [
+//            'payment_plan_id' => $event->payment_plan->id,
+//            'installment_ids' => $installments->pluck('id')->all(),
+//        ]);
     }
 }

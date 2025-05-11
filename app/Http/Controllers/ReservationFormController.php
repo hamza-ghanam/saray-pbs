@@ -38,7 +38,7 @@ class ReservationFormController extends Controller
      *         in="path",
      *         description="ID of the booking for which to generate or retrieve the RF",
      *         required=true,
-     *         @OA\Schema(type="integer", example=42)
+     *         @OA\Schema(type="integer", format="int64", example=42)
      *     ),
      *     @OA\Response(
      *         response=200,
@@ -89,11 +89,6 @@ class ReservationFormController extends Controller
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        // Generate installments
-        $installments = $this->paymentPlanService
-            ->generateInstallmentsForPaymentPlan($booking->unit, $booking->paymentPlan);
-        $booking->paymentPlan->setRelation('installments', $installments);
-
         $fileName = 'RF_' . $booking->id . '.pdf';
 
         // 4. Ensure only one Reservation Form per booking (or per unit)
@@ -111,6 +106,14 @@ class ReservationFormController extends Controller
                 ], Response::HTTP_NOT_FOUND);
             }
         }
+
+        $booking->paymentPlan->dld_fee = round($booking->price * ($booking->paymentPlan->dld_fee_percentage / 100), 2);
+
+        $booking->load([
+            'installments.paymentPlan',     // for grouping and headings
+            'unit',
+            'customerInfo'
+        ]);
 
         // 5. Generate the PDF (using your Blade view)
         $pdf = PDF::loadView('pdf.reservation_form', [

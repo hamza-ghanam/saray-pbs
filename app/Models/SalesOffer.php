@@ -10,7 +10,9 @@ class SalesOffer extends Model
         'unit_id',
         'generated_by_id',
         'offer_date',
-        'notes'
+        'offer_price',
+        'discount',
+        'notes',
     ];
 
     public function unit()

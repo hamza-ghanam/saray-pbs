@@ -17,17 +17,19 @@ class PaymentPlan extends Model
     protected $fillable = [
         'unit_id',
         'name',
-        'selling_price',
         'dld_fee_percentage',
-        'dld_fee',
         'admin_fee',
-        'discount',
         'EOI',
         'booking_percentage',
         'handover_percentage',
         'construction_percentage',
         'first_construction_installment_date',
-        'isDefault'
+        'isDefault',
+        'blocks',
+    ];
+
+    protected $casts = [
+        'blocks' => 'array',
     ];
 
     /**

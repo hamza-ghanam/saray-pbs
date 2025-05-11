@@ -29,6 +29,6 @@ class GeneratePaymentPlansForUnit
     public function handle(UnitCreated $event)
     {
         // Generate the three default payment plans for the unit.
-        $this->paymentPlanService->generateDefaultPlansForUnit($event->unit);
+        //$this->paymentPlanService->generateDefaultPlansForUnit($event->unit);
     }
 }

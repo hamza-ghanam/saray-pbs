@@ -120,8 +120,11 @@
         @if($paymentPlan)
             <p><span class="label">Plan Name:</span><span class="value">{{ $paymentPlan->name }}</span></p>
             <p><span class="label">Selling Price:</span><span class="value">{{ number_format($paymentPlan->selling_price, 2) }}</span></p>
-            <p><span class="label">Booking Percentage:</span><span class="value">{{ $paymentPlan->booking_percentage }}%</span></p>
-            <p><span class="label">DLD Fee Percentage:</span><span class="value">{{ $paymentPlan->dld_fee_percentage }}%</span></p>
+            @if($booking->discount > 0)
+                <p><span class="label">Discount:</span> {{ $booking->discount }}%</p>
+                <p><span class="label">Effective Price:</span> AED {{ number_format($booking->price, 2) }}</p>
+            @endif
+            <p><strong>DLD Fee:</strong> {{ (int) $paymentPlan->dld_fee_percentage }}% | AED {{ number_format($paymentPlan->dld_fee, 2) }}</p>
             <!-- Add more payment plan details or installments if needed -->
         @else
             <p>No payment plan assigned.</p>

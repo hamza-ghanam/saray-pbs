@@ -76,7 +76,7 @@
 
     <div>
         <h1 style="text-align: center">Sales Offer</h1>
-        <p style="text-align: center">Offer Date: {{ $offer_date->format('Y-m-d H:i') }}</p>
+        <p style="text-align: center">Offer Date: {{ $salesOffer->offer_date->format('Y-m-d H:i') }}</p>
     </div>
 
     <div class="section">
@@ -98,9 +98,13 @@
         <h2>Payment Plans</h2>
         @foreach($paymentPlans as $plan)
             <h3>Plan: {{ $plan->name }}</h3>
-            <p><strong>Selling Price:</strong> AED {{ number_format($plan->selling_price, 2) }}</p>
+            <p><strong>Selling Price:</strong> AED {{ number_format($unit->price, 2) }}</p>
+            @if($salesOffer->discount > 0)
+                <p><strong>Discount:</strong> {{ $salesOffer->discount }}%</p>
+                <p><strong>Effective Price:</strong> AED {{ number_format($salesOffer->offer_price, 2) }}</p>
+            @endif
             <p><strong>Admin Fee:</strong> AED {{ number_format($plan->admin_fee, 2) }}</p>
-            <p><strong>DLD fee:</strong> {{ (int) $plan->dld_fee_percentage }}% | AED {{ $plan->dld_fee }}</p>
+            <p><strong>DLD fee:</strong> {{ (int) $plan->dld_fee_percentage }}% | AED {{ number_format($plan->dld_fee, 2) }}</p>
             @if($plan->installments->count())
                 <table class="striped-table">
                     <colgroup>
@@ -132,7 +136,13 @@
                                     <br/><small>({{ (int) $installment->percentage }}% + {{ (int) $plan->dld_fee_percentage }}% DLD fee + Admin fee - EOI)</small>
                                 @endif
                             </td>
-                            <td>{{ $installment->percentage }}%</td>
+                            <td>
+                                @if($loop->first)
+                                    -
+                                @else
+                                    {{ $installment->percentage }}%
+                                @endif
+                            </td>
                             <td>{{ \Carbon\Carbon::parse($installment->date)->format('Y-m-d') }}</td>
                             <td>AED {{ number_format($installment->amount, 2) }}</td>
                         </tr>
@@ -140,6 +150,7 @@
                     </tbody>
                 </table>
             @endif
+            <br/>
         @endforeach
     </div>
 

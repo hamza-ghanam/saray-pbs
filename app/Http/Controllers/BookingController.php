@@ -8,6 +8,7 @@ use App\Models\CustomerInfo;
 use App\Models\PaymentPlan;
 use App\Models\Unit;
 use App\Models\User;
+use App\Services\PaymentPlanService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -25,6 +26,13 @@ use App\Services\FCMService;
 class BookingController extends Controller
 {
     use AuthorizesRequests;
+
+    protected PaymentPlanService $paymentPlanService;
+
+    public function __construct(PaymentPlanService $paymentPlanService)
+    {
+        $this->paymentPlanService = $paymentPlanService;
+    }
 
 //    protected $fcmService;
 
@@ -277,10 +285,10 @@ class BookingController extends Controller
     }
 
     /**
-     * Book a unit with provided customer information and an optional payment receipt.
+     * Book a unit with provided customer information, optional receipt, discount and notes.
      *
      * @OA\Post(
-     *     path="/book-unit",
+     *     path="/bookings/book-unit",
      *     summary="Book a unit by creating CustomerInfo and Booking with status Pre-Booked",
      *     tags={"Bookings"},
      *     security={{"sanctum":{}}},
@@ -296,8 +304,7 @@ class BookingController extends Controller
      *                     "birth_date",
      *                     "gender",
      *                     "nationality",
-     *                     "unit_id",
-     *                     "payment_plan_id"
+     *                     "unit_id"
      *                 },
      *                 @OA\Property(
      *                     property="upload_token",
@@ -319,7 +326,8 @@ class BookingController extends Controller
      *                 @OA\Property(
      *                     property="payment_plan_id",
      *                     type="integer",
-     *                     description="ID of the selected payment plan for this unit",
+     *                     description="ID of the selected payment plan for this booking",
+     *                     nullable=true,
      *                     example=5
      *                 ),
      *                 @OA\Property(
@@ -327,6 +335,19 @@ class BookingController extends Controller
      *                     type="string",
      *                     format="binary",
      *                     description="Optional payment receipt (pdf, jpg, jpeg, png)"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="discount",
+     *                     type="number",
+     *                     format="float",
+     *                     description="Optional discount percentage to apply to the booking price",
+     *                     example=5
+     *                 ),
+     *                 @OA\Property(
+     *                     property="notes",
+     *                     type="string",
+     *                     description="Optional free-text notes",
+     *                     example="Customer requests early handover."
      *                 )
      *             )
      *         )
@@ -336,27 +357,23 @@ class BookingController extends Controller
      *         description="Booking created successfully",
      *         @OA\JsonContent(
      *             type="object",
-     *             @OA\Property(property="id",                type="integer", format="int64", example=42),
-     *             @OA\Property(property="unit_id",           type="integer", example=12),
-     *             @OA\Property(property="payment_plan_id",   type="integer", example=5),
-     *             @OA\Property(property="customer_info_id",  type="integer", example=7),
-     *             @OA\Property(property="status",            type="string",  example="Pre-Booked"),
-     *             @OA\Property(property="created_by",        type="integer", example=3),
-     *             @OA\Property(property="created_at",        type="string",  format="date-time", example="2025-05-02T16:00:00Z"),
-     *             @OA\Property(property="updated_at",        type="string",  format="date-time", example="2025-05-02T16:00:00Z"),
-     *             @OA\Property(
-     *                 property="customer_info",
-     *                 type="object",
-     *                 description="Nested CustomerInfo record",
-     *                 @OA\Property(property="id",              type="integer", format="int64", example=7),
-     *                 @OA\Property(property="name",            type="string",             example="John Smith"),
-     *                 @OA\Property(property="passport_number", type="string",             example="N001234567"),
-     *                 @OA\Property(property="birth_date",      type="string", format="date", example="1992-02-05"),
-     *                 @OA\Property(property="gender",          type="string",             example="Male"),
-     *                 @OA\Property(property="nationality",     type="string",             example="Syrian Arab Republic"),
-     *                 @OA\Property(property="created_at",      type="string", format="date-time", example="2025-05-02T15:58:00Z"),
-     *                 @OA\Property(property="updated_at",      type="string", format="date-time", example="2025-05-02T15:58:00Z")
-     *             )
+     *             @OA\Property(property="id",               type="integer", format="int64", example=42),
+     *             @OA\Property(property="unit_id",          type="integer", example=12),
+     *             @OA\Property(property="payment_plan_id",  type="integer", example=5),
+     *             @OA\Property(property="customer_info_id", type="integer", example=7),
+     *             @OA\Property(property="status",           type="string",  example="Pre-Booked"),
+     *             @OA\Property(property="price",            type="number", format="float", description="Net booking price after discount", example=1535432.00),
+     *             @OA\Property(property="discount",         type="number", format="float", description="Discount percentage applied", example=5),
+     *             @OA\Property(property="notes",            type="string", description="Booking notes", example="Customer requests early handover."),
+     *             @OA\Property(property="created_by",       type="integer", example=3),
+     *             @OA\Property(property="receipt_path",     type="string",  description="Stored path of the receipt", example="receipts/abc123.pdf"),
+     *             @OA\Property(property="installments",     type="array",
+     *                 @OA\Items(ref="#/components/schemas/Installment")
+     *             ),
+     *             @OA\Property(property="customer_info", ref="#/components/schemas/CustomerInfo"),
+     *             @OA\Property(property="unit",          ref="#/components/schemas/Unit"),
+     *             @OA\Property(property="created_at",    type="string", format="date-time", example="2025-05-02T16:00:00Z"),
+     *             @OA\Property(property="updated_at",    type="string", format="date-time", example="2025-05-02T16:00:00Z")
      *         )
      *     ),
      *     @OA\Response(response=422, description="Validation error"),
@@ -382,7 +399,8 @@ class BookingController extends Controller
             'nationality' => 'required|string|max:255',
             'unit_id' => 'required|integer|exists:units,id',
             'payment_plan_id' => 'sometimes|integer|exists:payment_plans,id',
-            'receipt' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048'
+            'receipt' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'discount' => 'nullable|numeric|min:0|max:100',
         ]);
 
         if ($validator->fails()) {
@@ -421,13 +439,9 @@ class BookingController extends Controller
             }
 
             if($request->has('payment_plan_id')) {
-                $paymentPlan = PaymentPlan::where('id', $request->payment_plan_id)
-                    ->where('unit_id', $request->unit_id)
-                    ->first();
+                $paymentPlan = PaymentPlan::where('id', $request->payment_plan_id)->first();
             } else {
-                $paymentPlan = PaymentPlan::where('isDefault', true)
-                    ->where('unit_id', $request->unit_id)
-                    ->first();
+                $paymentPlan = PaymentPlan::where('isDefault', true)->first();
             }
 
             if (!$paymentPlan) {
@@ -454,15 +468,43 @@ class BookingController extends Controller
                 'document_path' => $passportPath,
             ]);
 
+            $basePrice = $unit->price;
+            $discountPct = $request->input('discount', 0);
+            $bookingPrice   = $discountPct > 0
+                ? round($basePrice * (1 - $discountPct / 100), 2)
+                : $basePrice;
+
             // Create the Booking record with status "Pre-Booked"
             $booking = Booking::create([
-                'unit_id' => $request->unit_id,
-                'payment_plan_id' => $paymentPlan->id,
-                'customer_info_id' => $customerInfo->id,
-                'status' => 'Pre-Booked',
-                'receipt_path' => $receiptPath,
-                'created_by' => $request->user()->id,
+                'unit_id'           => $request->unit_id,
+                'payment_plan_id'   => $paymentPlan->id,
+                'customer_info_id'  => $customerInfo->id,
+                'status'            => 'Pre-Booked',
+                'discount'          => $discountPct,
+                'price'             => $bookingPrice,
+                'receipt_path'      => $receiptPath,
+                'created_by'        => $request->user()->id,
             ]);
+
+            $booking->paymentPlan->dld_fee = round($booking->price * ($booking->paymentPlan->dld_fee_percentage / 100), 2);
+
+            // Generate installments of PP for this Booking
+            $template = $this->paymentPlanService->generateInstallments($booking->unit, $booking->paymentPlan, $discountPct);
+
+            // convert to plain arrays
+            $rows = $template->map(fn($i) => [
+                'payment_plan_id' => $paymentPlan->id,
+                'description' => $i->description,
+                'percentage'  => $i->percentage,
+                'date'        => $i->date,
+                'amount'      => $i->amount,
+            ])->all();
+
+            // persist them under the booking
+            $saved = $booking->installments()->createMany($rows);
+
+            // attach for immediate use
+            $booking->setRelation('installments', $saved);
 
             $unit->status = 'Pre-Booked';
             $unit->status_changed_at = now();

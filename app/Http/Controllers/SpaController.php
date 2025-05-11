@@ -33,13 +33,15 @@ class SpaController extends Controller
      *     summary="Generate or download an SPA PDF for a booking",
      *     tags={"Bookings/SPA"},
      *     security={{"sanctum":{}}},
+     *
      *     @OA\Parameter(
      *         name="bookingId",
      *         in="path",
      *         description="ID of the booking for which to generate or retrieve the SPA",
      *         required=true,
-     *         @OA\Schema(type="integer", example=42)
+     *         @OA\Schema(type="integer", format="int64", example=42)
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Existing SPA PDF streamed successfully",
@@ -60,7 +62,7 @@ class SpaController extends Controller
      *     ),
      *     @OA\Response(
      *         response=422,
-     *         description="Validation or business-rule error (e.g. unit/booking status invalid)"
+     *         description="Validation or business-rule error (e.g., unit/booking status invalid)"
      *     )
      * )
      */
@@ -93,11 +95,6 @@ class SpaController extends Controller
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        // Generate installments
-        $installments = $this->paymentPlanService
-            ->generateInstallmentsForPaymentPlan($booking->unit, $booking->paymentPlan);
-        $booking->paymentPlan->setRelation('installments', $installments);
-
         $fileName = 'SPA_' . $booking->id . '.pdf';
 
         // 3. Ensure only one SPA per booking
@@ -114,6 +111,14 @@ class SpaController extends Controller
                 ], Response::HTTP_NOT_FOUND);
             }
         }
+
+        $booking->paymentPlan->dld_fee = round($booking->price * ($booking->paymentPlan->dld_fee_percentage / 100), 2);
+
+        $booking->load([
+            'installments.paymentPlan',     // for grouping and headings
+            'unit',
+            'customerInfo'
+        ]);
 
         // 4. Generate the PDF (using your Blade view, e.g. 'pdf.spa')
         $pdf = PDF::loadView('pdf.spa', [

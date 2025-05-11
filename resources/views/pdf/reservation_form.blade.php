@@ -102,16 +102,19 @@
     <div class="section">
         <h2>Payment Plan</h2>
         @if($paymentPlan)
-            <p><span class="label">Plan Name:</span> {{ $paymentPlan->name }}</p>
-            <p><span class="label">Selling Price:</span> AED {{ number_format($paymentPlan->selling_price, 2) }}</p>
+            <p><strong>Plan Name:</strong> {{ $paymentPlan->name }}</p>
+            <p><strong>Selling Price:</strong> AED {{ number_format($unit->price, 2) }}</p>
+            @if($booking->discount > 0)
+                <p><strong>Discount:</strong> {{ $booking->discount }}%</p>
+                <p><strong>Effective Price:</strong> AED {{ number_format($booking->price, 2) }}</p>
+            @endif
             <p><strong>Admin Fee:</strong> AED {{ number_format($paymentPlan->admin_fee, 2) }}</p>
-            <p><span class="label">DLD Fee:</span> {{ (int) $paymentPlan->dld_fee_percentage }}% | AED {{ $paymentPlan->dld_fee }}</p>
-            <p><span class="label">Booking:</span> {{ $paymentPlan->booking_percentage }}%</p>
+            <p><strong>DLD Fee:</strong> {{ (int) $paymentPlan->dld_fee_percentage }}% | AED {{ number_format($paymentPlan->dld_fee, 2) }}</p>
         @else
             <p>No payment plan assigned.</p>
         @endif
 
-        @if($paymentPlan->installments->count())
+        @if($booking->installments->count())
             <table class="striped-table">
                 <colgroup>
                     <col>
@@ -134,15 +137,15 @@
                     <td>-</td>
                     <td>AED {{ number_format($paymentPlan->EOI, 2) }}</td>
                 </tr>
-                @foreach($paymentPlan->installments as $installment)
+                @foreach($booking->installments as $installment)
                     <tr>
                         <td>
                             {{ $installment->description }}
                             @if($loop->first)
-                                <br/><small>({{ (int) $installment->percentage }}% + {{ (int) $plan->dld_fee_percentage }}% DLD fee + Admin fee - EOI)</small>
+                                <br/><small>({{ (int) $installment->percentage }}% + {{ (int) $paymentPlan->dld_fee_percentage }}% DLD fee + Admin fee - EOI)</small>
                             @endif
                         </td>
-                        <td>{{ $installment->percentage }}%</td>
+                        <td>{{ (int) $installment->percentage }}%</td>
                         <td>{{ \Carbon\Carbon::parse($installment->date)->format('Y-m-d') }}</td>
                         <td>AED {{ number_format($installment->amount, 2) }}</td>
                     </tr>

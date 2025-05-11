@@ -20,6 +20,7 @@ class Installment extends Model
         'percentage',
         'date',
         'amount',
+        'booking_id',
     ];
 
     /**
@@ -28,5 +29,10 @@ class Installment extends Model
     public function paymentPlan()
     {
         return $this->belongsTo(PaymentPlan::class);
+    }
+
+    public function booking()
+    {
+        return $this->belongsTo(Booking::class);
     }
 }

@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\PaymentPlan;
+use App\Models\SalesOffer;
 use App\Models\Unit;
 use App\Services\PaymentPlanService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
@@ -26,32 +29,67 @@ class SalesOfferController extends Controller
      * @OA\Post(
      *     path="/sales-offers/generate",
      *     summary="Generate a sales offer PDF on the fly",
-     *     tags={"SalesOffer"},
+     *     tags={"SalesOffers"},
      *     security={{"sanctum":{}}},
+     *
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
      *             required={"unit_id"},
-     *             @OA\Property(property="unit_id", type="integer", example=1),
-     *             @OA\Property(property="notes", type="string", example="Special discount offer"),
+     *             @OA\Property(
+     *                 property="unit_id",
+     *                 type="integer",
+     *                 format="int64",
+     *                 description="ID of the unit to base the offer on",
+     *                 example=1
+     *             ),
      *             @OA\Property(
      *                 property="payment_plan_ids",
      *                 type="array",
-     *                 @OA\Items(type="integer", example=3),
-     *                 description="Optional array of Payment Plan IDs to include"
+     *                 description="Optional list of payment plan IDs to include in this offer",
+     *                 @OA\Items(type="integer", format="int64", example=3)
+     *             ),
+     *             @OA\Property(
+     *                 property="discount",
+     *                 type="number",
+     *                 format="float",
+     *                 description="Optional discount percentage to apply to the offer price",
+     *                 example=5
+     *             ),
+     *             @OA\Property(
+     *                 property="notes",
+     *                 type="string",
+     *                 description="Optional free-text notes for this offer",
+     *                 example="Special end-of-year promotion"
+     *             )
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Sales offer PDF streamed successfully",
+     *         @OA\MediaType(mediaType="application/pdf")
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unit not found"
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="The given data was invalid."),
+     *             @OA\Property(
+     *                 property="errors",
+     *                 type="object",
+     *                 additionalProperties=@OA\Schema(type="array", @OA\Items(type="string"))
      *             )
      *         )
      *     ),
      *     @OA\Response(
-     *         response=200,
-     *         description="Sales offer generated successfully",
-     *         @OA\MediaType(
-     *             mediaType="application/pdf"
-     *         )
-     *     ),
-     *     @OA\Response(response=404, description="Unit not found"),
-     *     @OA\Response(response=422, description="Validation error"),
-     *     @OA\Response(response=403, description="Forbidden")
+     *         response=403,
+     *         description="Forbidden (no permission to generate sales offer)"
+     *     )
      * )
      */
     public function generate(Request $request)
@@ -66,10 +104,11 @@ class SalesOfferController extends Controller
 
         // Validate incoming request data.
         $validator = Validator::make($request->all(), [
-            'unit_id'            => 'required|exists:units,id',
-            'notes'              => 'nullable|string',
-            'payment_plan_ids'   => 'nullable|array',
+            'unit_id' => 'required|exists:units,id',
+            'notes' => 'nullable|string',
+            'payment_plan_ids' => 'nullable|array',
             'payment_plan_ids.*' => 'integer|exists:payment_plans,id',
+            'discount' => 'nullable|numeric|min:0|max:100'
         ]);
 
         if ($validator->fails()) {
@@ -79,51 +118,56 @@ class SalesOfferController extends Controller
         $data = $validator->validated();
 
         // Retrieve the unit along with its building.
-        $unit = Unit::with('building')->find($data['unit_id']);
-        if (!$unit) {
-            return response()->json(['message' => 'Unit not found'], Response::HTTP_NOT_FOUND);
+        $unit = Unit::with('building')->findOrFail($data['unit_id']);
+
+        // Start a fresh query on PaymentPlan
+        $plansQuery = PaymentPlan::query();
+
+        if (!empty($data['payment_plan_ids'])) {
+            // user supplied specific plan IDs
+            $plansQuery->whereIn('id', $data['payment_plan_ids']);
+        } else {
+            // fallback to the globally-defined default plan(s)
+            $plansQuery->where('isDefault', true);
         }
 
-        // Determine which Payment Plans to include.
-        if (isset($data['payment_plan_ids'])) {
-            // Load only the selected payment plans that belong to this unit.
-            $paymentPlans = $unit->paymentPlans()
-                ->whereIn('id', $data['payment_plan_ids'])
-                ->with('installments')
-                ->get();
-        } else {
-            // Load the default payment plan of the unit.
-            $paymentPlans = $unit
-                ->paymentPlans()
-                ->where('isDefault', true)
-                ->with('installments')
-                ->get();
-        }
+        $paymentPlans = $plansQuery->get();
 
         $unit->load('building');
 
-        $allPlans = collect();
+        $basePrice = $unit->price;
+        $discountPct = $request->input('discount', 0);
+        $offerPrice   = $discountPct > 0
+            ? round($basePrice * (1 - $discountPct / 100), 2)
+            : $basePrice;
 
-        foreach ($paymentPlans as $paymentPlan) {
-            // Generate the installments for this plan
-            $installments = $this->paymentPlanService
-                ->generateInstallmentsForPaymentPlan($unit, $paymentPlan);
+        // 4) Generate installments for each
+        $allPlans = $paymentPlans->map(function (PaymentPlan $plan) use ($offerPrice, $discountPct, $unit) {
+            $insts = $this->paymentPlanService->generateInstallments($unit, $plan, $discountPct);
 
-            // Attach the freshly‐created Installment collection as the "installments" relation
-            $paymentPlan->setRelation('installments', $installments);
+            // override the relationship in-memory
+            $plan->setRelation('installments', $insts);
+            $plan->dld_fee = round($offerPrice * ($plan->dld_fee_percentage / 100), 2);
 
-            // Push the plan (with its new installments) onto our master collection
-            $allPlans->push($paymentPlan);
-        }
+            return $plan;
+        });
 
+        $salesOffer = SalesOffer::create([
+            'unit_id'           => $unit->id,
+            'generated_by_id'   => auth()->id(),
+            'offer_date'        => now(),
+            'offer_price'       => $offerPrice,
+            'discount'          => $discountPct,
+            'notes'             => $request->input('notes', null),
+        ]);
 
         // Prepare the data array for the PDF view.
         $salesOfferData = [
-            'unit'         => $unit,
-            'notes'        => $data['notes'] ?? null,
-            'paymentPlans' => $allPlans,
-            'generated_by' => $user,
-            'offer_date'   => now(),
+            'salesOffer'    => $salesOffer,
+            'unit'          => $unit,
+            'notes'         => $data['notes'] ?? null,
+            'paymentPlans'  => $allPlans,
+            'generated_by'  => $user,
         ];
 
         // Generate a PDF from the view 'pdf.sales_offer'.
