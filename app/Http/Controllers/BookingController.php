@@ -292,6 +292,7 @@ class BookingController extends Controller
      *     summary="Book a unit by creating CustomerInfo and Booking with status Pre-Booked",
      *     tags={"Bookings"},
      *     security={{"sanctum":{}}},
+     *
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\MediaType(
@@ -306,74 +307,76 @@ class BookingController extends Controller
      *                     "nationality",
      *                     "unit_id"
      *                 },
-     *                 @OA\Property(
-     *                     property="upload_token",
-     *                     type="string",
-     *                     description="Token referencing the previously uploaded passport file",
-     *                     example="3d1ad42a-49bb-4171-83af-f67dd83e97c3"
-     *                 ),
-     *                 @OA\Property(property="name",            type="string", maxLength=255, example="John Smith"),
-     *                 @OA\Property(property="passport_number", type="string", maxLength=50,  example="N001234567"),
-     *                 @OA\Property(property="birth_date",      type="string", format="date", example="1992-02-05"),
-     *                 @OA\Property(property="gender",          type="string", maxLength=10,  example="Male"),
-     *                 @OA\Property(property="nationality",     type="string", maxLength=255, example="Syrian Arab Republic"),
-     *                 @OA\Property(
-     *                     property="unit_id",
-     *                     type="integer",
-     *                     description="ID of the unit to be booked",
-     *                     example=12
-     *                 ),
-     *                 @OA\Property(
-     *                     property="payment_plan_id",
-     *                     type="integer",
-     *                     description="ID of the selected payment plan for this booking",
-     *                     nullable=true,
-     *                     example=5
-     *                 ),
-     *                 @OA\Property(
-     *                     property="receipt",
-     *                     type="string",
-     *                     format="binary",
-     *                     description="Optional payment receipt (pdf, jpg, jpeg, png)"
-     *                 ),
-     *                 @OA\Property(
-     *                     property="discount",
-     *                     type="number",
-     *                     format="float",
-     *                     description="Optional discount percentage to apply to the booking price",
-     *                     example=5
-     *                 ),
-     *                 @OA\Property(
-     *                     property="notes",
-     *                     type="string",
-     *                     description="Optional free-text notes",
-     *                     example="Customer requests early handover."
-     *                 )
+     *                 @OA\Property(property="upload_token", type="string", example="3d1ad42a-49bb-4171-83af-f67dd83e97c3"),
+     *                 @OA\Property(property="name", type="string", maxLength=255, example="John Smith"),
+     *                 @OA\Property(property="passport_number", type="string", maxLength=50, example="N001234567"),
+     *                 @OA\Property(property="birth_date", type="string", format="date", example="1992-02-05"),
+     *                 @OA\Property(property="gender", type="string", maxLength=10, example="Male"),
+     *                 @OA\Property(property="nationality", type="string", maxLength=255, example="Syrian Arab Republic"),
+     *                 @OA\Property(property="unit_id", type="integer", example=12),
+     *                 @OA\Property(property="payment_plan_id", type="integer", nullable=true, example=5),
+     *                 @OA\Property(property="receipt", type="string", format="binary"),
+     *                 @OA\Property(property="discount", type="number", format="float", example=5),
+     *                 @OA\Property(property="notes", type="string", example="Customer requests early handover.")
      *             )
      *         )
      *     ),
+     *
      *     @OA\Response(
      *         response=201,
      *         description="Booking created successfully",
      *         @OA\JsonContent(
      *             type="object",
-     *             @OA\Property(property="id",               type="integer", format="int64", example=42),
-     *             @OA\Property(property="unit_id",          type="integer", example=12),
-     *             @OA\Property(property="payment_plan_id",  type="integer", example=5),
+     *             required={"id", "unit_id", "payment_plan_id", "customer_info_id", "status", "price", "created_by", "created_at", "updated_at"},
+     *             @OA\Property(property="id", type="integer", example=42),
+     *             @OA\Property(property="unit_id", type="integer", example=12),
+     *             @OA\Property(property="payment_plan_id", type="integer", example=5),
      *             @OA\Property(property="customer_info_id", type="integer", example=7),
-     *             @OA\Property(property="status",           type="string",  example="Pre-Booked"),
-     *             @OA\Property(property="price",            type="number", format="float", description="Net booking price after discount", example=1535432.00),
-     *             @OA\Property(property="discount",         type="number", format="float", description="Discount percentage applied", example=5),
-     *             @OA\Property(property="notes",            type="string", description="Booking notes", example="Customer requests early handover."),
-     *             @OA\Property(property="created_by",       type="integer", example=3),
-     *             @OA\Property(property="receipt_path",     type="string",  description="Stored path of the receipt", example="receipts/abc123.pdf"),
-     *             @OA\Property(property="installments",     type="array",
-     *                 @OA\Items(ref="#/components/schemas/Installment")
+     *             @OA\Property(property="status", type="string", example="Pre-Booked"),
+     *             @OA\Property(property="price", type="number", format="float", example=1535432.00),
+     *             @OA\Property(property="discount", type="number", format="float", example=5),
+     *             @OA\Property(property="notes", type="string", example="Customer requests early handover."),
+     *             @OA\Property(property="created_by", type="integer", example=3),
+     *             @OA\Property(property="receipt_path", type="string", example="receipts/abc123.pdf"),
+     *             @OA\Property(
+     *                 property="installments",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     required={"payment_plan_id", "description", "percentage", "date", "amount"},
+     *                     @OA\Property(property="payment_plan_id", type="integer", example=5),
+     *                     @OA\Property(property="description", type="string", example="Booking Installment"),
+     *                     @OA\Property(property="percentage", type="number", format="float", example=20),
+     *                     @OA\Property(property="date", type="string", format="date", example="2025-01-01"),
+     *                     @OA\Property(property="amount", type="number", format="float", example=293173.12)
+     *                 )
      *             ),
-     *             @OA\Property(property="customer_info", ref="#/components/schemas/CustomerInfo"),
-     *             @OA\Property(property="unit",          ref="#/components/schemas/Unit"),
-     *             @OA\Property(property="created_at",    type="string", format="date-time", example="2025-05-02T16:00:00Z"),
-     *             @OA\Property(property="updated_at",    type="string", format="date-time", example="2025-05-02T16:00:00Z")
+     *             @OA\Property(
+     *                 property="customer_info",
+     *                 type="object",
+     *                 required={"id", "name", "passport_number", "birth_date", "gender", "nationality", "created_at", "updated_at"},
+     *                 @OA\Property(property="id", type="integer", example=7),
+     *                 @OA\Property(property="name", type="string", example="John Smith"),
+     *                 @OA\Property(property="passport_number", type="string", example="N001234567"),
+     *                 @OA\Property(property="birth_date", type="string", format="date", example="1992-02-05"),
+     *                 @OA\Property(property="gender", type="string", example="Male"),
+     *                 @OA\Property(property="nationality", type="string", example="Syrian Arab Republic"),
+     *                 @OA\Property(property="created_at", type="string", format="date-time", example="2025-05-02T15:58:00Z"),
+     *                 @OA\Property(property="updated_at", type="string", format="date-time", example="2025-05-02T15:58:00Z")
+     *             ),
+     *             @OA\Property(
+     *                 property="unit",
+     *                 type="object",
+     *                 required={"id", "unit_no", "price", "status"},
+     *                 @OA\Property(property="id", type="integer", example=12),
+     *                 @OA\Property(property="unit_no", type="string", example="A-302"),
+     *                 @OA\Property(property="price", type="number", format="float", example=1621554.74),
+     *                 @OA\Property(property="status", type="string", example="Available"),
+     *                 @OA\Property(property="created_at", type="string", format="date-time", example="2025-05-01T12:00:00Z"),
+     *                 @OA\Property(property="updated_at", type="string", format="date-time", example="2025-05-01T12:30:00Z")
+     *             ),
+     *             @OA\Property(property="created_at", type="string", format="date-time", example="2025-05-02T16:00:00Z"),
+     *             @OA\Property(property="updated_at", type="string", format="date-time", example="2025-05-02T16:00:00Z")
      *         )
      *     ),
      *     @OA\Response(response=422, description="Validation error"),

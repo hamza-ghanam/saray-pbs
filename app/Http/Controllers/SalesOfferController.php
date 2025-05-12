@@ -24,11 +24,11 @@ class SalesOfferController extends Controller
     }
 
     /**
-     * Generate a Sales Offer PDF on the fly.
+     * Generate and download a Sales Offer PDF for a unit.
      *
      * @OA\Post(
-     *     path="/sales-offers/generate",
-     *     summary="Generate a sales offer PDF on the fly",
+     *     path="/api/sales-offers/generate",
+     *     summary="Generate and stream a Sales Offer PDF",
      *     tags={"SalesOffers"},
      *     security={{"sanctum":{}}},
      *
@@ -36,60 +36,28 @@ class SalesOfferController extends Controller
      *         required=true,
      *         @OA\JsonContent(
      *             required={"unit_id"},
-     *             @OA\Property(
-     *                 property="unit_id",
-     *                 type="integer",
-     *                 format="int64",
-     *                 description="ID of the unit to base the offer on",
-     *                 example=1
-     *             ),
+     *             @OA\Property(property="unit_id", type="integer", example=1),
+     *             @OA\Property(property="notes", type="string", example="Special discount offer", nullable=true),
      *             @OA\Property(
      *                 property="payment_plan_ids",
      *                 type="array",
-     *                 description="Optional list of payment plan IDs to include in this offer",
-     *                 @OA\Items(type="integer", format="int64", example=3)
+     *                 @OA\Items(type="integer", example=3),
+     *                 description="Optional list of Payment Plan IDs to include"
      *             ),
-     *             @OA\Property(
-     *                 property="discount",
-     *                 type="number",
-     *                 format="float",
-     *                 description="Optional discount percentage to apply to the offer price",
-     *                 example=5
-     *             ),
-     *             @OA\Property(
-     *                 property="notes",
-     *                 type="string",
-     *                 description="Optional free-text notes for this offer",
-     *                 example="Special end-of-year promotion"
-     *             )
+     *             @OA\Property(property="discount", type="number", format="float", minimum=0, maximum=100, example=5, description="Optional discount percentage")
      *         )
      *     ),
      *
      *     @OA\Response(
      *         response=200,
-     *         description="Sales offer PDF streamed successfully",
-     *         @OA\MediaType(mediaType="application/pdf")
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Unit not found"
-     *     ),
-     *     @OA\Response(
-     *         response=422,
-     *         description="Validation error",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="The given data was invalid."),
-     *             @OA\Property(
-     *                 property="errors",
-     *                 type="object",
-     *                 additionalProperties=@OA\Schema(type="array", @OA\Items(type="string"))
-     *             )
+     *         description="Sales Offer PDF streamed successfully",
+     *         @OA\MediaType(
+     *             mediaType="application/pdf"
      *         )
      *     ),
-     *     @OA\Response(
-     *         response=403,
-     *         description="Forbidden (no permission to generate sales offer)"
-     *     )
+     *     @OA\Response(response=403, description="Forbidden"),
+     *     @OA\Response(response=404, description="Unit not found"),
+     *     @OA\Response(response=422, description="Validation error")
      * )
      */
     public function generate(Request $request)

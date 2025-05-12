@@ -647,14 +647,14 @@
                 ]
             }
         },
-        "/book-unit": {
+        "/bookings/book-unit": {
             "post": {
                 "tags": [
                     "Bookings"
                 ],
                 "summary": "Book a unit by creating CustomerInfo and Booking with status Pre-Booked",
-                "description": "Book a unit with provided customer information and an optional payment receipt.",
-                "operationId": "aaa866a8927a322b2bdb7d1eb709f9f7",
+                "description": "Book a unit with provided customer information, optional receipt, discount and notes.",
+                "operationId": "5c506914f01cb885d4e38f9806bcd14b",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -667,12 +667,10 @@
                                     "birth_date",
                                     "gender",
                                     "nationality",
-                                    "unit_id",
-                                    "payment_plan_id"
+                                    "unit_id"
                                 ],
                                 "properties": {
                                     "upload_token": {
-                                        "description": "Token referencing the previously uploaded passport file",
                                         "type": "string",
                                         "example": "3d1ad42a-49bb-4171-83af-f67dd83e97c3"
                                     },
@@ -702,19 +700,26 @@
                                         "example": "Syrian Arab Republic"
                                     },
                                     "unit_id": {
-                                        "description": "ID of the unit to be booked",
                                         "type": "integer",
                                         "example": 12
                                     },
                                     "payment_plan_id": {
-                                        "description": "ID of the selected payment plan for this unit",
                                         "type": "integer",
-                                        "example": 5
+                                        "example": 5,
+                                        "nullable": true
                                     },
                                     "receipt": {
-                                        "description": "Optional payment receipt (pdf, jpg, jpeg, png)",
                                         "type": "string",
                                         "format": "binary"
+                                    },
+                                    "discount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 5
+                                    },
+                                    "notes": {
+                                        "type": "string",
+                                        "example": "Customer requests early handover."
                                     }
                                 },
                                 "type": "object"
@@ -728,10 +733,20 @@
                         "content": {
                             "application/json": {
                                 "schema": {
+                                    "required": [
+                                        "id",
+                                        "unit_id",
+                                        "payment_plan_id",
+                                        "customer_info_id",
+                                        "status",
+                                        "price",
+                                        "created_by",
+                                        "created_at",
+                                        "updated_at"
+                                    ],
                                     "properties": {
                                         "id": {
                                             "type": "integer",
-                                            "format": "int64",
                                             "example": 42
                                         },
                                         "unit_id": {
@@ -750,26 +765,80 @@
                                             "type": "string",
                                             "example": "Pre-Booked"
                                         },
+                                        "price": {
+                                            "type": "number",
+                                            "format": "float",
+                                            "example": 1535432
+                                        },
+                                        "discount": {
+                                            "type": "number",
+                                            "format": "float",
+                                            "example": 5
+                                        },
+                                        "notes": {
+                                            "type": "string",
+                                            "example": "Customer requests early handover."
+                                        },
                                         "created_by": {
                                             "type": "integer",
                                             "example": 3
                                         },
-                                        "created_at": {
+                                        "receipt_path": {
                                             "type": "string",
-                                            "format": "date-time",
-                                            "example": "2025-05-02T16:00:00Z"
+                                            "example": "receipts/abc123.pdf"
                                         },
-                                        "updated_at": {
-                                            "type": "string",
-                                            "format": "date-time",
-                                            "example": "2025-05-02T16:00:00Z"
+                                        "installments": {
+                                            "type": "array",
+                                            "items": {
+                                                "required": [
+                                                    "payment_plan_id",
+                                                    "description",
+                                                    "percentage",
+                                                    "date",
+                                                    "amount"
+                                                ],
+                                                "properties": {
+                                                    "payment_plan_id": {
+                                                        "type": "integer",
+                                                        "example": 5
+                                                    },
+                                                    "description": {
+                                                        "type": "string",
+                                                        "example": "Booking Installment"
+                                                    },
+                                                    "percentage": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 20
+                                                    },
+                                                    "date": {
+                                                        "type": "string",
+                                                        "format": "date",
+                                                        "example": "2025-01-01"
+                                                    },
+                                                    "amount": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 293173.12
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
                                         },
                                         "customer_info": {
-                                            "description": "Nested CustomerInfo record",
+                                            "required": [
+                                                "id",
+                                                "name",
+                                                "passport_number",
+                                                "birth_date",
+                                                "gender",
+                                                "nationality",
+                                                "created_at",
+                                                "updated_at"
+                                            ],
                                             "properties": {
                                                 "id": {
                                                     "type": "integer",
-                                                    "format": "int64",
                                                     "example": 7
                                                 },
                                                 "name": {
@@ -805,6 +874,54 @@
                                                 }
                                             },
                                             "type": "object"
+                                        },
+                                        "unit": {
+                                            "required": [
+                                                "id",
+                                                "unit_no",
+                                                "price",
+                                                "status"
+                                            ],
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 12
+                                                },
+                                                "unit_no": {
+                                                    "type": "string",
+                                                    "example": "A-302"
+                                                },
+                                                "price": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 1621554.74
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "Available"
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-05-01T12:00:00Z"
+                                                },
+                                                "updated_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-05-01T12:30:00Z"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "created_at": {
+                                            "type": "string",
+                                            "format": "date-time",
+                                            "example": "2025-05-02T16:00:00Z"
+                                        },
+                                        "updated_at": {
+                                            "type": "string",
+                                            "format": "date-time",
+                                            "example": "2025-05-02T16:00:00Z"
                                         }
                                     },
                                     "type": "object"
@@ -2465,22 +2582,22 @@
                 ]
             }
         },
-        "/payment-plans/{id}": {
+        "/api/payment-plans/{id}": {
             "get": {
                 "tags": [
-                    "PaymentPlan"
+                    "PaymentPlans"
                 ],
-                "summary": "Get a payment plan with its installments",
-                "description": "Get a payment plan with its installments.",
-                "operationId": "2bd95dddb51051f37516160a8ce32461",
+                "summary": "Retrieve a specific payment plan",
+                "operationId": "showPaymentPlan",
                 "parameters": [
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "ID of the payment plan",
+                        "description": "ID of the payment plan to retrieve",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "integer",
+                            "format": "int64"
                         }
                     }
                 ],
@@ -2500,8 +2617,87 @@
                             }
                         }
                     },
+                    "403": {
+                        "description": "Forbidden — user lacks permission to view this plan",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthorized"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
                     "404": {
-                        "description": "Payment plan not found"
+                        "description": "Not Found — no plan exists with the given ID",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "No query results for model [App\\\\Models\\\\PaymentPlan] 123"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/payment-plans": {
+            "get": {
+                "tags": [
+                    "PaymentPlans"
+                ],
+                "summary": "Retrieve all payment plans",
+                "operationId": "indexPaymentPlans",
+                "responses": {
+                    "200": {
+                        "description": "List of payment plans",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "payment_plans": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/PaymentPlan"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden — user lacks permission to view payment plans",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthorized"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -2510,83 +2706,126 @@
                     }
                 ]
             },
-            "put": {
+            "post": {
                 "tags": [
-                    "PaymentPlan"
+                    "PaymentPlans"
                 ],
-                "summary": "Update a custom payment plan",
-                "description": "Update an existing custom payment plan.",
-                "operationId": "a5c4c2d5a838dc5c3b3c4604ee90e333",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID of the payment plan to update",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
+                "summary": "Persist a payment‐plan definition (blocks)",
+                "operationId": "75306dd00dfa633e1d8a0816e79fa134",
                 "requestBody": {
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "unit_id",
                                     "name",
                                     "dld_fee_percentage",
                                     "admin_fee",
-                                    "discount",
                                     "EOI",
-                                    "booking_percentage",
-                                    "handover_percentage",
-                                    "first_construction_installment_date"
+                                    "blocks"
                                 ],
                                 "properties": {
-                                    "unit_id": {
-                                        "type": "integer",
-                                        "example": 5
-                                    },
                                     "name": {
                                         "type": "string",
-                                        "example": "Custom 60/40 Plan Updated"
+                                        "example": "Custom Plan A"
                                     },
                                     "dld_fee_percentage": {
                                         "type": "number",
                                         "format": "float",
-                                        "example": 4
+                                        "example": 2
                                     },
                                     "admin_fee": {
                                         "type": "number",
                                         "format": "float",
-                                        "example": 4000
-                                    },
-                                    "discount": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 50000
+                                        "example": 500
                                     },
                                     "EOI": {
                                         "type": "number",
                                         "format": "float",
-                                        "example": 100000
+                                        "example": 10000
                                     },
-                                    "booking_percentage": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 20
-                                    },
-                                    "handover_percentage": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 40
-                                    },
-                                    "first_construction_installment_date": {
-                                        "type": "string",
-                                        "format": "date",
-                                        "example": "2025-04-15"
+                                    "blocks": {
+                                        "type": "array",
+                                        "items": {
+                                            "required": [
+                                                "type",
+                                                "description",
+                                                "percentage"
+                                            ],
+                                            "properties": {
+                                                "type": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "single",
+                                                        "repeat"
+                                                    ],
+                                                    "example": "single"
+                                                },
+                                                "description": {
+                                                    "type": "string",
+                                                    "example": "Booking Deposit"
+                                                },
+                                                "percentage": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 10
+                                                },
+                                                "date": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2025-06-01",
+                                                    "nullable": true
+                                                },
+                                                "offset": {
+                                                    "properties": {
+                                                        "months": {
+                                                            "type": "integer",
+                                                            "example": 0
+                                                        },
+                                                        "years": {
+                                                            "type": "integer",
+                                                            "example": 0
+                                                        }
+                                                    },
+                                                    "type": "object",
+                                                    "nullable": true
+                                                },
+                                                "start_offset": {
+                                                    "properties": {
+                                                        "months": {
+                                                            "type": "integer",
+                                                            "example": 2
+                                                        },
+                                                        "years": {
+                                                            "type": "integer",
+                                                            "example": 0
+                                                        }
+                                                    },
+                                                    "type": "object",
+                                                    "nullable": true
+                                                },
+                                                "frequency": {
+                                                    "properties": {
+                                                        "months": {
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "years": {
+                                                            "type": "integer",
+                                                            "example": 0
+                                                        }
+                                                    },
+                                                    "type": "object",
+                                                    "nullable": true
+                                                },
+                                                "count": {
+                                                    "type": "integer",
+                                                    "example": 30,
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
                                     }
                                 },
                                 "type": "object"
@@ -2595,21 +2834,139 @@
                     }
                 },
                 "responses": {
-                    "200": {
-                        "description": "Payment plan updated successfully",
+                    "201": {
+                        "description": "Payment plan definition stored successfully",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/PaymentPlan"
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer",
+                                            "example": 123
+                                        },
+                                        "name": {
+                                            "type": "string",
+                                            "example": "Custom Plan A"
+                                        },
+                                        "dld_fee_percentage": {
+                                            "type": "number",
+                                            "format": "float",
+                                            "example": 2
+                                        },
+                                        "admin_fee": {
+                                            "type": "number",
+                                            "format": "float",
+                                            "example": 500
+                                        },
+                                        "EOI": {
+                                            "type": "number",
+                                            "format": "float",
+                                            "example": 10000
+                                        },
+                                        "blocks": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "type": {
+                                                        "type": "string",
+                                                        "example": "single"
+                                                    },
+                                                    "description": {
+                                                        "type": "string",
+                                                        "example": "Booking Deposit"
+                                                    },
+                                                    "percentage": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 10
+                                                    },
+                                                    "date": {
+                                                        "type": "string",
+                                                        "format": "date",
+                                                        "example": "2025-06-01",
+                                                        "nullable": true
+                                                    },
+                                                    "offset": {
+                                                        "properties": {
+                                                            "months": {
+                                                                "type": "integer",
+                                                                "example": 0
+                                                            },
+                                                            "years": {
+                                                                "type": "integer",
+                                                                "example": 0
+                                                            }
+                                                        },
+                                                        "type": "object",
+                                                        "nullable": true
+                                                    },
+                                                    "start_offset": {
+                                                        "properties": {
+                                                            "months": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "years": {
+                                                                "type": "integer",
+                                                                "example": 0
+                                                            }
+                                                        },
+                                                        "type": "object",
+                                                        "nullable": true
+                                                    },
+                                                    "frequency": {
+                                                        "properties": {
+                                                            "months": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "years": {
+                                                                "type": "integer",
+                                                                "example": 0
+                                                            }
+                                                        },
+                                                        "type": "object",
+                                                        "nullable": true
+                                                    },
+                                                    "count": {
+                                                        "type": "integer",
+                                                        "example": 30,
+                                                        "nullable": true
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
                                 }
                             }
                         }
                     },
                     "422": {
-                        "description": "Validation error"
-                    },
-                    "403": {
-                        "description": "Forbidden"
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -2617,10 +2974,12 @@
                         "sanctum": []
                     }
                 ]
-            },
+            }
+        },
+        "/payment-plans/{id}": {
             "delete": {
                 "tags": [
-                    "PaymentPlan"
+                    "PaymentPlans"
                 ],
                 "summary": "Delete a payment plan",
                 "description": "Delete a payment plan and its installments.",
@@ -2651,166 +3010,6 @@
                 ]
             }
         },
-        "/units/{unit_id}/payment-plans": {
-            "get": {
-                "tags": [
-                    "PaymentPlan"
-                ],
-                "summary": "Get all payment plans for a unit",
-                "description": "Get all payment plans for a given unit with their installments.",
-                "operationId": "0d8b27dd64577764fed06157b78b56f7",
-                "parameters": [
-                    {
-                        "name": "unit_id",
-                        "in": "path",
-                        "description": "ID of the unit",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Payment plans retrieved successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "payment_plans": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/PaymentPlan"
-                                            }
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "No payment plans found for this unit"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            }
-        },
-        "/payment-plans": {
-            "post": {
-                "tags": [
-                    "PaymentPlan"
-                ],
-                "summary": "Create a custom payment plan",
-                "description": "Store a custom payment plan for a unit.",
-                "operationId": "4336bb8fbca01ddf2a906f591ef0a29b",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "unit_id",
-                                    "name",
-                                    "dld_fee_percentage",
-                                    "admin_fee",
-                                    "discount",
-                                    "EOI",
-                                    "booking_percentage",
-                                    "handover_percentage",
-                                    "first_construction_installment_date"
-                                ],
-                                "properties": {
-                                    "unit_id": {
-                                        "type": "integer",
-                                        "example": 5
-                                    },
-                                    "name": {
-                                        "type": "string",
-                                        "example": "Custom 60/40 Plan"
-                                    },
-                                    "dld_fee_percentage": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 4
-                                    },
-                                    "admin_fee": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 4000
-                                    },
-                                    "discount": {
-                                        "description": "Discount as a percentage",
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 10
-                                    },
-                                    "EOI": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 100000
-                                    },
-                                    "booking_percentage": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 20
-                                    },
-                                    "handover_percentage": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 40
-                                    },
-                                    "first_construction_installment_date": {
-                                        "type": "string",
-                                        "format": "date",
-                                        "example": "2025-04-15"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "Payment plan created successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "payment_plan": {
-                                            "$ref": "#/components/schemas/PaymentPlan"
-                                        },
-                                        "installments": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/Installment"
-                                            }
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Validation error"
-                    },
-                    "403": {
-                        "description": "Forbidden"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            }
-        },
         "/bookings/{bookingId}/rf": {
             "get": {
                 "tags": [
@@ -2827,6 +3026,7 @@
                         "required": true,
                         "schema": {
                             "type": "integer",
+                            "format": "int64",
                             "example": 42
                         }
                     }
@@ -3329,14 +3529,14 @@
                 ]
             }
         },
-        "/sales-offers/generate": {
+        "/api/sales-offers/generate": {
             "post": {
                 "tags": [
-                    "SalesOffer"
+                    "SalesOffers"
                 ],
-                "summary": "Generate a sales offer PDF on the fly",
-                "description": "Generate a Sales Offer PDF on the fly.",
-                "operationId": "2addf401a443c4d76737a537169ff89d",
+                "summary": "Generate and stream a Sales Offer PDF",
+                "description": "Generate and download a Sales Offer PDF for a unit.",
+                "operationId": "cfe51544b887d2f9bf70aad82d0f9b71",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -3352,15 +3552,24 @@
                                     },
                                     "notes": {
                                         "type": "string",
-                                        "example": "Special discount offer"
+                                        "example": "Special discount offer",
+                                        "nullable": true
                                     },
                                     "payment_plan_ids": {
-                                        "description": "Optional array of Payment Plan IDs to include",
+                                        "description": "Optional list of Payment Plan IDs to include",
                                         "type": "array",
                                         "items": {
                                             "type": "integer",
                                             "example": 3
                                         }
+                                    },
+                                    "discount": {
+                                        "description": "Optional discount percentage",
+                                        "type": "number",
+                                        "format": "float",
+                                        "maximum": 100,
+                                        "minimum": 0,
+                                        "example": 5
                                     }
                                 },
                                 "type": "object"
@@ -3370,19 +3579,19 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Sales offer generated successfully",
+                        "description": "Sales Offer PDF streamed successfully",
                         "content": {
                             "application/pdf": {}
                         }
+                    },
+                    "403": {
+                        "description": "Forbidden"
                     },
                     "404": {
                         "description": "Unit not found"
                     },
                     "422": {
                         "description": "Validation error"
-                    },
-                    "403": {
-                        "description": "Forbidden"
                     }
                 },
                 "security": [
@@ -3408,6 +3617,7 @@
                         "required": true,
                         "schema": {
                             "type": "integer",
+                            "format": "int64",
                             "example": 42
                         }
                     }
@@ -3432,7 +3642,7 @@
                         "description": "Booking not found or existing SPA file missing on disk"
                     },
                     "422": {
-                        "description": "Validation or business-rule error (e.g. unit/booking status invalid)"
+                        "description": "Validation or business-rule error (e.g., unit/booking status invalid)"
                     }
                 },
                 "security": [
@@ -6016,47 +6226,6 @@
                 },
                 "type": "object"
             },
-            "Installment": {
-                "title": "Installment",
-                "required": [
-                    "payment_plan_id",
-                    "description",
-                    "percentage",
-                    "date",
-                    "amount"
-                ],
-                "properties": {
-                    "id": {
-                        "type": "integer",
-                        "readOnly": true,
-                        "example": 1
-                    },
-                    "payment_plan_id": {
-                        "type": "integer",
-                        "example": 5
-                    },
-                    "description": {
-                        "type": "string",
-                        "example": "Booking Installment"
-                    },
-                    "percentage": {
-                        "type": "number",
-                        "format": "float",
-                        "example": 20
-                    },
-                    "date": {
-                        "type": "string",
-                        "format": "date",
-                        "example": "2025-01-01"
-                    },
-                    "amount": {
-                        "type": "number",
-                        "format": "float",
-                        "example": 293173.12
-                    }
-                },
-                "type": "object"
-            },
             "Unit": {
                 "title": "Unit",
                 "required": [
@@ -6074,8 +6243,7 @@
                     "completion_date",
                     "dld_fee_percentage",
                     "admin_fee",
-                    "EOI",
-                    "FCID"
+                    "EOI"
                 ],
                 "properties": {
                     "id": {
@@ -6177,11 +6345,6 @@
                         "format": "float",
                         "example": 100000
                     },
-                    "FCID": {
-                        "type": "string",
-                        "format": "date",
-                        "example": "2025-03-15"
-                    },
                     "created_at": {
                         "type": "string",
                         "format": "date-time",
@@ -6219,8 +6382,7 @@
                     "status",
                     "completion_date",
                     "dld_fee_percentage",
-                    "admin_fee",
-                    "FCID"
+                    "admin_fee"
                 ],
                 "properties": {
                     "prop_type": {
@@ -6312,11 +6474,6 @@
                         "type": "number",
                         "format": "float",
                         "example": 100000
-                    },
-                    "FCID": {
-                        "type": "string",
-                        "format": "date",
-                        "example": "2025-03-15"
                     }
                 },
                 "type": "object"
@@ -6344,10 +6501,8 @@
                 "required": [
                     "unit_id",
                     "name",
-                    "selling_price",
                     "dld_fee_percentage",
                     "admin_fee",
-                    "discount",
                     "EOI",
                     "booking_percentage",
                     "handover_percentage",
@@ -6368,11 +6523,6 @@
                         "type": "string",
                         "example": "60/40"
                     },
-                    "selling_price": {
-                        "type": "number",
-                        "format": "float",
-                        "example": 350000
-                    },
                     "dld_fee_percentage": {
                         "type": "number",
                         "format": "float",
@@ -6382,11 +6532,6 @@
                         "type": "number",
                         "format": "float",
                         "example": 4000
-                    },
-                    "discount": {
-                        "type": "number",
-                        "format": "float",
-                        "example": 0
                     },
                     "EOI": {
                         "type": "number",
@@ -6524,8 +6669,8 @@
             "description": "User Management"
         },
         {
-            "name": "PaymentPlan",
-            "description": "PaymentPlan"
+            "name": "PaymentPlans",
+            "description": "PaymentPlans"
         },
         {
             "name": "Bookings/RF",
@@ -6536,8 +6681,8 @@
             "description": "Roles & Permissions"
         },
         {
-            "name": "SalesOffer",
-            "description": "SalesOffer"
+            "name": "SalesOffers",
+            "description": "SalesOffers"
         },
         {
             "name": "Bookings/SPA",
