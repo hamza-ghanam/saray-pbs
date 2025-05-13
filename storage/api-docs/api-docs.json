@@ -556,7 +556,7 @@
                     "Bookings"
                 ],
                 "summary": "Book a unit by creating CustomerInfo and Booking with status Pre-Booked",
-                "description": "Book a unit with provided customer information, optional receipt, discount and notes.",
+                "description": "Book a unit with provided customer information, optional passport upload, receipt, discount and notes.",
                 "operationId": "5c506914f01cb885d4e38f9806bcd14b",
                 "requestBody": {
                     "required": true,
@@ -564,7 +564,6 @@
                         "multipart/form-data": {
                             "schema": {
                                 "required": [
-                                    "upload_token",
                                     "name",
                                     "passport_number",
                                     "birth_date",
@@ -574,8 +573,10 @@
                                 ],
                                 "properties": {
                                     "upload_token": {
+                                        "description": "Optional token for a previously uploaded passport; omit to skip document",
                                         "type": "string",
-                                        "example": "3d1ad42a-49bb-4171-83af-f67dd83e97c3"
+                                        "example": "3d1ad42a-49bb-4171-83af-f67dd83e97c3",
+                                        "nullable": true
                                     },
                                     "name": {
                                         "type": "string",
@@ -636,198 +637,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "required": [
-                                        "id",
-                                        "unit_id",
-                                        "payment_plan_id",
-                                        "customer_info_id",
-                                        "status",
-                                        "price",
-                                        "created_by",
-                                        "created_at",
-                                        "updated_at"
-                                    ],
-                                    "properties": {
-                                        "id": {
-                                            "type": "integer",
-                                            "example": 42
-                                        },
-                                        "unit_id": {
-                                            "type": "integer",
-                                            "example": 12
-                                        },
-                                        "payment_plan_id": {
-                                            "type": "integer",
-                                            "example": 5
-                                        },
-                                        "customer_info_id": {
-                                            "type": "integer",
-                                            "example": 7
-                                        },
-                                        "status": {
-                                            "type": "string",
-                                            "example": "Pre-Booked"
-                                        },
-                                        "price": {
-                                            "type": "number",
-                                            "format": "float",
-                                            "example": 1535432
-                                        },
-                                        "discount": {
-                                            "type": "number",
-                                            "format": "float",
-                                            "example": 5
-                                        },
-                                        "notes": {
-                                            "type": "string",
-                                            "example": "Customer requests early handover."
-                                        },
-                                        "created_by": {
-                                            "type": "integer",
-                                            "example": 3
-                                        },
-                                        "receipt_path": {
-                                            "type": "string",
-                                            "example": "receipts/abc123.pdf"
-                                        },
-                                        "installments": {
-                                            "type": "array",
-                                            "items": {
-                                                "required": [
-                                                    "payment_plan_id",
-                                                    "description",
-                                                    "percentage",
-                                                    "date",
-                                                    "amount"
-                                                ],
-                                                "properties": {
-                                                    "payment_plan_id": {
-                                                        "type": "integer",
-                                                        "example": 5
-                                                    },
-                                                    "description": {
-                                                        "type": "string",
-                                                        "example": "Booking Installment"
-                                                    },
-                                                    "percentage": {
-                                                        "type": "number",
-                                                        "format": "float",
-                                                        "example": 20
-                                                    },
-                                                    "date": {
-                                                        "type": "string",
-                                                        "format": "date",
-                                                        "example": "2025-01-01"
-                                                    },
-                                                    "amount": {
-                                                        "type": "number",
-                                                        "format": "float",
-                                                        "example": 293173.12
-                                                    }
-                                                },
-                                                "type": "object"
-                                            }
-                                        },
-                                        "customer_info": {
-                                            "required": [
-                                                "id",
-                                                "name",
-                                                "passport_number",
-                                                "birth_date",
-                                                "gender",
-                                                "nationality",
-                                                "created_at",
-                                                "updated_at"
-                                            ],
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 7
-                                                },
-                                                "name": {
-                                                    "type": "string",
-                                                    "example": "John Smith"
-                                                },
-                                                "passport_number": {
-                                                    "type": "string",
-                                                    "example": "N001234567"
-                                                },
-                                                "birth_date": {
-                                                    "type": "string",
-                                                    "format": "date",
-                                                    "example": "1992-02-05"
-                                                },
-                                                "gender": {
-                                                    "type": "string",
-                                                    "example": "Male"
-                                                },
-                                                "nationality": {
-                                                    "type": "string",
-                                                    "example": "Syrian Arab Republic"
-                                                },
-                                                "created_at": {
-                                                    "type": "string",
-                                                    "format": "date-time",
-                                                    "example": "2025-05-02T15:58:00Z"
-                                                },
-                                                "updated_at": {
-                                                    "type": "string",
-                                                    "format": "date-time",
-                                                    "example": "2025-05-02T15:58:00Z"
-                                                }
-                                            },
-                                            "type": "object"
-                                        },
-                                        "unit": {
-                                            "required": [
-                                                "id",
-                                                "unit_no",
-                                                "price",
-                                                "status"
-                                            ],
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 12
-                                                },
-                                                "unit_no": {
-                                                    "type": "string",
-                                                    "example": "A-302"
-                                                },
-                                                "price": {
-                                                    "type": "number",
-                                                    "format": "float",
-                                                    "example": 1621554.74
-                                                },
-                                                "status": {
-                                                    "type": "string",
-                                                    "example": "Available"
-                                                },
-                                                "created_at": {
-                                                    "type": "string",
-                                                    "format": "date-time",
-                                                    "example": "2025-05-01T12:00:00Z"
-                                                },
-                                                "updated_at": {
-                                                    "type": "string",
-                                                    "format": "date-time",
-                                                    "example": "2025-05-01T12:30:00Z"
-                                                }
-                                            },
-                                            "type": "object"
-                                        },
-                                        "created_at": {
-                                            "type": "string",
-                                            "format": "date-time",
-                                            "example": "2025-05-02T16:00:00Z"
-                                        },
-                                        "updated_at": {
-                                            "type": "string",
-                                            "format": "date-time",
-                                            "example": "2025-05-02T16:00:00Z"
-                                        }
-                                    },
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/Booking"
                                 }
                             }
                         }
@@ -849,18 +659,19 @@
                 ]
             }
         },
-        "/bookings/{id}/upload-receipt": {
+        "/bookings/{id}/upload-document": {
             "post": {
                 "tags": [
                     "Bookings"
                 ],
-                "summary": "Upload or replace a payment receipt for an existing booking",
-                "operationId": "6618a7e2c37fdfd2df93eaab894461c5",
+                "summary": "Upload (or replace) an ID document or a payment receipt for an existing booking",
+                "description": "Upload or replace either the customer’s ID document **or** a payment receipt.",
+                "operationId": "8526e93e4836399f36f466299ffc0e19",
                 "parameters": [
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "ID of the booking to upload a receipt for",
+                        "description": "ID of the booking",
                         "required": true,
                         "schema": {
                             "type": "integer",
@@ -873,24 +684,39 @@
                     "content": {
                         "multipart/form-data": {
                             "schema": {
-                                "required": [
-                                    "receipt"
-                                ],
+                                "description": "Provide **either** `id_document` **or** `receipt`",
                                 "properties": {
+                                    "id_document": {
+                                        "description": "Customer ID document (pdf, jpg, jpeg, png)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
                                     "receipt": {
-                                        "description": "Payment receipt file (pdf, jpg, jpeg, png)",
+                                        "description": "Payment receipt (pdf, jpg, jpeg, png)",
                                         "type": "string",
                                         "format": "binary"
                                     }
                                 },
-                                "type": "object"
+                                "type": "object",
+                                "oneOf": [
+                                    {
+                                        "required": [
+                                            "id_document"
+                                        ]
+                                    },
+                                    {
+                                        "required": [
+                                            "receipt"
+                                        ]
+                                    }
+                                ]
                             }
                         }
                     }
                 },
                 "responses": {
                     "200": {
-                        "description": "Receipt uploaded successfully",
+                        "description": "Document uploaded successfully",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -899,14 +725,14 @@
                             }
                         }
                     },
+                    "403": {
+                        "description": "Forbidden"
+                    },
                     "404": {
                         "description": "Booking not found"
                     },
                     "422": {
-                        "description": "Validation error"
-                    },
-                    "403": {
-                        "description": "Forbidden"
+                        "description": "Validation error or missing file"
                     }
                 },
                 "security": [

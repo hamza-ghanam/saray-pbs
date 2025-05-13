@@ -73,7 +73,7 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/bookings/scan-passport', [BookingController::class, 'scanPassport']);
     Route::post('/bookings/book-unit', [BookingController::class, 'bookUnit']);
-    Route::post('/bookings/{id}/upload-receipt', [BookingController::class, 'uploadReceipt']);
+    Route::post('/bookings/{id}/upload-document', [BookingController::class, 'uploadDocument']);
     Route::put('/bookings/{id}', [BookingController::class, 'update']);
     Route::delete('/bookings/{id}', [BookingController::class, 'destroy']);
     Route::get('/bookings/{booking}/download-document/{type}', [BookingController::class, 'downloadDocument'])
