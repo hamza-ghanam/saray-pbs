@@ -19,9 +19,8 @@ return new class extends Migration
             $table->string('floor');
             $table->string('parking');
             $table->string('pool_jacuzzi');
-            $table->decimal('suite_area', 10, 2);
-            $table->decimal('balcony_area', 10, 2);
-            $table->decimal('total_area', 10, 2);
+            $table->decimal('internal_square', 10, 2);
+            $table->decimal('external_square', 10, 2);
             $table->boolean('furnished');
             $table->string('unit_view');
             $table->string('floor_plan')->nullable();
@@ -29,7 +28,7 @@ return new class extends Migration
             $table->date('completion_date')->nullable();
             // System
             $table->foreignId('building_id')->constrained()->onDelete('cascade');
-            $table->enum('status', ['Pending', 'Available', 'Pre-Booked', 'Booked', 'Sold', 'Pre-Hold', 'Hold', 'Cancelled']);
+            $table->enum('status', ['Pending', 'Available', 'Pre-Booked', 'Booked', 'Completed', 'Sold', 'Pre-Hold', 'Hold', 'Cancelled']);
             $table->timestamps();
             $table->softDeletes();
         });

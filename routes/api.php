@@ -11,6 +11,7 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\ReservationFormController;
 use App\Http\Controllers\SpaController;
 use App\Http\Controllers\HoldingController;
+use App\Http\Controllers\DldDocumentController;
 use App\Http\Controllers\OneTimeLinkController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\UserManagementController;
@@ -56,12 +57,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // Payment Plans
 Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/payment-plans', [PaymentPlanController::class, 'index']);
     Route::post('/payment-plans', [PaymentPlanController::class, 'store']);
     Route::get('/payment-plans/{id}', [PaymentPlanController::class, 'show']);
     Route::put('/payment-plans/{id}', [PaymentPlanController::class, 'update']);
     Route::delete('/payment-plans/{id}', [PaymentPlanController::class, 'destroy']);
-    Route::get('/units/{id}/payment-plans', [PaymentPlanController::class, 'getPlansForUnit']);
-    Route::post('/units/{unit}/payment-plans', [PaymentPlanController::class, 'storeOLD']);
 });
 
 // Sales Offer
@@ -77,7 +77,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/bookings/{id}', [BookingController::class, 'update']);
     Route::delete('/bookings/{id}', [BookingController::class, 'destroy']);
     Route::get('/bookings/{booking}/download-document/{type}', [BookingController::class, 'downloadDocument'])
-        ->where('type', 'passport|receipt|rf|signed_rf|spa|signed_spa');
+        ->where('type', 'passport|receipt|rf|signed_rf|spa|signed_spa|dld');
     Route::get('/bookings/{id}', [BookingController::class, 'show']);
     Route::post('/bookings/{id}/approve', [BookingController::class, 'approveBooking']);
 });
@@ -95,6 +95,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/bookings/{id}/spa/upload-signed', [SpaController::class, 'uploadSigned']);
     Route::post('/bookings/{id}/spa/approve', [SpaController::class, 'approve']);
 });
+
+// DLD Documents
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/bookings/{booking}/dld', [DldDocumentController::class, 'store']);
+});
+
 
 // Unit Hold
 Route::middleware('auth:sanctum')->group(function () {

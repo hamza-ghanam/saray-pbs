@@ -78,12 +78,12 @@ class RbacSeeder extends Seeder
         */
 
         $permissions = [
-            'view unit update',
+            'upload DLD document',
         ];
 
 
 
-        $role = Role::findByName('Contractor');
+        $role = Role::findByName('System Maintenance');
         $role->givePermissionTo($permissions);
     }
 }

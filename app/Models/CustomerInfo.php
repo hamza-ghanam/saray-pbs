@@ -18,6 +18,8 @@ class CustomerInfo extends Model
         'document_path'
     ];
 
+    protected $hidden = ['document_path'];
+
     public function booking()
     {
         return $this->hasOne(Booking::class, 'customer_info_id');

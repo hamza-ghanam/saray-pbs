@@ -94,7 +94,7 @@
             <p><span class="label">Unit Type:</span><span class="value">{{ $unit->unit_type }}</span></p>
             <p><span class="label">Status:</span><span class="value">{{ $unit->status }}</span></p>
             <p><span class="label">Price:</span><span class="value">{{ number_format($unit->price, 2) }}</span></p>
-            <!-- Add more fields as needed (floor, total_area, etc.) -->
+            <!-- Add more fields as needed (floor, total_square, etc.) -->
         @else
             <p>No unit data available.</p>
         @endif

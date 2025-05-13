@@ -75,4 +75,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(DeviceToken::class);
     }
+
+    public function dldDocuments()
+    {
+        return $this->hasMany(DldDocument::class, 'uploaded_by');
+    }
 }

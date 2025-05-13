@@ -141,6 +141,10 @@ class SpaController extends Controller
             'status'     => 'Pending',
         ]);
 
+        $booking->unit->update([
+            'status' => 'Completed',
+        ]);
+
         return response($pdfContent, Response::HTTP_CREATED, [
             'Content-Type'        => 'application/pdf',
             'Content-Disposition' => "attachment; filename=\"{$fileName}\"",
@@ -322,11 +326,8 @@ class SpaController extends Controller
 
         // 4. Change the associated Booking status to "Sold" (final)
         if ($spa->booking) {
-            $spa->booking->status = 'Booked';
-            $spa->booking->save();
-
             if ($spa->booking->unit) {
-                $spa->booking->unit->status = 'Sold';
+                $spa->booking->unit->status = 'Completed';
                 $spa->booking->unit->status_changed_at = now();
                 $spa->booking->unit->save();
             }

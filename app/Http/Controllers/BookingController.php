@@ -23,6 +23,35 @@ use Mindee\Product\Passport\PassportV1;
 use Illuminate\Support\Str;
 use App\Services\FCMService;
 
+/**
+ * @OA\Schema(
+ *     schema="Booking",
+ *     type="object",
+ *     title="Booking",
+ *     required={
+ *         "id",
+ *         "unit_id",
+ *         "customer_info_id",
+ *         "status",
+ *         "created_by",
+ *         "created_at",
+ *         "updated_at"
+ *     },
+ *     @OA\Property(property="id",                 type="integer", format="int64", example=42),
+ *     @OA\Property(property="unit_id",            type="integer", example=12),
+ *     @OA\Property(property="payment_plan_id",    type="integer", nullable=true, example=5),
+ *     @OA\Property(property="customer_info_id",   type="integer", example=7),
+ *     @OA\Property(property="status",             type="string",  example="Pre-Booked"),
+ *     @OA\Property(property="price",              type="number",  format="float", example=1535432.00),
+ *     @OA\Property(property="discount",           type="number",  format="float", example=5),
+ *     @OA\Property(property="receipt_path",       type="string",             example="receipts/abc123.pdf"),
+ *     @OA\Property(property="created_by",         type="integer",            example=3),
+ *     @OA\Property(property="confirmed_by",       type="integer", nullable=true, example=null),
+ *     @OA\Property(property="confirmed_at",       type="string",  format="date-time", nullable=true, example=null),
+ *     @OA\Property(property="created_at",         type="string",  format="date-time", example="2025-05-02T16:00:00Z"),
+ *     @OA\Property(property="updated_at",         type="string",  format="date-time", example="2025-05-02T16:00:00Z")
+ * )
+ */
 class BookingController extends Controller
 {
     use AuthorizesRequests;
@@ -138,25 +167,11 @@ class BookingController extends Controller
         }
 
         // (Optional) Hide sensitive fields
-        $booking->makeHidden(['receipt_path']);
         $booking->load([
             'approvals',
             'reservationForm.approvals',
             'spa.approvals',
         ]);
-
-        if ($booking->reservationForm) {
-            $booking->reservationForm->makeHidden(['file_path', 'signed_file_path']);
-        }
-
-        // If spa() is a hasOne / belongsTo:
-        if ($booking->spa) {
-            $booking->spa->makeHidden(['file_path', 'signed_file_path']);
-        }
-
-        if ($booking->customerInfo) {
-            $booking->customerInfo->makeHidden(['document_path']);
-        }
 
         return response()->json($booking, Response::HTTP_OK);
     }
@@ -187,32 +202,41 @@ class BookingController extends Controller
      *         description="Customer passport data extracted successfully",
      *         @OA\JsonContent(
      *             type="object",
-     *             description="Parsed passport data",
-     *             @OA\Property(property="type", type="string", example="Passport"),
-     *             @OA\Property(property="card_no", type="string", example="015194164"),
-     *             @OA\Property(property="issuer", type="string", example="Syrian Arab Republic"),
-     *             @OA\Property(property="date_of_expiry", type="string", example="2024-07-05"),
-     *             @OA\Property(property="first_name", type="string", example="JOHN"),
-     *             @OA\Property(property="last_name", type="string", example="SMITH"),
-     *             @OA\Property(property="date_of_birth", type="string", example="1988-10-09"),
-     *             @OA\Property(property="gender", type="string", example="Male"),
-     *             @OA\Property(property="personal_number", type="string", example="01092683756"),
-     *             @OA\Property(property="nationality", type="string", example="Syrian Arab Republic")
+     *             @OA\Property(property="passport", type="object", description="Parsed passport data",
+     *                 @OA\Property(property="type",             type="string", example="Passport"),
+     *                 @OA\Property(property="card_no",          type="string", example="015194164"),
+     *                 @OA\Property(property="issuer",           type="string", example="Syrian Arab Republic"),
+     *                 @OA\Property(property="date_of_expiry",    type="string", example="2024-07-05"),
+     *                 @OA\Property(property="first_name",       type="string", example="JOHN"),
+     *                 @OA\Property(property="last_name",        type="string", example="SMITH"),
+     *                 @OA\Property(property="date_of_birth",    type="string", example="1988-10-09"),
+     *                 @OA\Property(property="gender",           type="string", example="Male"),
+     *                 @OA\Property(property="personal_number",  type="string", example="01092683756"),
+     *                 @OA\Property(property="nationality",      type="string", example="Syrian Arab Republic")
+     *             ),
+     *             @OA\Property(
+     *                 property="upload_token",
+     *                 type="string",
+     *                 example="3d1ad42a-49bb-4171-83af-f67dd83e97c3",
+     *                 description="Token to reference the stored upload for later use"
+     *             )
      *         )
      *     ),
      *     @OA\Response(
      *         response=422,
      *         description="Validation error",
      *         @OA\JsonContent(
-     *             type="object",
-     *             @OA\Property(property="document", type="array", @OA\Items(type="string", example="The document field is required."))
+     *             @OA\Property(
+     *                 property="document",
+     *                 type="array",
+     *                 @OA\Items(type="string", example="The document field is required.")
+     *             )
      *         )
      *     ),
      *     @OA\Response(
      *         response=403,
      *         description="Forbidden",
      *         @OA\JsonContent(
-     *             type="object",
      *             @OA\Property(property="message", type="string", example="Unauthorized")
      *         )
      *     ),
@@ -220,7 +244,6 @@ class BookingController extends Controller
      *         response=500,
      *         description="Internal Server Error",
      *         @OA\JsonContent(
-     *             type="object",
      *             @OA\Property(property="error", type="string", example="OCR extraction failed")
      *         )
      *     )
@@ -292,6 +315,7 @@ class BookingController extends Controller
      *     summary="Book a unit by creating CustomerInfo and Booking with status Pre-Booked",
      *     tags={"Bookings"},
      *     security={{"sanctum":{}}},
+     *
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\MediaType(
@@ -306,74 +330,76 @@ class BookingController extends Controller
      *                     "nationality",
      *                     "unit_id"
      *                 },
-     *                 @OA\Property(
-     *                     property="upload_token",
-     *                     type="string",
-     *                     description="Token referencing the previously uploaded passport file",
-     *                     example="3d1ad42a-49bb-4171-83af-f67dd83e97c3"
-     *                 ),
-     *                 @OA\Property(property="name",            type="string", maxLength=255, example="John Smith"),
-     *                 @OA\Property(property="passport_number", type="string", maxLength=50,  example="N001234567"),
-     *                 @OA\Property(property="birth_date",      type="string", format="date", example="1992-02-05"),
-     *                 @OA\Property(property="gender",          type="string", maxLength=10,  example="Male"),
-     *                 @OA\Property(property="nationality",     type="string", maxLength=255, example="Syrian Arab Republic"),
-     *                 @OA\Property(
-     *                     property="unit_id",
-     *                     type="integer",
-     *                     description="ID of the unit to be booked",
-     *                     example=12
-     *                 ),
-     *                 @OA\Property(
-     *                     property="payment_plan_id",
-     *                     type="integer",
-     *                     description="ID of the selected payment plan for this booking",
-     *                     nullable=true,
-     *                     example=5
-     *                 ),
-     *                 @OA\Property(
-     *                     property="receipt",
-     *                     type="string",
-     *                     format="binary",
-     *                     description="Optional payment receipt (pdf, jpg, jpeg, png)"
-     *                 ),
-     *                 @OA\Property(
-     *                     property="discount",
-     *                     type="number",
-     *                     format="float",
-     *                     description="Optional discount percentage to apply to the booking price",
-     *                     example=5
-     *                 ),
-     *                 @OA\Property(
-     *                     property="notes",
-     *                     type="string",
-     *                     description="Optional free-text notes",
-     *                     example="Customer requests early handover."
-     *                 )
+     *                 @OA\Property(property="upload_token", type="string", example="3d1ad42a-49bb-4171-83af-f67dd83e97c3"),
+     *                 @OA\Property(property="name", type="string", maxLength=255, example="John Smith"),
+     *                 @OA\Property(property="passport_number", type="string", maxLength=50, example="N001234567"),
+     *                 @OA\Property(property="birth_date", type="string", format="date", example="1992-02-05"),
+     *                 @OA\Property(property="gender", type="string", maxLength=10, example="Male"),
+     *                 @OA\Property(property="nationality", type="string", maxLength=255, example="Syrian Arab Republic"),
+     *                 @OA\Property(property="unit_id", type="integer", example=12),
+     *                 @OA\Property(property="payment_plan_id", type="integer", nullable=true, example=5),
+     *                 @OA\Property(property="receipt", type="string", format="binary"),
+     *                 @OA\Property(property="discount", type="number", format="float", example=5),
+     *                 @OA\Property(property="notes", type="string", example="Customer requests early handover.")
      *             )
      *         )
      *     ),
+     *
      *     @OA\Response(
      *         response=201,
      *         description="Booking created successfully",
      *         @OA\JsonContent(
      *             type="object",
-     *             @OA\Property(property="id",               type="integer", format="int64", example=42),
-     *             @OA\Property(property="unit_id",          type="integer", example=12),
-     *             @OA\Property(property="payment_plan_id",  type="integer", example=5),
+     *             required={"id", "unit_id", "payment_plan_id", "customer_info_id", "status", "price", "created_by", "created_at", "updated_at"},
+     *             @OA\Property(property="id", type="integer", example=42),
+     *             @OA\Property(property="unit_id", type="integer", example=12),
+     *             @OA\Property(property="payment_plan_id", type="integer", example=5),
      *             @OA\Property(property="customer_info_id", type="integer", example=7),
-     *             @OA\Property(property="status",           type="string",  example="Pre-Booked"),
-     *             @OA\Property(property="price",            type="number", format="float", description="Net booking price after discount", example=1535432.00),
-     *             @OA\Property(property="discount",         type="number", format="float", description="Discount percentage applied", example=5),
-     *             @OA\Property(property="notes",            type="string", description="Booking notes", example="Customer requests early handover."),
-     *             @OA\Property(property="created_by",       type="integer", example=3),
-     *             @OA\Property(property="receipt_path",     type="string",  description="Stored path of the receipt", example="receipts/abc123.pdf"),
-     *             @OA\Property(property="installments",     type="array",
-     *                 @OA\Items(ref="#/components/schemas/Installment")
+     *             @OA\Property(property="status", type="string", example="Pre-Booked"),
+     *             @OA\Property(property="price", type="number", format="float", example=1535432.00),
+     *             @OA\Property(property="discount", type="number", format="float", example=5),
+     *             @OA\Property(property="notes", type="string", example="Customer requests early handover."),
+     *             @OA\Property(property="created_by", type="integer", example=3),
+     *             @OA\Property(property="receipt_path", type="string", example="receipts/abc123.pdf"),
+     *             @OA\Property(
+     *                 property="installments",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     required={"payment_plan_id", "description", "percentage", "date", "amount"},
+     *                     @OA\Property(property="payment_plan_id", type="integer", example=5),
+     *                     @OA\Property(property="description", type="string", example="Booking Installment"),
+     *                     @OA\Property(property="percentage", type="number", format="float", example=20),
+     *                     @OA\Property(property="date", type="string", format="date", example="2025-01-01"),
+     *                     @OA\Property(property="amount", type="number", format="float", example=293173.12)
+     *                 )
      *             ),
-     *             @OA\Property(property="customer_info", ref="#/components/schemas/CustomerInfo"),
-     *             @OA\Property(property="unit",          ref="#/components/schemas/Unit"),
-     *             @OA\Property(property="created_at",    type="string", format="date-time", example="2025-05-02T16:00:00Z"),
-     *             @OA\Property(property="updated_at",    type="string", format="date-time", example="2025-05-02T16:00:00Z")
+     *             @OA\Property(
+     *                 property="customer_info",
+     *                 type="object",
+     *                 required={"id", "name", "passport_number", "birth_date", "gender", "nationality", "created_at", "updated_at"},
+     *                 @OA\Property(property="id", type="integer", example=7),
+     *                 @OA\Property(property="name", type="string", example="John Smith"),
+     *                 @OA\Property(property="passport_number", type="string", example="N001234567"),
+     *                 @OA\Property(property="birth_date", type="string", format="date", example="1992-02-05"),
+     *                 @OA\Property(property="gender", type="string", example="Male"),
+     *                 @OA\Property(property="nationality", type="string", example="Syrian Arab Republic"),
+     *                 @OA\Property(property="created_at", type="string", format="date-time", example="2025-05-02T15:58:00Z"),
+     *                 @OA\Property(property="updated_at", type="string", format="date-time", example="2025-05-02T15:58:00Z")
+     *             ),
+     *             @OA\Property(
+     *                 property="unit",
+     *                 type="object",
+     *                 required={"id", "unit_no", "price", "status"},
+     *                 @OA\Property(property="id", type="integer", example=12),
+     *                 @OA\Property(property="unit_no", type="string", example="A-302"),
+     *                 @OA\Property(property="price", type="number", format="float", example=1621554.74),
+     *                 @OA\Property(property="status", type="string", example="Available"),
+     *                 @OA\Property(property="created_at", type="string", format="date-time", example="2025-05-01T12:00:00Z"),
+     *                 @OA\Property(property="updated_at", type="string", format="date-time", example="2025-05-01T12:30:00Z")
+     *             ),
+     *             @OA\Property(property="created_at", type="string", format="date-time", example="2025-05-02T16:00:00Z"),
+     *             @OA\Property(property="updated_at", type="string", format="date-time", example="2025-05-02T16:00:00Z")
      *         )
      *     ),
      *     @OA\Response(response=422, description="Validation error"),
@@ -539,8 +565,6 @@ class BookingController extends Controller
 
         // Eager load the related customerInfo
         $booking->load('customerInfo');
-        $booking->makeHidden(['receipt_path']);
-        $booking->customerInfo->makeHidden(['document_path']);
 
         // No need for the passport upload anymore!
         DB::table('uploads')
@@ -553,8 +577,6 @@ class BookingController extends Controller
     }
 
     /**
-     * Upload (or replace) a payment receipt for an existing booking.
-     *
      * @OA\Post(
      *     path="/bookings/{id}/upload-receipt",
      *     summary="Upload or replace a payment receipt for an existing booking",
@@ -585,17 +607,7 @@ class BookingController extends Controller
      *     @OA\Response(
      *         response=200,
      *         description="Receipt uploaded successfully",
-     *         @OA\JsonContent(
-     *             type="object",
-     *             @OA\Property(property="id", type="integer", example=42),
-     *             @OA\Property(property="unit_id", type="integer", example=12),
-     *             @OA\Property(property="customer_info_id", type="integer", example=7),
-     *             @OA\Property(property="status", type="string", example="Pre-Booked"),
-     *             @OA\Property(property="confirmed_by", type="integer", nullable=true, example=null),
-     *             @OA\Property(property="confirmed_at", type="string", format="date-time", nullable=true, example=null),
-     *             @OA\Property(property="created_at", type="string", format="date-time", example="2025-03-10T12:00:00Z"),
-     *             @OA\Property(property="updated_at", type="string", format="date-time", example="2025-03-10T12:00:00Z")
-     *         )
+     *         @OA\JsonContent(ref="#/components/schemas/Booking")
      *     ),
      *     @OA\Response(response=404, description="Booking not found"),
      *     @OA\Response(response=422, description="Validation error"),
@@ -639,14 +651,10 @@ class BookingController extends Controller
         $booking->receipt_path = $receiptPath;
         $booking->save();
 
-        $booking->makeHidden(['receipt_path']);
-
         return response()->json($booking, Response::HTTP_OK);
     }
 
     /**
-     * Update an existing booking and its related customer info.
-     *
      * @OA\Put(
      *     path="/bookings/{id}",
      *     summary="Update a booking (and its customer info) by ID",
@@ -664,52 +672,17 @@ class BookingController extends Controller
      *         @OA\MediaType(
      *             mediaType="multipart/form-data",
      *             @OA\Schema(
-     *                 @OA\Property(
-     *                     property="name",
-     *                     type="string",
-     *                     maxLength=255,
-     *                     description="Updated customer name",
-     *                     example="John Smith"
-     *                 ),
-     *                 @OA\Property(
-     *                     property="passport_number",
-     *                     type="string",
-     *                     maxLength=50,
-     *                     description="Updated passport number",
-     *                     example="N001234567"
-     *                 ),
-     *                 @OA\Property(
-     *                     property="birth_date",
-     *                     type="string",
-     *                     format="date",
-     *                     description="Updated birth date",
-     *                     example="1992-02-05"
-     *                 ),
-     *                 @OA\Property(
-     *                     property="gender",
-     *                     type="string",
-     *                     maxLength=10,
-     *                     description="Updated gender",
-     *                     example="Male"
-     *                 ),
-     *                 @OA\Property(
-     *                     property="nationality",
-     *                     type="string",
-     *                     maxLength=255,
-     *                     description="Updated nationality",
-     *                     example="Syrian Arab Republic (the)"
-     *                 ),
-     *                 @OA\Property(
-     *                     property="payment_plan_id",
-     *                     type="integer",
-     *                     description="ID of the selected payment plan for this unit",
-     *                     example=5
-     *                 ),
+     *                 @OA\Property(property="name",             type="string", example="John Smith"),
+     *                 @OA\Property(property="passport_number",  type="string", example="N001234567"),
+     *                 @OA\Property(property="birth_date",       type="string", format="date", example="1992-02-05"),
+     *                 @OA\Property(property="gender",           type="string", example="Male"),
+     *                 @OA\Property(property="nationality",      type="string", example="Syrian Arab Republic"),
+     *                 @OA\Property(property="payment_plan_id",  type="integer", example=5),
      *                 @OA\Property(
      *                     property="receipt",
      *                     type="string",
      *                     format="binary",
-     *                     description="Optional new receipt file (pdf, jpg, jpeg, png)"
+     *                     description="Optional new receipt file"
      *                 )
      *             )
      *         )
@@ -717,26 +690,7 @@ class BookingController extends Controller
      *     @OA\Response(
      *         response=200,
      *         description="Booking updated successfully",
-     *         @OA\JsonContent(
-     *             type="object",
-     *             @OA\Property(property="id", type="integer", example=42),
-     *             @OA\Property(property="unit_id", type="integer", example=12),
-     *             @OA\Property(property="customer_info_id", type="integer", example=7),
-     *             @OA\Property(property="status", type="string", example="Pre-Booked"),
-     *             @OA\Property(property="confirmed_by", type="integer", nullable=true, example=null),
-     *             @OA\Property(property="confirmed_at", type="string", format="date-time", nullable=true, example=null),
-     *             @OA\Property(
-     *                 property="customer_info",
-     *                 type="object",
-     *                 description="Nested customer info",
-     *                 @OA\Property(property="id", type="integer", example=7),
-     *                 @OA\Property(property="name", type="string", example="John Smith"),
-     *                 @OA\Property(property="passport_number", type="string", example="N001234567"),
-     *                 @OA\Property(property="birth_date", type="string", format="date", example="1992-02-05"),
-     *                 @OA\Property(property="gender", type="string", example="Male"),
-     *                 @OA\Property(property="nationality", type="string", example="Syrian Arab Republic (the)"),
-     *             )
-     *         )
+     *         @OA\JsonContent(ref="#/components/schemas/Booking")
      *     ),
      *     @OA\Response(response=404, description="Booking not found"),
      *     @OA\Response(response=422, description="Validation error"),
@@ -833,18 +787,15 @@ class BookingController extends Controller
 
         // Reload relationships in case we want fresh data
         $booking->load('customerInfo');
-        $booking->makeHidden(['receipt_path']);
-        $booking->customerInfo->makeHidden(['document_path']);
 
         return response()->json($booking, Response::HTTP_OK);
     }
 
     /**
-     * Delete a booking by its ID.
-     *
      * @OA\Delete(
-     *     path="/bookings/{id}",
-     *     summary="Delete a booking by ID",
+     *     path="/api/bookings/{id}",
+     *     summary="Delete a booking and reset its unit to Available",
+     *     operationId="destroyBooking",
      *     tags={"Bookings"},
      *     security={{"sanctum":{}}},
      *     @OA\Parameter(
@@ -852,19 +803,25 @@ class BookingController extends Controller
      *         in="path",
      *         description="ID of the booking to delete",
      *         required=true,
-     *         @OA\Schema(type="integer", example=42)
+     *         @OA\Schema(type="integer", format="int64")
      *     ),
      *     @OA\Response(
      *         response=204,
-     *         description="Booking deleted successfully"
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Booking not found"
+     *         description="Booking deleted successfully, unit status reset to Available"
      *     ),
      *     @OA\Response(
      *         response=403,
-     *         description="Forbidden"
+     *         description="Forbidden — user lacks deletion permission",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Forbidden")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Not Found — booking does not exist",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Booking not found")
+     *         )
      *     )
      * )
      */
@@ -930,7 +887,7 @@ class BookingController extends Controller
      *         required=true,
      *         @OA\Schema(
      *             type="string",
-     *             enum={"passport","receipt","rf","signed_rf","spa","signed_spa"},
+     *             enum={"passport","receipt","rf","signed_rf","spa","signed_spa","dld"},
      *             example="receipt"
      *         )
      *     ),
@@ -950,7 +907,7 @@ class BookingController extends Controller
         $validated = Validator::make(
             ['type' => $type],
             ['type' => ['required', Rule::in([
-                'passport', 'receipt', 'rf', 'signed_rf', 'spa', 'signed_spa'
+                'passport', 'receipt', 'rf', 'signed_rf', 'spa', 'signed_spa', 'dld'
             ])]]
         )->validate();
 
@@ -982,6 +939,7 @@ class BookingController extends Controller
             'signed_rf' => fn() => optional($booking->signedReservationForm)->signed_file_path,
             'spa' => fn() => optional($booking->spa)->file_path,
             'signed_spa' => fn() => optional($booking->signedSpa)->signed_file_path,
+            'dld' => fn() => optional($booking->dldDocument)->file_path,
         ];
         $path = $getPath[$validated['type']]();
 

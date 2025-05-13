@@ -33,14 +33,6 @@ class PaymentPlan extends Model
     ];
 
     /**
-     * Get the unit that owns the payment plan.
-     */
-    public function unit()
-    {
-        return $this->belongsTo(Unit::class);
-    }
-
-    /**
      * Get the installments associated with this payment plan.
      */
     public function installments()
