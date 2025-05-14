@@ -11,6 +11,8 @@ class Building extends Model
 
     protected $fillable = ['name', 'location', 'status', 'ecd', 'added_by_id', 'image_path'];
 
+    protected $hidden = ['image_path'];
+
     public function units()
     {
         return $this->hasMany(Unit::class);

@@ -23,22 +23,13 @@ class PaymentPlan extends Model
         'booking_percentage',
         'handover_percentage',
         'construction_percentage',
-        'first_construction_installment_date',
-        'isDefault',
+        'is_default',
         'blocks',
     ];
 
     protected $casts = [
         'blocks' => 'array',
     ];
-
-    /**
-     * Get the unit that owns the payment plan.
-     */
-    public function unit()
-    {
-        return $this->belongsTo(Unit::class);
-    }
 
     /**
      * Get the installments associated with this payment plan.

@@ -277,7 +277,7 @@ class SpaController extends Controller
      *             @OA\Property(
      *                 property="message",
      *                 type="string",
-     *                 example="SPA has been approved and Unit is now Sold!"
+     *                 example="SPA has been approved! Waiting for DLD document"
      *             )
      *         )
      *     ),
@@ -322,13 +322,15 @@ class SpaController extends Controller
 
         // 4. Change the associated Booking status to "Sold" (final)
         if ($spa->booking) {
-            $spa->booking->status = 'Booked';
-            $spa->booking->save();
+            $spa->booking->update([
+                'status' => 'Completed',
+            ]);
 
             if ($spa->booking->unit) {
-                $spa->booking->unit->status = 'Sold';
-                $spa->booking->unit->status_changed_at = now();
-                $spa->booking->unit->save();
+                $spa->booking->unit->update([
+                    'status' => 'Completed',
+                    'status_changed_at' => now(),
+                ]);
             }
         }
 
@@ -341,6 +343,6 @@ class SpaController extends Controller
             'status'        => 'Approved',
         ]);
 
-        return response()->json(['message' => 'SPA has been approved and Unit is now Sold!'], Response::HTTP_OK);
+        return response()->json(['message' => 'SPA has been approved! Waiting for DLD document.'], Response::HTTP_OK);
     }
 }

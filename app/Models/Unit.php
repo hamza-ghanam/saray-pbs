@@ -16,17 +16,54 @@ class Unit extends Model
         'floor',
         'parking',
         'pool_jacuzzi',
-        'suite_area',
-        'balcony_area',
-        'total_area',
+        'internal_square',
+        'external_square',
         'furnished',
         'unit_view',
         'price',
-        'completion_date',
+        'min_price',
+        'pre_lunch_price',
+        'lunch_price',
         'building_id',
         'status_changed_at',
+        'status',
         'floor_plan',
     ];
+
+    protected $hidden = ['floor_plan'];
+
+    protected $appends = [
+        'internal_square_ft',
+        'external_square_ft',
+        'total_square_ft',
+        'total_square',
+    ];
+
+    protected const SQM_TO_SQFT = 10.7639;
+
+    public function getTotalSquareAttribute(): float
+    {
+        return ($this->internal_square ?? 0) + ($this->external_square ?? 0);
+    }
+
+    public function getInternalSquareFtAttribute(): float
+    {
+        return round(($this->internal_square ?? 0) * self::SQM_TO_SQFT, 2);
+    }
+
+    public function getExternalSquareFtAttribute(): float
+    {
+        return round(($this->external_square ?? 0) * self::SQM_TO_SQFT, 2);
+    }
+
+    public function getTotalSquareFtAttribute(): float
+    {
+        return round(
+            (($this->internal_square ?? 0) + ($this->external_square ?? 0))
+            * self::SQM_TO_SQFT,
+            2
+        );
+    }
 
     public function building()
     {
@@ -56,11 +93,6 @@ class Unit extends Model
     public function salesOffers()
     {
         return $this->hasMany(SalesOffer::class);
-    }
-
-    public function paymentPlans()
-    {
-        return $this->hasMany(PaymentPlan::class);
     }
 
     public function unitUpdates()

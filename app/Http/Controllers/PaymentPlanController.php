@@ -248,7 +248,7 @@ class PaymentPlanController extends Controller
      * Delete a payment plan and its installments.
      *
      * @OA\Delete(
-     *     path="/payment-plans/{id}",
+     *     path="/api/payment-plans/{id}",
      *     summary="Delete a payment plan",
      *     tags={"PaymentPlans"},
      *     security={{"sanctum":{}}},
@@ -257,17 +257,34 @@ class PaymentPlanController extends Controller
      *         in="path",
      *         description="ID of the payment plan to delete",
      *         required=true,
-     *         @OA\Schema(type="integer")
+     *         @OA\Schema(type="integer", format="int64")
      *     ),
      *     @OA\Response(
      *         response=204,
      *         description="Payment plan deleted successfully"
      *     ),
-     *     @OA\Response(response=403, description="Forbidden")
+     *     @OA\Response(
+     *         response=403,
+     *         description="Forbidden — user lacks permission to delete this plan",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unauthorized")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Not Found — payment plan does not exist",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="No query results for model [App\\Models\\PaymentPlan] 123")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=409,
+     *         description="Conflict — cannot delete a plan applied to existing bookings",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="Cannot delete a payment plan that is applied on existing bookings.")
+     *         )
+     *     )
      * )
-     *
-     * @param int $id
-     * @return \Illuminate\Http\JsonResponse
      */
     public function destroy(Request $request, $id)
     {
@@ -277,6 +294,14 @@ class PaymentPlanController extends Controller
         }
 
         $paymentPlan = PaymentPlan::findOrFail($id);
+
+        // Reject if there are any bookings tied to this plan
+        if ($paymentPlan->bookings()->exists()) {
+            return response()->json([
+                'error' => 'Cannot delete a payment plan that is applied on existing bookings.'
+            ], Response::HTTP_CONFLICT);
+        }
+
         $paymentPlan->delete();
 
         return response()->json(null, Response::HTTP_NO_CONTENT);

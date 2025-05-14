@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Requests;
 
+use App\Models\PaymentPlan;
 use Illuminate\Foundation\Http\FormRequest;
 use Carbon\Carbon;
 
@@ -30,6 +31,7 @@ class StorePaymentPlanRequest extends FormRequest
             'dld_fee_percentage'    => ['required','numeric','between:0,100'],
             'admin_fee'             => ['required','numeric','min:0'],
             'EOI'                   => ['required','numeric','min:0'],
+            'is_default'            => ['sometimes','boolean'],
 
             'blocks'                => ['required','array','min:2'],
             'blocks.*.type'         => ['required','in:single,repeat'],
@@ -80,6 +82,19 @@ class StorePaymentPlanRequest extends FormRequest
                     'blocks',
                     "Total of all percentages must equal 100 (got {$totalPct}%)."
                 );
+            }
+
+            if ($this->boolean('is_default')) {
+                $exists = PaymentPlan::where('is_default', true)
+                    ->when($this->route('id'), fn($q, $id) => $q->where('id', '!=', $id))
+                    ->exists();
+
+                if ($exists) {
+                    $v->errors()->add(
+                        'is_default',
+                        'There is already another default payment plan—only one may be default.'
+                    );
+                }
             }
 
             // 2) Ensure each block’s start date is unique

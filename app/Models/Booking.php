@@ -20,6 +20,8 @@ class Booking extends Model
         'payment_plan_id',
     ];
 
+    protected $hidden = ['receipt_path'];
+
     public function user()
     {
         return $this->belongsTo(User::class, 'created_by');
@@ -81,5 +83,10 @@ class Booking extends Model
     {
         return $this->hasMany(Installment::class)
             ->orderBy('date');
+    }
+
+    public function dldDocument()
+    {
+        return $this->hasOne(DldDocument::class);
     }
 }

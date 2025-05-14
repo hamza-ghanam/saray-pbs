@@ -314,7 +314,6 @@
                     "Bookings"
                 ],
                 "summary": "Update a booking (and its customer info) by ID",
-                "description": "Update an existing booking and its related customer info.",
                 "operationId": "6f58c5d17bbc7034b229d97390054811",
                 "parameters": [
                     {
@@ -335,42 +334,32 @@
                             "schema": {
                                 "properties": {
                                     "name": {
-                                        "description": "Updated customer name",
                                         "type": "string",
-                                        "maxLength": 255,
                                         "example": "John Smith"
                                     },
                                     "passport_number": {
-                                        "description": "Updated passport number",
                                         "type": "string",
-                                        "maxLength": 50,
                                         "example": "N001234567"
                                     },
                                     "birth_date": {
-                                        "description": "Updated birth date",
                                         "type": "string",
                                         "format": "date",
                                         "example": "1992-02-05"
                                     },
                                     "gender": {
-                                        "description": "Updated gender",
                                         "type": "string",
-                                        "maxLength": 10,
                                         "example": "Male"
                                     },
                                     "nationality": {
-                                        "description": "Updated nationality",
                                         "type": "string",
-                                        "maxLength": 255,
-                                        "example": "Syrian Arab Republic (the)"
+                                        "example": "Syrian Arab Republic"
                                     },
                                     "payment_plan_id": {
-                                        "description": "ID of the selected payment plan for this unit",
                                         "type": "integer",
                                         "example": 5
                                     },
                                     "receipt": {
-                                        "description": "Optional new receipt file (pdf, jpg, jpeg, png)",
+                                        "description": "Optional new receipt file",
                                         "type": "string",
                                         "format": "binary"
                                     }
@@ -386,67 +375,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "properties": {
-                                        "id": {
-                                            "type": "integer",
-                                            "example": 42
-                                        },
-                                        "unit_id": {
-                                            "type": "integer",
-                                            "example": 12
-                                        },
-                                        "customer_info_id": {
-                                            "type": "integer",
-                                            "example": 7
-                                        },
-                                        "status": {
-                                            "type": "string",
-                                            "example": "Pre-Booked"
-                                        },
-                                        "confirmed_by": {
-                                            "type": "integer",
-                                            "example": null,
-                                            "nullable": true
-                                        },
-                                        "confirmed_at": {
-                                            "type": "string",
-                                            "format": "date-time",
-                                            "example": null,
-                                            "nullable": true
-                                        },
-                                        "customer_info": {
-                                            "description": "Nested customer info",
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 7
-                                                },
-                                                "name": {
-                                                    "type": "string",
-                                                    "example": "John Smith"
-                                                },
-                                                "passport_number": {
-                                                    "type": "string",
-                                                    "example": "N001234567"
-                                                },
-                                                "birth_date": {
-                                                    "type": "string",
-                                                    "format": "date",
-                                                    "example": "1992-02-05"
-                                                },
-                                                "gender": {
-                                                    "type": "string",
-                                                    "example": "Male"
-                                                },
-                                                "nationality": {
-                                                    "type": "string",
-                                                    "example": "Syrian Arab Republic (the)"
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/Booking"
                                 }
                             }
                         }
@@ -462,42 +391,6 @@
                     },
                     "500": {
                         "description": "Internal Server Error"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            },
-            "delete": {
-                "tags": [
-                    "Bookings"
-                ],
-                "summary": "Delete a booking by ID",
-                "description": "Delete a booking by its ID.",
-                "operationId": "dc3a5e70d8c1811d5888122376cf81b3",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID of the booking to delete",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "example": 42
-                        }
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "Booking deleted successfully"
-                    },
-                    "404": {
-                        "description": "Booking not found"
-                    },
-                    "403": {
-                        "description": "Forbidden"
                     }
                 },
                 "security": [
@@ -540,47 +433,57 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "description": "Parsed passport data",
                                     "properties": {
-                                        "type": {
-                                            "type": "string",
-                                            "example": "Passport"
+                                        "passport": {
+                                            "description": "Parsed passport data",
+                                            "properties": {
+                                                "type": {
+                                                    "type": "string",
+                                                    "example": "Passport"
+                                                },
+                                                "card_no": {
+                                                    "type": "string",
+                                                    "example": "015194164"
+                                                },
+                                                "issuer": {
+                                                    "type": "string",
+                                                    "example": "Syrian Arab Republic"
+                                                },
+                                                "date_of_expiry": {
+                                                    "type": "string",
+                                                    "example": "2024-07-05"
+                                                },
+                                                "first_name": {
+                                                    "type": "string",
+                                                    "example": "JOHN"
+                                                },
+                                                "last_name": {
+                                                    "type": "string",
+                                                    "example": "SMITH"
+                                                },
+                                                "date_of_birth": {
+                                                    "type": "string",
+                                                    "example": "1988-10-09"
+                                                },
+                                                "gender": {
+                                                    "type": "string",
+                                                    "example": "Male"
+                                                },
+                                                "personal_number": {
+                                                    "type": "string",
+                                                    "example": "01092683756"
+                                                },
+                                                "nationality": {
+                                                    "type": "string",
+                                                    "example": "Syrian Arab Republic"
+                                                }
+                                            },
+                                            "type": "object"
                                         },
-                                        "card_no": {
+                                        "upload_token": {
+                                            "description": "Token to reference the stored upload for later use",
                                             "type": "string",
-                                            "example": "015194164"
-                                        },
-                                        "issuer": {
-                                            "type": "string",
-                                            "example": "Syrian Arab Republic"
-                                        },
-                                        "date_of_expiry": {
-                                            "type": "string",
-                                            "example": "2024-07-05"
-                                        },
-                                        "first_name": {
-                                            "type": "string",
-                                            "example": "JOHN"
-                                        },
-                                        "last_name": {
-                                            "type": "string",
-                                            "example": "SMITH"
-                                        },
-                                        "date_of_birth": {
-                                            "type": "string",
-                                            "example": "1988-10-09"
-                                        },
-                                        "gender": {
-                                            "type": "string",
-                                            "example": "Male"
-                                        },
-                                        "personal_number": {
-                                            "type": "string",
-                                            "example": "01092683756"
-                                        },
-                                        "nationality": {
-                                            "type": "string",
-                                            "example": "Syrian Arab Republic"
+                                            "example": "3d1ad42a-49bb-4171-83af-f67dd83e97c3"
                                         }
                                     },
                                     "type": "object"
@@ -653,7 +556,7 @@
                     "Bookings"
                 ],
                 "summary": "Book a unit by creating CustomerInfo and Booking with status Pre-Booked",
-                "description": "Book a unit with provided customer information, optional receipt, discount and notes.",
+                "description": "Book a unit with provided customer information, optional passport upload, receipt, discount and notes.",
                 "operationId": "5c506914f01cb885d4e38f9806bcd14b",
                 "requestBody": {
                     "required": true,
@@ -661,7 +564,6 @@
                         "multipart/form-data": {
                             "schema": {
                                 "required": [
-                                    "upload_token",
                                     "name",
                                     "passport_number",
                                     "birth_date",
@@ -671,8 +573,10 @@
                                 ],
                                 "properties": {
                                     "upload_token": {
+                                        "description": "Optional token for a previously uploaded passport; omit to skip document",
                                         "type": "string",
-                                        "example": "3d1ad42a-49bb-4171-83af-f67dd83e97c3"
+                                        "example": "3d1ad42a-49bb-4171-83af-f67dd83e97c3",
+                                        "nullable": true
                                     },
                                     "name": {
                                         "type": "string",
@@ -733,198 +637,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "required": [
-                                        "id",
-                                        "unit_id",
-                                        "payment_plan_id",
-                                        "customer_info_id",
-                                        "status",
-                                        "price",
-                                        "created_by",
-                                        "created_at",
-                                        "updated_at"
-                                    ],
-                                    "properties": {
-                                        "id": {
-                                            "type": "integer",
-                                            "example": 42
-                                        },
-                                        "unit_id": {
-                                            "type": "integer",
-                                            "example": 12
-                                        },
-                                        "payment_plan_id": {
-                                            "type": "integer",
-                                            "example": 5
-                                        },
-                                        "customer_info_id": {
-                                            "type": "integer",
-                                            "example": 7
-                                        },
-                                        "status": {
-                                            "type": "string",
-                                            "example": "Pre-Booked"
-                                        },
-                                        "price": {
-                                            "type": "number",
-                                            "format": "float",
-                                            "example": 1535432
-                                        },
-                                        "discount": {
-                                            "type": "number",
-                                            "format": "float",
-                                            "example": 5
-                                        },
-                                        "notes": {
-                                            "type": "string",
-                                            "example": "Customer requests early handover."
-                                        },
-                                        "created_by": {
-                                            "type": "integer",
-                                            "example": 3
-                                        },
-                                        "receipt_path": {
-                                            "type": "string",
-                                            "example": "receipts/abc123.pdf"
-                                        },
-                                        "installments": {
-                                            "type": "array",
-                                            "items": {
-                                                "required": [
-                                                    "payment_plan_id",
-                                                    "description",
-                                                    "percentage",
-                                                    "date",
-                                                    "amount"
-                                                ],
-                                                "properties": {
-                                                    "payment_plan_id": {
-                                                        "type": "integer",
-                                                        "example": 5
-                                                    },
-                                                    "description": {
-                                                        "type": "string",
-                                                        "example": "Booking Installment"
-                                                    },
-                                                    "percentage": {
-                                                        "type": "number",
-                                                        "format": "float",
-                                                        "example": 20
-                                                    },
-                                                    "date": {
-                                                        "type": "string",
-                                                        "format": "date",
-                                                        "example": "2025-01-01"
-                                                    },
-                                                    "amount": {
-                                                        "type": "number",
-                                                        "format": "float",
-                                                        "example": 293173.12
-                                                    }
-                                                },
-                                                "type": "object"
-                                            }
-                                        },
-                                        "customer_info": {
-                                            "required": [
-                                                "id",
-                                                "name",
-                                                "passport_number",
-                                                "birth_date",
-                                                "gender",
-                                                "nationality",
-                                                "created_at",
-                                                "updated_at"
-                                            ],
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 7
-                                                },
-                                                "name": {
-                                                    "type": "string",
-                                                    "example": "John Smith"
-                                                },
-                                                "passport_number": {
-                                                    "type": "string",
-                                                    "example": "N001234567"
-                                                },
-                                                "birth_date": {
-                                                    "type": "string",
-                                                    "format": "date",
-                                                    "example": "1992-02-05"
-                                                },
-                                                "gender": {
-                                                    "type": "string",
-                                                    "example": "Male"
-                                                },
-                                                "nationality": {
-                                                    "type": "string",
-                                                    "example": "Syrian Arab Republic"
-                                                },
-                                                "created_at": {
-                                                    "type": "string",
-                                                    "format": "date-time",
-                                                    "example": "2025-05-02T15:58:00Z"
-                                                },
-                                                "updated_at": {
-                                                    "type": "string",
-                                                    "format": "date-time",
-                                                    "example": "2025-05-02T15:58:00Z"
-                                                }
-                                            },
-                                            "type": "object"
-                                        },
-                                        "unit": {
-                                            "required": [
-                                                "id",
-                                                "unit_no",
-                                                "price",
-                                                "status"
-                                            ],
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 12
-                                                },
-                                                "unit_no": {
-                                                    "type": "string",
-                                                    "example": "A-302"
-                                                },
-                                                "price": {
-                                                    "type": "number",
-                                                    "format": "float",
-                                                    "example": 1621554.74
-                                                },
-                                                "status": {
-                                                    "type": "string",
-                                                    "example": "Available"
-                                                },
-                                                "created_at": {
-                                                    "type": "string",
-                                                    "format": "date-time",
-                                                    "example": "2025-05-01T12:00:00Z"
-                                                },
-                                                "updated_at": {
-                                                    "type": "string",
-                                                    "format": "date-time",
-                                                    "example": "2025-05-01T12:30:00Z"
-                                                }
-                                            },
-                                            "type": "object"
-                                        },
-                                        "created_at": {
-                                            "type": "string",
-                                            "format": "date-time",
-                                            "example": "2025-05-02T16:00:00Z"
-                                        },
-                                        "updated_at": {
-                                            "type": "string",
-                                            "format": "date-time",
-                                            "example": "2025-05-02T16:00:00Z"
-                                        }
-                                    },
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/Booking"
                                 }
                             }
                         }
@@ -946,19 +659,19 @@
                 ]
             }
         },
-        "/bookings/{id}/upload-receipt": {
+        "/bookings/{id}/upload-document": {
             "post": {
                 "tags": [
                     "Bookings"
                 ],
-                "summary": "Upload or replace a payment receipt for an existing booking",
-                "description": "Upload (or replace) a payment receipt for an existing booking.",
-                "operationId": "6618a7e2c37fdfd2df93eaab894461c5",
+                "summary": "Upload (or replace) an ID document or a payment receipt for an existing booking",
+                "description": "Upload or replace either the customer’s ID document **or** a payment receipt.",
+                "operationId": "48ea949a14be0a3b79a9093ddadb5767",
                 "parameters": [
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "ID of the booking to upload a receipt for",
+                        "description": "ID of the booking",
                         "required": true,
                         "schema": {
                             "type": "integer",
@@ -971,64 +684,96 @@
                     "content": {
                         "multipart/form-data": {
                             "schema": {
-                                "required": [
-                                    "receipt"
-                                ],
+                                "description": "Provide **either** `id_document` **or** `receipt`",
                                 "properties": {
+                                    "id_document": {
+                                        "description": "Customer ID document (pdf, jpg, jpeg, png)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
                                     "receipt": {
-                                        "description": "Payment receipt file (pdf, jpg, jpeg, png)",
+                                        "description": "Payment receipt (pdf, jpg, jpeg, png)",
                                         "type": "string",
                                         "format": "binary"
                                     }
                                 },
-                                "type": "object"
+                                "type": "object",
+                                "oneOf": [
+                                    {
+                                        "required": [
+                                            "id_document"
+                                        ]
+                                    },
+                                    {
+                                        "required": [
+                                            "receipt"
+                                        ]
+                                    }
+                                ]
                             }
                         }
                     }
                 },
                 "responses": {
                     "200": {
-                        "description": "Receipt uploaded successfully",
+                        "description": "Document uploaded successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Booking"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Booking not found"
+                    },
+                    "422": {
+                        "description": "Validation error or missing file"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/bookings/{id}": {
+            "delete": {
+                "tags": [
+                    "Bookings"
+                ],
+                "summary": "Delete a booking and reset its unit to Available",
+                "operationId": "destroyBooking",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the booking to delete",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Booking deleted successfully, unit status reset to Available"
+                    },
+                    "403": {
+                        "description": "Forbidden — user lacks deletion permission",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "id": {
-                                            "type": "integer",
-                                            "example": 42
-                                        },
-                                        "unit_id": {
-                                            "type": "integer",
-                                            "example": 12
-                                        },
-                                        "customer_info_id": {
-                                            "type": "integer",
-                                            "example": 7
-                                        },
-                                        "status": {
+                                        "message": {
                                             "type": "string",
-                                            "example": "Pre-Booked"
-                                        },
-                                        "confirmed_by": {
-                                            "type": "integer",
-                                            "example": null,
-                                            "nullable": true
-                                        },
-                                        "confirmed_at": {
-                                            "type": "string",
-                                            "format": "date-time",
-                                            "example": null,
-                                            "nullable": true
-                                        },
-                                        "created_at": {
-                                            "type": "string",
-                                            "format": "date-time",
-                                            "example": "2025-03-10T12:00:00Z"
-                                        },
-                                        "updated_at": {
-                                            "type": "string",
-                                            "format": "date-time",
-                                            "example": "2025-03-10T12:00:00Z"
+                                            "example": "Forbidden"
                                         }
                                     },
                                     "type": "object"
@@ -1037,13 +782,20 @@
                         }
                     },
                     "404": {
-                        "description": "Booking not found"
-                    },
-                    "422": {
-                        "description": "Validation error"
-                    },
-                    "403": {
-                        "description": "Forbidden"
+                        "description": "Not Found — booking does not exist",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Booking not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -1085,7 +837,8 @@
                                 "rf",
                                 "signed_rf",
                                 "spa",
-                                "signed_spa"
+                                "signed_spa",
+                                "dld"
                             ],
                             "example": "receipt"
                         }
@@ -1289,20 +1042,19 @@
                 }
             }
         },
-        "/buildings": {
+        "/api/buildings": {
             "get": {
                 "tags": [
                     "Building"
                 ],
                 "summary": "List all buildings with optional filters and pagination",
                 "description": "Display a paginated listing of buildings.",
-                "operationId": "8dbf4d765ceccf748097033980369501",
+                "operationId": "704d1f7897ed7a3b8d29dacea66823ad",
                 "parameters": [
                     {
                         "name": "name",
                         "in": "query",
-                        "description": "Filter buildings by name",
-                        "required": false,
+                        "description": "Filter by name",
                         "schema": {
                             "type": "string"
                         }
@@ -1310,8 +1062,7 @@
                     {
                         "name": "location",
                         "in": "query",
-                        "description": "Filter buildings by location",
-                        "required": false,
+                        "description": "Filter by location",
                         "schema": {
                             "type": "string"
                         }
@@ -1319,8 +1070,7 @@
                     {
                         "name": "status",
                         "in": "query",
-                        "description": "Filter buildings by status",
-                        "required": false,
+                        "description": "Filter by status",
                         "schema": {
                             "type": "string"
                         }
@@ -1329,7 +1079,6 @@
                         "name": "page",
                         "in": "query",
                         "description": "Page number",
-                        "required": false,
                         "schema": {
                             "type": "integer",
                             "example": 1
@@ -1338,8 +1087,7 @@
                     {
                         "name": "limit",
                         "in": "query",
-                        "description": "Number of items per page",
-                        "required": false,
+                        "description": "Items per page (max 100)",
                         "schema": {
                             "type": "integer",
                             "example": 10
@@ -1382,7 +1130,7 @@
                         }
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — insufficient permissions"
                     }
                 },
                 "security": [
@@ -1397,7 +1145,7 @@
                 ],
                 "summary": "Create a new building",
                 "description": "Store a newly created building in storage, optionally with an image.",
-                "operationId": "91828bb17342458c9c9e1d3382ef3198",
+                "operationId": "c8f8399919e01b1e4e2e2f6a9f1f5107",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -1443,40 +1191,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "properties": {
-                                        "id": {
-                                            "type": "integer",
-                                            "format": "int64",
-                                            "example": 123
-                                        },
-                                        "name": {
-                                            "type": "string",
-                                            "example": "Building A"
-                                        },
-                                        "location": {
-                                            "type": "string",
-                                            "example": "Downtown"
-                                        },
-                                        "status": {
-                                            "type": "string",
-                                            "example": "Off-Plan"
-                                        },
-                                        "ecd": {
-                                            "type": "string",
-                                            "example": "Q4-2026"
-                                        },
-                                        "added_by_id": {
-                                            "type": "integer",
-                                            "example": 45
-                                        },
-                                        "image_url": {
-                                            "description": "Authenticated URL to fetch the building’s image",
-                                            "type": "string",
-                                            "format": "url",
-                                            "example": "https://your-domain.com/api/buildings/123/image"
-                                        }
-                                    },
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/Building"
                                 }
                             }
                         }
@@ -1485,7 +1200,7 @@
                         "description": "Validation error"
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — insufficient permissions"
                     }
                 },
                 "security": [
@@ -1495,22 +1210,23 @@
                 ]
             }
         },
-        "/buildings/{id}": {
+        "/api/buildings/{id}": {
             "get": {
                 "tags": [
                     "Building"
                 ],
                 "summary": "Get building details",
                 "description": "Display the specified building.",
-                "operationId": "5512ef4690f0e1993ac9401ca1a3dcee",
+                "operationId": "7c2e9a5ec44b127b681717d1d5b91152",
                 "parameters": [
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "ID of the building",
+                        "description": "Building ID",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "integer",
+                            "format": "int64"
                         }
                     }
                 ],
@@ -1526,7 +1242,10 @@
                         }
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — insufficient permissions"
+                    },
+                    "404": {
+                        "description": "Not Found — building does not exist"
                     }
                 },
                 "security": [
@@ -1539,17 +1258,18 @@
                 "tags": [
                     "Building"
                 ],
-                "summary": "Update an existing building",
+                "summary": "Update a building",
                 "description": "Update an existing building, optionally replacing its image.",
-                "operationId": "fbc9958f26c4410b19f5b059bec2e49b",
+                "operationId": "0bd50384a833589efa669b51b8e1ff88",
                 "parameters": [
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "ID of the building to update",
+                        "description": "Building ID",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "integer",
+                            "format": "int64"
                         }
                     }
                 ],
@@ -1576,7 +1296,7 @@
                                         "example": "Q4-2026"
                                     },
                                     "image": {
-                                        "description": "Optional new building image (jpeg, png, gif)",
+                                        "description": "Optional new building image",
                                         "type": "string",
                                         "format": "binary"
                                     }
@@ -1592,39 +1312,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "properties": {
-                                        "id": {
-                                            "type": "integer",
-                                            "example": 123
-                                        },
-                                        "name": {
-                                            "type": "string",
-                                            "example": "Building A Updated"
-                                        },
-                                        "location": {
-                                            "type": "string",
-                                            "example": "New Location"
-                                        },
-                                        "status": {
-                                            "type": "string",
-                                            "example": "Off-Plan"
-                                        },
-                                        "ecd": {
-                                            "type": "string",
-                                            "example": "Q4-2026"
-                                        },
-                                        "added_by_id": {
-                                            "type": "integer",
-                                            "example": 45
-                                        },
-                                        "image_url": {
-                                            "description": "Authenticated URL to fetch the building’s image",
-                                            "type": "string",
-                                            "format": "url",
-                                            "example": "https://your-domain.com/api/buildings/123/image"
-                                        }
-                                    },
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/Building"
                                 }
                             }
                         }
@@ -1633,7 +1321,10 @@
                         "description": "Validation error"
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — insufficient permissions"
+                    },
+                    "404": {
+                        "description": "Not Found — building does not exist"
                     }
                 },
                 "security": [
@@ -1648,15 +1339,16 @@
                 ],
                 "summary": "Delete a building",
                 "description": "Remove the specified building from storage.",
-                "operationId": "d5e7526ffccb2953f696d47de5b43656",
+                "operationId": "db5360c892964cf865373a95f5da4633",
                 "parameters": [
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "ID of the building to delete",
+                        "description": "Building ID",
                         "required": true,
                         "schema": {
-                            "type": "integer"
+                            "type": "integer",
+                            "format": "int64"
                         }
                     }
                 ],
@@ -1665,7 +1357,13 @@
                         "description": "Building deleted successfully"
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — insufficient permissions"
+                    },
+                    "404": {
+                        "description": "Not Found — building does not exist"
+                    },
+                    "409": {
+                        "description": "Conflict — building has existing units"
                     }
                 },
                 "security": [
@@ -1675,30 +1373,29 @@
                 ]
             }
         },
-        "/buildings/{buildingId}/units": {
+        "/api/buildings/{buildingId}/units": {
             "get": {
                 "tags": [
                     "Building"
                 ],
-                "summary": "List all units for a specific building with optional filters and pagination",
-                "description": "Display a paginated listing of units within a specific building.",
-                "operationId": "01aed30ff1834334b3679d6c956e371f",
+                "summary": "List units in a building",
+                "description": "List all units for a specific building with optional filters.",
+                "operationId": "2ea5af369ed04223da6d7b2fb00aff75",
                 "parameters": [
                     {
                         "name": "buildingId",
                         "in": "path",
-                        "description": "ID of the building",
+                        "description": "Building ID",
                         "required": true,
                         "schema": {
                             "type": "integer",
-                            "example": 1
+                            "format": "int64"
                         }
                     },
                     {
                         "name": "unit_no",
                         "in": "query",
-                        "description": "Filter units by unit number",
-                        "required": false,
+                        "description": "Filter by unit number",
                         "schema": {
                             "type": "string",
                             "example": "A101"
@@ -1707,8 +1404,7 @@
                     {
                         "name": "status",
                         "in": "query",
-                        "description": "Filter units by status",
-                        "required": false,
+                        "description": "Filter by status",
                         "schema": {
                             "type": "string",
                             "enum": [
@@ -1728,7 +1424,6 @@
                         "name": "page",
                         "in": "query",
                         "description": "Page number",
-                        "required": false,
                         "schema": {
                             "type": "integer",
                             "example": 1
@@ -1737,8 +1432,7 @@
                     {
                         "name": "limit",
                         "in": "query",
-                        "description": "Number of items per page (max 100)",
-                        "required": false,
+                        "description": "Items per page (max 100)",
                         "schema": {
                             "type": "integer",
                             "example": 10
@@ -1747,7 +1441,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "A paginated list of units for the specified building",
+                        "description": "Paginated list of units",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1781,10 +1475,163 @@
                         }
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden — insufficient permissions"
                     },
                     "404": {
-                        "description": "Building not found"
+                        "description": "Not Found — building does not exist"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/buildings/{id}/image": {
+            "get": {
+                "tags": [
+                    "Building"
+                ],
+                "summary": "Retrieve the building image",
+                "description": "Serve the building’s image binary, with strong cache validators.",
+                "operationId": "a056375f7927130e6ee13c0ba980e059",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Building ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Building image binary",
+                        "content": {
+                            "application/octet-stream": {}
+                        }
+                    },
+                    "304": {
+                        "description": "Not Modified"
+                    },
+                    "403": {
+                        "description": "Forbidden — insufficient permissions"
+                    },
+                    "404": {
+                        "description": "Not Found — image does not exist"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/bookings/{booking}/dld": {
+            "post": {
+                "tags": [
+                    "Bookings"
+                ],
+                "summary": "Upload a DLD document for a booking and mark the unit as Sold",
+                "operationId": "uploadBookingDld",
+                "parameters": [
+                    {
+                        "name": "booking",
+                        "in": "path",
+                        "description": "ID of the booking to upload DLD for",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "dld_document": {
+                                        "description": "PDF file of the DLD document",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "DLD uploaded and booking & unit status updated to Sold",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "DLD uploaded and persisted; booking and unit are now Sold."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden — user lacks permission",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Forbidden"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation failed or unit not in Completed status",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Cannot upload DLD unless the unit is in Completed status."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict — DLD already exists",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "A DLD document has already been uploaded for this booking."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -2023,167 +1870,6 @@
                     },
                     "422": {
                         "description": "Invalid state: Holding/Unit not in Pre-Hold or invalid action"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            }
-        },
-        "/device-token": {
-            "post": {
-                "tags": [
-                    "Notifications"
-                ],
-                "summary": "Store or update the device token",
-                "description": "Stores the device token for the authenticated user or updates an existing record.",
-                "operationId": "storeDeviceToken",
-                "requestBody": {
-                    "description": "Device token payload",
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "token"
-                                ],
-                                "properties": {
-                                    "token": {
-                                        "type": "string",
-                                        "example": "YOUR_DEVICE_TOKEN"
-                                    },
-                                    "device_type": {
-                                        "type": "string",
-                                        "example": "android"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Device token stored successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Device token stored successfully."
-                                        },
-                                        "data": {
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Unprocessable Entity",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "error": {
-                                            "type": "string",
-                                            "example": "The given data was invalid."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            }
-        },
-        "/notify": {
-            "post": {
-                "tags": [
-                    "Notifications"
-                ],
-                "summary": "Send a test push notification",
-                "description": "Sends a test push notification to a device using its FCM token.",
-                "operationId": "sendPushNotification",
-                "requestBody": {
-                    "description": "Device token payload",
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "token"
-                                ],
-                                "properties": {
-                                    "token": {
-                                        "type": "string",
-                                        "example": "YOUR_DEVICE_TOKEN"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Notification sent successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Notification sent successfully."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Unprocessable Entity",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "error": {
-                                            "type": "string",
-                                            "example": "Device token is required"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "error": {
-                                            "type": "string",
-                                            "example": "An error occurred while sending the notification."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
                     }
                 },
                 "security": [
@@ -2655,6 +2341,84 @@
                         "sanctum": []
                     }
                 ]
+            },
+            "delete": {
+                "tags": [
+                    "PaymentPlans"
+                ],
+                "summary": "Delete a payment plan",
+                "description": "Delete a payment plan and its installments.",
+                "operationId": "23bb54c79dc39bfd4f313b7b4f8c29e2",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the payment plan to delete",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Payment plan deleted successfully"
+                    },
+                    "403": {
+                        "description": "Forbidden — user lacks permission to delete this plan",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthorized"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found — payment plan does not exist",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "No query results for model [App\\\\Models\\\\PaymentPlan] 123"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict — cannot delete a plan applied to existing bookings",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Cannot delete a payment plan that is applied on existing bookings."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
             }
         },
         "/api/payment-plans": {
@@ -2967,40 +2731,6 @@
                                 }
                             }
                         }
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            }
-        },
-        "/payment-plans/{id}": {
-            "delete": {
-                "tags": [
-                    "PaymentPlans"
-                ],
-                "summary": "Delete a payment plan",
-                "description": "Delete a payment plan and its installments.",
-                "operationId": "b747a37bf2263ee4c6da1aaf46814476",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID of the payment plan to delete",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "Payment plan deleted successfully"
-                    },
-                    "403": {
-                        "description": "Forbidden"
                     }
                 },
                 "security": [
@@ -3781,7 +3511,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "SPA has been approved and Unit is now Sold!"
+                                            "example": "SPA has been approved! Waiting for DLD document"
                                         }
                                     },
                                     "type": "object"
@@ -3923,17 +3653,17 @@
                                                         "type": "string",
                                                         "example": "2"
                                                     },
-                                                    "suite_area": {
+                                                    "internal_square": {
                                                         "type": "number",
                                                         "format": "float",
                                                         "example": 102.04
                                                     },
-                                                    "balcony_area": {
+                                                    "external_square": {
                                                         "type": "number",
                                                         "format": "float",
                                                         "example": 38.15
                                                     },
-                                                    "total_area": {
+                                                    "total_square": {
                                                         "type": "number",
                                                         "format": "float",
                                                         "example": 140.19
@@ -3954,11 +3684,6 @@
                                                     "status": {
                                                         "type": "string",
                                                         "example": "Booked"
-                                                    },
-                                                    "completion_date": {
-                                                        "type": "string",
-                                                        "format": "date",
-                                                        "example": "2025-12-15"
                                                     },
                                                     "floor_plan_url": {
                                                         "type": "string",
@@ -4136,7 +3861,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/UnitWithPaymentPlans"
+                                    "$ref": "#/components/schemas/Unit"
                                 }
                             }
                         }
@@ -4202,17 +3927,17 @@
                                             "type": "string",
                                             "example": "1"
                                         },
-                                        "suite_area": {
+                                        "internal_square": {
                                             "type": "number",
                                             "format": "float",
                                             "example": 120.5
                                         },
-                                        "balcony_area": {
+                                        "external_square": {
                                             "type": "number",
                                             "format": "float",
                                             "example": 15.75
                                         },
-                                        "total_area": {
+                                        "total_square": {
                                             "type": "number",
                                             "format": "float",
                                             "example": 136.25
@@ -4234,11 +3959,6 @@
                                             "type": "string",
                                             "example": "Available"
                                         },
-                                        "completion_date": {
-                                            "type": "string",
-                                            "format": "date",
-                                            "example": "2025-12-15"
-                                        },
                                         "floor_plan_url": {
                                             "description": "Authenticated URL to fetch the unit’s floor plan",
                                             "type": "string",
@@ -4251,13 +3971,6 @@
                                             "type": "array",
                                             "items": {
                                                 "$ref": "#/components/schemas/Approval"
-                                            }
-                                        },
-                                        "payment_plans": {
-                                            "description": "Payment plans with nested installments",
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/PaymentPlan"
                                             }
                                         },
                                         "latest_holding": {
@@ -4465,12 +4178,12 @@
                                         "type": "string",
                                         "example": "None"
                                     },
-                                    "suite_area": {
+                                    "internal_square": {
                                         "type": "number",
                                         "format": "float",
                                         "example": 120.5
                                     },
-                                    "balcony_area": {
+                                    "external_square": {
                                         "type": "number",
                                         "format": "float",
                                         "example": 15.75
@@ -4565,6 +4278,25 @@
                     },
                     "403": {
                         "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Unit not found"
+                    },
+                    "409": {
+                        "description": "Conflict — unit has existing bookings or holdings",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Cannot delete a unit that has existing bookings or holdings."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -4609,6 +4341,9 @@
                     },
                     "403": {
                         "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Unit not found"
                     }
                 },
                 "security": [
@@ -4624,8 +4359,7 @@
                     "Units"
                 ],
                 "summary": "Assign a unit to a contractor",
-                "description": "Assigns a unit to a contractor. The contractor must have the 'Contractor' role.",
-                "operationId": "assignUnitToContractor",
+                "operationId": "52efb020b7c140fb66a2b21cd4f01a83",
                 "parameters": [
                     {
                         "name": "unitId",
@@ -4638,7 +4372,6 @@
                     }
                 ],
                 "requestBody": {
-                    "description": "ID of the contractor to assign the unit to",
                     "required": true,
                     "content": {
                         "application/json": {
@@ -4675,15 +4408,63 @@
                         }
                     },
                     "400": {
-                        "description": "Bad Request"
+                        "description": "Bad Request — user is not a contractor"
                     },
                     "403": {
-                        "description": "Unauthorized"
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Unit or contractor not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
                     }
                 },
                 "security": [
                     {
-                        "bearerAuth": []
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/units/{id}/floor_plan": {
+            "get": {
+                "tags": [
+                    "Units"
+                ],
+                "summary": "Retrieve the unit’s floor plan image",
+                "operationId": "40ed7c70bec17daa0dab5689efed046d",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the unit",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Floor plan image binary",
+                        "content": {
+                            "application/octet-stream": {}
+                        }
+                    },
+                    "304": {
+                        "description": "Not Modified"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Floor plan not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
                     }
                 ]
             }
@@ -6178,6 +5959,82 @@
     },
     "components": {
         "schemas": {
+            "Booking": {
+                "title": "Booking",
+                "required": [
+                    "id",
+                    "unit_id",
+                    "customer_info_id",
+                    "status",
+                    "created_by",
+                    "created_at",
+                    "updated_at"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64",
+                        "example": 42
+                    },
+                    "unit_id": {
+                        "type": "integer",
+                        "example": 12
+                    },
+                    "payment_plan_id": {
+                        "type": "integer",
+                        "example": 5,
+                        "nullable": true
+                    },
+                    "customer_info_id": {
+                        "type": "integer",
+                        "example": 7
+                    },
+                    "status": {
+                        "type": "string",
+                        "example": "Pre-Booked"
+                    },
+                    "price": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 1535432
+                    },
+                    "discount": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 5
+                    },
+                    "receipt_path": {
+                        "type": "string",
+                        "example": "receipts/abc123.pdf"
+                    },
+                    "created_by": {
+                        "type": "integer",
+                        "example": 3
+                    },
+                    "confirmed_by": {
+                        "type": "integer",
+                        "example": null,
+                        "nullable": true
+                    },
+                    "confirmed_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": null,
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2025-05-02T16:00:00Z"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2025-05-02T16:00:00Z"
+                    }
+                },
+                "type": "object"
+            },
             "Building": {
                 "title": "Building",
                 "required": [
@@ -6191,6 +6048,7 @@
                 "properties": {
                     "id": {
                         "type": "integer",
+                        "format": "int64",
                         "example": 1
                     },
                     "name": {
@@ -6207,7 +6065,7 @@
                     },
                     "ecd": {
                         "type": "string",
-                        "example": "Q4-2026 (Estimated Completion Date)"
+                        "example": "Q4-2026"
                     },
                     "added_by_id": {
                         "type": "integer",
@@ -6222,6 +6080,12 @@
                         "type": "string",
                         "format": "date-time",
                         "example": "2025-01-02T00:00:00Z"
+                    },
+                    "image_url": {
+                        "description": "URL to fetch the building’s image",
+                        "type": "string",
+                        "format": "url",
+                        "example": "https://your-domain.com/api/buildings/1/image"
                     }
                 },
                 "type": "object"
@@ -6229,25 +6093,27 @@
             "Unit": {
                 "title": "Unit",
                 "required": [
+                    "id",
                     "prop_type",
                     "unit_type",
                     "unit_no",
                     "floor",
-                    "suite_area",
-                    "total_area",
+                    "internal_square",
+                    "external_square",
                     "furnished",
                     "unit_view",
                     "price",
+                    "min_price",
+                    "pre_lunch_price",
+                    "lunch_price",
                     "building_id",
                     "status",
-                    "completion_date",
-                    "dld_fee_percentage",
-                    "admin_fee",
-                    "EOI"
+                    "status_changed_at"
                 ],
                 "properties": {
                     "id": {
                         "type": "integer",
+                        "format": "int64",
                         "readOnly": true,
                         "example": 1
                     },
@@ -6275,20 +6141,35 @@
                         "type": "string",
                         "example": "None"
                     },
-                    "suite_area": {
+                    "internal_square": {
                         "type": "number",
                         "format": "float",
                         "example": 120.5
                     },
-                    "balcony_area": {
+                    "external_square": {
                         "type": "number",
                         "format": "float",
                         "example": 15.75
                     },
-                    "total_area": {
+                    "total_square": {
                         "type": "number",
                         "format": "float",
                         "example": 136.25
+                    },
+                    "internal_square_ft": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 1295.83
+                    },
+                    "external_square_ft": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 169.57
+                    },
+                    "total_square_ft": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 1465.4
                     },
                     "furnished": {
                         "type": "boolean",
@@ -6303,47 +6184,40 @@
                         "format": "float",
                         "example": 350000
                     },
+                    "min_price": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 300000
+                    },
+                    "pre_lunch_price": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 320000
+                    },
+                    "lunch_price": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 340000
+                    },
                     "building_id": {
                         "type": "integer",
                         "example": 5
                     },
                     "status": {
                         "type": "string",
-                        "enum": [
-                            "Pending",
-                            "Available",
-                            "Pre-Booked",
-                            "Booked",
-                            "Sold",
-                            "Pre-Hold",
-                            "Hold",
-                            "Cancelled"
-                        ],
                         "example": "Pending"
                     },
-                    "completion_date": {
+                    "status_changed_at": {
                         "type": "string",
-                        "format": "date",
-                        "example": "2025-12-15"
+                        "format": "date-time",
+                        "example": "2025-05-10T12:34:56Z"
                     },
-                    "floor_plan": {
+                    "floor_plan_url": {
+                        "description": "Authenticated URL to fetch the unit’s floor plan",
                         "type": "string",
-                        "example": "floor_plans/abc123.jpg"
-                    },
-                    "dld_fee_percentage": {
-                        "type": "number",
-                        "format": "float",
-                        "example": 65000
-                    },
-                    "admin_fee": {
-                        "type": "number",
-                        "format": "float",
-                        "example": 4000
-                    },
-                    "EOI": {
-                        "type": "number",
-                        "format": "float",
-                        "example": 100000
+                        "format": "url",
+                        "example": "https://your-domain.com/api/units/1/floor_plan",
+                        "nullable": true
                     },
                     "created_at": {
                         "type": "string",
@@ -6370,21 +6244,26 @@
             "UnitInput": {
                 "title": "Unit Input",
                 "required": [
+                    "building_id",
                     "prop_type",
                     "unit_type",
                     "unit_no",
                     "floor",
-                    "suite_area",
+                    "internal_square",
+                    "external_square",
                     "furnished",
                     "unit_view",
                     "price",
-                    "building_id",
-                    "status",
-                    "completion_date",
-                    "dld_fee_percentage",
-                    "admin_fee"
+                    "min_price",
+                    "pre_lunch_price",
+                    "lunch_price",
+                    "status"
                 ],
                 "properties": {
+                    "building_id": {
+                        "type": "integer",
+                        "example": 5
+                    },
                     "prop_type": {
                         "type": "string",
                         "example": "Residential"
@@ -6409,12 +6288,12 @@
                         "type": "string",
                         "example": "None"
                     },
-                    "suite_area": {
+                    "internal_square": {
                         "type": "number",
                         "format": "float",
                         "example": 120.5
                     },
-                    "balcony_area": {
+                    "external_square": {
                         "type": "number",
                         "format": "float",
                         "example": 15.75
@@ -6432,69 +6311,32 @@
                         "format": "float",
                         "example": 350000
                     },
-                    "building_id": {
-                        "type": "integer",
-                        "example": 5
+                    "min_price": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 300000
+                    },
+                    "pre_lunch_price": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 320000
+                    },
+                    "lunch_price": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 340000
                     },
                     "status": {
                         "type": "string",
-                        "enum": [
-                            "Pending",
-                            "Available",
-                            "Pre-Booked",
-                            "Booked",
-                            "Sold",
-                            "Pre-Hold",
-                            "Hold",
-                            "Cancelled"
-                        ],
                         "example": "Pending"
-                    },
-                    "completion_date": {
-                        "type": "string",
-                        "format": "date",
-                        "example": "2025-12-15"
                     },
                     "floor_plan": {
                         "description": "Optional floor plan file (jpg, jpeg, png)",
                         "type": "string",
                         "format": "binary"
-                    },
-                    "dld_fee_percentage": {
-                        "type": "number",
-                        "format": "float",
-                        "example": 65000
-                    },
-                    "admin_fee": {
-                        "type": "number",
-                        "format": "float",
-                        "example": 4000
-                    },
-                    "EOI": {
-                        "type": "number",
-                        "format": "float",
-                        "example": 100000
                     }
                 },
                 "type": "object"
-            },
-            "UnitWithPaymentPlans": {
-                "allOf": [
-                    {
-                        "$ref": "#/components/schemas/Unit"
-                    },
-                    {
-                        "properties": {
-                            "paymentPlans": {
-                                "type": "array",
-                                "items": {
-                                    "$ref": "#/components/schemas/PaymentPlan"
-                                }
-                            }
-                        },
-                        "type": "object"
-                    }
-                ]
             },
             "PaymentPlan": {
                 "title": "Payment Plan",
@@ -6506,8 +6348,7 @@
                     "EOI",
                     "booking_percentage",
                     "handover_percentage",
-                    "construction_percentage",
-                    "first_construction_installment_date"
+                    "construction_percentage"
                 ],
                 "properties": {
                     "id": {
@@ -6552,11 +6393,6 @@
                         "type": "number",
                         "format": "float",
                         "example": 40
-                    },
-                    "first_construction_installment_date": {
-                        "type": "string",
-                        "format": "date",
-                        "example": "2025-03-15"
                     },
                     "created_at": {
                         "type": "string",
@@ -6655,10 +6491,6 @@
         {
             "name": "Units",
             "description": "Units"
-        },
-        {
-            "name": "Notifications",
-            "description": "Notifications"
         },
         {
             "name": "OneTime Links",

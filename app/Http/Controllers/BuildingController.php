@@ -22,15 +22,22 @@ use Symfony\Component\HttpFoundation\Response;
  *     schema="Building",
  *     type="object",
  *     title="Building",
- *     required={"id", "name", "location", "status", "ecd", "added_by_id"},
- *     @OA\Property(property="id", type="integer", example=1),
- *     @OA\Property(property="name", type="string", example="Building A"),
- *     @OA\Property(property="location", type="string", example="Downtown"),
- *     @OA\Property(property="status", type="string", example="Off-Plan"),
- *     @OA\Property(property="ecd", type="string", example="Q4-2026 (Estimated Completion Date)"),
- *     @OA\Property(property="added_by_id", type="integer", example=1),
- *     @OA\Property(property="created_at", type="string", format="date-time", example="2025-01-01T00:00:00Z"),
- *     @OA\Property(property="updated_at", type="string", format="date-time", example="2025-01-02T00:00:00Z")
+ *     required={"id","name","location","status","ecd","added_by_id"},
+ *     @OA\Property(property="id",           type="integer", format="int64", example=1),
+ *     @OA\Property(property="name",         type="string",             example="Building A"),
+ *     @OA\Property(property="location",     type="string",             example="Downtown"),
+ *     @OA\Property(property="status",       type="string",             example="Off-Plan"),
+ *     @OA\Property(property="ecd",          type="string",             example="Q4-2026"),
+ *     @OA\Property(property="added_by_id",  type="integer",            example=1),
+ *     @OA\Property(property="created_at",   type="string", format="date-time", example="2025-01-01T00:00:00Z"),
+ *     @OA\Property(property="updated_at",   type="string", format="date-time", example="2025-01-02T00:00:00Z"),
+ *     @OA\Property(
+ *         property="image_url",
+ *         type="string",
+ *         format="url",
+ *         description="URL to fetch the building’s image",
+ *         example="https://your-domain.com/api/buildings/1/image"
+ *     )
  * )
  */
 class BuildingController extends Controller
@@ -39,57 +46,27 @@ class BuildingController extends Controller
      * Display a paginated listing of buildings.
      *
      * @OA\Get(
-     *     path="/buildings",
+     *     path="/api/buildings",
      *     summary="List all buildings with optional filters and pagination",
      *     tags={"Building"},
      *     security={{"sanctum":{}}},
-     *     @OA\Parameter(
-     *         name="name",
-     *         in="query",
-     *         description="Filter buildings by name",
-     *         required=false,
-     *         @OA\Schema(type="string")
-     *     ),
-     *     @OA\Parameter(
-     *         name="location",
-     *         in="query",
-     *         description="Filter buildings by location",
-     *         required=false,
-     *         @OA\Schema(type="string")
-     *     ),
-     *     @OA\Parameter(
-     *         name="status",
-     *         in="query",
-     *         description="Filter buildings by status",
-     *         required=false,
-     *         @OA\Schema(type="string")
-     *     ),
-     *     @OA\Parameter(
-     *         name="page",
-     *         in="query",
-     *         description="Page number",
-     *         required=false,
-     *         @OA\Schema(type="integer", example=1)
-     *     ),
-     *     @OA\Parameter(
-     *         name="limit",
-     *         in="query",
-     *         description="Number of items per page",
-     *         required=false,
-     *         @OA\Schema(type="integer", example=10)
-     *     ),
+     *     @OA\Parameter(name="name",     in="query", description="Filter by name",     @OA\Schema(type="string")),
+     *     @OA\Parameter(name="location", in="query", description="Filter by location", @OA\Schema(type="string")),
+     *     @OA\Parameter(name="status",   in="query", description="Filter by status",   @OA\Schema(type="string")),
+     *     @OA\Parameter(name="page",     in="query", description="Page number",         @OA\Schema(type="integer", example=1)),
+     *     @OA\Parameter(name="limit",    in="query", description="Items per page (max 100)", @OA\Schema(type="integer", example=10)),
      *     @OA\Response(
      *         response=200,
      *         description="A paginated list of buildings",
      *         @OA\JsonContent(
-     *             @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/Building")),
-     *             @OA\Property(property="current_page", type="integer", example=1),
-     *             @OA\Property(property="last_page", type="integer", example=5),
-     *             @OA\Property(property="per_page", type="integer", example=10),
-     *             @OA\Property(property="total", type="integer", example=50)
+     *             @OA\Property(property="data",        type="array", @OA\Items(ref="#/components/schemas/Building")),
+     *             @OA\Property(property="current_page",type="integer", example=1),
+     *             @OA\Property(property="last_page",   type="integer", example=5),
+     *             @OA\Property(property="per_page",    type="integer", example=10),
+     *             @OA\Property(property="total",       type="integer", example=50)
      *         )
      *     ),
-     *     @OA\Response(response=403, description="Forbidden")
+     *     @OA\Response(response=403, description="Forbidden — insufficient permissions")
      * )
      */
     public function index(Request $request)
@@ -126,7 +103,7 @@ class BuildingController extends Controller
      * Store a newly created building in storage, optionally with an image.
      *
      * @OA\Post(
-     *     path="/buildings",
+     *     path="/api/buildings",
      *     summary="Create a new building",
      *     tags={"Building"},
      *     security={{"sanctum":{}}},
@@ -135,7 +112,7 @@ class BuildingController extends Controller
      *         @OA\MediaType(
      *             mediaType="multipart/form-data",
      *             @OA\Schema(
-     *                 required={"name", "location", "status", "ecd"},
+     *                 required={"name","location","status","ecd"},
      *                 @OA\Property(property="name",     type="string", example="Building A"),
      *                 @OA\Property(property="location", type="string", example="Downtown"),
      *                 @OA\Property(property="status",   type="string", example="Off-Plan"),
@@ -152,25 +129,10 @@ class BuildingController extends Controller
      *     @OA\Response(
      *         response=201,
      *         description="Building created successfully",
-     *         @OA\JsonContent(
-     *             type="object",
-     *             @OA\Property(property="id",            type="integer", format="int64", example=123),
-     *             @OA\Property(property="name",          type="string",             example="Building A"),
-     *             @OA\Property(property="location",      type="string",             example="Downtown"),
-     *             @OA\Property(property="status",        type="string",             example="Off-Plan"),
-     *             @OA\Property(property="ecd",           type="string",             example="Q4-2026"),
-     *             @OA\Property(property="added_by_id",   type="integer",            example=45),
-     *             @OA\Property(
-     *                 property="image_url",
-     *                 type="string",
-     *                 format="url",
-     *                 description="Authenticated URL to fetch the building’s image",
-     *                 example="https://your-domain.com/api/buildings/123/image"
-     *             )
-     *         )
+     *         @OA\JsonContent(ref="#/components/schemas/Building")
      *     ),
      *     @OA\Response(response=422, description="Validation error"),
-     *     @OA\Response(response=403, description="Forbidden")
+     *     @OA\Response(response=403, description="Forbidden — insufficient permissions")
      * )
      */
     public function store(Request $request)
@@ -209,7 +171,6 @@ class BuildingController extends Controller
         $building = Building::create($data);
 
         $building->image_url = $building->image_path ? route('buildings.image', ['id' => $building->id]) : null;
-        $building->makeHidden(['image_path']);
 
         return response()->json($building, Response::HTTP_CREATED);
     }
@@ -218,23 +179,21 @@ class BuildingController extends Controller
      * Display the specified building.
      *
      * @OA\Get(
-     *     path="/buildings/{id}",
+     *     path="/api/buildings/{id}",
      *     summary="Get building details",
      *     tags={"Building"},
      *     security={{"sanctum":{}}},
      *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         description="ID of the building",
-     *         required=true,
-     *         @OA\Schema(type="integer")
+     *         name="id", in="path", description="Building ID", required=true,
+     *         @OA\Schema(type="integer", format="int64")
      *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Building details",
      *         @OA\JsonContent(ref="#/components/schemas/Building")
      *     ),
-     *     @OA\Response(response=403, description="Forbidden")
+     *     @OA\Response(response=403, description="Forbidden — insufficient permissions"),
+     *     @OA\Response(response=404, description="Not Found — building does not exist")
      * )
      */
     public function show(Request $request, $id)
@@ -248,7 +207,6 @@ class BuildingController extends Controller
 
         $building = Building::findOrFail($id);
         $building->image_url = $building->image_path ? route('buildings.image', ['id' => $building->id]) : null;
-        $building->makeHidden(['image_path']);
 
         return response()->json($building, Response::HTTP_OK);
     }
@@ -257,16 +215,13 @@ class BuildingController extends Controller
      * Update an existing building, optionally replacing its image.
      *
      * @OA\Put(
-     *     path="/buildings/{id}",
-     *     summary="Update an existing building",
+     *     path="/api/buildings/{id}",
+     *     summary="Update a building",
      *     tags={"Building"},
      *     security={{"sanctum":{}}},
      *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         description="ID of the building to update",
-     *         required=true,
-     *         @OA\Schema(type="integer")
+     *         name="id", in="path", description="Building ID", required=true,
+     *         @OA\Schema(type="integer", format="int64")
      *     ),
      *     @OA\RequestBody(
      *         required=true,
@@ -281,7 +236,7 @@ class BuildingController extends Controller
      *                     property="image",
      *                     type="string",
      *                     format="binary",
-     *                     description="Optional new building image (jpeg, png, gif)"
+     *                     description="Optional new building image"
      *                 )
      *             )
      *         )
@@ -289,25 +244,11 @@ class BuildingController extends Controller
      *     @OA\Response(
      *         response=200,
      *         description="Building updated successfully",
-     *         @OA\JsonContent(
-     *             type="object",
-     *             @OA\Property(property="id",          type="integer", example=123),
-     *             @OA\Property(property="name",        type="string",  example="Building A Updated"),
-     *             @OA\Property(property="location",    type="string",  example="New Location"),
-     *             @OA\Property(property="status",      type="string",  example="Off-Plan"),
-     *             @OA\Property(property="ecd",         type="string",  example="Q4-2026"),
-     *             @OA\Property(property="added_by_id", type="integer", example=45),
-     *             @OA\Property(
-     *                 property="image_url",
-     *                 type="string",
-     *                 format="url",
-     *                 description="Authenticated URL to fetch the building’s image",
-     *                 example="https://your-domain.com/api/buildings/123/image"
-     *             )
-     *         )
+     *         @OA\JsonContent(ref="#/components/schemas/Building")
      *     ),
      *     @OA\Response(response=422, description="Validation error"),
-     *     @OA\Response(response=403, description="Forbidden")
+     *     @OA\Response(response=403, description="Forbidden — insufficient permissions"),
+     *     @OA\Response(response=404, description="Not Found — building does not exist")
      * )
      */
     public function update(Request $request, $id)
@@ -350,7 +291,6 @@ class BuildingController extends Controller
         $building->update($data);
 
         $building->image_url = $building->image_path ? route('buildings.image', ['id' => $building->id]) : null;
-        $building->makeHidden(['image_path']);
 
         return response()->json($building, Response::HTTP_OK);
     }
@@ -359,22 +299,18 @@ class BuildingController extends Controller
      * Remove the specified building from storage.
      *
      * @OA\Delete(
-     *     path="/buildings/{id}",
+     *     path="/api/buildings/{id}",
      *     summary="Delete a building",
      *     tags={"Building"},
      *     security={{"sanctum":{}}},
      *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         description="ID of the building to delete",
-     *         required=true,
-     *         @OA\Schema(type="integer")
+     *         name="id", in="path", description="Building ID", required=true,
+     *         @OA\Schema(type="integer", format="int64")
      *     ),
-     *     @OA\Response(
-     *         response=204,
-     *         description="Building deleted successfully"
-     *     ),
-     *     @OA\Response(response=403, description="Forbidden")
+     *     @OA\Response(response=204, description="Building deleted successfully"),
+     *     @OA\Response(response=403, description="Forbidden — insufficient permissions"),
+     *     @OA\Response(response=404, description="Not Found — building does not exist"),
+     *     @OA\Response(response=409, description="Conflict — building has existing units")
      * )
      */
     public function destroy(Request $request, $id)
@@ -383,80 +319,54 @@ class BuildingController extends Controller
         Log::info('User ' . $user->id . ' called BuildingController@destroy for building id: ' . $id);
 
         if (!$user->can('delete building')) {
-            abort(403, 'Unauthorized');
+            abort(Response::HTTP_FORBIDDEN, 'Unauthorized');
         }
 
         $building = Building::findOrFail($id);
+
+        if ($building->units()->exists()) {
+            return response()->json([
+                'error' => 'Cannot delete a building that has units.'
+            ], Response::HTTP_CONFLICT);
+        }
+
         $building->delete();
 
         return response()->json(null, 204);
     }
 
     /**
-     * Display a paginated listing of units within a specific building.
+     * List all units for a specific building with optional filters.
      *
      * @OA\Get(
-     *     path="/buildings/{buildingId}/units",
-     *     summary="List all units for a specific building with optional filters and pagination",
+     *     path="/api/buildings/{buildingId}/units",
+     *     summary="List units in a building",
      *     tags={"Building"},
      *     security={{"sanctum":{}}},
      *     @OA\Parameter(
-     *         name="buildingId",
-     *         in="path",
-     *         description="ID of the building",
-     *         required=true,
-     *         @OA\Schema(type="integer", example=1)
+     *         name="buildingId", in="path", description="Building ID", required=true,
+     *         @OA\Schema(type="integer", format="int64")
      *     ),
+     *     @OA\Parameter(name="unit_no",  in="query", description="Filter by unit number", @OA\Schema(type="string", example="A101")),
      *     @OA\Parameter(
-     *         name="unit_no",
-     *         in="query",
-     *         description="Filter units by unit number",
-     *         required=false,
-     *         @OA\Schema(type="string", example="A101")
+     *         name="status", in="query", description="Filter by status",
+     *         @OA\Schema(type="string", enum={"Pending","Available","Pre-Booked","Booked","Sold","Pre-Hold","Hold","Cancelled"}, example="Available")
      *     ),
-     *     @OA\Parameter(
-     *         name="status",
-     *         in="query",
-     *         description="Filter units by status",
-     *         required=false,
-     *         @OA\Schema(
-     *             type="string",
-     *             enum={"Pending","Available","Pre-Booked","Booked","Sold","Pre-Hold","Hold","Cancelled"},
-     *             example="Available"
-     *         )
-     *     ),
-     *     @OA\Parameter(
-     *         name="page",
-     *         in="query",
-     *         description="Page number",
-     *         required=false,
-     *         @OA\Schema(type="integer", example=1)
-     *     ),
-     *     @OA\Parameter(
-     *         name="limit",
-     *         in="query",
-     *         description="Number of items per page (max 100)",
-     *         required=false,
-     *         @OA\Schema(type="integer", example=10)
-     *     ),
+     *     @OA\Parameter(name="page",  in="query", description="Page number", @OA\Schema(type="integer", example=1)),
+     *     @OA\Parameter(name="limit", in="query", description="Items per page (max 100)", @OA\Schema(type="integer", example=10)),
      *     @OA\Response(
      *         response=200,
-     *         description="A paginated list of units for the specified building",
+     *         description="Paginated list of units",
      *         @OA\JsonContent(
-     *             type="object",
-     *             @OA\Property(
-     *                 property="data",
-     *                 type="array",
-     *                 @OA\Items(ref="#/components/schemas/Unit")
-     *             ),
-     *             @OA\Property(property="current_page", type="integer", example=1),
-     *             @OA\Property(property="last_page",    type="integer", example=5),
-     *             @OA\Property(property="per_page",     type="integer", example=10),
-     *             @OA\Property(property="total",        type="integer", example=50)
+     *             @OA\Property(property="data",        type="array", @OA\Items(ref="#/components/schemas/Unit")),
+     *             @OA\Property(property="current_page",type="integer", example=1),
+     *             @OA\Property(property="last_page",   type="integer", example=5),
+     *             @OA\Property(property="per_page",    type="integer", example=10),
+     *             @OA\Property(property="total",       type="integer", example=50)
      *         )
      *     ),
-     *     @OA\Response(response=403, description="Forbidden"),
-     *     @OA\Response(response=404, description="Building not found")
+     *     @OA\Response(response=403, description="Forbidden — insufficient permissions"),
+     *     @OA\Response(response=404, description="Not Found — building does not exist")
      * )
      */
     public function getUnitsByBuilding(Request $request, $buildingId)
@@ -527,7 +437,6 @@ class BuildingController extends Controller
             ->with([
                 'building',
                 'approvals',
-                'paymentPlans.installments',
                 'latestHolding.user',
                 'latestHolding.approvals',
                 'latestBooking.user',
@@ -538,7 +447,28 @@ class BuildingController extends Controller
         return response()->json($units, Response::HTTP_OK);
     }
 
-
+    /**
+     * Serve the building’s image binary, with strong cache validators.
+     *
+     * @OA\Get(
+     *     path="/api/buildings/{id}/image",
+     *     summary="Retrieve the building image",
+     *     tags={"Building"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(
+     *         name="id", in="path", description="Building ID", required=true,
+     *         @OA\Schema(type="integer", format="int64")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Building image binary",
+     *         @OA\MediaType(mediaType="application/octet-stream")
+     *     ),
+     *     @OA\Response(response=304, description="Not Modified"),
+     *     @OA\Response(response=403, description="Forbidden — insufficient permissions"),
+     *     @OA\Response(response=404, description="Not Found — image does not exist")
+     * )
+     */
     public function showImage(Request $request, $id)
     {
         $building = Building::findOrFail($id);

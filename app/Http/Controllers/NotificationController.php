@@ -19,40 +19,6 @@ class NotificationController extends Controller
         $this->fcmService = $fcmService;
     }
 
-    /**
-     * @OA\Post(
-     *     path="/device-token",
-     *     summary="Store or update the device token",
-     *     description="Stores the device token for the authenticated user or updates an existing record.",
-     *     operationId="storeDeviceToken",
-     *     tags={"Notifications"},
-     *     security={{"sanctum":{}}},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         description="Device token payload",
-     *         @OA\JsonContent(
-     *             required={"token"},
-     *             @OA\Property(property="token", type="string", example="YOUR_DEVICE_TOKEN"),
-     *             @OA\Property(property="device_type", type="string", example="android")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Device token stored successfully",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Device token stored successfully."),
-     *             @OA\Property(property="data", type="object")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=422,
-     *         description="Unprocessable Entity",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="error", type="string", example="The given data was invalid.")
-     *         )
-     *     )
-     * )
-     */
     public function storeDeviceToken(Request $request)
     {
         $request->validate([
@@ -75,45 +41,6 @@ class NotificationController extends Controller
     }
 
 
-    /**
-     * @OA\Post(
-     *     path="/notify",
-     *     summary="Send a test push notification",
-     *     description="Sends a test push notification to a device using its FCM token.",
-     *     operationId="sendPushNotification",
-     *     tags={"Notifications"},
-     *     security={{"sanctum":{}}},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         description="Device token payload",
-     *         @OA\JsonContent(
-     *             required={"token"},
-     *             @OA\Property(property="token", type="string", example="YOUR_DEVICE_TOKEN")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Notification sent successfully",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Notification sent successfully.")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=422,
-     *         description="Unprocessable Entity",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="error", type="string", example="Device token is required")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=500,
-     *         description="Internal Server Error",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="error", type="string", example="An error occurred while sending the notification.")
-     *         )
-     *     )
-     * )
-     */
     public function sendPushNotification(Request $request)
     {
         // Validate that a device token is provided.

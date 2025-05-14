@@ -11,6 +11,7 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\ReservationFormController;
 use App\Http\Controllers\SpaController;
 use App\Http\Controllers\HoldingController;
+use App\Http\Controllers\DldDocumentController;
 use App\Http\Controllers\OneTimeLinkController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\UserManagementController;
@@ -72,11 +73,12 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/bookings/scan-passport', [BookingController::class, 'scanPassport']);
     Route::post('/bookings/book-unit', [BookingController::class, 'bookUnit']);
-    Route::post('/bookings/{id}/upload-receipt', [BookingController::class, 'uploadReceipt']);
+    Route::post('/bookings/{id}/upload-document', [BookingController::class, 'uploadDocument']);
     Route::put('/bookings/{id}', [BookingController::class, 'update']);
     Route::delete('/bookings/{id}', [BookingController::class, 'destroy']);
     Route::get('/bookings/{booking}/download-document/{type}', [BookingController::class, 'downloadDocument'])
-        ->where('type', 'passport|receipt|rf|signed_rf|spa|signed_spa');
+        ->where('type', 'passport|receipt|rf|signed_rf|spa|signed_spa|dld')
+        ->name('bookings.download_document');
     Route::get('/bookings/{id}', [BookingController::class, 'show']);
     Route::post('/bookings/{id}/approve', [BookingController::class, 'approveBooking']);
 });
@@ -94,6 +96,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/bookings/{id}/spa/upload-signed', [SpaController::class, 'uploadSigned']);
     Route::post('/bookings/{id}/spa/approve', [SpaController::class, 'approve']);
 });
+
+// DLD Documents
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/bookings/{booking}/dld', [DldDocumentController::class, 'store']);
+});
+
 
 // Unit Hold
 Route::middleware('auth:sanctum')->group(function () {
