@@ -23,7 +23,7 @@ class DldDocumentController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/api/bookings/{booking}/dld",
+     *     path="/bookings/{booking}/dld",
      *     summary="Upload a DLD document for a booking and mark the unit as Sold",
      *     operationId="uploadBookingDld",
      *     tags={"Bookings"},

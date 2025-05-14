@@ -53,6 +53,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/units/{id}/approve', [UnitController::class, 'approve']);
     Route::post('/units/{id}/assign', [UnitController::class, 'assignUnit']);
     Route::get('/units/{id}/floor-plan', [UnitController::class, 'showFloorPlan'])->name('units.floor_plan');
+    Route::post('/units/import', [UnitController::class, 'importUnits']);
 });
 
 // Payment Plans

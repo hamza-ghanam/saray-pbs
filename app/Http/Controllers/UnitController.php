@@ -14,6 +14,9 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\Response;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\UnitsImport;
+use Maatwebsite\Excel\HeadingRowImport;
 
 /**
  * @OA\Info(
@@ -991,7 +994,7 @@ class UnitController extends Controller
                 ->header('Last-Modified', $lastModified);
         }
 
-        // Otherwise send the file with no-cache + validators
+        // Otherwise, send the file with no-cache + validators
         return response()->file($fullPath, [
             'Content-Disposition' => 'inline; filename="' . basename($path) . '"',
             'Cache-Control'       => 'no-cache, must-revalidate, max-age=0, proxy-revalidate',
@@ -1000,5 +1003,56 @@ class UnitController extends Controller
             'Last-Modified'       => $lastModified,
             'ETag'                => $eTag,
         ]);
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/units/import",
+     *     summary="Bulk import units from Excel",
+     *     tags={"Units"},
+     *     security={{"sanctum":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 required={"building_id","file"},
+     *                 @OA\Property(property="building_id", type="integer", example=1),
+     *                 @OA\Property(property="file", type="file", format="binary")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=201, description="Units imported successfully"),
+     *     @OA\Response(response=422, description="Validation errors"),
+     *     @OA\Response(response=500, description="Import failed")
+     * )
+     *
+     * POST /units/import
+     * @param  Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function importUnits(Request $request)
+    {
+        $request->validate([
+            'building_id' => 'required|exists:buildings,id',
+            'file'        => 'required|file|mimes:xlsx,xls,csv',
+        ]);
+
+        $building = Building::findOrFail($request->building_id);
+
+        $importer = new UnitsImport($building);
+
+        try {
+            Excel::import($importer, $request->file('file'));
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Import failed: ' . $e->getMessage()
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        return response()->json([
+            'message' => 'Units imported successfully',
+            'imported' => UnitsImport::$totalCount,
+        ], Response::HTTP_CREATED);
     }
 }

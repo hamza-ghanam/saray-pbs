@@ -4469,6 +4469,55 @@
                 ]
             }
         },
+        "/api/units/import": {
+            "post": {
+                "tags": [
+                    "Units"
+                ],
+                "summary": "Bulk import units from Excel",
+                "operationId": "9574070b565ff37dc682a80a30eaa845",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "building_id",
+                                    "file"
+                                ],
+                                "properties": {
+                                    "building_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "file": {
+                                        "type": "file",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Units imported successfully"
+                    },
+                    "422": {
+                        "description": "Validation errors"
+                    },
+                    "500": {
+                        "description": "Import failed"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/unit-updates": {
             "get": {
                 "tags": [

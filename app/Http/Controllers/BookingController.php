@@ -773,7 +773,7 @@ class BookingController extends Controller
 
     /**
      * @OA\Delete(
-     *     path="/api/bookings/{id}",
+     *     path="/bookings/{id}",
      *     summary="Delete a booking and reset its unit to Available",
      *     operationId="destroyBooking",
      *     tags={"Bookings"},
