@@ -129,7 +129,7 @@ use Symfony\Component\HttpFoundation\Response;
  *     schema="PaymentPlan",
  *     type="object",
  *     title="Payment Plan",
- *     required={"unit_id", "name", "dld_fee_percentage", "admin_fee", "EOI", "booking_percentage", "handover_percentage", "construction_percentage", "first_construction_installment_date"},
+ *     required={"unit_id", "name", "dld_fee_percentage", "admin_fee", "EOI", "booking_percentage", "handover_percentage", "construction_percentage"},
  *     @OA\Property(property="id", type="integer", readOnly=true, example=1),
  *     @OA\Property(property="unit_id", type="integer", example=1),
  *     @OA\Property(property="name", type="string", example="60/40"),
@@ -455,7 +455,7 @@ class UnitController extends Controller
             // Create the Unit record.
             $unit = Unit::create($data);
 
-            $unit->floor_plan = $unit->floor_plan ? route('units.floor_plan', ['id' => $unit->id]) : null;
+            $unit->floor_plan_path = $unit->floor_plan ? route('units.floor_plan', ['id' => $unit->id]) : null;
 
             // Dispatch an event to generate payment plans for the unit.
             // No need to link unit with PP
@@ -877,7 +877,7 @@ class UnitController extends Controller
         DB::commit();
 
         // Eager-load the building relationship to attach the building information.
-        $unit->load('building');
+        $unit->load(['building', 'approvals']);
         return response()->json($unit, Response::HTTP_OK);
     }
 

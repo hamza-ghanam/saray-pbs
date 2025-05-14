@@ -356,22 +356,22 @@ class BookingController extends Controller
         $user = $request->user();
         Log::info("User {$user->id} is attempting to book unit {$request->unit_id}.");
 
-        if (! $user->can('book unit')) {
+        if (!$user->can('book unit')) {
             return response()->json(['message' => 'Unauthorized'], Response::HTTP_FORBIDDEN);
         }
 
         $validator = Validator::make($request->all(), [
-            'upload_token'    => 'sometimes|string',
-            'name'            => 'required|string|max:255',
+            'upload_token' => 'sometimes|string',
+            'name' => 'required|string|max:255',
             'passport_number' => 'required|string|max:50',
-            'birth_date'      => 'required|date',
-            'gender'          => 'required|string|max:10',
-            'nationality'     => 'required|string|max:255',
-            'unit_id'         => 'required|integer|exists:units,id',
+            'birth_date' => 'required|date',
+            'gender' => 'required|string|max:10',
+            'nationality' => 'required|string|max:255',
+            'unit_id' => 'required|integer|exists:units,id',
             'payment_plan_id' => 'sometimes|integer|exists:payment_plans,id',
-            'receipt'         => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
-            'discount'        => 'nullable|numeric|min:0|max:100',
-            'notes'           => 'nullable|string',
+            'receipt' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'discount' => 'nullable|numeric|min:0|max:100',
+            'notes' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
@@ -389,7 +389,7 @@ class BookingController extends Controller
                     ->where('user_id', $user->id)
                     ->first();
 
-                if (! $upload) {
+                if (!$upload) {
                     return response()->json(['message' => 'Invalid or expired token'], Response::HTTP_FORBIDDEN);
                 }
 
@@ -404,8 +404,8 @@ class BookingController extends Controller
                 ->first();
 
             if (
-                ! in_array($unit->status, ['Available','Cancelled']) &&
-                ! ($myHold && $unit->status === 'Hold')
+                !in_array($unit->status, ['Available', 'Cancelled']) &&
+                !($myHold && $unit->status === 'Hold')
             ) {
                 return response()->json([
                     'error' => "Unit status must be 'Available' or 'Cancelled' to book (unless you hold it)."
@@ -416,10 +416,10 @@ class BookingController extends Controller
             if ($request->has('payment_plan_id')) {
                 $paymentPlan = PaymentPlan::find($request->payment_plan_id);
             } else {
-                $paymentPlan = PaymentPlan::where('isDefault', true)->first();
+                $paymentPlan = PaymentPlan::where('is_default', true)->first();
             }
 
-            if (! $paymentPlan) {
+            if (!$paymentPlan) {
                 throw new \Exception('Selected payment plan does not exist for this unit.');
             }
 
@@ -431,16 +431,16 @@ class BookingController extends Controller
 
             // Create customer info
             $customerInfo = CustomerInfo::create([
-                'name'           => $request->name,
-                'passport_number'=> $request->passport_number,
-                'birth_date'     => $request->birth_date,
-                'gender'         => $request->gender,
-                'nationality'    => $request->nationality,
-                'document_path'  => $passportPath,
+                'name' => $request->name,
+                'passport_number' => $request->passport_number,
+                'birth_date' => $request->birth_date,
+                'gender' => $request->gender,
+                'nationality' => $request->nationality,
+                'document_path' => $passportPath,
             ]);
 
             // Compute booking price
-            $basePrice   = $unit->price;
+            $basePrice = $unit->price;
             $discountPct = $request->input('discount', 0);
             $bookingPrice = $discountPct > 0
                 ? round($basePrice * (1 - $discountPct / 100), 2)
@@ -448,15 +448,15 @@ class BookingController extends Controller
 
             // Create booking
             $booking = Booking::create([
-                'unit_id'          => $unit->id,
-                'payment_plan_id'  => $paymentPlan->id,
+                'unit_id' => $unit->id,
+                'payment_plan_id' => $paymentPlan->id,
                 'customer_info_id' => $customerInfo->id,
-                'status'           => 'Pre-Booked',
-                'discount'         => $discountPct,
-                'price'            => $bookingPrice,
-                'receipt_path'     => $receiptPath,
-                'created_by'       => $user->id,
-                'notes'            => $request->input('notes'),
+                'status' => 'Pre-Booked',
+                'discount' => $discountPct,
+                'price' => $bookingPrice,
+                'receipt_path' => $receiptPath,
+                'created_by' => $user->id,
+                'notes' => $request->input('notes'),
             ]);
 
             // Generate and persist installments
@@ -464,18 +464,18 @@ class BookingController extends Controller
                 ->generateInstallments($unit, $paymentPlan, $discountPct);
 
             $rows = $template->map(fn($i) => [
-                'payment_plan_id'=> $paymentPlan->id,
-                'description'    => $i->description,
-                'percentage'     => $i->percentage,
-                'date'           => $i->date,
-                'amount'         => $i->amount,
+                'payment_plan_id' => $paymentPlan->id,
+                'description' => $i->description,
+                'percentage' => $i->percentage,
+                'date' => $i->date,
+                'amount' => $i->amount,
             ])->all();
 
             $saved = $booking->installments()->createMany($rows);
             $booking->setRelation('installments', $saved);
 
             // Update unit status
-            $unit->status            = 'Pre-Booked';
+            $unit->status = 'Pre-Booked';
             $unit->status_changed_at = now();
             $unit->save();
 
@@ -557,27 +557,27 @@ class BookingController extends Controller
         $user = $request->user();
         Log::info("User {$user->id} is uploading a document for booking {$id}.");
 
-        if (! $user->can('edit booking') || ! $user->can('approve booking')) {
+        if (!$user->can('edit booking') || !$user->can('approve booking')) {
             return response()->json(['message' => 'Forbidden'], Response::HTTP_FORBIDDEN);
         }
 
         $validator = Validator::make($request->all(), [
             'id_document' => 'sometimes|file|mimes:pdf,jpg,jpeg,png|max:2048',
-            'receipt'     => 'sometimes|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'receipt' => 'sometimes|file|mimes:pdf,jpg,jpeg,png|max:2048',
         ]);
 
         if ($validator->fails()) {
             return response()->json($validator->errors(), Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        if (! $request->hasFile('id_document') && ! $request->hasFile('receipt')) {
+        if (!$request->hasFile('id_document') && !$request->hasFile('receipt')) {
             return response()->json([
                 'error' => 'You must upload either id_document or receipt.'
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
         $booking = Booking::with('customerInfo')->find($id);
-        if (! $booking) {
+        if (!$booking) {
             return response()->json(['message' => 'Booking not found'], Response::HTTP_NOT_FOUND);
         }
 
@@ -607,6 +607,24 @@ class BookingController extends Controller
             }
 
             DB::commit();
+
+            // Reload nested customerInfo
+            $booking->load('customerInfo');
+
+            $booking->customerInfo->document_url = $booking->customerInfo->document_path ?
+                route(
+                    'bookings.download_document',
+                    ['booking' => $booking->id, 'type' => 'passport']
+                ) : null;
+
+            $booking->receipt_url = $booking->receipt_path
+                ? route(
+                    'bookings.download_document',
+                    ['booking' => $booking->id, 'type' => 'receipt']
+                ) : null;
+
+            return response()->json($booking, Response::HTTP_OK);
+
         } catch (\Exception $ex) {
             DB::rollback();
             return response()->json(
@@ -614,11 +632,6 @@ class BookingController extends Controller
                 Response::HTTP_INTERNAL_SERVER_ERROR
             );
         }
-
-        // Reload nested customerInfo
-        $booking->load('customerInfo');
-
-        return response()->json($booking, Response::HTTP_OK);
     }
 
     /**

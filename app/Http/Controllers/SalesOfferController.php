@@ -96,7 +96,7 @@ class SalesOfferController extends Controller
             $plansQuery->whereIn('id', $data['payment_plan_ids']);
         } else {
             // fallback to the globally-defined default plan(s)
-            $plansQuery->where('isDefault', true);
+            $plansQuery->where('is_default', true);
         }
 
         $paymentPlans = $plansQuery->get();

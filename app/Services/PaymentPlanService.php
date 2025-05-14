@@ -42,8 +42,7 @@ class PaymentPlanService
                 'booking_percentage'              => $bookingPct,
                 'construction_percentage'         => $constructionPct,
                 'handover_percentage'             => $handoverPct,
-                'first_construction_installment_date' => null,
-                'isDefault'                       => false,
+                'is_default'                      => false,
             ]);
         });
     }

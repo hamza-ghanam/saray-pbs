@@ -18,7 +18,7 @@ return new class extends Migration
             $table->date('birth_date');
             $table->enum('gender', ['male', 'female']);
             $table->string('nationality');
-            $table->string('document_path');
+            $table->string('document_path')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

@@ -23,8 +23,7 @@ class PaymentPlan extends Model
         'booking_percentage',
         'handover_percentage',
         'construction_percentage',
-        'first_construction_installment_date',
-        'isDefault',
+        'is_default',
         'blocks',
     ];
 

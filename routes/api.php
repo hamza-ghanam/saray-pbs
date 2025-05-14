@@ -77,7 +77,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/bookings/{id}', [BookingController::class, 'update']);
     Route::delete('/bookings/{id}', [BookingController::class, 'destroy']);
     Route::get('/bookings/{booking}/download-document/{type}', [BookingController::class, 'downloadDocument'])
-        ->where('type', 'passport|receipt|rf|signed_rf|spa|signed_spa|dld');
+        ->where('type', 'passport|receipt|rf|signed_rf|spa|signed_spa|dld')
+        ->name('bookings.download_document');
     Route::get('/bookings/{id}', [BookingController::class, 'show']);
     Route::post('/bookings/{id}/approve', [BookingController::class, 'approveBooking']);
 });
