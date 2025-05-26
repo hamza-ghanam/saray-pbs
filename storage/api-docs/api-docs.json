@@ -398,6 +398,67 @@
                         "sanctum": []
                     }
                 ]
+            },
+            "delete": {
+                "tags": [
+                    "Bookings"
+                ],
+                "summary": "Delete a booking and reset its unit to Available",
+                "operationId": "destroyBooking",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the booking to delete",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Booking deleted successfully, unit status reset to Available"
+                    },
+                    "403": {
+                        "description": "Forbidden — user lacks deletion permission",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Forbidden"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found — booking does not exist",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Booking not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
             }
         },
         "/bookings/scan-passport": {
@@ -733,69 +794,6 @@
                     },
                     "422": {
                         "description": "Validation error or missing file"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            }
-        },
-        "/api/bookings/{id}": {
-            "delete": {
-                "tags": [
-                    "Bookings"
-                ],
-                "summary": "Delete a booking and reset its unit to Available",
-                "operationId": "destroyBooking",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID of the booking to delete",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "format": "int64"
-                        }
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "Booking deleted successfully, unit status reset to Available"
-                    },
-                    "403": {
-                        "description": "Forbidden — user lacks deletion permission",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Forbidden"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found — booking does not exist",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Booking not found"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
                     }
                 },
                 "security": [
@@ -1532,7 +1530,7 @@
                 ]
             }
         },
-        "/api/bookings/{booking}/dld": {
+        "/bookings/{booking}/dld": {
             "post": {
                 "tags": [
                     "Bookings"
@@ -2268,7 +2266,7 @@
                 ]
             }
         },
-        "/api/payment-plans/{id}": {
+        "/payment-plans/{id}": {
             "get": {
                 "tags": [
                     "PaymentPlans"
@@ -2348,7 +2346,7 @@
                 ],
                 "summary": "Delete a payment plan",
                 "description": "Delete a payment plan and its installments.",
-                "operationId": "23bb54c79dc39bfd4f313b7b4f8c29e2",
+                "operationId": "b747a37bf2263ee4c6da1aaf46814476",
                 "parameters": [
                     {
                         "name": "id",
@@ -2357,7 +2355,8 @@
                         "required": true,
                         "schema": {
                             "type": "integer",
-                            "format": "int64"
+                            "format": "int64",
+                            "example": 1
                         }
                     }
                 ],
@@ -2398,14 +2397,14 @@
                         }
                     },
                     "409": {
-                        "description": "Conflict — cannot delete a plan applied to existing bookings",
+                        "description": "Conflict — cannot delete the default plan or one applied to bookings",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "error": {
                                             "type": "string",
-                                            "example": "Cannot delete a payment plan that is applied on existing bookings."
+                                            "example": "Cannot delete the default payment plan."
                                         }
                                     },
                                     "type": "object"
@@ -2421,7 +2420,7 @@
                 ]
             }
         },
-        "/api/payment-plans": {
+        "/payment-plans": {
             "get": {
                 "tags": [
                     "PaymentPlans"
@@ -2475,7 +2474,7 @@
                     "PaymentPlans"
                 ],
                 "summary": "Persist a payment‐plan definition (blocks)",
-                "operationId": "75306dd00dfa633e1d8a0816e79fa134",
+                "operationId": "4336bb8fbca01ddf2a906f591ef0a29b",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -2731,6 +2730,59 @@
                                 }
                             }
                         }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/payment-plans/{id}/make-default": {
+            "post": {
+                "tags": [
+                    "PaymentPlans"
+                ],
+                "summary": "Set a specific payment plan as the only default",
+                "operationId": "973d609ced3a6f30afd41d5dbe633c15",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the payment plan to make default",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Payment plan successfully set as default",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Payment plan #1 is now the default."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Payment plan not found"
+                    },
+                    "500": {
+                        "description": "Server error"
                     }
                 },
                 "security": [
@@ -4469,13 +4521,13 @@
                 ]
             }
         },
-        "/api/units/import": {
+        "/units/import": {
             "post": {
                 "tags": [
                     "Units"
                 ],
                 "summary": "Bulk import units from Excel",
-                "operationId": "9574070b565ff37dc682a80a30eaa845",
+                "operationId": "e2904679582c0d705b8df251a0e1bb20",
                 "requestBody": {
                     "required": true,
                     "content": {

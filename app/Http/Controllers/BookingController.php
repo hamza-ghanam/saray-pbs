@@ -272,7 +272,7 @@ class BookingController extends Controller
 
         try {
             // 1. Parse the passport MRZ using Mindee
-            $mindeeClient = new Client(env('MINDEE_API_KEY'));
+            $mindeeClient = new Client('1391e370bb8f620821566ec76857a455');
             $inputSource = $mindeeClient->sourceFromPath($path);
             $apiResponse = $mindeeClient->parse(PassportV1::class, $inputSource);
 
@@ -308,8 +308,6 @@ class BookingController extends Controller
     }
 
     /**
-     * Book a unit with provided customer information, optional passport upload, receipt, discount and notes.
-     *
      * @OA\Post(
      *     path="/bookings/book-unit",
      *     summary="Book a unit by creating CustomerInfo and Booking with status Pre-Booked",
@@ -320,7 +318,7 @@ class BookingController extends Controller
      *         @OA\MediaType(
      *             mediaType="multipart/form-data",
      *             @OA\Schema(
-     *                 required={"name","passport_number","birth_date","gender","nationality","unit_id"},
+     *                 required={"name","passport_number","birth_date","gender","nationality","email","phone_number","address","unit_id"},
      *                 @OA\Property(
      *                     property="upload_token",
      *                     type="string",
@@ -328,16 +326,21 @@ class BookingController extends Controller
      *                     example="3d1ad42a-49bb-4171-83af-f67dd83e97c3",
      *                     description="Optional token for a previously uploaded passport; omit to skip document"
      *                 ),
-     *                 @OA\Property(property="name",            type="string", maxLength=255, example="John Smith"),
-     *                 @OA\Property(property="passport_number", type="string", maxLength=50,  example="N001234567"),
-     *                 @OA\Property(property="birth_date",      type="string", format="date", example="1992-02-05"),
-     *                 @OA\Property(property="gender",          type="string", maxLength=10,  example="Male"),
-     *                 @OA\Property(property="nationality",     type="string", maxLength=255, example="Syrian Arab Republic"),
-     *                 @OA\Property(property="unit_id",         type="integer", example=12),
-     *                 @OA\Property(property="payment_plan_id", type="integer", nullable=true, example=5),
-     *                 @OA\Property(property="receipt",         type="string", format="binary"),
-     *                 @OA\Property(property="discount",        type="number", format="float", example=5),
-     *                 @OA\Property(property="notes",           type="string", example="Customer requests early handover.")
+     *                 @OA\Property(property="name",             type="string", maxLength=255, example="John Smith"),
+     *                 @OA\Property(property="passport_number",  type="string", maxLength=50,  example="N001234567"),
+     *                 @OA\Property(property="birth_date",       type="string", format="date", example="1992-02-05"),
+     *                 @OA\Property(property="gender",           type="string", maxLength=10,  example="Male"),
+     *                 @OA\Property(property="nationality",      type="string", maxLength=255, example="Syrian Arab Republic"),
+     *                 @OA\Property(property="start_date",       type="string", format="date", example="2020-03-18"),
+     *                 @OA\Property(property="expiry_date",      type="string", format="date", example="2030-03-17"),
+     *                 @OA\Property(property="email",            type="string", format="email", maxLength=255, example="john@gmail.com"),
+     *                 @OA\Property(property="phone_number",     type="string", maxLength=20, example="971501234567"),
+     *                 @OA\Property(property="address",          type="string", maxLength=255, example="Barsha 1, Dubai"),
+     *                 @OA\Property(property="unit_id",          type="integer", example=12),
+     *                 @OA\Property(property="payment_plan_id",  type="integer", nullable=true, example=5),
+     *                 @OA\Property(property="receipt",          type="string", format="binary"),
+     *                 @OA\Property(property="discount",         type="number", format="float", example=5),
+     *                 @OA\Property(property="notes",            type="string", example="Customer requests early handover.")
      *             )
      *         )
      *     ),
@@ -356,144 +359,151 @@ class BookingController extends Controller
         $user = $request->user();
         Log::info("User {$user->id} is attempting to book unit {$request->unit_id}.");
 
-        if (!$user->can('book unit')) {
+        if (! $user->can('book unit')) {
             return response()->json(['message' => 'Unauthorized'], Response::HTTP_FORBIDDEN);
         }
 
-        $validator = Validator::make($request->all(), [
-            'upload_token' => 'sometimes|string',
-            'name' => 'required|string|max:255',
-            'passport_number' => 'required|string|max:50',
-            'birth_date' => 'required|date',
-            'gender' => 'required|string|max:10',
-            'nationality' => 'required|string|max:255',
-            'unit_id' => 'required|integer|exists:units,id',
-            'payment_plan_id' => 'sometimes|integer|exists:payment_plans,id',
-            'receipt' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
-            'discount' => 'nullable|numeric|min:0|max:100',
-            'notes' => 'nullable|string',
+        // 1) Validate input (optionals are nullable)
+        $validated = $request->validate([
+            'upload_token'     => 'nullable|string',
+            'name'             => 'required|string|max:255',
+            'passport_number'  => 'required|string|max:50',
+            'birth_date'       => 'required|date',
+            'gender'           => 'required|string|max:10',
+            'nationality'      => 'required|string|max:255',
+            'start_date'       => 'nullable|date',
+            'expiry_date'      => 'nullable|date',
+            'email'            => 'required|email|max:255',
+            'phone_number'     => 'required|string|max:20',
+            'address'          => 'required|string|max:255',
+            'unit_id'          => 'required|integer|exists:units,id',
+            'payment_plan_id'  => 'nullable|integer|exists:payment_plans,id',
+            'receipt'          => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'discount'         => 'nullable|numeric|min:0|max:100',
+            'notes'            => 'nullable|string',
         ]);
-
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
 
         DB::beginTransaction();
 
         try {
-            // Optional passport path
+            // 2) Handle optional passport upload via token
             $passportPath = null;
             if ($request->filled('upload_token')) {
                 $upload = DB::table('uploads')
-                    ->where('token', $request->upload_token)
+                    ->where('token',   $validated['upload_token'])
                     ->where('user_id', $user->id)
                     ->first();
 
-                if (!$upload) {
-                    return response()->json(['message' => 'Invalid or expired token'], Response::HTTP_FORBIDDEN);
+                if (! $upload) {
+                    return response()->json(
+                        ['message' => 'Invalid or expired token'],
+                        Response::HTTP_FORBIDDEN
+                    );
                 }
 
                 $passportPath = $upload->path;
             }
 
-            // Ensure unit can be booked
-            $unit = Unit::findOrFail($request->unit_id);
+            // 3) Ensure unit can be booked
+            $unit   = Unit::findOrFail($validated['unit_id']);
             $myHold = $unit->holdings()
                 ->where('created_by', $user->id)
-                ->where('status', 'Hold')
+                ->where('status',     'Hold')
                 ->first();
 
             if (
-                !in_array($unit->status, ['Available', 'Cancelled']) &&
-                !($myHold && $unit->status === 'Hold')
+                ! in_array($unit->status, ['Available', 'Cancelled']) &&
+                ! ($myHold && $unit->status === 'Hold')
             ) {
                 return response()->json([
                     'error' => "Unit status must be 'Available' or 'Cancelled' to book (unless you hold it)."
                 ], Response::HTTP_UNPROCESSABLE_ENTITY);
             }
 
-            // Determine payment plan
-            if ($request->has('payment_plan_id')) {
-                $paymentPlan = PaymentPlan::find($request->payment_plan_id);
+            // 4) Determine payment plan
+            if ($request->filled('payment_plan_id')) {
+                $paymentPlan = PaymentPlan::find($validated['payment_plan_id']);
             } else {
                 $paymentPlan = PaymentPlan::where('is_default', true)->first();
             }
 
-            if (!$paymentPlan) {
+            if (! $paymentPlan) {
                 throw new \Exception('Selected payment plan does not exist for this unit.');
             }
 
-            // Optional receipt
+            // 5) Handle optional receipt upload
             $receiptPath = null;
             if ($request->hasFile('receipt')) {
                 $receiptPath = $request->file('receipt')->store('receipts', 'local');
             }
 
-            // Create customer info
-            $customerInfo = CustomerInfo::create([
-                'name' => $request->name,
-                'passport_number' => $request->passport_number,
-                'birth_date' => $request->birth_date,
-                'gender' => $request->gender,
-                'nationality' => $request->nationality,
-                'document_path' => $passportPath,
-            ]);
+            // 6) Create CustomerInfo
+            $customerData = array_merge(
+                $validated,
+                [
+                    'document_path' => $passportPath,
+                ]
+            );
+            $customerInfo = CustomerInfo::create($customerData);
 
-            // Compute booking price
-            $basePrice = $unit->price;
-            $discountPct = $request->input('discount', 0);
+            // 7) Compute booking price with discount
+            $basePrice    = $unit->price;
+            $discountPct  = $validated['discount'] ?? 0;
             $bookingPrice = $discountPct > 0
                 ? round($basePrice * (1 - $discountPct / 100), 2)
                 : $basePrice;
 
-            // Create booking
+            // 8) Create Booking
             $booking = Booking::create([
-                'unit_id' => $unit->id,
-                'payment_plan_id' => $paymentPlan->id,
-                'customer_info_id' => $customerInfo->id,
-                'status' => 'Pre-Booked',
-                'discount' => $discountPct,
-                'price' => $bookingPrice,
-                'receipt_path' => $receiptPath,
-                'created_by' => $user->id,
-                'notes' => $request->input('notes'),
+                'unit_id'           => $unit->id,
+                'payment_plan_id'   => $paymentPlan->id,
+                'customer_info_id'  => $customerInfo->id,
+                'status'            => 'Pre-Booked',
+                'discount'          => $discountPct,
+                'price'             => $bookingPrice,
+                'receipt_path'      => $receiptPath,
+                'created_by'        => $user->id,
+                'notes'             => $validated['notes'] ?? null,
             ]);
 
-            // Generate and persist installments
+            // 9) Generate & persist installments
             $template = $this->paymentPlanService
                 ->generateInstallments($unit, $paymentPlan, $discountPct);
 
             $rows = $template->map(fn($i) => [
                 'payment_plan_id' => $paymentPlan->id,
-                'description' => $i->description,
-                'percentage' => $i->percentage,
-                'date' => $i->date,
-                'amount' => $i->amount,
+                'description'     => $i->description,
+                'percentage'      => $i->percentage,
+                'date'            => $i->date,
+                'amount'          => $i->amount,
             ])->all();
 
             $saved = $booking->installments()->createMany($rows);
             $booking->setRelation('installments', $saved);
 
-            // Update unit status
-            $unit->status = 'Pre-Booked';
-            $unit->status_changed_at = now();
-            $unit->save();
+            // 10) Update unit status & any hold
+            $unit->update([
+                'status'            => 'Pre-Booked',
+                'status_changed_at' => now(),
+            ]);
 
             if ($myHold) {
-                $myHold->status = 'Processed';
-                $myHold->save();
+                $myHold->update(['status' => 'Processed']);
             }
+
+            DB::commit();
         } catch (\Exception $ex) {
             DB::rollBack();
-            return response()->json(['error' => $ex->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return response()->json(
+                ['error' => $ex->getMessage()],
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
         }
 
-        DB::commit();
-
-        // Clean up upload token if used
+        // 11) Cleanup upload token
         if ($request->filled('upload_token')) {
             DB::table('uploads')
-                ->where('token', $request->upload_token)
+                ->where('token',   $validated['upload_token'])
                 ->where('user_id', $user->id)
                 ->delete();
         }

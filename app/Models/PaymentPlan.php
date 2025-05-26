@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 
 class PaymentPlan extends Model
 {
@@ -46,5 +47,16 @@ class PaymentPlan extends Model
     public function bookings()
     {
         return $this->hasMany(Booking::class, 'payment_plan_id');
+    }
+
+    public static function setDefault(int $id): void
+    {
+        DB::transaction(function () use ($id) {
+            static::where('is_default', true)
+                ->update(['is_default' => false]);
+
+            static::where('id', $id)
+                ->update(['is_default' => true]);
+        });
     }
 }

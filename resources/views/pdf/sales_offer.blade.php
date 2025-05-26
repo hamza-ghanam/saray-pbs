@@ -9,7 +9,8 @@
         }
 
         body {
-            font-family: DejaVu Sans, sans-serif; font-size: 14px;
+            font-family: DejaVu Sans, sans-serif;
+            font-size: 14px;
         }
 
         header {
@@ -26,8 +27,8 @@
         footer {
             position: fixed;
             bottom: -65px;
-            left:   -45px;   /* pull into the left margin */
-            right:  -45px;   /* pull into the right margin */
+            left: -45px; /* pull into the left margin */
+            right: -45px; /* pull into the right margin */
             height: 50px;
             text-align: center;
             line-height: 35px;
@@ -49,14 +50,29 @@
 
             border-collapse: collapse;
         }
+
         .striped-table th,
         .striped-table td {
             padding: 8px;
-            border-bottom: 1px solid #ccc;    /* gray line */
+            border-bottom: 1px solid #ccc; /* gray line */
             text-align: left;
         }
+
         .striped-table tr:nth-child(even) {
-            background-color: #f9f9f9;        /* subtle stripe */
+            background-color: #f9f9f9; /* subtle stripe */
+        }
+
+        .table-compact td h4,
+        .table-compact td p {
+            margin: 0;
+            padding: 0;
+        }
+        /* optionally collapse cell padding too */
+        .table-compact {
+            border-collapse: collapse;
+        }
+        .table-compact td {
+            padding: 4px 8px; /* tweak to whatever you like */
         }
     </style>
     <title>Sales Offer</title>
@@ -81,9 +97,35 @@
 
     <div class="section">
         <h2>Unit Details</h2>
-        <h4>Unit No:{{ $unit->unit_no }}</h4>
-        <p><strong>Unit Type:</strong> {{ $unit->unit_type }}</p>
         <p><strong>Building:</strong> {{ $unit->building->name ?? 'N/A' }}</p>
+        <table class="table-compact">
+            <tr>
+                <td>
+                    <h4>Unit No:{{ $unit->unit_no }}</h4>
+                </td>
+                <td>
+                    <p><strong>Unit Type:</strong> {{ $unit->unit_type }}</p>
+                </td>
+                <td>
+                    <p><strong>Floor:</strong> {{ $unit->floor }}</p>
+                </td>
+            </tr>
+            <tr><td>&nbsp;</td></tr>
+            <tr>
+                <td colspan="3"><h4>Square Ft<sup>2</sup></h4></td>
+            </tr>
+            <tr>
+                <td>
+                    <p><strong>Internal:</strong> {{ $unit->internal_square_ft }}</p>
+                </td>
+                <td>
+                    <p><strong>External:</strong> {{ $unit->external_square_ft }}</p>
+                </td>
+                <td>
+                    <p><strong>Total:</strong> {{ $unit->total_square_ft }}</p>
+                </td>
+            </tr>
+        </table>
         <p><strong>Price:</strong> AED {{ number_format($unit->price, 2) }}</p>
     </div>
 
@@ -104,13 +146,15 @@
                 <p><strong>Effective Price:</strong> AED {{ number_format($salesOffer->offer_price, 2) }}</p>
             @endif
             <p><strong>Admin Fee:</strong> AED {{ number_format($plan->admin_fee, 2) }}</p>
-            <p><strong>DLD fee:</strong> {{ (int) $plan->dld_fee_percentage }}% | AED {{ number_format($plan->dld_fee, 2) }}</p>
+            <p><strong>DLD fee:</strong> {{ (int) $plan->dld_fee_percentage }}% |
+                AED {{ number_format($plan->dld_fee, 2) }}</p>
             @if($plan->installments->count())
                 <table class="striped-table">
                     <colgroup>
                         <col>
                         <col style="width:5%">
-                        <col><
+                        <col>
+                        <
                         <col>
                     </colgroup>
                     <thead>
@@ -133,7 +177,8 @@
                             <td>
                                 {{ $installment->description }}
                                 @if($loop->first)
-                                    <br/><small>({{ (int) $installment->percentage }}% + {{ (int) $plan->dld_fee_percentage }}% DLD fee + Admin fee - EOI)</small>
+                                    <br/><small>({{ (int) $installment->percentage }}%
+                                        + {{ (int) $plan->dld_fee_percentage }}% DLD fee + Admin fee - EOI)</small>
                                 @endif
                             </td>
                             <td>

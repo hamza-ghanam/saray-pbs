@@ -63,6 +63,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/payment-plans/{id}', [PaymentPlanController::class, 'show']);
     Route::put('/payment-plans/{id}', [PaymentPlanController::class, 'update']);
     Route::delete('/payment-plans/{id}', [PaymentPlanController::class, 'destroy']);
+    Route::post('/payment-plans/{id}/make-default', [PaymentPlanController::class, 'makeDefault']);
 });
 
 // Sales Offer

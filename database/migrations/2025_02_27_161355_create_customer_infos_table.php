@@ -19,6 +19,11 @@ return new class extends Migration
             $table->enum('gender', ['male', 'female']);
             $table->string('nationality');
             $table->string('document_path')->nullable();
+            $table->date('start_date');
+            $table->date('expiry_date');
+            $table->string('email');
+            $table->string('phone_number');
+            $table->string('address');
             $table->timestamps();
             $table->softDeletes();
         });

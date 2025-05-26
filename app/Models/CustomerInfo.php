@@ -15,7 +15,12 @@ class CustomerInfo extends Model
         'birth_date',
         'gender',
         'nationality',
-        'document_path'
+        'document_path',
+        'start_date',
+        'expiry_date',
+        'email',
+        'phone_number',
+        'address',
     ];
 
     protected $hidden = ['document_path'];

@@ -10,6 +10,7 @@ use App\Services\PaymentPlanService;
 use Carbon\Carbon;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Symfony\Component\HttpFoundation\Response;
@@ -18,7 +19,7 @@ class PaymentPlanController extends Controller
 {
     /**
      * @OA\Get(
-     *     path="/api/payment-plans/{id}",
+     *     path="/payment-plans/{id}",
      *     summary="Retrieve a specific payment plan",
      *     operationId="showPaymentPlan",
      *     tags={"PaymentPlans"},
@@ -70,7 +71,7 @@ class PaymentPlanController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/api/payment-plans",
+     *     path="/payment-plans",
      *     summary="Retrieve all payment plans",
      *     operationId="indexPaymentPlans",
      *     tags={"PaymentPlans"},
@@ -109,7 +110,7 @@ class PaymentPlanController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/api/payment-plans",
+     *     path="/payment-plans",
      *     summary="Persist a payment‐plan definition (blocks)",
      *     tags={"PaymentPlans"},
      *     security={{"sanctum":{}}},
@@ -248,7 +249,7 @@ class PaymentPlanController extends Controller
      * Delete a payment plan and its installments.
      *
      * @OA\Delete(
-     *     path="/api/payment-plans/{id}",
+     *     path="/payment-plans/{id}",
      *     summary="Delete a payment plan",
      *     tags={"PaymentPlans"},
      *     security={{"sanctum":{}}},
@@ -257,7 +258,7 @@ class PaymentPlanController extends Controller
      *         in="path",
      *         description="ID of the payment plan to delete",
      *         required=true,
-     *         @OA\Schema(type="integer", format="int64")
+     *         @OA\Schema(type="integer", format="int64", example=1)
      *     ),
      *     @OA\Response(
      *         response=204,
@@ -279,9 +280,9 @@ class PaymentPlanController extends Controller
      *     ),
      *     @OA\Response(
      *         response=409,
-     *         description="Conflict — cannot delete a plan applied to existing bookings",
+     *         description="Conflict — cannot delete the default plan or one applied to bookings",
      *         @OA\JsonContent(
-     *             @OA\Property(property="error", type="string", example="Cannot delete a payment plan that is applied on existing bookings.")
+     *             @OA\Property(property="error", type="string", example="Cannot delete the default payment plan.")
      *         )
      *     )
      * )
@@ -295,15 +296,62 @@ class PaymentPlanController extends Controller
 
         $paymentPlan = PaymentPlan::findOrFail($id);
 
-        // Reject if there are any bookings tied to this plan
+        // 1) Reject if it's the default plan
+        if ($paymentPlan->is_default) {
+            return response()->json([
+                'error' => 'Cannot delete the default payment plan.'
+            ], Response::HTTP_CONFLICT);
+        }
+
+        // 2) Reject if there are any bookings tied to this plan
         if ($paymentPlan->bookings()->exists()) {
             return response()->json([
-                'error' => 'Cannot delete a payment plan that is applied on existing bookings.'
+                'error' => 'Cannot delete a payment plan that is applied to existing bookings.'
             ], Response::HTTP_CONFLICT);
         }
 
         $paymentPlan->delete();
 
         return response()->json(null, Response::HTTP_NO_CONTENT);
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/payment-plans/{id}/make-default",
+     *     summary="Set a specific payment plan as the only default",
+     *     tags={"PaymentPlans"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID of the payment plan to make default",
+     *         required=true,
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Payment plan successfully set as default",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Payment plan #1 is now the default.")
+     *         )
+     *     ),
+     *     @OA\Response(response=403, description="Forbidden"),
+     *     @OA\Response(response=404, description="Payment plan not found"),
+     *     @OA\Response(response=500, description="Server error")
+     * )
+     */
+    public function makeDefault(Request $request, $id)
+    {
+        DB::transaction(function () use ($id) {
+            PaymentPlan::where('is_default', true)
+                ->update(['is_default' => false]);
+
+            PaymentPlan::where('id', $id)
+                ->update(['is_default' => true]);
+        });
+
+        return response()->json([
+            'message' => "Payment plan #{$id} is now the default."
+        ], Response::HTTP_OK);
     }
 }

@@ -104,7 +104,7 @@ class PaymentPlanService
         if ($isBooking) {
             // full booking‐deposit formula
             $amount = ($price * ($percentage / 100))
-                + $plan->dld_fee
+                + ($price * ($plan->dld_fee_percentage  / 100))
                 + $plan->admin_fee
                 - $plan->EOI;
         } else {
