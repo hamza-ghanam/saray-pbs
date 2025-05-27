@@ -15,18 +15,18 @@ class CustomerInfo extends Model
         'birth_date',
         'gender',
         'nationality',
-        'document_path',
         'start_date',
         'expiry_date',
         'email',
         'phone_number',
         'address',
+        'document_path',
     ];
 
     protected $hidden = ['document_path'];
 
     public function booking()
     {
-        return $this->hasOne(Booking::class, 'customer_info_id');
+        return $this->belongsTo(Booking::class);
     }
 }

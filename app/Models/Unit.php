@@ -33,36 +33,35 @@ class Unit extends Model
     protected $hidden = ['floor_plan'];
 
     protected $appends = [
-        'internal_square_ft',
-        'external_square_ft',
-        'total_square_ft',
+        'internal_square_m',
+        'external_square_m',
+        'total_square_m',
         'total_square',
     ];
 
-    protected const SQM_TO_SQFT = 10.7639;
+    protected const SQFT_TO_SQM = 1 / 10.7639;
 
     public function getTotalSquareAttribute(): float
     {
         return ($this->internal_square ?? 0) + ($this->external_square ?? 0);
     }
 
-    public function getInternalSquareFtAttribute(): float
+    public function getInternalSquareMAttribute(): float
     {
-        return round(($this->internal_square ?? 0) * self::SQM_TO_SQFT, 2);
+        return round(($this->internal_square ?? 0) * self::SQFT_TO_SQM, 2);
     }
 
-    public function getExternalSquareFtAttribute(): float
+    public function getExternalSquareMAttribute(): float
     {
-        return round(($this->external_square ?? 0) * self::SQM_TO_SQFT, 2);
+        return round(($this->external_square ?? 0) * self::SQFT_TO_SQM, 2);
     }
 
-    public function getTotalSquareFtAttribute(): float
+    public function getTotalSquareMAttribute(): float
     {
         return round(
             (($this->internal_square ?? 0) + ($this->external_square ?? 0))
-            * self::SQM_TO_SQFT,
-            2
-        );
+            * self::SQFT_TO_SQM,
+            2);
     }
 
     public function building()

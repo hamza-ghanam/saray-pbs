@@ -18,6 +18,7 @@ use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\BrokerController;
 use App\Http\Controllers\UnitUpdateController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\CustomerInfoController;
 
 //Index
 Route::get('/', function () {
@@ -83,6 +84,11 @@ Route::middleware('auth:sanctum')->group(function () {
         ->name('bookings.download_document');
     Route::get('/bookings/{id}', [BookingController::class, 'show']);
     Route::post('/bookings/{id}/approve', [BookingController::class, 'approveBooking']);
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/customers', [CustomerInfoController::class, 'index']);
+    Route::get('/customers/{id}', [CustomerInfoController::class, 'show']);
 });
 
 // Reservation Forms

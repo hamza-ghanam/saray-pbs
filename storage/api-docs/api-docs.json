@@ -154,7 +154,7 @@
                     "Bookings"
                 ],
                 "summary": "Retrieve a booking and its related records by ID",
-                "description": "Get a booking by its ID, including related customer info, reservation form, SPA, and approvals.",
+                "description": "Get a booking by its ID, including related customer infos, reservation form, SPA, and approvals.",
                 "operationId": "4b13c909d897a5edd245741a4aafd9d2",
                 "parameters": [
                     {
@@ -183,50 +183,49 @@
                                             "type": "integer",
                                             "example": 12
                                         },
-                                        "customer_info_id": {
-                                            "type": "integer",
-                                            "example": 7
-                                        },
                                         "status": {
                                             "type": "string",
                                             "example": "Pre-Booked"
+                                        },
+                                        "customer_infos": {
+                                            "description": "List of customers associated with the booking",
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 7
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "John Smith"
+                                                    },
+                                                    "passport_number": {
+                                                        "type": "string",
+                                                        "example": "N001234567"
+                                                    },
+                                                    "birth_date": {
+                                                        "type": "string",
+                                                        "format": "date",
+                                                        "example": "1992-02-05"
+                                                    },
+                                                    "gender": {
+                                                        "type": "string",
+                                                        "example": "Male"
+                                                    },
+                                                    "nationality": {
+                                                        "type": "string",
+                                                        "example": "Syrian Arab Republic"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
                                         },
                                         "approvals": {
                                             "type": "array",
                                             "items": {
                                                 "$ref": "#/components/schemas/Approval"
                                             }
-                                        },
-                                        "customer_info": {
-                                            "description": "Nested customer info",
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 7
-                                                },
-                                                "name": {
-                                                    "type": "string",
-                                                    "example": "John Smith"
-                                                },
-                                                "passport_number": {
-                                                    "type": "string",
-                                                    "example": "N001234567"
-                                                },
-                                                "birth_date": {
-                                                    "type": "string",
-                                                    "format": "date",
-                                                    "example": "1992-02-05"
-                                                },
-                                                "gender": {
-                                                    "type": "string",
-                                                    "example": "Male"
-                                                },
-                                                "nationality": {
-                                                    "type": "string",
-                                                    "example": "Syrian Arab Republic (the)"
-                                                }
-                                            },
-                                            "type": "object"
                                         },
                                         "reservation_form": {
                                             "description": "Associated reservation form",
@@ -313,7 +312,8 @@
                 "tags": [
                     "Bookings"
                 ],
-                "summary": "Update a booking (and its customer info) by ID",
+                "summary": "Update a booking (and a specific customer info) by ID",
+                "description": "Update a booking and a specific customer info record.",
                 "operationId": "6f58c5d17bbc7034b229d97390054811",
                 "parameters": [
                     {
@@ -324,6 +324,16 @@
                         "schema": {
                             "type": "integer",
                             "example": 42
+                        }
+                    },
+                    {
+                        "name": "customer_id",
+                        "in": "query",
+                        "description": "ID of the customer info to update (required if customer fields are included)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 101
                         }
                     }
                 ],
@@ -413,7 +423,8 @@
                         "required": true,
                         "schema": {
                             "type": "integer",
-                            "format": "int64"
+                            "format": "int64",
+                            "example": 42
                         }
                     }
                 ],
@@ -616,8 +627,8 @@
                 "tags": [
                     "Bookings"
                 ],
-                "summary": "Book a unit by creating CustomerInfo and Booking with status Pre-Booked",
-                "description": "Book a unit with provided customer information, optional passport upload, receipt, discount and notes.",
+                "summary": "Book a unit with multiple customers and status Pre-Booked",
+                "description": "Book a unit by creating one Booking and multiple CustomerInfo records",
                 "operationId": "5c506914f01cb885d4e38f9806bcd14b",
                 "requestBody": {
                     "required": true,
@@ -625,45 +636,10 @@
                         "multipart/form-data": {
                             "schema": {
                                 "required": [
-                                    "name",
-                                    "passport_number",
-                                    "birth_date",
-                                    "gender",
-                                    "nationality",
-                                    "unit_id"
+                                    "unit_id",
+                                    "customers"
                                 ],
                                 "properties": {
-                                    "upload_token": {
-                                        "description": "Optional token for a previously uploaded passport; omit to skip document",
-                                        "type": "string",
-                                        "example": "3d1ad42a-49bb-4171-83af-f67dd83e97c3",
-                                        "nullable": true
-                                    },
-                                    "name": {
-                                        "type": "string",
-                                        "maxLength": 255,
-                                        "example": "John Smith"
-                                    },
-                                    "passport_number": {
-                                        "type": "string",
-                                        "maxLength": 50,
-                                        "example": "N001234567"
-                                    },
-                                    "birth_date": {
-                                        "type": "string",
-                                        "format": "date",
-                                        "example": "1992-02-05"
-                                    },
-                                    "gender": {
-                                        "type": "string",
-                                        "maxLength": 10,
-                                        "example": "Male"
-                                    },
-                                    "nationality": {
-                                        "type": "string",
-                                        "maxLength": 255,
-                                        "example": "Syrian Arab Republic"
-                                    },
                                     "unit_id": {
                                         "type": "integer",
                                         "example": 12
@@ -685,6 +661,12 @@
                                     "notes": {
                                         "type": "string",
                                         "example": "Customer requests early handover."
+                                    },
+                                    "customers": {
+                                        "type": "array",
+                                        "items": {
+                                            "$ref": "#/components/schemas/CustomerInfo"
+                                        }
                                     }
                                 },
                                 "type": "object"
@@ -694,14 +676,7 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "Booking created successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Booking"
-                                }
-                            }
-                        }
+                        "description": "Booking created successfully"
                     },
                     "422": {
                         "description": "Validation error"
@@ -725,8 +700,8 @@
                 "tags": [
                     "Bookings"
                 ],
-                "summary": "Upload (or replace) an ID document or a payment receipt for an existing booking",
-                "description": "Upload or replace either the customer’s ID document **or** a payment receipt.",
+                "summary": "Upload (or replace) an ID document for a specific customer or a payment receipt for the booking",
+                "description": "Upload or replace either a customer’s ID document **or** a payment receipt.",
                 "operationId": "48ea949a14be0a3b79a9093ddadb5767",
                 "parameters": [
                     {
@@ -745,12 +720,17 @@
                     "content": {
                         "multipart/form-data": {
                             "schema": {
-                                "description": "Provide **either** `id_document` **or** `receipt`",
+                                "description": "Provide **either** `id_document` with `customer_id` **or** a `receipt`",
                                 "properties": {
                                     "id_document": {
                                         "description": "Customer ID document (pdf, jpg, jpeg, png)",
                                         "type": "string",
                                         "format": "binary"
+                                    },
+                                    "customer_id": {
+                                        "description": "Required when uploading ID document; must belong to this booking",
+                                        "type": "integer",
+                                        "example": 101
                                     },
                                     "receipt": {
                                         "description": "Payment receipt (pdf, jpg, jpeg, png)",
@@ -762,7 +742,8 @@
                                 "oneOf": [
                                     {
                                         "required": [
-                                            "id_document"
+                                            "id_document",
+                                            "customer_id"
                                         ]
                                     },
                                     {
@@ -839,6 +820,16 @@
                                 "dld"
                             ],
                             "example": "receipt"
+                        }
+                    },
+                    {
+                        "name": "customer_id",
+                        "in": "query",
+                        "description": "Required only when type is passport — specifies which customer's ID document to download",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 101
                         }
                     }
                 ],
@@ -1521,6 +1512,309 @@
                     },
                     "404": {
                         "description": "Not Found — image does not exist"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/customers": {
+            "get": {
+                "tags": [
+                    "Customers"
+                ],
+                "summary": "List all customers with related booking, unit, and building",
+                "description": "Get a paginated list of all customers with their booking and unit/building info.",
+                "operationId": "d24c98cfc85221a6db093404890518c7",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number for pagination",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of customers retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "current_page": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "per_page": {
+                                            "type": "integer",
+                                            "example": 20
+                                        },
+                                        "total": {
+                                            "type": "integer",
+                                            "example": 85
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 101
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "John Smith"
+                                                    },
+                                                    "passport_number": {
+                                                        "type": "string",
+                                                        "example": "N001234567"
+                                                    },
+                                                    "birth_date": {
+                                                        "type": "string",
+                                                        "format": "date",
+                                                        "example": "1992-02-05"
+                                                    },
+                                                    "gender": {
+                                                        "type": "string",
+                                                        "example": "Male"
+                                                    },
+                                                    "nationality": {
+                                                        "type": "string",
+                                                        "example": "Syrian Arab Republic"
+                                                    },
+                                                    "booking": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 42
+                                                            },
+                                                            "status": {
+                                                                "type": "string",
+                                                                "example": "Pre-Booked"
+                                                            },
+                                                            "unit": {
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "integer",
+                                                                        "example": 12
+                                                                    },
+                                                                    "unit_no": {
+                                                                        "type": "string",
+                                                                        "example": "A-203"
+                                                                    },
+                                                                    "building": {
+                                                                        "properties": {
+                                                                            "id": {
+                                                                                "type": "integer",
+                                                                                "example": 3
+                                                                            },
+                                                                            "name": {
+                                                                                "type": "string",
+                                                                                "example": "Sunrise Tower"
+                                                                            },
+                                                                            "location": {
+                                                                                "type": "string",
+                                                                                "example": "Downtown"
+                                                                            }
+                                                                        },
+                                                                        "type": "object"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/customers/{id}": {
+            "get": {
+                "tags": [
+                    "Customers"
+                ],
+                "summary": "Retrieve a customer and their associated booking, unit, and building",
+                "description": "Get a specific customer's full details, including their booking, unit, and building.",
+                "operationId": "e855c356319ac04f04e4eabfc941fa1a",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the customer",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 101
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Customer retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer",
+                                            "example": 101
+                                        },
+                                        "name": {
+                                            "type": "string",
+                                            "example": "John Smith"
+                                        },
+                                        "passport_number": {
+                                            "type": "string",
+                                            "example": "N001234567"
+                                        },
+                                        "birth_date": {
+                                            "type": "string",
+                                            "format": "date",
+                                            "example": "1992-02-05"
+                                        },
+                                        "gender": {
+                                            "type": "string",
+                                            "example": "Male"
+                                        },
+                                        "nationality": {
+                                            "type": "string",
+                                            "example": "Syrian Arab Republic"
+                                        },
+                                        "booking": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 42
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "Pre-Booked"
+                                                },
+                                                "discount": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 5
+                                                },
+                                                "unit": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 12
+                                                        },
+                                                        "unit_no": {
+                                                            "type": "string",
+                                                            "example": "A-203"
+                                                        },
+                                                        "building": {
+                                                            "properties": {
+                                                                "id": {
+                                                                    "type": "integer",
+                                                                    "example": 3
+                                                                },
+                                                                "name": {
+                                                                    "type": "string",
+                                                                    "example": "Sunrise Tower"
+                                                                },
+                                                                "location": {
+                                                                    "type": "string",
+                                                                    "example": "Downtown"
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "payment_plan": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "integer",
+                                                            "example": 5
+                                                        },
+                                                        "name": {
+                                                            "type": "string",
+                                                            "example": "Standard Plan"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "approvals": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/Approval"
+                                                    }
+                                                },
+                                                "spa": {
+                                                    "properties": {
+                                                        "status": {
+                                                            "type": "string",
+                                                            "example": "Pending"
+                                                        },
+                                                        "approvals": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/components/schemas/Approval"
+                                                            }
+                                                        }
+                                                    },
+                                                    "type": "object",
+                                                    "nullable": true
+                                                },
+                                                "reservation_form": {
+                                                    "properties": {
+                                                        "status": {
+                                                            "type": "string",
+                                                            "example": "Signed"
+                                                        },
+                                                        "approvals": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/components/schemas/Approval"
+                                                            }
+                                                        }
+                                                    },
+                                                    "type": "object",
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Customer not found"
+                    },
+                    "403": {
+                        "description": "Unauthorized"
                     }
                 },
                 "security": [
@@ -4554,13 +4848,78 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "Units imported successfully"
+                        "description": "Units imported successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Units imported successfully"
+                                        },
+                                        "imported": {
+                                            "type": "integer",
+                                            "example": 120
+                                        },
+                                        "skipped": {
+                                            "description": "List of unit_no(s) that were skipped (e.g. duplicates)",
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string",
+                                                "example": "1109"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "422": {
-                        "description": "Validation errors"
+                        "description": "Validation errors",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "building_id": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string",
+                                                "example": "The selected building_id is invalid."
+                                            }
+                                        },
+                                        "file": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string",
+                                                "example": "The file field is required."
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "500": {
-                        "description": "Import failed"
+                        "description": "Import failed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Import failed"
+                                        },
+                                        "details": {
+                                            "type": "string",
+                                            "example": "Undefined array key 'use'"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -6060,6 +6419,73 @@
     },
     "components": {
         "schemas": {
+            "CustomerInfo": {
+                "title": "Customer Info",
+                "required": [
+                    "name",
+                    "passport_number",
+                    "birth_date",
+                    "gender",
+                    "nationality",
+                    "email",
+                    "phone_number",
+                    "address"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "example": "John Smith"
+                    },
+                    "passport_number": {
+                        "type": "string",
+                        "example": "A1234567"
+                    },
+                    "birth_date": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "1990-01-01"
+                    },
+                    "gender": {
+                        "type": "string",
+                        "example": "Male"
+                    },
+                    "nationality": {
+                        "type": "string",
+                        "example": "British"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "john@example.com"
+                    },
+                    "phone_number": {
+                        "type": "string",
+                        "example": "+971501234567"
+                    },
+                    "address": {
+                        "type": "string",
+                        "example": "123 Palm Jumeirah, Dubai"
+                    },
+                    "start_date": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-01-01",
+                        "nullable": true
+                    },
+                    "expiry_date": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-12-31",
+                        "nullable": true
+                    },
+                    "upload_token": {
+                        "type": "string",
+                        "example": "3d1ad42a-49bb-4171-83af-f67dd83e97c3",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
             "Booking": {
                 "title": "Booking",
                 "required": [
@@ -6257,17 +6683,17 @@
                         "format": "float",
                         "example": 136.25
                     },
-                    "internal_square_ft": {
+                    "internal_square_m": {
                         "type": "number",
                         "format": "float",
                         "example": 1295.83
                     },
-                    "external_square_ft": {
+                    "external_square_m": {
                         "type": "number",
                         "format": "float",
                         "example": 169.57
                     },
-                    "total_square_ft": {
+                    "total_square_m": {
                         "type": "number",
                         "format": "float",
                         "example": 1465.4
@@ -6584,6 +7010,10 @@
         {
             "name": "Building",
             "description": "Building"
+        },
+        {
+            "name": "Customers",
+            "description": "Customers"
         },
         {
             "name": "Holdings",

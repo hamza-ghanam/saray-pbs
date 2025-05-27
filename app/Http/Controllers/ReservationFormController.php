@@ -112,13 +112,13 @@ class ReservationFormController extends Controller
         $booking->load([
             'installments.paymentPlan',     // for grouping and headings
             'unit',
-            'customerInfo'
+            'customerInfos'
         ]);
 
         // 5. Generate the PDF (using your Blade view)
         $pdf = PDF::loadView('pdf.reservation_form', [
             'booking' => $booking,
-            'customerInfo' => $booking->customerInfo,
+            'customerInfos' => $booking->customerInfos,
             'paymentPlan' => $booking->paymentPlan,
             'unit' => $booking->unit,
         ]);

@@ -51,6 +51,28 @@
         .striped-table tr:nth-child(even) {
             background-color: #f9f9f9;        /* subtle stripe */
         }
+
+        table.customers {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+
+        table.customers td {
+            vertical-align: top;
+            padding-left: 15px;
+            width: 50%;
+            border: none;
+        }
+
+        table.customers td:first-child {
+            border-right: 1px solid #999;
+            padding-right: 15px;
+        }
+
+        .label {
+            font-weight: bold;
+        }
     </style>
     <title>Reservation Form</title>
 </head>
@@ -88,11 +110,29 @@
     {{-- Customer Information --}}
     <div class="section">
         <h2>Customer Information</h2>
-        @if($customerInfo)
-            <p><span class="label">Name:</span> {{ $customerInfo->name }}</p>
-            <p><span class="label">Passport #:</span> {{ $customerInfo->passport_number }}</p>
-            <p><span class="label">Birth Date:</span> {{ $customerInfo->birth_date }}</p>
-            <p><span class="label">Nationality:</span> {{ $customerInfo->nationality }}</p>
+        @if($customerInfos)
+            <table class="customers">
+                @foreach ($customerInfos->chunk(2) as $pair)
+                    <tr>
+                        @foreach ($pair as $customerInfo)
+                            <td>
+                                <h3 style="background-color: #ECECEC;"><span class="label" style="padding-top: 0; margin-top: 0;">{{ $customerInfo->name }}</h3>
+                                <p><span class="label">Passport #:</span> {{ $customerInfo->passport_number }}</p>
+                                <p><span class="label">Birth Date:</span> {{ $customerInfo->birth_date }}</p>
+                                <p><span class="label">Nationality:</span> {{ $customerInfo->nationality }}</p>
+                                <p><span class="label">Email:</span> {{ $customerInfo->email }}</p>
+                                <p><span class="label">Phone Number:</span> {{ $customerInfo->phone_number }}</p>
+                                <p><span class="label">Address:</span> {{ $customerInfo->address }}</p>
+                            </td>
+                        @endforeach
+
+                        {{-- If odd number of customers, add empty cell to fill row --}}
+                        @if ($pair->count() < 2)
+                            <td></td>
+                        @endif
+                    </tr>
+                @endforeach
+            </table>
         @else
             <p>No customer data available.</p>
         @endif

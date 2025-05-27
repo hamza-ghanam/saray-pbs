@@ -32,9 +32,9 @@ class Booking extends Model
         return $this->belongsTo(Unit::class);
     }
 
-    public function customerInfo()
+    public function customerInfos()
     {
-        return $this->belongsTo(CustomerInfo::class);
+        return $this->hasMany(CustomerInfo::class);
     }
 
     public function reservationForm()
@@ -69,6 +69,14 @@ class Booking extends Model
             'ref_type',      // column holding the class name
             'ref_id'         // column holding the ID
         );
+    }
+
+    public function getLatestApprovedAtAttribute()
+    {
+        return $this->approvals()
+            ->where('status', 'Approved')
+            ->latest()
+            ->value('created_at');
     }
 
     public function paymentPlan()

@@ -116,13 +116,13 @@
             </tr>
             <tr>
                 <td>
-                    <p><strong>Internal:</strong> {{ $unit->internal_square_ft }}</p>
+                    <p><strong>Internal:</strong> {{ $unit->internal_square }}</p>
                 </td>
                 <td>
-                    <p><strong>External:</strong> {{ $unit->external_square_ft }}</p>
+                    <p><strong>External:</strong> {{ $unit->external_square }}</p>
                 </td>
                 <td>
-                    <p><strong>Total:</strong> {{ $unit->total_square_ft }}</p>
+                    <p><strong>Total:</strong> {{ $unit->total_square }}</p>
                 </td>
             </tr>
         </table>

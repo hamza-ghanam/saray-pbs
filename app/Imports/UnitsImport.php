@@ -4,6 +4,7 @@ namespace App\Imports;
 
 use App\Models\Unit;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithCalculatedFormulas;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
@@ -24,50 +25,63 @@ class UnitsImport implements ToModel, WithHeadingRow, WithCalculatedFormulas, Wi
         $this->building = $building;
     }
 
+
     /** Row 3 in Excel (the “NUMBER, FLOOR, USE, …” row) */
     public function headingRow(): int { return 3; }
 
     /** Row 4 in Excel (the first data row) */
     public function startRow(): int { return 4; }
 
+    protected int $currentRow = 3;
+    public array $skippedRows = [];
+
     /**
      * Map each row to a Unit model.
      */
     public function model(array $row)
     {
-        if (! is_numeric($row['number']) || strtolower($row['number']) === 'total') {
-            return null;  // skip this row entirely
+        $this->currentRow++;
+//        dd(array_keys($row));
+
+        try {
+            if (! is_numeric($row['number']) || strtolower($row['number']) === 'total') {
+                Log::info('Skipped: invalid or summary row.');
+                return null;  // skip this row entirely
+            }
+
+            $exists = Unit::where('building_id', $this->building->id)
+                ->where('unit_no', $row['number'])
+                ->exists();
+
+            if ($exists) {
+                $this->skippedRows[] = "Skipped: duplicate unit_no {$row['number']} in building {$this->building->id}";
+                return null;
+            }
+
+            self::$totalCount++;
+
+            return new Unit([
+                'prop_type'         => 'Residential',
+                'unit_type'         => $row['use'],
+                'unit_no'           => $row['number'],
+                'floor'             => $row['floor'],
+                'parking'           => 1,
+                'pool_jacuzzi'      => '-',
+                'internal_square'   => $row['sqft'],
+                'external_square'   => $row['sqft3'],
+                'furnished'         => false,
+                'unit_view'         => '-',
+                'price'             => $row['list_price'],
+                'min_price'         => $row['min_price'] ?? null,
+                'pre_lunch_price'   => $row['pre_lunch_price'] ?? null,
+                'lunch_price'       => $row['lunch_price'] ?? null,
+                'building_id'       => $this->building->id,
+                'status'            => 'Pending',
+                'status_changed_at' => Carbon::now(),
+            ]);
+        } catch (\Exception $e) {
+            throw new \Exception("Error on row {$this->currentRow}: " . $e->getMessage(), 0, $e);
         }
-
-        $exists = Unit::where('building_id', $this->building->id)
-            ->where('unit_no',    $row['number'])
-            ->exists();
-
-        if ($exists) {
-            return null;
-        }
-
-        self::$totalCount++;
-
-        return new Unit([
-            'prop_type'         => 'Residential',
-            'unit_type'         => $row['use'],
-            'unit_no'           => $row['number'],
-            'floor'             => $row['floor'],
-            'parking'           => 1,
-            'pool_jacuzzi'      => '-',
-            'internal_square'   => $row['sqm'],
-            'external_square'   => $row['sqm2'],
-            'furnished'         => false,
-            'unit_view'         => '-',
-            'price'             => $row['list_price'],
-            'min_price'         => $row['min_price'],
-            'pre_lunch_price'   => $row['pre_lunch_price'],
-            'lunch_price'       => $row['lunch_price'],
-            'building_id'       => $this->building->id,
-            'status'            => 'Pending',
-            'status_changed_at' => Carbon::now(),
-        ]);
     }
 
     /**

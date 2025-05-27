@@ -117,13 +117,13 @@ class SpaController extends Controller
         $booking->load([
             'installments.paymentPlan',     // for grouping and headings
             'unit',
-            'customerInfo'
+            'customerInfos'
         ]);
 
         // 4. Generate the PDF (using your Blade view, e.g. 'pdf.spa')
         $pdf = PDF::loadView('pdf.spa', [
             'booking'      => $booking,
-            'customerInfo' => $booking->customerInfo,
+            'customerInfos' => $booking->customerInfos,
             'paymentPlan'  => $booking->paymentPlan,
             'unit'         => $booking->unit,
         ]);

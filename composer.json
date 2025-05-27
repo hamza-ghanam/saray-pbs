@@ -17,7 +17,8 @@
         "mindee/mindee": "^1.16",
         "rakibdevs/mrz-parser": "^1.2",
         "spatie/laravel-permission": "^6.15",
-        "zircote/swagger-php": "^5.0"
+        "zircote/swagger-php": "^5.0",
+        "ext-intl": "*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -33,7 +34,10 @@
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
-        }
+        },
+        "files": [
+            "app/helpers.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {

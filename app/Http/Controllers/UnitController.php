@@ -59,9 +59,9 @@ use Maatwebsite\Excel\HeadingRowImport;
  *     @OA\Property(property="internal_square",     type="number", format="float", example=120.50),
  *     @OA\Property(property="external_square",     type="number", format="float", example=15.75),
  *     @OA\Property(property="total_square",        type="number", format="float", example=136.25),
- *     @OA\Property(property="internal_square_ft",  type="number", format="float", example=1295.83),
- *     @OA\Property(property="external_square_ft",  type="number", format="float", example=169.57),
- *     @OA\Property(property="total_square_ft",     type="number", format="float", example=1465.40),
+ *     @OA\Property(property="internal_square_m",  type="number", format="float", example=1295.83),
+ *     @OA\Property(property="external_square_m",  type="number", format="float", example=169.57),
+ *     @OA\Property(property="total_square_m",     type="number", format="float", example=1465.40),
  *     @OA\Property(property="furnished",           type="boolean",               example=true),
  *     @OA\Property(property="unit_view",           type="string",                example="City View"),
  *     @OA\Property(property="price",               type="number", format="float", example=350000.00),
@@ -113,8 +113,8 @@ use Maatwebsite\Excel\HeadingRowImport;
  *     @OA\Property(property="pool_jacuzzi",       type="string",  example="None"),
  *     @OA\Property(property="internal_square",    type="number",  format="float", example=120.50),
  *     @OA\Property(property="external_square",    type="number",  format="float", example=15.75),
- *     @OA\Property(property="furnished",          type="boolean",             example=true),
- *     @OA\Property(property="unit_view",          type="string",              example="City View"),
+ *     @OA\Property(property="furnished",          type="boolean", example=true),
+ *     @OA\Property(property="unit_view",          type="string",  example="City View"),
  *     @OA\Property(property="price",              type="number",  format="float", example=350000.00),
  *     @OA\Property(property="min_price",          type="number",  format="float", example=300000.00),
  *     @OA\Property(property="pre_lunch_price",    type="number",  format="float", example=320000.00),
@@ -1018,18 +1018,45 @@ class UnitController extends Controller
      *             @OA\Schema(
      *                 required={"building_id","file"},
      *                 @OA\Property(property="building_id", type="integer", example=1),
-     *                 @OA\Property(property="file", type="file", format="binary")
+     *                 @OA\Property(property="file",        type="file",    format="binary")
      *             )
      *         )
      *     ),
-     *     @OA\Response(response=201, description="Units imported successfully"),
-     *     @OA\Response(response=422, description="Validation errors"),
-     *     @OA\Response(response=500, description="Import failed")
+     *     @OA\Response(
+     *         response=201,
+     *         description="Units imported successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message",  type="string", example="Units imported successfully"),
+     *             @OA\Property(property="imported", type="integer", example=120),
+     *             @OA\Property(
+     *                 property="skipped",
+     *                 type="array",
+     *                 description="List of unit_no(s) that were skipped (e.g. duplicates)",
+     *                 @OA\Items(type="string", example="1109")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation errors",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="building_id", type="array",
+     *                 @OA\Items(type="string", example="The selected building_id is invalid.")
+     *             ),
+     *             @OA\Property(property="file", type="array",
+     *                 @OA\Items(type="string", example="The file field is required.")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Import failed",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error",   type="string", example="Import failed"),
+     *             @OA\Property(property="details", type="string", example="Undefined array key 'use'")
+     *         )
+     *     )
      * )
-     *
-     * POST /units/import
-     * @param  Request  $request
-     * @return \Illuminate\Http\JsonResponse
      */
     public function importUnits(Request $request)
     {
@@ -1043,16 +1070,20 @@ class UnitController extends Controller
         $importer = new UnitsImport($building);
 
         try {
-            Excel::import($importer, $request->file('file'));
+            DB::transaction(function () use ($importer, $request) {
+                Excel::import($importer, $request->file('file'));
+            });
+
+            return response()->json([
+                'message' => 'Units imported successfully',
+                'imported' => UnitsImport::$totalCount,
+                'skipped' => $importer->skippedRows,
+            ], Response::HTTP_CREATED);
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'Import failed: ' . $e->getMessage()
+                'error' => 'Import failed',
+                'details' => $e->getMessage(),
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-
-        return response()->json([
-            'message' => 'Units imported successfully',
-            'imported' => UnitsImport::$totalCount,
-        ], Response::HTTP_CREATED);
     }
 }
