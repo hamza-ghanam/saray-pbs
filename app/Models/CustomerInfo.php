@@ -15,7 +15,7 @@ class CustomerInfo extends Model
         'birth_date',
         'gender',
         'nationality',
-        'start_date',
+        'issuance_date',
         'expiry_date',
         'email',
         'phone_number',

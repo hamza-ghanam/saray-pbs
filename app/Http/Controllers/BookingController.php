@@ -48,7 +48,7 @@ use App\Services\FCMService;
  *     @OA\Property(property="email",           type="string", format="email", example="john@example.com"),
  *     @OA\Property(property="phone_number",    type="string", example="+971501234567"),
  *     @OA\Property(property="address",         type="string", example="123 Palm Jumeirah, Dubai"),
- *     @OA\Property(property="start_date",      type="string", format="date", nullable=true, example="2025-01-01"),
+ *     @OA\Property(property="issuance_date",      type="string", format="date", nullable=true, example="2025-01-01"),
  *     @OA\Property(property="expiry_date",     type="string", format="date", nullable=true, example="2025-12-31"),
  *     @OA\Property(property="upload_token",    type="string", nullable=true, example="3d1ad42a-49bb-4171-83af-f67dd83e97c3")
  * ),
@@ -317,6 +317,9 @@ class BookingController extends Controller
 
             // 3. Parse the combined MRZ lines via MrzParser
             $data = MrzParser::parse($mrz);
+
+            // 4. Issuance date, if exists
+            $data['issuance_date'] = $apiResponse->document->inference->prediction->issuanceDate?->value ?? null;
         } catch (\Exception $ex) {
             Log::error("OCR extraction failed: " . $ex->getMessage());
             return response()->json(['error' => 'OCR extraction failed'], Response::HTTP_INTERNAL_SERVER_ERROR);
@@ -395,7 +398,7 @@ class BookingController extends Controller
             'customers.*.birth_date'      => 'required|date',
             'customers.*.gender'          => 'required|string|max:10',
             'customers.*.nationality'     => 'required|string|max:255',
-            'customers.*.start_date'      => 'nullable|date',
+            'customers.*.issuance_date'      => 'nullable|date',
             'customers.*.expiry_date'     => 'nullable|date',
             'customers.*.email'           => 'required|email|max:255',
             'customers.*.phone_number'    => 'required|string|max:20',

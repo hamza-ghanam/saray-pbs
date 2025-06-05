@@ -6466,7 +6466,7 @@
                         "type": "string",
                         "example": "123 Palm Jumeirah, Dubai"
                     },
-                    "start_date": {
+                    "issuance_date": {
                         "type": "string",
                         "format": "date",
                         "example": "2025-01-01",

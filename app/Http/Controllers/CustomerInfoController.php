@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\CustomerInfo;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
 class CustomerInfoController extends Controller
@@ -70,9 +71,17 @@ class CustomerInfoController extends Controller
      *     @OA\Response(response=403, description="Unauthorized")
      * )
      */
-    public function index()
+    public function index(Request $request)
     {
-        $customers = CustomerInfo::with('booking.unit')->paginate(20); // Or ->get() if unpaginated
+        $user = $request->user();
+        Log::info("User {$user->id} is attempting to list customers info");
+
+        if (!$user->can('view customer')) {
+            return response()->json(['message' => 'Unauthorized'], Response::HTTP_FORBIDDEN);
+        }
+
+        $limit = min((int)$request->get('limit', 10), 100);
+        $customers = CustomerInfo::with('booking.unit.building')->paginate($limit);
 
         return response()->json($customers, Response::HTTP_OK);
     }
@@ -167,11 +176,19 @@ class CustomerInfoController extends Controller
      *     @OA\Response(response=403, description="Unauthorized")
      * )
      */
-    public function show($id)
+    public function show(Request $request, $id)
     {
+        $user = $request->user();
+        Log::info("User {$user->id} is attempting to list customers info");
+
+        if (!$user->can('view customer')) {
+            return response()->json(['message' => 'Unauthorized'], Response::HTTP_FORBIDDEN);
+        }
+
         $customer = CustomerInfo::with([
             'booking.unit.building',
             'booking.paymentPlan',
+            'booking.installments',
             'booking.approvals',
             'booking.spa.approvals',
             'booking.reservationForm.approvals'
