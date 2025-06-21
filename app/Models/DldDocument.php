@@ -14,6 +14,11 @@ class DldDocument extends Model
 
     protected $hidden = ['file_path'];
 
+    protected $casts = [
+        'uploaded_by' => 'integer',
+        'booking_id' => 'integer',
+    ];
+
     public function booking()
     {
         return $this->belongsTo(Booking::class);

@@ -9,6 +9,7 @@ use App\Models\Unit;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -17,6 +18,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\UnitsImport;
 use Maatwebsite\Excel\HeadingRowImport;
+use ZipArchive;
 
 /**
  * @OA\Info(
@@ -417,10 +419,10 @@ class UnitController extends Controller
             'building_id' => 'required|exists:buildings,id',
             'prop_type' => 'required|string|max:255',
             'unit_type' => 'required|string|max:255',
-            'unit_no'     => [
+            'unit_no' => [
                 'required',
                 'string',
-                Rule::unique('units','unit_no')
+                Rule::unique('units', 'unit_no')
                     ->where(fn($q) => $q->where('building_id', $request->building_id)),
             ],
             'floor' => 'required|string|max:50',
@@ -610,13 +612,13 @@ class UnitController extends Controller
             $hasMyBooking = $unit->bookings()
                     ->where('created_by', $salesId)
                     ->where('status', '!=', 'Cancelled')
-                    ->exists() && in_array($unit->status, ['Pre-Booked','Booked']);
+                    ->exists() && in_array($unit->status, ['Pre-Booked', 'Booked']);
             $hasMyHolding = $unit->holdings()
                     ->where('created_by', $salesId)
-                    ->whereIn('status',['Hold','Pre-Hold', 'Processed'])
-                    ->exists() && in_array($unit->status, ['Hold','Pre-Hold', 'Processed']);
+                    ->whereIn('status', ['Hold', 'Pre-Hold', 'Processed'])
+                    ->exists() && in_array($unit->status, ['Hold', 'Pre-Hold', 'Processed']);
 
-            if (! ($isOpen || $hasMyBooking || $hasMyHolding)) {
+            if (!($isOpen || $hasMyBooking || $hasMyHolding)) {
                 return response()->json([
                     'message' => 'Unit not available for you at this stage.'
                 ], Response::HTTP_FORBIDDEN);
@@ -703,13 +705,12 @@ class UnitController extends Controller
         $validator = Validator::make($request->all(), [
             'prop_type' => 'sometimes|required|string|max:255',
             'unit_type' => 'sometimes|required|string|max:255',
-            'unit_no'     => [
+            'unit_no' => [
                 'required',
                 'string',
                 Rule::unique('units', 'unit_no')
                     ->ignore($unit->id)
-                    ->where(fn($query) =>
-                        $query->where('building_id', $buildingId)
+                    ->where(fn($query) => $query->where('building_id', $buildingId)
                     ),
             ],
             'floor' => 'sometimes|required|string|max:50',
@@ -974,7 +975,7 @@ class UnitController extends Controller
         }
 
         $path = $unit->floor_plan; // e.g. "floor_plans/xyz.png"
-        if (! Storage::disk('local')->exists($path)) {
+        if (!Storage::disk('local')->exists($path)) {
             abort(Response::HTTP_NOT_FOUND);
         }
 
@@ -997,11 +998,11 @@ class UnitController extends Controller
         // Otherwise, send the file with no-cache + validators
         return response()->file($fullPath, [
             'Content-Disposition' => 'inline; filename="' . basename($path) . '"',
-            'Cache-Control'       => 'no-cache, must-revalidate, max-age=0, proxy-revalidate',
-            'Pragma'              => 'no-cache',
-            'Expires'             => '0',
-            'Last-Modified'       => $lastModified,
-            'ETag'                => $eTag,
+            'Cache-Control' => 'no-cache, must-revalidate, max-age=0, proxy-revalidate',
+            'Pragma' => 'no-cache',
+            'Expires' => '0',
+            'Last-Modified' => $lastModified,
+            'ETag' => $eTag,
         ]);
     }
 
@@ -1062,7 +1063,7 @@ class UnitController extends Controller
     {
         $request->validate([
             'building_id' => 'required|exists:buildings,id',
-            'file'        => 'required|file|mimes:xlsx,xls,csv',
+            'file' => 'required|file|mimes:xlsx,xls,csv',
         ]);
 
         $building = Building::findOrFail($request->building_id);
@@ -1085,5 +1086,140 @@ class UnitController extends Controller
                 'details' => $e->getMessage(),
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/units/import-floor-plans",
+     *     summary="Import floor plans from a ZIP file",
+     *     description="Upload a ZIP file containing floor plans named by unit_no. Each file will be stored and assigned to the matching unit in the specified building.",
+     *     operationId="importFloorPlans",
+     *     tags={"Units"},
+     *     security={{"sanctum":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 required={"building_id", "file"},
+     *                 @OA\Property(
+     *                     property="building_id",
+     *                     type="integer",
+     *                     description="The ID of the building",
+     *                     example=5
+     *                 ),
+     *                 @OA\Property(
+     *                     property="file",
+     *                     type="string",
+     *                     format="binary",
+     *                     description="ZIP file containing floor plans named by unit_no (e.g. 1109.jpg). Max size: 15 MB",
+     *                     example="plans.zip"
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Floor plans processed successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Floor plans processed successfully."),
+     *             @OA\Property(
+     *                 property="summary",
+     *                 type="object",
+     *                 @OA\Property(property="added", type="integer", example=5),
+     *                 @OA\Property(property="replaced", type="integer", example=0),
+     *                 @OA\Property(
+     *                     property="skipped",
+     *                     type="array",
+     *                     @OA\Items(type="string", example="Skipped: unit_no '1234' not found in building 5")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error or ZIP processing error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="Could not open ZIP file")
+     *         )
+     *     )
+     * )
+     */
+    public function importFloorPlans(Request $request)
+    {
+        $request->validate([
+            'building_id' => 'required|exists:buildings,id',
+            'file' => 'required|file|mimes:zip|max:15360', // 15MB
+        ]);
+
+        $buildingId = $request->building_id;
+
+        $zipFile = $request->file('file');
+        $timestamp = now()->timestamp;
+
+        // Save the ZIP into the 'local' disk, which maps to storage/app/private
+        $tempZipPath = $zipFile->store('temp', 'local');
+
+        // Build full path to ZIP file
+        $fullZipPath = storage_path('app/private/' . ltrim($tempZipPath, '/\\'));
+
+        if (!file_exists($fullZipPath)) {
+            return response()->json(['error' => "ZIP file not found at path: {$fullZipPath}"], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        // Path to extract files
+        $extractedPath = storage_path("app/private/temp/floor_plans_{$timestamp}");
+        mkdir($extractedPath, 0777, true);
+
+        // Extract
+        $zip = new ZipArchive;
+        if ($zip->open($fullZipPath) !== true) {
+            return response()->json(['error' => 'Failed to open ZIP file'], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $zip->extractTo($extractedPath);
+        $zip->close();
+
+        $allowedExtensions = ['jpg', 'jpeg', 'png'];
+        $results = ['added' => 0, 'replaced' => 0, 'skipped' => []];
+
+        foreach (File::files($extractedPath) as $file) {
+            $ext = strtolower($file->getExtension());
+            if (!in_array($ext, $allowedExtensions)) {
+                $results['skipped'][] = "Skipped '{$file->getFilename()}' (invalid extension)";
+                continue;
+            }
+
+            $unitNo = pathinfo($file->getFilename(), PATHINFO_FILENAME);
+            $unit = \App\Models\Unit::where('building_id', $buildingId)
+                ->where('unit_no', $unitNo)
+                ->first();
+
+            if (!$unit) {
+                $results['skipped'][] = "Skipped: unit_no '{$unitNo}' not found in building {$buildingId}";
+                continue;
+            }
+
+            $newFileName = $unitNo . '.' . $file->getExtension();
+            $storagePath = "floor_plans/{$newFileName}";
+
+            $isReplacement = $unit->floor_plan && Storage::disk('local')->exists($unit->floor_plan);
+
+            Storage::disk('local')->put($storagePath, file_get_contents($file->getRealPath()));
+
+            $unit->floor_plan = $storagePath;
+            $unit->save();
+
+            $results[$isReplacement ? 'replaced' : 'added']++;
+        }
+
+        // Clean up
+        Storage::disk('local')->delete($tempZipPath);
+        File::deleteDirectory($extractedPath);
+
+        return response()->json([
+            'message' => 'Floor plans processed successfully.',
+            'summary' => $results,
+        ], Response::HTTP_OK);
     }
 }

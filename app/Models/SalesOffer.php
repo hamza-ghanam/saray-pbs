@@ -15,6 +15,11 @@ class SalesOffer extends Model
         'notes',
     ];
 
+    protected $casts = [
+        'unit_id' => 'integer',
+        'generated_by_id' => 'integer',
+    ];
+
     public function unit()
     {
         return $this->belongsTo(Unit::class);

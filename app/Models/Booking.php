@@ -22,6 +22,15 @@ class Booking extends Model
 
     protected $hidden = ['receipt_path'];
 
+    protected $casts = [
+        'created_by' => 'integer',
+        'payment_plan_id' => 'integer',
+        'customer_info_id' => 'integer',
+        'unit_id' => 'integer',
+        'price' => 'decimal:2',
+        'discount' => 'decimal:2',
+    ];
+
     public function user()
     {
         return $this->belongsTo(User::class, 'created_by');

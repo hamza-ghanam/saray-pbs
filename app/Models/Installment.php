@@ -23,6 +23,11 @@ class Installment extends Model
         'booking_id',
     ];
 
+    protected $casts = [
+        'payment_plan_id' => 'integer',
+        'booking_id' => 'integer',
+    ];
+
     /**
      * Get the payment plan that owns the installment.
      */

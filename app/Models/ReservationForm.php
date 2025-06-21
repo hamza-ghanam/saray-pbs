@@ -19,6 +19,10 @@ class ReservationForm extends Model
 
     protected $hidden = ['file_path', 'signed_file_path'];
 
+    protected $casts = [
+        'unit_id' => 'integer',
+    ];
+
     public function booking()
     {
         return $this->belongsTo(Booking::class);

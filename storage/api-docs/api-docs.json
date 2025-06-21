@@ -4929,6 +4929,102 @@
                 ]
             }
         },
+        "/units/import-floor-plans": {
+            "post": {
+                "tags": [
+                    "Units"
+                ],
+                "summary": "Import floor plans from a ZIP file",
+                "description": "Upload a ZIP file containing floor plans named by unit_no. Each file will be stored and assigned to the matching unit in the specified building.",
+                "operationId": "importFloorPlans",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "building_id",
+                                    "file"
+                                ],
+                                "properties": {
+                                    "building_id": {
+                                        "description": "The ID of the building",
+                                        "type": "integer",
+                                        "example": 5
+                                    },
+                                    "file": {
+                                        "description": "ZIP file containing floor plans named by unit_no (e.g. 1109.jpg). Max size: 15 MB",
+                                        "type": "string",
+                                        "format": "binary",
+                                        "example": "plans.zip"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Floor plans processed successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Floor plans processed successfully."
+                                        },
+                                        "summary": {
+                                            "properties": {
+                                                "added": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "replaced": {
+                                                    "type": "integer",
+                                                    "example": 0
+                                                },
+                                                "skipped": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "Skipped: unit_no '1234' not found in building 5"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error or ZIP processing error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Could not open ZIP file"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/unit-updates": {
             "get": {
                 "tags": [
@@ -6959,9 +7055,9 @@
                         "example": 42
                     },
                     "ref_type": {
-                        "description": "Model class name",
+                        "description": "Polymorphic model class name",
                         "type": "string",
-                        "example": "App\\\\Models\\\\Unit"
+                        "example": "App\\\\Models\\\\Booking"
                     },
                     "approved_by": {
                         "type": "integer",
@@ -6973,6 +7069,7 @@
                         "example": "Sales"
                     },
                     "status": {
+                        "description": "One of: Pending, Approved, Rejected",
                         "type": "string",
                         "example": "Approved"
                     },

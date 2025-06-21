@@ -8,6 +8,10 @@ class DeviceToken extends Model
 {
     protected $fillable = ['user_id', 'token', 'device_type'];
 
+    protected $casts = [
+        'user_id' => 'integer',
+    ];
+
     public function user()
     {
         return $this->belongsTo(User::class);

@@ -39,6 +39,10 @@ class Unit extends Model
         'total_square',
     ];
 
+    protected $casts = [
+        'building_id' => 'integer',
+    ];
+
     protected const SQFT_TO_SQM = 1 / 10.7639;
 
     public function getTotalSquareAttribute(): float

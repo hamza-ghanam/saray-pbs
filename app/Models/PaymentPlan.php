@@ -30,6 +30,7 @@ class PaymentPlan extends Model
 
     protected $casts = [
         'blocks' => 'array',
+        'unit_id' => 'integer',
     ];
 
     /**

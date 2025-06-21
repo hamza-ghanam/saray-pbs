@@ -11,6 +11,10 @@ class OneTimeLink extends Model
 
     protected $fillable = ['token', 'user_type', 'expired_at', 'user_id'];
 
+    protected $casts = [
+        'user_id' => 'integer',
+    ];
+
     public function user()
     {
         return $this->belongsTo(User::class);

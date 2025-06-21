@@ -15,6 +15,11 @@ class Holding extends Model
         'created_by',
     ];
 
+    protected $casts = [
+        'unit_id' => 'integer',
+        'created_by' => 'integer',
+    ];
+
     public function user()
     {
         return $this->belongsTo(User::class, 'created_by');

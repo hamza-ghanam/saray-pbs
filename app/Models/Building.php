@@ -11,6 +11,10 @@ class Building extends Model
 
     protected $fillable = ['name', 'location', 'status', 'ecd', 'added_by_id', 'image_path'];
 
+    protected $casts = [
+        'added_by_id' => 'integer',
+    ];
+
     protected $hidden = ['image_path'];
 
     public function units()

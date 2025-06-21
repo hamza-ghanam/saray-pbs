@@ -13,10 +13,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  *     required={"id","ref_id","ref_type","approved_by","approval_type","status","created_at"},
  *     @OA\Property(property="id",             type="integer", format="int64",    example=1),
  *     @OA\Property(property="ref_id",         type="integer", format="int64",    example=42),
- *     @OA\Property(property="ref_type",       type="string",  description="Model class name", example="App\\Models\\Unit"),
+ *     @OA\Property(property="ref_type", type="string", example="App\\Models\\Booking", description="Polymorphic model class name"),
  *     @OA\Property(property="approved_by",    type="integer", format="int64",    example=17),
  *     @OA\Property(property="approval_type",  type="string",  example="Sales"),
- *     @OA\Property(property="status",         type="string",  example="Approved"),
+ *     @OA\Property(property="status", type="string", example="Approved", description="One of: Pending, Approved, Rejected"),
  *     @OA\Property(property="created_at",     type="string",  format="date-time", example="2025-05-02T15:58:33Z")
  * )
  */
@@ -30,6 +30,11 @@ class Approval extends Model
         'approved_by',
         'approval_type',
         'status'
+    ];
+
+    protected $casts = [
+        'ref_id' => 'integer',
+        'approved_by' => 'integer',
     ];
 
     /**
