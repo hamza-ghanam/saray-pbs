@@ -37,7 +37,7 @@ class BrokerController extends Controller
      *                     property="signed_agreement",
      *                     type="string",
      *                     format="binary",
-     *                     description="The signed agreement file (pdf, jpg, jpeg, png, zip)"
+     *                     description="The signed agreement file (pdf only)"
      *                 )
      *             )
      *         )
@@ -62,7 +62,7 @@ class BrokerController extends Controller
         $validator = Validator::make($request->all(), [
             'email'            => 'required|email',
             'password'         => 'required|string',
-            'signed_agreement' => 'required|file|mimes:pdf,jpg,jpeg,png,zip|max:2048',
+            'signed_agreement' => 'required|file|mimes:pdf|max:2048',
         ]);
 
         if ($validator->fails()) {

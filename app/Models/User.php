@@ -80,4 +80,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(DldDocument::class, 'uploaded_by');
     }
+
+    public function brokerProfile()
+    {
+        return $this->hasOne(BrokerProfile::class);
+    }
 }

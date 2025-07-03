@@ -79,7 +79,7 @@ class OneTimeLinkController extends Controller
             abort(Response::HTTP_FORBIDDEN, 'Unauthorized');
         }
 
-        $limit = min((int) $request->get('limit', 10), 100);
+        $limit = min((int)$request->get('limit', 10), 100);
 
         $otls = OneTimeLink::with('user')
             ->latest()      // defaults to ordering by created_at DESC
@@ -151,14 +151,13 @@ class OneTimeLinkController extends Controller
     /**
      * Register a new Broker or Contractor using a one-time link token.
      *
-     * This endpoint requires different documents based on the user_type
-     * stored in the OneTimeLink (Broker or Contractor).
-     * For Broker:
-     *  - rera_cert, trade_license, bank_account, tax_registration (all required).
-     * For Contractor:
-     *  - contract, trade_license, scope_of_work (all required).
+     * - **Broker** must upload:
+     *   - rera_cert, trade_license, bank_account, tax_registration
+     *   - broker_profile[license_number], broker_profile[rera_registration_number], broker_profile[address], broker_profile[po_box], broker_profile[telephone]
+     * - **Contractor** must upload:
+     *   - contract, trade_license, scope_of_work
      *
-     * An agreement PDF will be generated and returned in the response.
+     * An agreement PDF will be generated and returned (for Brokers).
      *
      * @OA\Post(
      *     path="/otls/register",
@@ -169,131 +168,75 @@ class OneTimeLinkController extends Controller
      *         @OA\MediaType(
      *             mediaType="multipart/form-data",
      *             @OA\Schema(
-     *                 required={"token", "name", "email", "password", "password_confirmation"},
-     *                 @OA\Property(
-     *                     property="token",
-     *                     type="string",
-     *                     description="The OTL token from the link (determines user_type: Broker/Contractor)",
-     *                     example="ab12cd34ef56gh78ij90klmn1234op56"
-     *                 ),
-     *                 @OA\Property(
-     *                     property="name",
-     *                     type="string",
-     *                     maxLength=255,
-     *                     description="User's full name",
-     *                     example="John Doe"
-     *                 ),
-     *                 @OA\Property(
-     *                     property="email",
-     *                     type="string",
-     *                     format="email",
-     *                     description="User's email",
-     *                     example="john.doe@example.com"
-     *                 ),
-     *                 @OA\Property(
-     *                     property="password",
-     *                     type="string",
-     *                     format="password",
-     *                     description="User's password (min 6 chars), must match password_confirmation",
-     *                     example="strongpassword123"
-     *                 ),
-     *                 @OA\Property(
-     *                     property="password_confirmation",
-     *                     type="string",
-     *                     format="password",
-     *                     description="Must match 'password' field",
-     *                     example="strongpassword123"
-     *                 ),
-     *                 @OA\Property(
-     *                     property="rera_cert",
-     *                     type="string",
-     *                     format="binary",
-     *                     description="Required if user_type is Broker (pdf, zip, jpg, jpeg, png)"
-     *                 ),
-     *                 @OA\Property(
-     *                     property="trade_license",
-     *                     type="string",
-     *                     format="binary",
-     *                     description="Required if user_type is Broker or Contractor (pdf, zip, jpg, jpeg, png)"
-     *                 ),
-     *                 @OA\Property(
-     *                     property="bank_account",
-     *                     type="string",
-     *                     format="binary",
-     *                     description="Required if user_type is Broker (pdf, zip, jpg, jpeg, png)"
-     *                 ),
-     *                 @OA\Property(
-     *                     property="tax_registration",
-     *                     type="string",
-     *                     format="binary",
-     *                     description="Required if user_type is Broker (pdf, zip, jpg, jpeg, png)"
-     *                 ),
-     *                 @OA\Property(
-     *                     property="contract",
-     *                     type="string",
-     *                     format="binary",
-     *                     description="Required if user_type is Contractor (pdf, zip, jpg, jpeg, png)"
-     *                 ),
-     *                 @OA\Property(
-     *                     property="scope_of_work",
-     *                     type="string",
-     *                     format="binary",
-     *                     description="Required if user_type is Contractor (pdf, zip, jpg, jpeg, png)"
-     *                 )
+     *                 required={"token","name","email","password","password_confirmation"},
+     *                 @OA\Property(property="token", type="string", description="OneTimeLink token", example="ab12cd34ef56gh78ij90klmn1234op56"),
+     *                 @OA\Property(property="name", type="string", maxLength=255, example="John Doe"),
+     *                 @OA\Property(property="email", type="string", format="email", example="john.doe@example.com"),
+     *                 @OA\Property(property="password", type="string", format="password", minLength=6, example="strongPass123"),
+     *                 @OA\Property(property="password_confirmation", type="string", format="password", example="strongPass123"),
+     *                 @OA\Property(property="rera_cert",        type="string", format="binary", description="Broker: RERA certificate"),
+     *                 @OA\Property(property="trade_license",    type="string", format="binary", description="Trade license"),
+     *                 @OA\Property(property="bank_account",     type="string", format="binary", description="Broker: bank account proof"),
+     *                 @OA\Property(property="tax_registration", type="string", format="binary", description="Broker: tax registration proof"),
+     *                 @OA\Property(property="contract",      type="string", format="binary", description="Contractor: contract document"),
+     *                 @OA\Property(property="scope_of_work", type="string", format="binary", description="Contractor: scope of work"),
+     *                 @OA\Property(property="broker_profile[license_number]",           type="string", description="Broker’s license number"),
+     *                 @OA\Property(property="broker_profile[rera_registration_number]", type="string", description="Broker’s RERA registration number"),
+     *                 @OA\Property(property="broker_profile[address]",                  type="string", description="Broker’s address"),
+     *                 @OA\Property(property="broker_profile[po_box]",                   type="string", description="Broker’s PO Box"),
+     *                 @OA\Property(property="broker_profile[telephone]",                type="string", description="Broker’s telephone number")
      *             )
      *         )
      *     ),
      *     @OA\Response(
      *         response=201,
-     *         description="User registered successfully, awaiting approval, agreement generated",
+     *         description="User registered successfully",
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(property="message", type="string", example="Broker registered successfully, awaiting approval"),
      *             @OA\Property(
      *                 property="user",
      *                 type="object",
-     *                 description="Newly created user record",
-     *                 @OA\Property(property="id", type="integer", example=15),
-     *                 @OA\Property(property="name", type="string", example="John Doe"),
-     *                 @OA\Property(property="email", type="string", format="email", example="john.doe@example.com"),
-     *                 @OA\Property(property="status", type="string", example="Pending"),
-     *                 @OA\Property(property="created_at", type="string", format="date-time", example="2025-03-10T12:00:00Z"),
-     *                 @OA\Property(property="updated_at", type="string", format="date-time", example="2025-03-10T12:00:00Z")
+     *                 description="Created user record",
+     *                 @OA\Property(property="id",         type="integer", example=15),
+     *                 @OA\Property(property="name",       type="string",  example="John Doe"),
+     *                 @OA\Property(property="email",      type="string",  format="email", example="john.doe@example.com"),
+     *                 @OA\Property(property="status",     type="string",  example="Pending"),
+     *                 @OA\Property(property="created_at", type="string",  format="date-time", example="2025-03-10T12:00:00Z"),
+     *                 @OA\Property(property="updated_at", type="string",  format="date-time", example="2025-03-10T12:00:00Z")
      *             ),
      *             @OA\Property(
-     *                 property="agreement_url",
-     *                 type="string",
-     *                 format="uri",
-     *                 example="http://your-domain.test/storage/agreements/agreement_15.pdf",
-     *                 description="URL to the generated agreement PDF"
-     *             )
+     *                 property="docs",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="doc_id",     type="integer", example=42),
+     *                     @OA\Property(property="doc_type",   type="string",  example="rera_cert"),
+     *                     @OA\Property(property="created_at", type="string",  format="date-time", example="2025-07-01T09:00:00Z"),
+     *                     @OA\Property(property="updated_at", type="string",  format="date-time", example="2025-07-01T09:00:00Z")
+     *                 )
+     *             ),
+     *             @OA\Property(property="agreement_url", type="string", format="uri", example="https://your-domain.test/storage/agreements/agreement_42.pdf")
      *         )
      *     ),
      *     @OA\Response(response=400, description="Invalid or already used token / Invalid user_type"),
-     *     @OA\Response(response=422, description="Validation error (e.g., missing docs, password mismatch)"),
-     *     @OA\Response(response=500, description="Server error while creating user or generating PDF")
+     *     @OA\Response(response=422, description="Validation error"),
+     *     @OA\Response(response=500, description="Server error")
      * )
      */
     public function selfRegisterUser(Request $request): \Illuminate\Http\JsonResponse
     {
         // 1. Basic validation (we'll add doc rules after we get user_type from OTL)
-        $basicRules = [
+        $baseData = $request->validate([
             'token' => 'required|string',
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:6|confirmed',
-        ];
-
-        // Validate basic fields
-        $validator = Validator::make($request->all(), $basicRules);
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
-
-        $token = $request->input('token');
+        ]);
 
         // 2. Retrieve OneTimeLink by token
-        $otl = OneTimeLink::where('token', $token)->first();
+        $otl = OneTimeLink::where('token', $baseData['token'])->first();
+
         if (!$otl) {
             return response()->json(['error' => 'Invalid token'], Response::HTTP_BAD_REQUEST);
         }
@@ -305,17 +248,23 @@ class OneTimeLinkController extends Controller
         $userType = $otl->user_type; // e.g. "Broker" or "Contractor"
 
         // Prepare additional doc rules
-        $additionalRules = [];
         if ($userType === 'Broker') {
-            $additionalRules = [
+            $rules = [
                 'rera_cert' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
                 'trade_license' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
                 'bank_account' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
                 'tax_registration' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
+
+                // broker_profile
+                'broker_profile.license_number' => 'required|string',
+                'broker_profile.rera_registration_number' => 'required|string',
+                'broker_profile.address' => 'required|string',
+                'broker_profile.po_box' => 'required|string',
+                'broker_profile.telephone' => 'required|string',
             ];
         } elseif ($userType === 'Contractor') {
-            $additionalRules = [
-                'contract'      => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048|max:2048',
+            $rules = [
+                'contract' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048|max:2048',
                 'trade_license' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048|max:2048',
                 'scope_of_work' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048|max:2048',
             ];
@@ -323,23 +272,15 @@ class OneTimeLinkController extends Controller
             return response()->json(['error' => 'Invalid user_type in OTL'], Response::HTTP_BAD_REQUEST);
         }
 
-        // Merge and re-validate
-        $finalRules = array_merge($basicRules, $additionalRules);
-        $validator = Validator::make($request->all(), $finalRules);
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
-
-        $data = $validator->validated();
+        $validated = array_merge($baseData, $request->validate($rules));
 
         DB::beginTransaction();
-
         try {
             // 4. Create the user
             $user = User::create([
-                'name' => $data['name'],
-                'email' => $data['email'],
-                'password' => Hash::make($data['password']),
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'password' => Hash::make($validated['password']),
                 'status' => 'Pending', // waiting for admin approval
             ]);
 
@@ -348,37 +289,25 @@ class OneTimeLinkController extends Controller
 
             // 6. Upload docs and store them in user_docs (one doc per record)
             if ($userType === 'Broker') {
-                $reraPath = $request->file('rera_cert')->store('docs', 'local');
-                $user->docs()->create(['doc_type' => 'rera_cert', 'file_path' => $reraPath]);
+                foreach (['rera_cert', 'trade_license', 'bank_account', 'tax_registration'] as $docType) {
+                    $path = $request->file($docType)->store('docs', 'local');
+                    $user->docs()->create(['doc_type' => $docType, 'file_path' => $path]);
+                }
 
-                $tlPath = $request->file('trade_license')->store('docs', 'local');
-                $user->docs()->create(['doc_type' => 'trade_license', 'file_path' => $tlPath]);
-
-                $baPath = $request->file('bank_account')->store('docs', 'local');
-                $user->docs()->create(['doc_type' => 'bank_account', 'file_path' => $baPath]);
-
-                $trPath = $request->file('tax_registration')->store('docs', 'local');
-                $user->docs()->create(['doc_type' => 'tax_registration', 'file_path' => $trPath]);
-
+                $user->brokerProfile()->create($validated['broker_profile']);
             } else { // Contractor
-                $contractPath = $request->file('contract')->store('docs', 'local');
-                $user->docs()->create(['doc_type' => 'contract', 'file_path' => $contractPath]);
-
-                $tlPath = $request->file('trade_license')->store('docs', 'local');
-                $user->docs()->create(['doc_type' => 'trade_license', 'file_path' => $tlPath]);
-
-                $sowPath = $request->file('scope_of_work')->store('docs', 'local');
-                $user->docs()->create(['doc_type' => 'scope_of_work', 'file_path' => $sowPath]);
+                foreach (['contract', 'trade_license', 'scope_of_work'] as $docType) {
+                    $path = $request->file($docType)->store('docs', 'local');
+                    $user->docs()->create(['doc_type' => $docType, 'file_path' => $path]);
+                }
             }
 
             // 7. Mark the OTL as used
-            $otl->expired_at = now();
-            $otl->user_id = $user->id;
-            $otl->save();
+            $otl->update(['expired_at' => now(), 'user_id' => $user->id]);
 
             $respData = [
                 'message' => "{$userType} registered successfully, awaiting approval",
-                'user'    => $user,
+                'user' => $user,
             ];
 
             if ($userType === 'Broker') {
@@ -390,18 +319,19 @@ class OneTimeLinkController extends Controller
                 ]);
                 $pdfContent = $pdf->output();
                 $pdfName = "agreement_{$user->id}.pdf";
-                $doc = $user->docs()->create([
+                $user->docs()->create([
                     'doc_type' => 'agreement',
                     'file_path' => "agreements/{$pdfName}", // storing the relative path
                 ]);
 
                 // 2. Store the PDF content in "local" disk
                 Storage::disk('public')->put("agreements/{$pdfName}", $pdfContent);
-                $agreementUrl = env('APP_URL') . '/storage/app/public/agreements/' . $pdfName;
+                $agreementUrl = Storage::disk('public')->url("agreements/{$pdfName}");
 
                 DB::commit();
 
-                $docs = $user->docs->map(function ($doc) {
+                $docsCollection = $user->docs()->get(); // now this is a Collection
+                $docs = $docsCollection->map(function ($doc) {
                     return [
                         'doc_id' => $doc->id,
                         'doc_type' => $doc->doc_type,
@@ -411,12 +341,12 @@ class OneTimeLinkController extends Controller
                 });
 
                 $respData += [
-                    'docs'          => $docs,
+                    'docs' => $docs,
                     'agreement_url' => $agreementUrl,
                 ];
             } else {
                 $respData += [
-                    'docs'         => $user->docs,
+                    'docs' => $user->docs,
                 ];
             }
 
@@ -495,5 +425,93 @@ class OneTimeLinkController extends Controller
             'message' => 'User approved successfully',
             'user' => $user
         ], Response::HTTP_OK);
+    }
+
+    /**
+     * Download an agreement PDF for a Broker.
+     *
+     * - Brokers can download their own agreement or signed agreement.
+     * - Users with the `manage broker` permission can download any broker’s agreement.
+     *
+     * @OA\Post(
+     *     path="/brokers/{user}/agreements/",
+     *     summary="Download a Broker's agreement PDF",
+     *     tags={"Brokers"},
+     *     security={{ "bearerAuth":{} }},
+     *     @OA\Parameter(
+     *         name="user",
+     *         in="path",
+     *         required=true,
+     *         description="ID of the broker user",
+     *         @OA\Schema(type="integer", example=15)
+     *     ),
+     *     @OA\RequestBody(
+     *         required=false,
+     *         @OA\MediaType(
+     *             mediaType="application/json",
+     *             @OA\Schema(
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="type",
+     *                     type="string",
+     *                     description="Document type to download, optional, default is unsigned agreement",
+     *                     enum={"signed_agreement"},
+     *                     default="signed_agreement"
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="PDF file download",
+     *         @OA\MediaType(
+     *             mediaType="application/pdf"
+     *         )
+     *     ),
+     *     @OA\Response(response=403, description="Forbidden"),
+     *     @OA\Response(response=404, description="Agreement not found"),
+     *     @OA\Response(response=500, description="Server error")
+     * )
+     */
+    public function downloadAgreement(Request $request, User $user)
+    {
+        $authUser = $request->user();
+        $type = $request->input('type', 'agreement');
+
+        // 2. Permission check
+        abort_if(
+            (
+                ! $authUser->hasRole('Broker')
+                && ! $authUser->can('manage broker')
+            )
+            || (
+                $authUser->hasRole('Broker')
+                && $user->id !== $authUser->id
+            ),
+            Response::HTTP_FORBIDDEN
+        );
+
+        $target = $authUser->hasRole('Broker')
+            ? $authUser
+            : $user;
+
+        $localPath = $type === 'signed_agreement' ? 'local' : 'public';
+
+        // Find the document
+        $agreementDoc = $target
+            ->docs()
+            ->where('doc_type', $type)
+            ->first();
+
+        if (! $agreementDoc) {
+            return response()->json(['message' => 'Agreement not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        Log::info("User {$authUser->id} downloading {$type} of broker {$authUser->name}");
+
+        $ext      = pathinfo($agreementDoc->file_path, PATHINFO_EXTENSION);
+        $filename = "agreement_{$target->name}.{$ext}";
+
+        return Storage::disk($localPath)->download($agreementDoc->file_path, $filename);
     }
 }

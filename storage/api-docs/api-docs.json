@@ -981,7 +981,7 @@
                                         "example": "strongpassword123"
                                     },
                                     "signed_agreement": {
-                                        "description": "The signed agreement file (pdf, jpg, jpeg, png, zip)",
+                                        "description": "The signed agreement file (pdf only)",
                                         "type": "string",
                                         "format": "binary"
                                     }
@@ -2335,7 +2335,7 @@
                     "OneTime Links"
                 ],
                 "summary": "Register a Broker or Contractor via one-time link token",
-                "description": "Register a new Broker or Contractor using a one-time link token.\n\nThis endpoint requires different documents based on the user_type\nstored in the OneTimeLink (Broker or Contractor).\nFor Broker:\n- rera_cert, trade_license, bank_account, tax_registration (all required).\nFor Contractor:\n- contract, trade_license, scope_of_work (all required).\n\nAn agreement PDF will be generated and returned in the response.",
+                "description": "Register a new Broker or Contractor using a one-time link token.\n\n- **Broker** must upload:\n- rera_cert, trade_license, bank_account, tax_registration\n- broker_profile[license_number], broker_profile[rera_registration_number], broker_profile[address], broker_profile[po_box], broker_profile[telephone]\n- **Contractor** must upload:\n- contract, trade_license, scope_of_work\n\nAn agreement PDF will be generated and returned (for Brokers).",
                 "operationId": "a536b0d405ab6ffe4eec6df137aeb684",
                 "requestBody": {
                     "required": true,
@@ -2351,63 +2351,80 @@
                                 ],
                                 "properties": {
                                     "token": {
-                                        "description": "The OTL token from the link (determines user_type: Broker/Contractor)",
+                                        "description": "OneTimeLink token",
                                         "type": "string",
                                         "example": "ab12cd34ef56gh78ij90klmn1234op56"
                                     },
                                     "name": {
-                                        "description": "User's full name",
                                         "type": "string",
                                         "maxLength": 255,
                                         "example": "John Doe"
                                     },
                                     "email": {
-                                        "description": "User's email",
                                         "type": "string",
                                         "format": "email",
                                         "example": "john.doe@example.com"
                                     },
                                     "password": {
-                                        "description": "User's password (min 6 chars), must match password_confirmation",
                                         "type": "string",
                                         "format": "password",
-                                        "example": "strongpassword123"
+                                        "minLength": 6,
+                                        "example": "strongPass123"
                                     },
                                     "password_confirmation": {
-                                        "description": "Must match 'password' field",
                                         "type": "string",
                                         "format": "password",
-                                        "example": "strongpassword123"
+                                        "example": "strongPass123"
                                     },
                                     "rera_cert": {
-                                        "description": "Required if user_type is Broker (pdf, zip, jpg, jpeg, png)",
+                                        "description": "Broker: RERA certificate",
                                         "type": "string",
                                         "format": "binary"
                                     },
                                     "trade_license": {
-                                        "description": "Required if user_type is Broker or Contractor (pdf, zip, jpg, jpeg, png)",
+                                        "description": "Trade license",
                                         "type": "string",
                                         "format": "binary"
                                     },
                                     "bank_account": {
-                                        "description": "Required if user_type is Broker (pdf, zip, jpg, jpeg, png)",
+                                        "description": "Broker: bank account proof",
                                         "type": "string",
                                         "format": "binary"
                                     },
                                     "tax_registration": {
-                                        "description": "Required if user_type is Broker (pdf, zip, jpg, jpeg, png)",
+                                        "description": "Broker: tax registration proof",
                                         "type": "string",
                                         "format": "binary"
                                     },
                                     "contract": {
-                                        "description": "Required if user_type is Contractor (pdf, zip, jpg, jpeg, png)",
+                                        "description": "Contractor: contract document",
                                         "type": "string",
                                         "format": "binary"
                                     },
                                     "scope_of_work": {
-                                        "description": "Required if user_type is Contractor (pdf, zip, jpg, jpeg, png)",
+                                        "description": "Contractor: scope of work",
                                         "type": "string",
                                         "format": "binary"
+                                    },
+                                    "broker_profile[license_number]": {
+                                        "description": "Broker’s license number",
+                                        "type": "string"
+                                    },
+                                    "broker_profile[rera_registration_number]": {
+                                        "description": "Broker’s RERA registration number",
+                                        "type": "string"
+                                    },
+                                    "broker_profile[address]": {
+                                        "description": "Broker’s address",
+                                        "type": "string"
+                                    },
+                                    "broker_profile[po_box]": {
+                                        "description": "Broker’s PO Box",
+                                        "type": "string"
+                                    },
+                                    "broker_profile[telephone]": {
+                                        "description": "Broker’s telephone number",
+                                        "type": "string"
                                     }
                                 },
                                 "type": "object"
@@ -2417,7 +2434,7 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "User registered successfully, awaiting approval, agreement generated",
+                        "description": "User registered successfully",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -2427,7 +2444,7 @@
                                             "example": "Broker registered successfully, awaiting approval"
                                         },
                                         "user": {
-                                            "description": "Newly created user record",
+                                            "description": "Created user record",
                                             "properties": {
                                                 "id": {
                                                     "type": "integer",
@@ -2459,11 +2476,36 @@
                                             },
                                             "type": "object"
                                         },
+                                        "docs": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "doc_id": {
+                                                        "type": "integer",
+                                                        "example": 42
+                                                    },
+                                                    "doc_type": {
+                                                        "type": "string",
+                                                        "example": "rera_cert"
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2025-07-01T09:00:00Z"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2025-07-01T09:00:00Z"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
                                         "agreement_url": {
-                                            "description": "URL to the generated agreement PDF",
                                             "type": "string",
                                             "format": "uri",
-                                            "example": "http://your-domain.test/storage/agreements/agreement_15.pdf"
+                                            "example": "https://your-domain.test/storage/agreements/agreement_42.pdf"
                                         }
                                     },
                                     "type": "object"
@@ -2475,10 +2517,10 @@
                         "description": "Invalid or already used token / Invalid user_type"
                     },
                     "422": {
-                        "description": "Validation error (e.g., missing docs, password mismatch)"
+                        "description": "Validation error"
                     },
                     "500": {
-                        "description": "Server error while creating user or generating PDF"
+                        "description": "Server error"
                     }
                 }
             }
@@ -2556,6 +2598,70 @@
                 "security": [
                     {
                         "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/brokers/{user}/agreements/": {
+            "post": {
+                "tags": [
+                    "Brokers"
+                ],
+                "summary": "Download a Broker's agreement PDF",
+                "description": "Download an agreement PDF for a Broker.\n\n- Brokers can download their own agreement or signed agreement.\n- Users with the `manage broker` permission can download any broker’s agreement.",
+                "operationId": "8460765f12d178f8885af120c2ef82bd",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "description": "ID of the broker user",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 15
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "type": {
+                                        "description": "Document type to download, optional, default is unsigned agreement",
+                                        "type": "string",
+                                        "default": "signed_agreement",
+                                        "enum": [
+                                            "signed_agreement"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "PDF file download",
+                        "content": {
+                            "application/pdf": {}
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Agreement not found"
+                    },
+                    "500": {
+                        "description": "Server error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
                     }
                 ]
             }

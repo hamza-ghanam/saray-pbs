@@ -85,6 +85,12 @@ class SalesOfferController extends Controller
 
         $data = $validator->validated();
 
+        if ($user->hasRole('Broker') && !empty($data['discount'])) {
+            return response()->json([
+                'discount' => ['Brokers are not allowed to apply a discount.']
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
         // Retrieve the unit along with its building.
         $unit = Unit::with('building')->findOrFail($data['unit_id']);
 

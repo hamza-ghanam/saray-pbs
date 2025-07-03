@@ -62,17 +62,36 @@
             background-color: #f9f9f9; /* subtle stripe */
         }
 
-        .table-compact td h4,
-        .table-compact td p {
-            margin: 0;
-            padding: 0;
+        .unit-info {
+            font-size: 11pt;
+            color: #000;
+            line-height: 1.6;
+            width: 100%;
+            max-width: 600px;
         }
-        /* optionally collapse cell padding too */
-        .table-compact {
+
+        .unit-info table {
+            width: 100%;
             border-collapse: collapse;
+            margin-bottom: 10px;
         }
-        .table-compact td {
-            padding: 4px 8px; /* tweak to whatever you like */
+
+        .unit-info td {
+            padding-top: 4px;
+            vertical-align: top;
+        }
+
+        .unit-info .section-title {
+            font-weight: bold;
+            padding-top: 10px;
+        }
+
+        .area-values {
+            padding-left: 10px;
+        }
+
+        .plan-title {
+            background-color: #E5E5E5;
         }
     </style>
     <title>Sales Offer</title>
@@ -98,35 +117,35 @@
     <div class="section">
         <h2>Unit Details</h2>
         <p><strong>Building:</strong> {{ $unit->building->name ?? 'N/A' }}</p>
-        <table class="table-compact">
-            <tr>
-                <td>
-                    <h4>Unit No:{{ $unit->unit_no }}</h4>
-                </td>
-                <td>
-                    <p><strong>Unit Type:</strong> {{ $unit->unit_type }}</p>
-                </td>
-                <td>
-                    <p><strong>Floor:</strong> {{ $unit->floor }}</p>
-                </td>
-            </tr>
-            <tr><td>&nbsp;</td></tr>
-            <tr>
-                <td colspan="3"><h4>Square Ft<sup>2</sup></h4></td>
-            </tr>
-            <tr>
-                <td>
-                    <p><strong>Internal:</strong> {{ $unit->internal_square }}</p>
-                </td>
-                <td>
-                    <p><strong>External:</strong> {{ $unit->external_square }}</p>
-                </td>
-                <td>
-                    <p><strong>Total:</strong> {{ $unit->total_square }}</p>
-                </td>
-            </tr>
-        </table>
-        <p><strong>Price:</strong> AED {{ number_format($unit->price, 2) }}</p>
+
+        <div class="unit-info">
+            <table>
+                <tr>
+                    <td><strong>Unit No:</strong> {{ $unit->unit_no }}</td>
+                    <td><strong>Unit Type:</strong> {{ $unit->unit_type }}</td>
+                    <td><strong>Floor:</strong> {{ $unit->floor }}</td>
+                    <td><strong>Furnished:</strong>  {{ $unit->furnished == 0 ? 'No' : 'Yes' }}</td>
+                </tr>
+            </table>
+
+            <table>
+                <tr>
+                    <td><strong>Parking:</strong> {{ $unit->parking }}</td>
+                    <td><strong>Jacuzzi Pool:</strong> {{ $unit->pool_jacuzzi }}</td>
+                    <td><strong>&nbsp;</strong>&nbsp;</td>
+                    <td><strong>&nbsp;</strong>&nbsp;</td>
+                </tr>
+            </table>
+
+            <div class="section-title">Area (ft²)</div>
+            <table>
+                <tr>
+                    <td class="area-values"><strong>Internal:</strong> {{ $unit->internal_square }}</td>
+                    <td class="area-values"><strong>External:</strong> {{ $unit->external_square }}</td>
+                    <td class="area-values"><strong>Total:</strong> {{ $unit->total_square }}</td>
+                </tr>
+            </table>
+        </div>
     </div>
 
     @if($notes)
@@ -139,13 +158,13 @@
     <div class="section">
         <h2>Payment Plans</h2>
         @foreach($paymentPlans as $plan)
-            <h3>Plan: {{ $plan->name }}</h3>
+            <h3 class="plan-title">Plan: {{ $plan->name }}</h3>
             <p><strong>Selling Price:</strong> AED {{ number_format($unit->price, 2) }}</p>
             @if($salesOffer->discount > 0)
                 <p><strong>Discount:</strong> {{ $salesOffer->discount }}%</p>
                 <p><strong>Effective Price:</strong> AED {{ number_format($salesOffer->offer_price, 2) }}</p>
             @endif
-            <p><strong>Admin Fee:</strong> AED {{ number_format($plan->admin_fee, 2) }}</p>
+            <p><strong>Admin fee:</strong> AED {{ number_format($plan->admin_fee, 2) }}</p>
             <p><strong>DLD fee:</strong> {{ (int) $plan->dld_fee_percentage }}% |
                 AED {{ number_format($plan->dld_fee, 2) }}</p>
             @if($plan->installments->count())
