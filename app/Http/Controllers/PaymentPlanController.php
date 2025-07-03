@@ -111,17 +111,18 @@ class PaymentPlanController extends Controller
     /**
      * @OA\Post(
      *     path="/payment-plans",
-     *     summary="Persist a payment‐plan definition (blocks)",
+     *     summary="Persist a payment‑plan definition (blocks)",
      *     tags={"PaymentPlans"},
      *     security={{"sanctum":{}}},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"name", "dld_fee_percentage", "admin_fee", "EOI", "blocks"},
+     *             required={"name", "dld_fee_percentage", "admin_fee", "EOI", "blocks", "handover_percentage"},
      *             @OA\Property(property="name", type="string", example="Custom Plan A"),
      *             @OA\Property(property="dld_fee_percentage", type="number", format="float", example=2),
      *             @OA\Property(property="admin_fee", type="number", format="float", example=500),
      *             @OA\Property(property="EOI", type="number", format="float", example=10000),
+     *             @OA\Property(property="handover_percentage", type="number", format="float", example=40),
      *             @OA\Property(
      *                 property="blocks",
      *                 type="array",
@@ -152,8 +153,7 @@ class PaymentPlanController extends Controller
      *                         nullable=true,
      *                         @OA\Property(property="months", type="integer", example=1),
      *                         @OA\Property(property="years", type="integer", example=0)
-     *                     ),
-     *                     @OA\Property(property="count", type="integer", nullable=true, example=30)
+     *                     )
      *                 )
      *             )
      *         )
@@ -168,6 +168,7 @@ class PaymentPlanController extends Controller
      *             @OA\Property(property="dld_fee_percentage", type="number", format="float", example=2),
      *             @OA\Property(property="admin_fee", type="number", format="float", example=500),
      *             @OA\Property(property="EOI", type="number", format="float", example=10000),
+     *             @OA\Property(property="handover_percentage", type="number", format="float", example=40),
      *             @OA\Property(
      *                 property="blocks",
      *                 type="array",
@@ -197,8 +198,7 @@ class PaymentPlanController extends Controller
      *                         nullable=true,
      *                         @OA\Property(property="months", type="integer", example=1),
      *                         @OA\Property(property="years", type="integer", example=0)
-     *                     ),
-     *                     @OA\Property(property="count", type="integer", nullable=true, example=30)
+     *                     )
      *                 )
      *             )
      *         )
@@ -223,6 +223,7 @@ class PaymentPlanController extends Controller
      */
     public function store(
         StorePaymentPlanRequest $request,
+        Unit $unit,
         PaymentPlanService $builder
     ) {
         // 1) Grab the validated data
@@ -230,11 +231,12 @@ class PaymentPlanController extends Controller
 
         // 3) Create the plan header _and_ persist the blocks JSON
         $plan = $builder->createFromDefinition([
-            'name'               => $data['name'],
-            'dld_fee_percentage' => $data['dld_fee_percentage'],
-            'admin_fee'          => $data['admin_fee'],
-            'EOI'                => $data['EOI'],
-            'blocks'             => $data['blocks'],   // <— store the blocks definition
+            'name'                  => $data['name'],
+            'dld_fee_percentage'    => $data['dld_fee_percentage'],
+            'admin_fee'             => $data['admin_fee'],
+            'EOI'                   => $data['EOI'],
+            'blocks'                => $data['blocks'],   // <— store the blocks definition
+            'handover_percentage'   => $data['handover_percentage'],
         ]);
 
         // 4) Return the saved plan (including the blocks field)

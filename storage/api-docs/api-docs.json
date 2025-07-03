@@ -1161,7 +1161,8 @@
                                     },
                                     "ecd": {
                                         "type": "string",
-                                        "example": "Q4-2026"
+                                        "format": "date",
+                                        "example": "2027-30-12"
                                     },
                                     "image": {
                                         "description": "Optional building image (jpeg, png, gif)",
@@ -1282,7 +1283,8 @@
                                     },
                                     "ecd": {
                                         "type": "string",
-                                        "example": "Q4-2026"
+                                        "format": "date",
+                                        "example": "2027-30-12"
                                     },
                                     "image": {
                                         "description": "Optional new building image",
@@ -2873,7 +2875,7 @@
                 "tags": [
                     "PaymentPlans"
                 ],
-                "summary": "Persist a payment‐plan definition (blocks)",
+                "summary": "Persist a payment‑plan definition (blocks)",
                 "operationId": "4336bb8fbca01ddf2a906f591ef0a29b",
                 "requestBody": {
                     "required": true,
@@ -2885,7 +2887,8 @@
                                     "dld_fee_percentage",
                                     "admin_fee",
                                     "EOI",
-                                    "blocks"
+                                    "blocks",
+                                    "handover_percentage"
                                 ],
                                 "properties": {
                                     "name": {
@@ -2906,6 +2909,11 @@
                                         "type": "number",
                                         "format": "float",
                                         "example": 10000
+                                    },
+                                    "handover_percentage": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 40
                                     },
                                     "blocks": {
                                         "type": "array",
@@ -2980,11 +2988,6 @@
                                                     },
                                                     "type": "object",
                                                     "nullable": true
-                                                },
-                                                "count": {
-                                                    "type": "integer",
-                                                    "example": 30,
-                                                    "nullable": true
                                                 }
                                             },
                                             "type": "object"
@@ -3025,6 +3028,11 @@
                                             "type": "number",
                                             "format": "float",
                                             "example": 10000
+                                        },
+                                        "handover_percentage": {
+                                            "type": "number",
+                                            "format": "float",
+                                            "example": 40
                                         },
                                         "blocks": {
                                             "type": "array",
@@ -3089,11 +3097,6 @@
                                                             }
                                                         },
                                                         "type": "object",
-                                                        "nullable": true
-                                                    },
-                                                    "count": {
-                                                        "type": "integer",
-                                                        "example": 30,
                                                         "nullable": true
                                                     }
                                                 },
@@ -6794,7 +6797,8 @@
                     },
                     "ecd": {
                         "type": "string",
-                        "example": "Q4-2026"
+                        "format": "date",
+                        "example": "2027-30-12"
                     },
                     "added_by_id": {
                         "type": "integer",

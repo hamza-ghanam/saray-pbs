@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('location');
             $table->string('status');
-            $table->string('ecd');
+            $table->date('ecd');
             $table->string('image_path');
             $table->foreignId('added_by_id')->constrained('users')->onDelete('cascade');
             $table->timestamps();
