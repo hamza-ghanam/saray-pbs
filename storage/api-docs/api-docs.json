@@ -5754,7 +5754,7 @@
                 "tags": [
                     "User Management"
                 ],
-                "summary": "Register a new user (this includes optional docs for Broker/Contractor)",
+                "summary": "Register a new user (this includes docs for Broker/Contractor)",
                 "description": "Register a new user with a specific role, optionally uploading docs if Broker/Contractor.",
                 "operationId": "baa08ff84a21cbbc3a8df83fa6979216",
                 "requestBody": {
@@ -5791,7 +5791,7 @@
                                         "example": "secret123"
                                     },
                                     "role": {
-                                        "description": "Role to assign (e.g., 'Broker', 'Contractor', 'Sales', etc.)",
+                                        "description": "Role to assign",
                                         "type": "string",
                                         "enum": [
                                             "CRM Officer",
@@ -5807,33 +5807,58 @@
                                         ],
                                         "example": "Broker"
                                     },
+                                    "broker_profile[license_number]": {
+                                        "description": "Required if role=Broker",
+                                        "type": "string",
+                                        "example": "BR-123456"
+                                    },
+                                    "broker_profile[rera_registration_number]": {
+                                        "description": "Required if role=Broker",
+                                        "type": "string",
+                                        "example": "RERA-654321"
+                                    },
+                                    "broker_profile[address]": {
+                                        "description": "Required if role=Broker",
+                                        "type": "string",
+                                        "example": "123 Broker St"
+                                    },
+                                    "broker_profile[po_box]": {
+                                        "description": "Required if role=Broker",
+                                        "type": "string",
+                                        "example": "7890"
+                                    },
+                                    "broker_profile[telephone]": {
+                                        "description": "Required if role=Broker",
+                                        "type": "string",
+                                        "example": "+971501234567"
+                                    },
                                     "rera_cert": {
-                                        "description": "Optional doc if role=Broker (pdf, jpg, jpeg, png)",
+                                        "description": "Required if role=Broker",
                                         "type": "string",
                                         "format": "binary"
                                     },
                                     "trade_license": {
-                                        "description": "Optional doc if role=Broker or Contractor (pdf, jpg, jpeg, png)",
+                                        "description": "Required if role in [Broker,Contractor]",
                                         "type": "string",
                                         "format": "binary"
                                     },
                                     "bank_account": {
-                                        "description": "Optional doc if role=Broker",
+                                        "description": "Required if role=Broker",
                                         "type": "string",
                                         "format": "binary"
                                     },
                                     "tax_registration": {
-                                        "description": "Optional doc if role=Broker",
+                                        "description": "Required if role=Broker",
                                         "type": "string",
                                         "format": "binary"
                                     },
                                     "contract": {
-                                        "description": "Optional doc if role=Contractor",
+                                        "description": "Required if role=Contractor",
                                         "type": "string",
                                         "format": "binary"
                                     },
                                     "scope_of_work": {
-                                        "description": "Optional doc if role=Contractor",
+                                        "description": "Required if role=Contractor",
                                         "type": "string",
                                         "format": "binary"
                                     }
@@ -5890,7 +5915,7 @@
                                                     },
                                                     "doc_id": {
                                                         "type": "integer",
-                                                        "example": "53"
+                                                        "example": 53
                                                     }
                                                 },
                                                 "type": "object"

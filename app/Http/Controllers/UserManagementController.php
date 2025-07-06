@@ -257,7 +257,7 @@ class UserManagementController extends Controller
      *
      * @OA\Post(
      *     path="/users",
-     *     summary="Register a new user (this includes optional docs for Broker/Contractor)",
+     *     summary="Register a new user (this includes docs for Broker/Contractor)",
      *     tags={"User Management"},
      *     security={{"sanctum":{}}},
      *     @OA\RequestBody(
@@ -265,7 +265,7 @@ class UserManagementController extends Controller
      *         @OA\MediaType(
      *             mediaType="multipart/form-data",
      *             @OA\Schema(
-     *                 required={"name", "email", "password", "password_confirmation", "role"},
+     *                 required={"name","email","password","password_confirmation","role"},
      *                 @OA\Property(property="name", type="string", example="John Doe", description="User's full name"),
      *                 @OA\Property(property="email", type="string", format="email", example="john@example.com"),
      *                 @OA\Property(property="password", type="string", format="password", example="secret123"),
@@ -273,49 +273,21 @@ class UserManagementController extends Controller
      *                 @OA\Property(
      *                     property="role",
      *                     type="string",
-     *                     description="Role to assign (e.g., 'Broker', 'Contractor', 'Sales', etc.)",
-     *                     example="Broker",
-     *                     enum={
-     *                         "CRM Officer","Sales","CSO","Accountant","CFO","CEO","HR Admin",
-     *                         "Broker","Contractor","System Maintenance"
-     *                     }
+     *                     description="Role to assign",
+     *                     enum={"CRM Officer","Sales","CSO","Accountant","CFO","CEO","HR Admin","Broker","Contractor","System Maintenance"},
+     *                     example="Broker"
      *                 ),
-     *                 @OA\Property(
-     *                     property="rera_cert",
-     *                     type="string",
-     *                     format="binary",
-     *                     description="Optional doc if role=Broker (pdf, jpg, jpeg, png)"
-     *                 ),
-     *                 @OA\Property(
-     *                     property="trade_license",
-     *                     type="string",
-     *                     format="binary",
-     *                     description="Optional doc if role=Broker or Contractor (pdf, jpg, jpeg, png)"
-     *                 ),
-     *                 @OA\Property(
-     *                     property="bank_account",
-     *                     type="string",
-     *                     format="binary",
-     *                     description="Optional doc if role=Broker"
-     *                 ),
-     *                 @OA\Property(
-     *                     property="tax_registration",
-     *                     type="string",
-     *                     format="binary",
-     *                     description="Optional doc if role=Broker"
-     *                 ),
-     *                 @OA\Property(
-     *                     property="contract",
-     *                     type="string",
-     *                     format="binary",
-     *                     description="Optional doc if role=Contractor"
-     *                 ),
-     *                 @OA\Property(
-     *                     property="scope_of_work",
-     *                     type="string",
-     *                     format="binary",
-     *                     description="Optional doc if role=Contractor"
-     *                 )
+     *                 @OA\Property(property="broker_profile[license_number]", type="string", example="BR-123456", description="Required if role=Broker"),
+     *                 @OA\Property(property="broker_profile[rera_registration_number]", type="string", example="RERA-654321", description="Required if role=Broker"),
+     *                 @OA\Property(property="broker_profile[address]", type="string", example="123 Broker St", description="Required if role=Broker"),
+     *                 @OA\Property(property="broker_profile[po_box]", type="string", example="7890", description="Required if role=Broker"),
+     *                 @OA\Property(property="broker_profile[telephone]", type="string", example="+971501234567", description="Required if role=Broker"),
+     *                 @OA\Property(property="rera_cert",        type="string", format="binary", description="Required if role=Broker"),
+     *                 @OA\Property(property="trade_license",    type="string", format="binary", description="Required if role in [Broker,Contractor]"),
+     *                 @OA\Property(property="bank_account",     type="string", format="binary", description="Required if role=Broker"),
+     *                 @OA\Property(property="tax_registration", type="string", format="binary", description="Required if role=Broker"),
+     *                 @OA\Property(property="contract",         type="string", format="binary", description="Required if role=Contractor"),
+     *                 @OA\Property(property="scope_of_work",    type="string", format="binary", description="Required if role=Contractor")
      *             )
      *         )
      *     ),
@@ -340,7 +312,7 @@ class UserManagementController extends Controller
      *                 description="List of uploaded docs if any",
      *                 @OA\Items(
      *                     @OA\Property(property="doc_type", type="string", example="rera_cert"),
-     *                     @OA\Property(property="doc_id", type="integer", example="53")
+     *                     @OA\Property(property="doc_id",   type="integer", example=53)
      *                 )
      *             )
      *         )
@@ -357,51 +329,70 @@ class UserManagementController extends Controller
 
         // Define role-permission mappings
         $rolePermissions = [
-            'CRM Officer' => 'add crm officer',
-            'Sales' => 'add sales',
-            'CSO' => 'add cso',
-            'COO' => 'add coo',
-            'Accountant' => 'add accountant',
-            'CFO' => 'add cfo',
-            'CEO' => 'add ceo',
-            'HR Admin' => 'add hr admin',
-            'Broker' => 'manage broker',
-            'Contractor' => 'manage contractor',
+            'CRM Officer'      => 'add crm officer',
+            'Sales'            => 'add sales',
+            'CSO'              => 'add cso',
+            'COO'              => 'add coo',
+            'Accountant'       => 'add accountant',
+            'CFO'              => 'add cfo',
+            'CEO'              => 'add ceo',
+            'HR Admin'         => 'add hr admin',
+            'Broker'           => 'manage broker',
+            'Contractor'       => 'manage contractor',
             'System Maintenance' => 'add system maintenance',
         ];
 
         // Basic validation rules
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
+        $rules = [
+            'name'     => 'required|string|max:255',
+            'email'    => 'required|email|unique:users,email',
             'password' => 'required|string|min:6|confirmed',
-            'role' => 'required|string|in:' . implode(',', array_keys($rolePermissions)),
+            'role'     => 'required|string|in:' . implode(',', array_keys($rolePermissions)),
 
-            // Optional doc fields (just define them as sometimes|file)
-            'rera_cert' => 'sometimes|file|mimes:pdf,jpg,jpeg,png|max:2048',
-            'trade_license' => 'sometimes|file|mimes:pdf,jpg,jpeg,png|max:2048',
-            'bank_account' => 'sometimes|file|mimes:pdf,jpg,jpeg,png|max:2048',
-            'tax_registration' => 'sometimes|file|mimes:pdf,jpg,jpeg,png|max:2048',
-            'contract' => 'sometimes|file|mimes:pdf,jpg,jpeg,png|max:2048',
-            'scope_of_work' => 'sometimes|file|mimes:pdf,jpg,jpeg,png|max:2048',
-        ]);
+            // Broker profile fields required if role is Broker
+            'broker_profile.license_number'           => 'required_if:role,Broker|string|max:255',
+            'broker_profile.rera_registration_number' => 'required_if:role,Broker|string|max:255',
+            'broker_profile.address'                  => 'required_if:role,Broker|string|max:255',
+            'broker_profile.po_box'                   => 'required_if:role,Broker|string|max:255',
+            'broker_profile.telephone'                => 'required_if:role,Broker|string|max:255',
 
+            // Documents: required for Broker or Contractor
+            'rera_cert'        => 'required_if:role,Broker|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'bank_account'     => 'required_if:role,Broker|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'tax_registration' => 'required_if:role,Broker|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'contract'         => 'required_if:role,Contractor|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'scope_of_work'    => 'required_if:role,Contractor|file|mimes:pdf,jpg,jpeg,png|max:2048',
+
+            // Trade license for both
+            'trade_license'    => 'required_if:role,Broker,Contractor|file|mimes:pdf,jpg,jpeg,png|max:2048',
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
-            return response()->json($validator->errors(), Response::HTTP_UNPROCESSABLE_ENTITY);
+            return response()->json(
+                ['errors' => $validator->errors()],
+                Response::HTTP_UNPROCESSABLE_ENTITY
+            );
         }
 
         $data = $validator->validated();
         $selectedRole = $data['role'];
 
         // Check if the authenticated user has permission to assign this role
-        if (!$authUser->can($rolePermissions[$selectedRole])) {
-            return response()->json(['error' => $rolePermissions[$selectedRole]], Response::HTTP_FORBIDDEN);
+        if (! $authUser->can($rolePermissions[$selectedRole])) {
+            return response()->json(
+                ['error' => 'Forbidden'],
+                Response::HTTP_FORBIDDEN
+            );
         }
 
         // Ensure the role exists in the database
         $role = Role::where('name', $selectedRole)->where('guard_name', 'web')->first();
-        if (!$role) {
-            return response()->json(['error' => 'Role does not exist'], Response::HTTP_UNPROCESSABLE_ENTITY);
+        if (! $role) {
+            return response()->json(
+                ['error' => 'Role does not exist'],
+                Response::HTTP_UNPROCESSABLE_ENTITY
+            );
         }
 
         DB::beginTransaction();
@@ -421,35 +412,37 @@ class UserManagementController extends Controller
             // If role is Contractor, handle doc fields for contract, etc.
             // We'll do it in one pass, but only store if file is present.
             if ($selectedRole === 'Broker') {
-                $docFields = ['rera_cert', 'trade_license', 'bank_account', 'tax_registration'];
-            } elseif ($selectedRole === 'Contractor') {
-                $docFields = ['contract', 'scope_of_work', 'trade_license'];
-            } else {
-                $docFields = [];
+                $profile = $data['broker_profile'];
+                $newUser->brokerProfile()->create([
+                    'license_number'           => $profile['license_number'],
+                    'rera_registration_number' => $profile['rera_registration_number'],
+                    'address'                  => $profile['address'],
+                    'po_box'                   => $profile['po_box'],
+                    'telephone'                => $profile['telephone'],
+                ]);
             }
 
+            // Upload docs
             $docsCreated = [];
-            foreach ($docFields as $docType) {
-                if ($request->hasFile($docType)) {
-                    $file = $request->file($docType);
-                    $fileName = "{$docType}_{$newUser->id}." . $file->getClientOriginalExtension();
+            $docFields   = [];
+            if ($selectedRole === 'Broker') {
+                $docFields = ['rera_cert','trade_license','bank_account','tax_registration'];
+            } elseif ($selectedRole === 'Contractor') {
+                $docFields = ['contract','trade_license','scope_of_work'];
+            }
 
-                    // Store in a private disk ("local" or "private" depending on your config)
-                    // e.g. 'private' => ['driver' => 'local', 'root' => storage_path('app/private'), ...]
-                    $filePath = $file->storeAs('docs', $fileName, 'local');
-                    // physically: storage/app/private/docs/<docType>_<userId>.<ext>
+            foreach ($docFields as $type) {
+                if ($request->hasFile($type)) {
+                    $file     = $request->file($type);
+                    $filename = "{$type}_{$newUser->id}.{$file->getClientOriginalExtension()}";
+                    $path     = $file->storeAs('docs', $filename, 'local');
 
-                    // Create the doc record in user_docs
                     $doc = $newUser->docs()->create([
-                        'doc_type' => $docType,
-                        'file_path' => $filePath, // e.g. "docs/rera_cert_15.pdf"
+                        'doc_type'  => $type,
+                        'file_path' => $path,
                     ]);
 
-                    // Return only doc_id and doc_type (no public download link)
-                    $docsCreated[] = [
-                        'doc_type' => $docType,
-                        'doc_id' => $doc->id
-                    ];
+                    $docsCreated[] = ['doc_type' => $type, 'doc_id' => $doc->id];
                 }
             }
 

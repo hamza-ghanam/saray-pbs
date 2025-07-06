@@ -250,21 +250,21 @@ class OneTimeLinkController extends Controller
         // Prepare additional doc rules
         if ($userType === 'Broker') {
             $rules = [
-                'rera_cert' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
-                'trade_license' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
-                'bank_account' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
-                'tax_registration' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
+                'rera_cert'         => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
+                'trade_license'     => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
+                'bank_account'      => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
+                'tax_registration'  => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
 
                 // broker_profile
-                'broker_profile.license_number' => 'required|string',
-                'broker_profile.rera_registration_number' => 'required|string',
-                'broker_profile.address' => 'required|string',
-                'broker_profile.po_box' => 'required|string',
-                'broker_profile.telephone' => 'required|string',
+                'broker_profile.license_number'             => 'required|string',
+                'broker_profile.rera_registration_number'   => 'required|string',
+                'broker_profile.address'                    => 'required|string',
+                'broker_profile.po_box'                     => 'required|string',
+                'broker_profile.telephone'                  => 'required|string',
             ];
         } elseif ($userType === 'Contractor') {
             $rules = [
-                'contract' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048|max:2048',
+                'contract'      => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048|max:2048',
                 'trade_license' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048|max:2048',
                 'scope_of_work' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048|max:2048',
             ];
