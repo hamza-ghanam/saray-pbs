@@ -131,7 +131,7 @@
             <table>
                 <tr>
                     <td><strong>Parking:</strong> {{ $unit->parking }}</td>
-                    <td><strong>Jacuzzi Pool:</strong> {{ $unit->pool_jacuzzi }}</td>
+                    <td><strong>Amenity:</strong> {{ $unit->amenity }}</td>
                     <td><strong>&nbsp;</strong>&nbsp;</td>
                     <td><strong>&nbsp;</strong>&nbsp;</td>
                 </tr>

@@ -57,7 +57,7 @@ use ZipArchive;
  *     @OA\Property(property="unit_no",             type="string",                example="A101"),
  *     @OA\Property(property="floor",               type="string",                example="1"),
  *     @OA\Property(property="parking",             type="string",                example="Covered"),
- *     @OA\Property(property="pool_jacuzzi",        type="string",                example="None"),
+ *     @OA\Property(property="amenity",        type="string",                example="None"),
  *     @OA\Property(property="internal_square",     type="number", format="float", example=120.50),
  *     @OA\Property(property="external_square",     type="number", format="float", example=15.75),
  *     @OA\Property(property="total_square",        type="number", format="float", example=136.25),
@@ -112,7 +112,7 @@ use ZipArchive;
  *     @OA\Property(property="unit_no",            type="string",  example="A101"),
  *     @OA\Property(property="floor",              type="string",  example="1"),
  *     @OA\Property(property="parking",            type="string",  example="Covered"),
- *     @OA\Property(property="pool_jacuzzi",       type="string",  example="None"),
+ *     @OA\Property(property="amenity",       type="string",  example="None"),
  *     @OA\Property(property="internal_square",    type="number",  format="float", example=120.50),
  *     @OA\Property(property="external_square",    type="number",  format="float", example=15.75),
  *     @OA\Property(property="furnished",          type="boolean", example=true),
@@ -427,7 +427,7 @@ class UnitController extends Controller
             ],
             'floor' => 'required|string|max:50',
             'parking' => 'nullable|string|max:255',
-            'pool_jacuzzi' => 'nullable|string|max:255',
+            'amenity' => 'nullable|string|max:255',
             'internal_square' => 'required|numeric|min:1',
             'external_square' => 'nullable|numeric|min:0',
             'furnished' => 'required|boolean',
@@ -669,7 +669,7 @@ class UnitController extends Controller
      *                 @OA\Property(property="unit_no", type="string", example="A101"),
      *                 @OA\Property(property="floor", type="string", example="1"),
      *                 @OA\Property(property="parking", type="string", example="Covered"),
-     *                 @OA\Property(property="pool_jacuzzi", type="string", example="None"),
+     *                 @OA\Property(property="amenity", type="string", example="None"),
      *                 @OA\Property(property="internal_square", type="number", format="float", example=120.50),
      *                 @OA\Property(property="external_square", type="number", format="float", example=15.75),
      *                 @OA\Property(property="furnished", type="boolean", example=true),
@@ -715,7 +715,7 @@ class UnitController extends Controller
             ],
             'floor' => 'sometimes|required|string|max:50',
             'parking' => 'nullable|string|max:255',
-            'pool_jacuzzi' => 'nullable|string|max:255',
+            'amenity' => 'nullable|string|max:255',
             'internal_square' => 'sometimes|required|numeric',
             'external_square' => 'nullable|numeric',
             'furnished' => 'sometimes|required|boolean',
@@ -1063,7 +1063,7 @@ class UnitController extends Controller
     {
         $request->validate([
             'building_id' => 'required|exists:buildings,id',
-            'file' => 'required|file|mimes:xlsx,xls,csv',
+            'file' => 'required|file|mimes:xlsx,xls,csv|max:30000',
         ]);
 
         $building = Building::findOrFail($request->building_id);
@@ -1112,7 +1112,7 @@ class UnitController extends Controller
      *                     property="file",
      *                     type="string",
      *                     format="binary",
-     *                     description="ZIP file containing floor plans named by unit_no (e.g. 1109.jpg). Max size: 15 MB",
+     *                     description="ZIP file containing floor plans named by unit_no (e.g. 1109.jpg). Max size: 30 MB",
      *                     example="plans.zip"
      *                 )
      *             )
@@ -1149,7 +1149,7 @@ class UnitController extends Controller
     {
         $request->validate([
             'building_id' => 'required|exists:buildings,id',
-            'file' => 'required|file|mimes:zip|max:15360', // 15MB
+            'file' => 'required|file|mimes:zip|max:30000', // 50MB
         ]);
 
         $buildingId = $request->building_id;
@@ -1191,7 +1191,7 @@ class UnitController extends Controller
             }
 
             $unitNo = pathinfo($file->getFilename(), PATHINFO_FILENAME);
-            $unit = \App\Models\Unit::where('building_id', $buildingId)
+            $unit = Unit::where('building_id', $buildingId)
                 ->where('unit_no', $unitNo)
                 ->first();
 

@@ -41,20 +41,20 @@ class UnitsImport implements ToModel, WithHeadingRow, WithCalculatedFormulas, Wi
     public function model(array $row)
     {
         $this->currentRow++;
-//        dd(array_keys($row));
+        // dd(array_keys($row));
 
         try {
-            if (! is_numeric($row['number']) || strtolower($row['number']) === 'total') {
+            if (! is_numeric($row['unit_number']) || strtolower($row['unit_number']) === 'total') {
                 Log::info('Skipped: invalid or summary row.');
                 return null;  // skip this row entirely
             }
 
             $exists = Unit::where('building_id', $this->building->id)
-                ->where('unit_no', $row['number'])
+                ->where('unit_no', $row['unit_number'])
                 ->exists();
 
             if ($exists) {
-                $this->skippedRows[] = "Skipped: duplicate unit_no {$row['number']} in building {$this->building->id}";
+                $this->skippedRows[] = "Skipped: duplicate unit_no {$row['unit_number']} in building {$this->building->id}";
                 return null;
             }
 
@@ -62,15 +62,15 @@ class UnitsImport implements ToModel, WithHeadingRow, WithCalculatedFormulas, Wi
 
             return new Unit([
                 'prop_type'         => 'Residential',
-                'unit_type'         => $row['use'],
-                'unit_no'           => $row['number'],
+                'unit_type'         => $row['type'],
+                'unit_no'           => $row['unit_number'],
                 'floor'             => $row['floor'],
                 'parking'           => 1,
-                'pool_jacuzzi'      => '-',
-                'internal_square'   => $row['sqft'],
-                'external_square'   => $row['sqft3'],
+                'amenity'      => $row['amenity'],
+                'internal_square'   => $row['internal'],
+                'external_square'   => $row['external'],
                 'furnished'         => false,
-                'unit_view'         => '-',
+                'unit_view'         => $row['view'],
                 'price'             => $row['list_price'],
                 'min_price'         => $row['min_price'] ?? null,
                 'pre_lunch_price'   => $row['pre_lunch_price'] ?? null,

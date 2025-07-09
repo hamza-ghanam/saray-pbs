@@ -4629,7 +4629,7 @@
                                         "type": "string",
                                         "example": "Covered"
                                     },
-                                    "pool_jacuzzi": {
+                                    "amenity": {
                                         "type": "string",
                                         "example": "None"
                                     },
@@ -5062,7 +5062,7 @@
                                         "example": 5
                                     },
                                     "file": {
-                                        "description": "ZIP file containing floor plans named by unit_no (e.g. 1109.jpg). Max size: 15 MB",
+                                        "description": "ZIP file containing floor plans named by unit_no (e.g. 1109.jpg). Max size: 30 MB",
                                         "type": "string",
                                         "format": "binary",
                                         "example": "plans.zip"
@@ -6870,7 +6870,7 @@
                         "type": "string",
                         "example": "Covered"
                     },
-                    "pool_jacuzzi": {
+                    "amenity": {
                         "type": "string",
                         "example": "None"
                     },
@@ -7017,7 +7017,7 @@
                         "type": "string",
                         "example": "Covered"
                     },
-                    "pool_jacuzzi": {
+                    "amenity": {
                         "type": "string",
                         "example": "None"
                     },

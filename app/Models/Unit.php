@@ -15,7 +15,7 @@ class Unit extends Model
         'unit_no',
         'floor',
         'parking',
-        'pool_jacuzzi',
+        'amenity',
         'internal_square',
         'external_square',
         'furnished',

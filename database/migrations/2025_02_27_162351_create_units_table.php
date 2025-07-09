@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('unit_no');
             $table->string('floor');
             $table->string('parking');
-            $table->string('pool_jacuzzi');
+            $table->string('amenity');
             $table->decimal('internal_square', 10, 2);
             $table->decimal('external_square', 10, 2);
             $table->boolean('furnished');
