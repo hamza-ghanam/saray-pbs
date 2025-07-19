@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
+use Mccarlosen\LaravelMpdf\Facades\LaravelMpdf as MYPDF;
 use Symfony\Component\HttpFoundation\Response;
 
 class ReservationFormController extends Controller
@@ -93,19 +94,19 @@ class ReservationFormController extends Controller
 
         // 4. Ensure only one Reservation Form per booking (or per unit)
         //    If you want exactly one RF per booking:
-        $existingRF = ReservationForm::where('booking_id', $booking->id)->first();
-        if ($existingRF) {
-            if (Storage::disk('local')->exists($existingRF->file_path)) {
-                return Storage::disk('local')->download($existingRF->file_path, $fileName, [
-                    'Content-Type' => 'application/pdf',
-                ]);
-            } else {
-                // If the file is missing, you could re-generate or return an error
-                return response()->json([
-                    'error' => 'Existing Reservation Form file not found on disk.'
-                ], Response::HTTP_NOT_FOUND);
-            }
-        }
+//        $existingRF = ReservationForm::where('booking_id', $booking->id)->first();
+//        if ($existingRF) {
+//            if (Storage::disk('local')->exists($existingRF->file_path)) {
+//                return Storage::disk('local')->download($existingRF->file_path, $fileName, [
+//                    'Content-Type' => 'application/pdf',
+//                ]);
+//            } else {
+//                // If the file is missing, you could re-generate or return an error
+//                return response()->json([
+//                    'error' => 'Existing Reservation Form file not found on disk.'
+//                ], Response::HTTP_NOT_FOUND);
+//            }
+//        }
 
         $booking->paymentPlan->dld_fee = round($booking->price * ($booking->paymentPlan->dld_fee_percentage / 100), 2);
 
@@ -115,13 +116,31 @@ class ReservationFormController extends Controller
             'customerInfos'
         ]);
 
-        // 5. Generate the PDF (using your Blade view)
-        $pdf = PDF::loadView('pdf.reservation_form', [
+        $reservationData = [
             'booking' => $booking,
             'customerInfos' => $booking->customerInfos,
             'paymentPlan' => $booking->paymentPlan,
+            'installments' => $booking->installments,
             'unit' => $booking->unit,
+        ];
+
+        // 5. Generate the PDF (using your Blade view)
+        /*
+         * // DomPDF - 28/03/2025
+        $pdf = PDF::loadView('pdf.reservation_form', $reservationData);
+        */
+
+        // mPDF - 12/7/2025
+        $pdf = MYPDF::loadView('pdf.reservation_form', $reservationData, [], [
+            'instanceConfigurator' => function($mpdf) {
+                $mpdf->showImageErrors = true; // Show errors related to images
+                $mpdf->debug = true; // Enable general debugging
+                $mpdf->autoScriptToLang = true;
+                $mpdf->autoLangToFont = true;
+                $mpdf->allow_charset_conversion = false; // This is often crucial for Arabic/RTL
+            }
         ]);
+
 
         // Get the raw PDF content
         $pdfContent = $pdf->output();

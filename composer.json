@@ -7,7 +7,11 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "ext-intl": "*",
+        "ext-zip": "*",
+        "ar-php/ar-php": "^1.0",
         "barryvdh/laravel-dompdf": "^3.1",
+        "carlos-meneses/laravel-mpdf": "^2.1",
         "darkaonline/l5-swagger": "^9.0",
         "kreait/laravel-firebase": "^6.0",
         "laravel/framework": "^12.0",
@@ -17,9 +21,7 @@
         "mindee/mindee": "^1.16",
         "rakibdevs/mrz-parser": "^1.2",
         "spatie/laravel-permission": "^6.15",
-        "zircote/swagger-php": "^5.0",
-        "ext-intl": "*",
-        "ext-zip": "*"
+        "zircote/swagger-php": "^5.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

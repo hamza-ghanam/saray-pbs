@@ -173,7 +173,6 @@
                         <col>
                         <col style="width:5%">
                         <col>
-                        <
                         <col>
                     </colgroup>
                     <thead>
