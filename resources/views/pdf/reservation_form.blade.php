@@ -624,7 +624,7 @@
             <td class="left-th" style="width: 49%; text-align: justify; padding: 10px;">
                 <ol start="15">
                     <li>
-                        This Offer shall be governed and construed in accordance with the laws of the Emirate of Abu Dhabi and the Federal Laws of the United Arab Emirates as applied in the Emirate of Abu Dhabi.
+                        This Offer shall be governed and construed in accordance with the laws of the Emirate of Dubai and the Federal Laws of the United Arab Emirates as applied in the Emirate of Dubai.
                     </li>
                 </ol>
             </td>
@@ -632,7 +632,7 @@
             <td class="rtl-text right-th spaced-text" style="width: 49%; padding: 10px; text-align: justify;">
                 <ol start="15">
                     <li>
-                        يخضع هذا العرض ويفسر وفقا لقوانين إمارة أبوظبي والقوانين الاتحادية لدولة الإمارات العربية المتحدة المعمول بها في إمارة أبوظبي.
+                        يخضع هذا العرض ويفسر وفقا لقوانين إمارة دبي والقوانين الاتحادية لدولة الإمارات العربية المتحدة المعمول بها في إمارة دبي.
                     </li>
                 </ol>
             </td>
@@ -641,7 +641,7 @@
             <td class="left-th" style="width: 49%; text-align: justify; padding: 10px;">
                 <ol start="16">
                     <li>
-                        All disputes arising between the parties in connection with this Offer to Purchase shall be referred to the courts of Abu Dhabi. For the avoidance of doubt, ADGM laws shall not apply, and the ADGM Courts shall have no jurisdiction over any such disputes.
+                        All disputes arising between the parties in connection with this Offer to Purchase shall be referred to the courts of Dubai, for the avoidance of doubt.
                     </li>
                 </ol>
             </td>
@@ -649,7 +649,7 @@
             <td class="rtl-text right-th spaced-text" style="width: 49%; padding: 10px; text-align: justify;">
                 <ol start="16">
                     <li>
-                        تحال جميع المنازعات الناشئة بين الطرفين فيما يتعلق بهذا العرض إلى محاكم أبوظبي. دفعا لأي غموض، لا تسري قوانين مركز أبوظبي المالي العالمي (ADGM) على هذا العرض، ولا تكون لمحاكم مركز أبوظبي المالي العالمي أي ولاية قضائية بشأن هذه المنازعات.
+                        تحال جميع المنازعات الناشئة بين الطرفين فيما يتعلق بهذا العرض إلى محاكم دبي، دفعا لأي غموض.
                     </li>
                 </ol>
             </td>

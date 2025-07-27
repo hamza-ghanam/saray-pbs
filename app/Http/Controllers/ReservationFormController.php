@@ -94,19 +94,19 @@ class ReservationFormController extends Controller
 
         // 4. Ensure only one Reservation Form per booking (or per unit)
         //    If you want exactly one RF per booking:
-//        $existingRF = ReservationForm::where('booking_id', $booking->id)->first();
-//        if ($existingRF) {
-//            if (Storage::disk('local')->exists($existingRF->file_path)) {
-//                return Storage::disk('local')->download($existingRF->file_path, $fileName, [
-//                    'Content-Type' => 'application/pdf',
-//                ]);
-//            } else {
-//                // If the file is missing, you could re-generate or return an error
-//                return response()->json([
-//                    'error' => 'Existing Reservation Form file not found on disk.'
-//                ], Response::HTTP_NOT_FOUND);
-//            }
-//        }
+        $existingRF = ReservationForm::where('booking_id', $booking->id)->first();
+        if ($existingRF) {
+            if (Storage::disk('local')->exists($existingRF->file_path)) {
+                return Storage::disk('local')->download($existingRF->file_path, $fileName, [
+                    'Content-Type' => 'application/pdf',
+                ]);
+            } else {
+                // If the file is missing, you could re-generate or return an error
+                return response()->json([
+                    'error' => 'Existing Reservation Form file not found on disk.'
+                ], Response::HTTP_NOT_FOUND);
+            }
+        }
 
         $booking->paymentPlan->dld_fee = round($booking->price * ($booking->paymentPlan->dld_fee_percentage / 100), 2);
 
