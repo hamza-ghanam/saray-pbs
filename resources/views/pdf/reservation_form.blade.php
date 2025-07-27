@@ -79,7 +79,9 @@
             line-height: 1.5;
         }
 
-        .justified[lang="en"] { }
+        .justified[lang="en"] {
+            /* To be added in Production */
+        }
     </style>
 </head>
 <body>
@@ -616,7 +618,6 @@
             </td>
         </tr>
     </table>
-
 
     <br/>
     <table class="info-table">
