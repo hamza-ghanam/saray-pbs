@@ -159,8 +159,7 @@
         <p>
             BETWEEN<br/>
             Unique Saray Development, a company duly registered in the Emirate of Dubai, United Arab Emirates with
-            license number
-            000000 and having its address at PO Box ………. Bay Square, Business Bay Building, Dubai, United Arab
+            license number 1343857 and having its address at PO Box ………. Bay Square, Business Bay Building, Dubai, United Arab
             Emirates, telephone: 04 554 8787,
             email id: info@uniquesaray.com (the "Seller");
 
