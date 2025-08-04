@@ -80,6 +80,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/bookings/{id}/upload-document', [BookingController::class, 'uploadDocument']);
     Route::put('/bookings/{id}', [BookingController::class, 'update']);
     Route::delete('/bookings/{id}', [BookingController::class, 'destroy']);
+    Route::patch('/bookings/{id}/cancel', [BookingController::class, 'cancel']);
     Route::get('/bookings/{booking}/download-document/{type}', [BookingController::class, 'downloadDocument'])
         ->where('type', 'passport|receipt|rf|signed_rf|spa|signed_spa|dld')
         ->name('bookings.download_document');
@@ -145,6 +146,8 @@ Route::middleware('auth:sanctum')->group(function () {
 // User Management
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/users', [UserManagementController::class, 'listAllUsers']);
+    Route::get('/users/agents', [UserManagementController::class, 'getAgents']);
+    Route::get('/users/brokers', [UserManagementController::class, 'getBrokers']);
     Route::get('/users/{id}', [UserManagementController::class, 'getUserDetails']);
     Route::post('/users', [UserManagementController::class, 'registerUser']);
     Route::put('/users/{id}', [UserManagementController::class, 'updateUser']);

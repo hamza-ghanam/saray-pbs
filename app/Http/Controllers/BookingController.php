@@ -122,7 +122,16 @@ class BookingController extends Controller
      *             @OA\Property(property="id",        type="integer", example=42),
      *             @OA\Property(property="unit_id",   type="integer", example=12),
      *             @OA\Property(property="status",    type="string",  example="Pre-Booked"),
-     *
+     *             @OA\Property(property="agent",     type="object", nullable=true,
+     *                 @OA\Property(property="id", type="integer", example=3),
+     *                 @OA\Property(property="name", type="string", example="Ali Broker"),
+     *             ),
+     *             @OA\Property(property="sale_source", type="object", nullable=true,
+     *                 @OA\Property(property="id", type="integer", example=7),
+     *                 @OA\Property(property="name", type="string", example="Fatima Sales"),
+     *                 @OA\Property(property="email", type="string", example="fatima@example.com"),
+     *                 @OA\Property(property="type", type="string", example="Broker", description="Either 'Broker' or 'Direct'")
+     *             ),
      *             @OA\Property(
      *                 property="customer_infos",
      *                 type="array",
@@ -168,6 +177,9 @@ class BookingController extends Controller
      *                 @OA\Property(property="id",         type="integer", example=11),
      *                 @OA\Property(property="booking_id", type="integer", example=42),
      *                 @OA\Property(property="status",     type="string",  example="Pending"),
+     *                 @OA\Property(property="agent_id", type="integer", example=3),
+     *                 @OA\Property(property="sale_source_id", type="integer",example=7),
+     *                 @OA\Property(property="note",     type="string",  example="Mr. Feras"),
      *                 @OA\Property(property="signed_at",  type="string",  format="date-time", nullable=true, example=null),
      *                 @OA\Property(
      *                     property="approvals",
@@ -207,7 +219,21 @@ class BookingController extends Controller
             return response()->json(['message' => 'Forbidden'], Response::HTTP_FORBIDDEN);
         }
 
-        return response()->json($booking, Response::HTTP_OK);
+        if ($booking->saleSource) {
+            $booking->saleSource->type = 'Broker Agency';
+        } else {
+            $booking->sale_source = [
+                'id'        => null,
+                'name'      => null,
+                'email'     => null,
+                'status'    => null,
+                'type'      => 'Direct',
+            ];
+        }
+
+        $booking->load('customerInfos', 'installments', 'agent');
+
+        return response()->json( $booking, Response::HTTP_OK);
     }
 
     /**
@@ -362,6 +388,8 @@ class BookingController extends Controller
      *                 @OA\Property(property="payment_plan_id", type="integer", nullable=true, example=5),
      *                 @OA\Property(property="receipt", type="string", format="binary"),
      *                 @OA\Property(property="discount", type="number", format="float", example=5),
+     *                 @OA\Property(property="agent_id", type="integer", nullable=true, example=3, description="User ID of the agent (must not be Broker or Contractor)"),
+     *                 @OA\Property(property="sale_source_id", type="integer", nullable=true, example=7, description="User ID of the source of sale"),
      *                 @OA\Property(property="notes", type="string", example="Customer requests early handover."),
      *                 @OA\Property(
      *                     property="customers",
@@ -392,6 +420,18 @@ class BookingController extends Controller
             'receipt'          => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
             'discount'         => 'nullable|numeric|min:0|max:100',
             'notes'            => 'nullable|string',
+
+            'agent_id'         => [
+                'required', 'integer', 'exists:users,id',
+                function ($attribute, $value, $fail) {
+                    $user = User::find($value);
+                    if ($user && $user->hasAnyRole(['Broker', 'Contractor'])) {
+                        $fail("Selected agent cannot be a Broker or Contractor.");
+                    }
+                }
+            ],
+            'sale_source_id'   => 'nullable|integer|exists:users,id',
+
             'customers'        => 'required|array|min:1',
             'customers.*.name'            => 'required|string|max:255',
             'customers.*.passport_number' => 'required|string|max:50',
@@ -456,6 +496,9 @@ class BookingController extends Controller
                 'receipt_path'    => $receiptPath,
                 'created_by'      => $user->id,
                 'notes'           => $validated['notes'] ?? null,
+
+                'agent_id'        => $validated['agent_id'] ?? null,
+                'sale_source_id'  => $validated['sale_source_id'] ?? null,
             ]);
 
             // 6. Create CustomerInfo entries
@@ -514,7 +557,20 @@ class BookingController extends Controller
 
             DB::commit();
 
-            $booking->load('customerInfos', 'installments');
+            if ($booking->saleSource) {
+                $booking->saleSource->type = 'Broker Agency';
+            } else {
+                $booking->sale_source = [
+                    'id'        => null,
+                    'name'      => null,
+                    'email'     => null,
+                    'status'    => null,
+                    'type'      => 'Direct',
+                ];
+            }
+
+            $booking->load('customerInfos', 'installments', 'agent');
+
             return response()->json($booking, Response::HTTP_CREATED);
         } catch (\Exception $ex) {
             DB::rollBack();
@@ -741,6 +797,19 @@ class BookingController extends Controller
                 'integer',
                 'exists:customer_infos,id'
             ],
+
+            'notes'            => 'nullable|string',
+            'agent_id'         => [
+                'sometimes', 'integer', 'exists:users,id',
+                function ($attribute, $value, $fail) {
+                    $user = User::find($value);
+                    if ($user && $user->hasAnyRole(['Broker', 'Contractor'])) {
+                        $fail("Selected agent cannot be a Broker or Contractor.");
+                    }
+                }
+            ],
+            'sale_source_id'   => 'sometimes|integer|exists:users,id',
+
         ]);
 
         if ($validator->fails()) {
@@ -774,6 +843,18 @@ class BookingController extends Controller
                 }
 
                 $booking->payment_plan_id = $paymentPlan->id;
+            }
+
+            if ($request->has('agent_id')) {
+                $booking->agent_id = $request->agent_id;
+            }
+
+            if ($request->has('sale_source_id')) {
+                $booking->sale_source_id = $request->sale_source_id;
+            }
+
+            if ($request->has('notes')) {
+                $booking->notes = $request->notes;
             }
 
             if ($request->hasFile('receipt')) {
@@ -811,13 +892,111 @@ class BookingController extends Controller
             }
 
             DB::commit();
-            $booking->load('customerInfos');
+            $booking->load('customerInfos', 'agent', 'saleSource');
 
             return response()->json($booking, Response::HTTP_OK);
 
         } catch (\Exception $ex) {
             DB::rollBack();
             return response()->json(['error' => $ex->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Cancel a booking and reset the unit status.
+     *
+     * @OA\Patch(
+     *     path="/bookings/{id}/cancel",
+     *     summary="Cancel a booking",
+     *     description="Cancels a booking and resets the associated unit's status to 'Available'. Requires 'cancel booking' permission.",
+     *     tags={"Bookings"},
+     *     security={{"sanctum":{}}},
+     *
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="ID of the booking to cancel",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Booking cancelled successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Booking cancelled successfully."),
+     *             @OA\Property(
+     *                 property="booking",
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer", example=123),
+     *                 @OA\Property(property="status", type="string", example="Cancelled"),
+     *                 @OA\Property(
+     *                     property="unit",
+     *                     type="object",
+     *                     @OA\Property(property="id", type="integer", example=45),
+     *                     @OA\Property(property="status", type="string", example="Available")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Forbidden – user lacks permission to cancel bookings",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Forbidden")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Booking not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Booking not found")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Internal server error while cancelling booking",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="Failed to cancel booking.")
+     *         )
+     *     )
+     * )
+     */
+    public function cancel(Request $request, $id)
+    {
+        $user = $request->user();
+        Log::info("User {$user->id} is attempting to cancel booking {$id}.");
+
+        $booking = Booking::with('unit')->find($id);
+        if (!$booking) {
+            return response()->json(['message' => 'Booking not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        if (!$user->can('cancel booking')) {
+            return response()->json(['message' => 'Forbidden'], Response::HTTP_FORBIDDEN);
+        }
+
+        DB::beginTransaction();
+        try {
+            // Reset unit status
+            if ($booking->unit) {
+                $booking->unit->status = 'Available';
+                $booking->unit->save();
+            }
+
+            // Delete the booking
+            $booking->status = 'Cancelled';
+            $booking->save();
+
+            DB::commit();
+            return response()->json([
+                'message' => 'Booking cancelled successfully.',
+                'booking' => $booking,
+            ], Response::HTTP_OK);
+        } catch (\Exception $ex) {
+            DB::rollBack();
+            Log::error("Error cancelling booking {$id}: " . $ex->getMessage());
+            return response()->json(['error' => 'Failed to cancel booking.'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -1188,5 +1367,14 @@ class BookingController extends Controller
             'message' => "Booking approved by {$role}",
             'approval' => $approval,
         ], Response::HTTP_CREATED);
+    }
+
+    private function getSaleSourceType($saleSource) {
+        return $saleSource
+            ? array_merge(
+                $saleSource->only(['id', 'name', 'email', 'status']),
+                ['type' => 'Broker Agency']
+            )
+            : ['id' => null, 'name' => null, 'email' => null, 'status' => null, 'type' => 'Direct'];
     }
 }

@@ -117,26 +117,26 @@ class UserManagementController extends Controller
         }
 
         // Dynamic pagination: retrieve the 'limit' parameter (default 10, capped at 100)
-        $limit = min((int) $request->get('limit', 10), 100);
+        $limit = min((int)$request->get('limit', 10), 100);
         $usersPaginated = $query->paginate($limit);
 
         // Transform each user into the desired output format.
         $transformedUsers = $usersPaginated->getCollection()->map(function ($user) {
             $roleName = $user->roles->pluck('name')->first(); // assuming one role per user
             $userData = [
-                'id'     => $user->id,
-                'name'   => $user->name,
-                'email'  => $user->email,
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
                 'status' => $user->status,
-                'role'   => $roleName,
+                'role' => $roleName,
             ];
 
             // If user is a contractor, include their assigned units.
             if (strtolower($roleName) === 'contractor') {
                 $userData['units'] = $user->contractorUnits->map(function ($unit) {
                     return [
-                        'id'     => $unit->id,
-                        'name'   => $unit->name,
+                        'id' => $unit->id,
+                        'name' => $unit->name,
                         'status' => $unit->status,
                     ];
                 });
@@ -1052,7 +1052,7 @@ class UserManagementController extends Controller
         $user = User::findOrFail($userId);
 
         // Dynamic pagination: retrieve 'limit', cast to integer, and cap at 100 items per page.
-        $limit = min((int) $request->get('limit', 10), 100);
+        $limit = min((int)$request->get('limit', 10), 100);
 
         $docs = $user->docs()->paginate($limit);
 
@@ -1103,6 +1103,107 @@ class UserManagementController extends Controller
 
         // Serve file from private/local disk
         return Storage::disk('local')->download($doc->file_path);
+    }
+
+    /**
+     * Get all agent users (excluding Brokers and Contractors).
+     *
+     * @OA\Get(
+     *     path="/users/agents",
+     *     summary="List agent users",
+     *     description="Returns users excluding those with roles 'Broker' or 'Contractor'. Requires 'book unit' permission.",
+     *     tags={"User Management"},
+     *     security={{"sanctum":{}}},
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="List of agents",
+     *         @OA\JsonContent(
+     *             @OA\Property(
+     *                 property="agents",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="name", type="string", example="Jane Doe"),
+     *                     @OA\Property(property="email", type="string", example="jane@example.com")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Forbidden – user lacks permission to book units",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Forbidden")
+     *         )
+     *     )
+     * )
+     */
+    public function getAgents(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user->can('book unit')) {
+            return response()->json(['message' => 'Forbidden'], Response::HTTP_FORBIDDEN);
+        }
+
+        $excludedRoles = ['Broker', 'Contractor', 'System Maintenance'];
+
+        $agents = User::where('status', 'Active')
+            ->whereDoesntHave('roles', function ($query) use ($excludedRoles) {
+                $query->whereIn('name', $excludedRoles);
+            })->get();
+
+        return response()->json(['agents' => $agents], Response::HTTP_OK);
+    }
+
+    /**
+     * Get all users with the role 'Broker'.
+     *
+     * @OA\Get(
+     *     path="/users/brokers",
+     *     summary="List brokers",
+     *     description="Returns a list of users who have the 'Broker' role. Requires 'view brokers' permission.",
+     *     tags={"User Management"},
+     *     security={{"sanctum":{}}},
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="List of brokers",
+     *         @OA\JsonContent(
+     *             @OA\Property(
+     *                 property="brokers",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="id", type="integer", example=8),
+     *                     @OA\Property(property="name", type="string", example="Ali Broker"),
+     *                     @OA\Property(property="email", type="string", example="ali.broker@example.com")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Forbidden – user lacks permission to view brokers",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Forbidden")
+     *         )
+     *     )
+     * )
+     */
+    public function getBrokers(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user->can('book unit')) {
+            return response()->json(['message' => 'Forbidden'], Response::HTTP_FORBIDDEN);
+        }
+
+        $brokers = User::role('Broker')->where('status', 'Active')->get();
+
+        return response()->json(['brokers' => $brokers], Response::HTTP_OK);
     }
 
     private function canDownload(UserDoc $doc)

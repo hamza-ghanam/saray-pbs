@@ -18,6 +18,8 @@ class Booking extends Model
         'receipt_path',
         'created_by', // Make sure it's fillable
         'payment_plan_id',
+        'agent_id',
+        'sale_source_id',
     ];
 
     protected $hidden = ['receipt_path'];
@@ -105,5 +107,15 @@ class Booking extends Model
     public function dldDocument()
     {
         return $this->hasOne(DldDocument::class);
+    }
+
+    public function agent()
+    {
+        return $this->belongsTo(User::class, 'agent_id');
+    }
+
+    public function saleSource()
+    {
+        return $this->belongsTo(User::class, 'sale_source_id');
     }
 }

@@ -85,4 +85,14 @@ class User extends Authenticatable
     {
         return $this->hasOne(BrokerProfile::class);
     }
+
+    public function bookingsAsAgent()
+    {
+        return $this->hasMany(Booking::class, 'agent');
+    }
+
+    public function bookingsAsSaleSource()
+    {
+        return $this->hasMany(Booking::class, 'sale_source_id');
+    }
 }

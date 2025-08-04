@@ -156,17 +156,37 @@
     @endif
 
     <div class="section">
+        @php
+        $dollar_rate = 3.65;
+        @endphp
         <h2>Payment Plans</h2>
         @foreach($paymentPlans as $plan)
             <h3 class="plan-title">Plan: {{ $plan->name }}</h3>
-            <p><strong>Selling Price:</strong> AED {{ number_format($unit->price, 2) }}</p>
+            <p>
+                <strong>Selling Price:</strong>
+                <img src="{{ public_path('images/aed_symbol.svg') }}" width="12" alt="AED" /> {{ number_format($unit->price, 2) }}
+                <span style="margin-left: 15px; margin-right: 15px">|</span>
+                <strong>$ </strong>{{ number_format($unit->price / $dollar_rate, 2) }}
+            </p>
             @if($salesOffer->discount > 0)
                 <p><strong>Discount:</strong> {{ $salesOffer->discount }}%</p>
-                <p><strong>Effective Price:</strong> AED {{ number_format($salesOffer->offer_price, 2) }}</p>
+                <p>
+                    <strong>Effective Price:</strong>
+                    <img src="{{ public_path('images/aed_symbol.svg') }}" width="12" alt="AED" /> {{ number_format($salesOffer->offer_price, 2) }}
+                    <strong>$ </strong>{{ number_format($salesOffer->offer_price / $dollar_rate, 2) }}
+                </p>
             @endif
-            <p><strong>Admin fee:</strong> AED {{ number_format($plan->admin_fee, 2) }}</p>
+            <p>
+                <strong>Admin fee:</strong>
+                <img src="{{ public_path('images/aed_symbol.svg') }}" width="12" alt="AED" /> {{ number_format($plan->admin_fee, 2) }}
+                <span style="margin-left: 15px; margin-right: 15px">|</span>
+                <strong>$ </strong>{{ number_format($plan->admin_fee / $dollar_rate, 2) }}
+            </p>
             <p><strong>DLD fee:</strong> {{ (int) $plan->dld_fee_percentage }}% |
-                AED {{ number_format($plan->dld_fee, 2) }}</p>
+                <img src="{{ public_path('images/aed_symbol.svg') }}" width="12" alt="AED" /> {{ number_format($plan->dld_fee, 2) }}
+                <span style="margin-left: 15px; margin-right: 15px">|</span>
+                <strong>$ </strong>{{ number_format($plan->dld_fee / $dollar_rate, 2) }}
+            </p>
             @if($plan->installments->count())
                 <table class="striped-table">
                     <colgroup>
@@ -188,7 +208,11 @@
                         <td>Expression of interest (EOI)</td>
                         <td>-</td>
                         <td>-</td>
-                        <td>AED {{ number_format($plan->EOI, 2) }}</td>
+                        <td>
+                            <img src="{{ public_path('images/aed_symbol.svg') }}" width="12" alt="AED" /> {{ number_format($plan->EOI, 2) }}
+                            <br/>
+                            <strong>$ </strong>{{ number_format($plan->EOI / $dollar_rate, 2) }}
+                        </td>
                     </tr>
                     @foreach($plan->installments as $installment)
                         <tr>
@@ -207,7 +231,11 @@
                                 @endif
                             </td>
                             <td>{{ \Carbon\Carbon::parse($installment->date)->format('Y-m-d') }}</td>
-                            <td>AED {{ number_format($installment->amount, 2) }}</td>
+                            <td>
+                                <img src="{{ public_path('images/aed_symbol.svg') }}" width="12" alt="AED" /> {{ number_format($installment->amount, 2) }}
+                                <br/>
+                                <strong>$ </strong>{{ number_format($installment->amount / $dollar_rate, 2) }}
+                            </td>
                         </tr>
                     @endforeach
                     </tbody>

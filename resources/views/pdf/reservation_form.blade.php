@@ -149,24 +149,14 @@
             <th class="rtl-text right-th">المشروع:</th>
         </tr>
         <tr>
-            <th class="left-th">Unit:</th>
+            <th class="left-th">Unit No:</th>
             <td style="text-align: center;">{{ $unit->unit_no }}</td>
-            <th class="rtl-text right-th">الوحدة:</th>
+            <th class="rtl-text right-th">رقم الوحدة:</th>
         </tr>
         <tr>
-            <th class="left-th">Unit Internal Area:</th>
-            <td style="text-align: center;">{{ $unit->internal_square }}</td>
-            <th class="rtl-text right-th">المساحة الداخلية للوحدة:</th>
-        </tr>
-        <tr>
-            <th class="left-th">Balcony/Terrace Area (if applicable):</th>
-            <td style="text-align: center;">{{ $unit->external_square }}</td>
-            <th class="rtl-text right-th">مساحة الشرفة / التراس (إذا كان منطبقا):</th>
-        </tr>
-        <tr>
-            <th class="left-th">Unit Gross Area</th>
+            <th class="left-th">Unit Area</th>
             <td style="text-align: center;">{{ $unit->total_square }}</td>
-            <th class="rtl-text right-th">مساحة الوحدة الإجمالية</th>
+            <th class="rtl-text right-th">مساحة الوحدة</th>
         </tr>
         <tr>
             <th class="left-th">Number of car parking spaces (if applicable)</th>
