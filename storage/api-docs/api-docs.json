@@ -2481,10 +2481,10 @@
                                         "type": "string",
                                         "example": "Broker"
                                     },
-                                    "expires_in_hours": {
-                                        "description": "Optional number of hours until link expires",
-                                        "type": "integer",
-                                        "example": 48
+                                    "email": {
+                                        "description": "User email to share the OTL via it.",
+                                        "type": "string",
+                                        "example": "myemail@hotmail.com"
                                     }
                                 },
                                 "type": "object"
@@ -2494,7 +2494,7 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "One-time link created"
+                        "description": "One-time link successfully generated and shared by email."
                     },
                     "403": {
                         "description": "Forbidden (user lacks permission)"
@@ -2622,7 +2622,7 @@
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "Broker registered successfully, awaiting approval"
+                                            "example": "Contractor registered successfully, awaiting approval"
                                         },
                                         "user": {
                                             "description": "Created user record",
@@ -2682,11 +2682,6 @@
                                                 },
                                                 "type": "object"
                                             }
-                                        },
-                                        "agreement_url": {
-                                            "type": "string",
-                                            "format": "uri",
-                                            "example": "https://your-domain.test/storage/agreements/agreement_42.pdf"
                                         }
                                     },
                                     "type": "object"
@@ -2779,70 +2774,6 @@
                 "security": [
                     {
                         "sanctum": []
-                    }
-                ]
-            }
-        },
-        "/brokers/{user}/agreements/": {
-            "post": {
-                "tags": [
-                    "Brokers"
-                ],
-                "summary": "Download a Broker's agreement PDF",
-                "description": "Download an agreement PDF for a Broker.\n\n- Brokers can download their own agreement or signed agreement.\n- Users with the `manage broker` permission can download any broker’s agreement.",
-                "operationId": "8460765f12d178f8885af120c2ef82bd",
-                "parameters": [
-                    {
-                        "name": "user",
-                        "in": "path",
-                        "description": "ID of the broker user",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "example": 15
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": false,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "properties": {
-                                    "type": {
-                                        "description": "Document type to download, optional, default is unsigned agreement",
-                                        "type": "string",
-                                        "default": "signed_agreement",
-                                        "enum": [
-                                            "signed_agreement"
-                                        ]
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "PDF file download",
-                        "content": {
-                            "application/pdf": {}
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden"
-                    },
-                    "404": {
-                        "description": "Agreement not found"
-                    },
-                    "500": {
-                        "description": "Server error"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
                     }
                 ]
             }
@@ -3380,7 +3311,7 @@
                     "Bookings/RF"
                 ],
                 "summary": "Generate or download a Reservation Form PDF for a booking",
-                "description": "Generate or retrieve a Reservation Form for a booking.\n\nIf a Reservation Form already exists (and its PDF file is present on disk), the existing PDF is streamed back (HTTP 200).\nOtherwise, a new PDF is generated, stored, and streamed back (HTTP 201).",
+                "description": "Generate or retrieve a Reservation Form for a booking.\n\nIf a Reservation Form already exists (and its PDF file is present on disk), the existing PDF is emailed to the customer(s) (HTTP 200).\nOtherwise, a new PDF is generated, stored, and emailed (HTTP 201).",
                 "operationId": "36d25ffa3e42fe2dffe9c0b092fee08b",
                 "parameters": [
                     {
@@ -3397,15 +3328,35 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Existing Reservation Form PDF streamed successfully",
+                        "description": "Existing Reservation Form PDF emailed successfully",
                         "content": {
-                            "application/pdf": {}
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Reservation form emailed to customer(s) successfully."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
                         }
                     },
                     "201": {
-                        "description": "New Reservation Form PDF generated and streamed successfully",
+                        "description": "New Reservation Form PDF generated and emailed successfully",
                         "content": {
-                            "application/pdf": {}
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Reservation form emailed to customer(s) successfully."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
                         }
                     },
                     "403": {
@@ -3971,7 +3922,7 @@
                     "Bookings/SPA"
                 ],
                 "summary": "Generate or download an SPA PDF for a booking",
-                "description": "Generate or download an SPA PDF for a booking.\n\nIf an SPA already exists (and its PDF file is present on disk), the existing PDF is streamed back (HTTP 200).\nOtherwise, a new PDF is generated, stored, and streamed back (HTTP 201).",
+                "description": "Generate or download an SPA PDF for a booking.\n\nIf an SPA already exists (and its PDF file is present on disk), the existing PDF is emailed to the customer(s) (HTTP 200).\nOtherwise, a new PDF is generated, stored, and emailed (HTTP 201).",
                 "operationId": "eb8c8cdc34a6f5f1c783c87837771311",
                 "parameters": [
                     {
@@ -3990,13 +3941,33 @@
                     "200": {
                         "description": "Existing SPA PDF streamed successfully",
                         "content": {
-                            "application/pdf": {}
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "SPA form emailed to customer(s) successfully."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
                         }
                     },
                     "201": {
                         "description": "New SPA PDF generated and streamed successfully",
                         "content": {
-                            "application/pdf": {}
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "SPA form emailed to customer(s) successfully."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
                         }
                     },
                     "403": {

@@ -60,34 +60,21 @@
             alt="{{ config('app.name') }} Logo"
             style="max-width: 200px; height: auto; display: inline-block; margin-bottom: 15px;"
         >
-        <h1>Broker Account Registration</h1>
+        <h1>Sales Purchase Agreement</h1>
     </div>
 
     <div class="content">
-        <p>🎉 <strong>Congratulations,</strong> {{ $user->name }}!.</p>
+        <p>Dear {{ $booking->customerInfos->first()->name ?? 'Customer' }},</p>
 
-        <p>We’re pleased to let you know that your account has been <strong>approved</strong> and is now active.</p>
+        <p>Thank you for choosing to reserve a property with us. Please find attached your official <span class="highlight">Sales Purchase Agreement (SPA)</span>
+            of unit no. {{ $booking->unit->unit_no }} for your review and signature.</p>
 
-        <p>Click the link below to log in to the portal and get started:</p>
+        <p>Once signed, please reply to this email with the attached signed copy.</p>
 
-        <p style="text-align: center; margin: 30px 0;">
-            <a
-                href="{{ env('FEND_URL') }}"
-                style="
-						display: inline-block;
-						padding: 12px 20px;
-						text-decoration: none;
-						background: dodgerblue;
-						color: #ffffff;
-						border-radius: 4px;
-						font-weight: bold;
-					"
-            >
-                Log in to your account
-            </a>
-        </p>
+        <p>If you have any questions or require further assistance, please don’t hesitate to contact our sales team.</p>
 
-        <p>Best regards,</p>
+        <p>Best regards,<br>
+            <strong>Sales Team</strong></p>
     </div>
 
     <div class="footer">

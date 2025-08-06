@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 
+use App\Mail\BrokerAgreementMail;
+use App\Mail\OneTimeLinkMail;
+use App\Mail\SalesPurchaseAgreementMail;
 use App\Models\OneTimeLink;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -102,10 +105,10 @@ class OneTimeLinkController extends Controller
      *         @OA\JsonContent(
      *             required={"user_type"},
      *             @OA\Property(property="user_type", type="string", example="Broker", description="Either 'Broker' or 'Contractor'"),
-     *             @OA\Property(property="expires_in_hours", type="integer", example=48, description="Optional number of hours until link expires")
+     *             @OA\Property(property="email", type="string", example="myemail@hotmail.com", description="User email to share the OTL via it.")
      *         )
      *     ),
-     *     @OA\Response(response=201, description="One-time link created"),
+     *     @OA\Response(response=201, description="One-time link successfully generated and shared by email."),
      *     @OA\Response(response=403, description="Forbidden (user lacks permission)"),
      *     @OA\Response(response=422, description="Validation error")
      * )
@@ -122,6 +125,7 @@ class OneTimeLinkController extends Controller
 
         $validator = Validator::make($request->all(), [
             'user_type' => 'required|string|in:Broker,Contractor',
+            'email'     => 'required|email|max:255|unique:users,email',
         ]);
 
         if ($validator->fails()) {
@@ -142,9 +146,12 @@ class OneTimeLinkController extends Controller
             'expired_at' => null, // link is valid until used
         ]);
 
+        //Email
+        Mail::to($request->email)->send(new OneTimeLinkMail($otl));
+
         return response()->json([
-            'message' => 'One-time link generated successfully',
-            'otl' => $otl
+            'message' => 'One-time link successfully generated and shared by email.',
+            'booking' => $otl
         ], Response::HTTP_CREATED);
     }
 
@@ -193,7 +200,7 @@ class OneTimeLinkController extends Controller
      *         description="User registered successfully",
      *         @OA\JsonContent(
      *             type="object",
-     *             @OA\Property(property="message", type="string", example="Broker registered successfully, awaiting approval"),
+     *             @OA\Property(property="message", type="string", example="Contractor registered successfully, awaiting approval"),
      *             @OA\Property(
      *                 property="user",
      *                 type="object",
@@ -215,8 +222,7 @@ class OneTimeLinkController extends Controller
      *                     @OA\Property(property="created_at", type="string",  format="date-time", example="2025-07-01T09:00:00Z"),
      *                     @OA\Property(property="updated_at", type="string",  format="date-time", example="2025-07-01T09:00:00Z")
      *                 )
-     *             ),
-     *             @OA\Property(property="agreement_url", type="string", format="uri", example="https://your-domain.test/storage/agreements/agreement_42.pdf")
+     *             )
      *         )
      *     ),
      *     @OA\Response(response=400, description="Invalid or already used token / Invalid user_type"),
@@ -306,7 +312,6 @@ class OneTimeLinkController extends Controller
             $otl->update(['expired_at' => now(), 'user_id' => $user->id]);
 
             $respData = [
-                'message' => "{$userType} registered successfully, awaiting approval",
                 'user' => $user,
             ];
 
@@ -325,8 +330,7 @@ class OneTimeLinkController extends Controller
                 ]);
 
                 // 2. Store the PDF content in "local" disk
-                Storage::disk('public')->put("agreements/{$pdfName}", $pdfContent);
-                $agreementUrl = Storage::disk('public')->url("agreements/{$pdfName}");
+                Storage::disk('local')->put("agreements/{$pdfName}", $pdfContent);
 
                 DB::commit();
 
@@ -341,11 +345,15 @@ class OneTimeLinkController extends Controller
                 });
 
                 $respData += [
-                    'docs' => $docs,
-                    'agreement_url' => $agreementUrl,
+                    'message' => 'Broker agreement emailed to the broker successfully.',
+                    'docs' => $docs
                 ];
+
+                // Email
+                Mail::to($validated['email'])->send(new BrokerAgreementMail($user, $pdfName));
             } else {
                 $respData += [
+                    'message' => "Contractor registered successfully, awaiting approval",
                     'docs' => $user->docs,
                 ];
             }
@@ -415,11 +423,7 @@ class OneTimeLinkController extends Controller
         $user->status = 'Active';
         $user->save();
 
-        Mail::send('emails.user_approved', ['user' => $user], function ($message) use ($user) {
-            $message
-                ->to($user->email, $user->name)
-                ->subject('Your account is now active!');
-        });
+        Mail::to($user->email)->send(new OneTimeLinkMail(null, $user));
 
         return response()->json([
             'message' => 'User approved successfully',
@@ -427,52 +431,7 @@ class OneTimeLinkController extends Controller
         ], Response::HTTP_OK);
     }
 
-    /**
-     * Download an agreement PDF for a Broker.
-     *
-     * - Brokers can download their own agreement or signed agreement.
-     * - Users with the `manage broker` permission can download any broker’s agreement.
-     *
-     * @OA\Post(
-     *     path="/brokers/{user}/agreements/",
-     *     summary="Download a Broker's agreement PDF",
-     *     tags={"Brokers"},
-     *     security={{ "bearerAuth":{} }},
-     *     @OA\Parameter(
-     *         name="user",
-     *         in="path",
-     *         required=true,
-     *         description="ID of the broker user",
-     *         @OA\Schema(type="integer", example=15)
-     *     ),
-     *     @OA\RequestBody(
-     *         required=false,
-     *         @OA\MediaType(
-     *             mediaType="application/json",
-     *             @OA\Schema(
-     *                 type="object",
-     *                 @OA\Property(
-     *                     property="type",
-     *                     type="string",
-     *                     description="Document type to download, optional, default is unsigned agreement",
-     *                     enum={"signed_agreement"},
-     *                     default="signed_agreement"
-     *                 )
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="PDF file download",
-     *         @OA\MediaType(
-     *             mediaType="application/pdf"
-     *         )
-     *     ),
-     *     @OA\Response(response=403, description="Forbidden"),
-     *     @OA\Response(response=404, description="Agreement not found"),
-     *     @OA\Response(response=500, description="Server error")
-     * )
-     */
+    // To be deleted..
     public function downloadAgreement(Request $request, User $user)
     {
         $authUser = $request->user();

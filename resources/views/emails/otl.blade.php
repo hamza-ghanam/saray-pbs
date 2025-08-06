@@ -60,20 +60,19 @@
             alt="{{ config('app.name') }} Logo"
             style="max-width: 200px; height: auto; display: inline-block; margin-bottom: 15px;"
         >
-        <h1>Broker Account Registration</h1>
+        <h1>Broker Registration</h1>
     </div>
 
     <div class="content">
-        <p>🎉 <strong>Congratulations,</strong> {{ $user->name }}!.</p>
+        <p>Dear broker,</p>
 
-        <p>We’re pleased to let you know that your account has been <strong>approved</strong> and is now active.</p>
+        <p>Thank you for registering with us. Please use the below one-time link to register and create an account:</p>
 
-        <p>Click the link below to log in to the portal and get started:</p>
+        <p>Once registered, you will receive your official agreement to be signed and returned. After that, please wait for the verification process and final approval before proceeding..</p>
 
-        <p style="text-align: center; margin: 30px 0;">
-            <a
-                href="{{ env('FEND_URL') }}"
-                style="
+        <p>
+                <a href="{{ env('FEND_URL') }}/one-time-links/register/Broker/{{ $otl->token }}"
+                   style="
 						display: inline-block;
 						padding: 12px 20px;
 						text-decoration: none;
@@ -81,13 +80,13 @@
 						color: #ffffff;
 						border-radius: 4px;
 						font-weight: bold;
-					"
-            >
-                Log in to your account
-            </a>
+					">
+                    Register Here
+                </a>
         </p>
 
-        <p>Best regards,</p>
+        <p>Best regards,<br>
+            <strong>Sales Team</strong></p>
     </div>
 
     <div class="footer">

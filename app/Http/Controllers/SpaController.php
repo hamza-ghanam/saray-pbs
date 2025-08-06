@@ -2,12 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\DldDocumentMail;
+use App\Mail\ReservationFormMail;
+use App\Mail\SalesPurchaseAgreementMail;
 use App\Models\Approval;
 use App\Models\Booking;
 use App\Models\SPA; // Your SPA model
 use App\Services\PaymentPlanService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use Barryvdh\DomPDF\Facade\Pdf as PDF; // dompdf
@@ -25,8 +29,8 @@ class SpaController extends Controller
     /**
      * Generate or download an SPA PDF for a booking.
      *
-     * If an SPA already exists (and its PDF file is present on disk), the existing PDF is streamed back (HTTP 200).
-     * Otherwise, a new PDF is generated, stored, and streamed back (HTTP 201).
+     * If an SPA already exists (and its PDF file is present on disk), the existing PDF is emailed to the customer(s) (HTTP 200).
+     * Otherwise, a new PDF is generated, stored, and emailed (HTTP 201).
      *
      * @OA\Get(
      *     path="/bookings/{bookingId}/spa",
@@ -45,12 +49,16 @@ class SpaController extends Controller
      *     @OA\Response(
      *         response=200,
      *         description="Existing SPA PDF streamed successfully",
-     *         @OA\MediaType(mediaType="application/pdf")
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="SPA form emailed to customer(s) successfully.")
+     *         )
      *     ),
      *     @OA\Response(
      *         response=201,
      *         description="New SPA PDF generated and streamed successfully",
-     *         @OA\MediaType(mediaType="application/pdf")
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="SPA form emailed to customer(s) successfully.")
+     *         )
      *     ),
      *     @OA\Response(
      *         response=403,
@@ -102,9 +110,11 @@ class SpaController extends Controller
         if ($existingSPA) {
             // If file exists, return existing
             if (Storage::disk('local')->exists($existingSPA->file_path)) {
-                return Storage::disk('local')->download($existingSPA->file_path, $fileName, [
-                    'Content-Type' => 'application/pdf',
-                ]);
+                foreach ($booking->customerInfos as $customer) {
+                    Mail::to($customer->email)->send(new SalesPurchaseAgreementMail($booking, $fileName));
+                }
+
+                return response()->json(['message' => 'SPA emailed to customer(s) successfully.'], Response::HTTP_OK);
             } else {
                 return response()->json([
                     'error' => 'Existing SPA file not found on disk.'
@@ -141,10 +151,18 @@ class SpaController extends Controller
             'status'     => 'Pending',
         ]);
 
+        foreach ($booking->customerInfos as $customer) {
+            Mail::to($customer->email)->send(new SalesPurchaseAgreementMail($booking, $fileName));
+        }
+
+        return response()->json(['message' => 'SPA emailed to customer(s) successfully.'], Response::HTTP_CREATED);
+
+        /*
         return response($pdfContent, Response::HTTP_CREATED, [
             'Content-Type'        => 'application/pdf',
             'Content-Disposition' => "attachment; filename=\"{$fileName}\"",
         ]);
+        */
     }
 
     /**
@@ -342,6 +360,10 @@ class SpaController extends Controller
             'approval_type' => $user->getRoleNames()->first(),
             'status'        => 'Approved',
         ]);
+
+        foreach ($spa->booking->customerInfos as $customer) {
+            Mail::to($customer->email)->send(new SalesPurchaseAgreementMail($spa->booking, ''));
+        }
 
         return response()->json(['message' => 'SPA has been approved! Waiting for DLD document.'], Response::HTTP_OK);
     }

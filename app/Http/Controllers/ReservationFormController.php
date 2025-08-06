@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\ReservationFormMail;
 use App\Models\Approval;
 use App\Models\Booking;
 use App\Models\ReservationForm;
 use App\Services\PaymentPlanService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
@@ -26,8 +28,8 @@ class ReservationFormController extends Controller
     /**
      * Generate or retrieve a Reservation Form for a booking.
      *
-     * If a Reservation Form already exists (and its PDF file is present on disk), the existing PDF is streamed back (HTTP 200).
-     * Otherwise, a new PDF is generated, stored, and streamed back (HTTP 201).
+     * If a Reservation Form already exists (and its PDF file is present on disk), the existing PDF is emailed to the customer(s) (HTTP 200).
+     * Otherwise, a new PDF is generated, stored, and emailed (HTTP 201).
      *
      * @OA\Get(
      *     path="/bookings/{bookingId}/rf",
@@ -43,13 +45,17 @@ class ReservationFormController extends Controller
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Existing Reservation Form PDF streamed successfully",
-     *         @OA\MediaType(mediaType="application/pdf")
+     *         description="Existing Reservation Form PDF emailed successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Reservation form emailed to customer(s) successfully.")
+     *         )
      *     ),
      *     @OA\Response(
      *         response=201,
-     *         description="New Reservation Form PDF generated and streamed successfully",
-     *         @OA\MediaType(mediaType="application/pdf")
+     *         description="New Reservation Form PDF generated and emailed successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Reservation form emailed to customer(s) successfully.")
+     *         )
      *     ),
      *     @OA\Response(response=403, description="Forbidden (no permission to generate reservation form)"),
      *     @OA\Response(response=404, description="Booking not found or existing PDF file missing on disk"),
@@ -97,9 +103,11 @@ class ReservationFormController extends Controller
         $existingRF = ReservationForm::where('booking_id', $booking->id)->first();
         if ($existingRF) {
             if (Storage::disk('local')->exists($existingRF->file_path)) {
-                return Storage::disk('local')->download($existingRF->file_path, $fileName, [
-                    'Content-Type' => 'application/pdf',
-                ]);
+                foreach ($booking->customerInfos as $customer) {
+                    Mail::to($customer->email)->send(new ReservationFormMail($booking, $fileName));
+                }
+
+                return response()->json(['message' => 'Reservation form emailed to customer(s) successfully.'], Response::HTTP_OK);
             } else {
                 // If the file is missing, you could re-generate or return an error
                 return response()->json([
@@ -141,7 +149,6 @@ class ReservationFormController extends Controller
             }
         ]);
 
-
         // Get the raw PDF content
         $pdfContent = $pdf->output();
 
@@ -156,11 +163,21 @@ class ReservationFormController extends Controller
             'status' => 'Pending',
         ]);
 
+        // Send it by email!
+        foreach ($booking->customerInfos as $customer) {
+            Mail::to($customer->email)->send(new ReservationFormMail($booking, $fileName));
+        }
+
+        return response()->json(['message' => 'Reservation form emailed to customer(s) successfully.'], Response::HTTP_CREATED);
+
+
+        /*
         // 8. Stream the newly created PDF
         return response($pdfContent, Response::HTTP_CREATED, [
             'Content-Type'        => 'application/pdf',
             'Content-Disposition' => "attachment; filename=\"{$fileName}\"",
         ]);
+        */
     }
 
     /**
