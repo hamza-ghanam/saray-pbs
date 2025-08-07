@@ -3336,36 +3336,10 @@
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "Existing Reservation Form PDF emailed successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Reservation form emailed to customer(s) successfully."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
                     "201": {
-                        "description": "New Reservation Form PDF generated and emailed successfully",
+                        "description": "New Reservation Form PDF generated and streamed successfully",
                         "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Reservation form emailed to customer(s) successfully."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
+                            "application/pdf": {}
                         }
                     },
                     "403": {
@@ -3947,36 +3921,10 @@
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "Existing SPA PDF streamed successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "SPA form emailed to customer(s) successfully."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
                     "201": {
                         "description": "New SPA PDF generated and streamed successfully",
                         "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "SPA form emailed to customer(s) successfully."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
+                            "application/pdf": {}
                         }
                     },
                     "403": {

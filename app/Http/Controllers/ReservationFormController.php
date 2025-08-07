@@ -8,6 +8,7 @@ use App\Models\Booking;
 use App\Models\ReservationForm;
 use App\Services\PaymentPlanService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
@@ -44,18 +45,9 @@ class ReservationFormController extends Controller
      *         @OA\Schema(type="integer", format="int64", example=42)
      *     ),
      *     @OA\Response(
-     *         response=200,
-     *         description="Existing Reservation Form PDF emailed successfully",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Reservation form emailed to customer(s) successfully.")
-     *         )
-     *     ),
-     *     @OA\Response(
      *         response=201,
-     *         description="New Reservation Form PDF generated and emailed successfully",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Reservation form emailed to customer(s) successfully.")
-     *         )
+     *         description="New Reservation Form PDF generated and streamed successfully",
+     *         @OA\MediaType(mediaType="application/pdf")
      *     ),
      *     @OA\Response(response=403, description="Forbidden (no permission to generate reservation form)"),
      *     @OA\Response(response=404, description="Booking not found or existing PDF file missing on disk"),
@@ -96,98 +88,102 @@ class ReservationFormController extends Controller
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        $fileName = 'RF_' . $booking->id . '.pdf';
+        DB::beginTransaction();
+        try {
+            $fileName = 'RF_' . $booking->id . '.pdf';
 
-        // 4. Ensure only one Reservation Form per booking (or per unit)
-        //    If you want exactly one RF per booking:
-        /*
-        $existingRF = ReservationForm::where('booking_id', $booking->id)->first();
-        if ($existingRF) {
-            if (Storage::disk('local')->exists($existingRF->file_path)) {
-                foreach ($booking->customerInfos as $customer) {
-                    Mail::to($customer->email)->send(new ReservationFormMail($booking, $fileName));
+            // 4. Ensure only one Reservation Form per booking (or per unit)
+            //    If you want exactly one RF per booking:
+            /*
+            $existingRF = ReservationForm::where('booking_id', $booking->id)->first();
+            if ($existingRF) {
+                if (Storage::disk('local')->exists($existingRF->file_path)) {
+                    foreach ($booking->customerInfos as $customer) {
+                        Mail::to($customer->email)->send(new ReservationFormMail($booking, $fileName));
+                    }
+
+                    return response()->json(['message' => 'Reservation form emailed to customer(s) successfully.'], Response::HTTP_OK);
+                } else {
+                    // If the file is missing, you could re-generate or return an error
+                    return response()->json([
+                        'error' => 'Existing Reservation Form file not found on disk.'
+                    ], Response::HTTP_NOT_FOUND);
                 }
+            }
+            */
 
-                return response()->json(['message' => 'Reservation form emailed to customer(s) successfully.'], Response::HTTP_OK);
+            $booking->paymentPlan->dld_fee = round($booking->price * ($booking->paymentPlan->dld_fee_percentage / 100), 2);
+
+            $booking->load([
+                'installments.paymentPlan',     // for grouping and headings
+                'unit',
+                'customerInfos'
+            ]);
+
+            $reservationData = [
+                'booking' => $booking,
+                'customerInfos' => $booking->customerInfos,
+                'paymentPlan' => $booking->paymentPlan,
+                'installments' => $booking->installments,
+                'unit' => $booking->unit,
+            ];
+
+            // 5. Generate the PDF (using your Blade view)
+            /*
+             * // DomPDF - 28/03/2025
+            $pdf = PDF::loadView('pdf.reservation_form', $reservationData);
+            */
+
+            // mPDF - 12/7/2025
+            $pdf = MYPDF::loadView('pdf.reservation_form', $reservationData, [], [
+                'instanceConfigurator' => function ($mpdf) {
+                    $mpdf->showImageErrors = true; // Show errors related to images
+                    $mpdf->debug = true; // Enable general debugging
+                    $mpdf->autoScriptToLang = true;
+                    $mpdf->autoLangToFont = true;
+                    $mpdf->allow_charset_conversion = false; // This is often crucial for Arabic/RTL
+                }
+            ]);
+
+            // Get the raw PDF content
+            $pdfContent = $pdf->output();
+
+            // 6. Store the PDF file on disk
+            $filePath = 'reservation_forms/' . $fileName; // relative to "public" disk
+            Storage::disk('local')->put($filePath, $pdfContent);
+
+            $existingRF = ReservationForm::where('booking_id', $booking->id)->first();
+            if ($existingRF) {
+                $existingRF->update([
+                    'file_path' => $filePath,
+                    'status' => 'Pending',
+                ]);
             } else {
-                // If the file is missing, you could re-generate or return an error
-                return response()->json([
-                    'error' => 'Existing Reservation Form file not found on disk.'
-                ], Response::HTTP_NOT_FOUND);
+                // 7. Create a new ReservationForm record with status = "Pending"
+                ReservationForm::create([
+                    'booking_id' => $booking->id,
+                    'file_path' => $filePath,
+                    'status' => 'Pending',
+                ]);
             }
-        }
-        */
 
-        $booking->paymentPlan->dld_fee = round($booking->price * ($booking->paymentPlan->dld_fee_percentage / 100), 2);
+            DB::commit();
 
-        $booking->load([
-            'installments.paymentPlan',     // for grouping and headings
-            'unit',
-            'customerInfos'
-        ]);
-
-        $reservationData = [
-            'booking' => $booking,
-            'customerInfos' => $booking->customerInfos,
-            'paymentPlan' => $booking->paymentPlan,
-            'installments' => $booking->installments,
-            'unit' => $booking->unit,
-        ];
-
-        // 5. Generate the PDF (using your Blade view)
-        /*
-         * // DomPDF - 28/03/2025
-        $pdf = PDF::loadView('pdf.reservation_form', $reservationData);
-        */
-
-        // mPDF - 12/7/2025
-        $pdf = MYPDF::loadView('pdf.reservation_form', $reservationData, [], [
-            'instanceConfigurator' => function($mpdf) {
-                $mpdf->showImageErrors = true; // Show errors related to images
-                $mpdf->debug = true; // Enable general debugging
-                $mpdf->autoScriptToLang = true;
-                $mpdf->autoLangToFont = true;
-                $mpdf->allow_charset_conversion = false; // This is often crucial for Arabic/RTL
+            // Send it by email!
+            foreach ($booking->customerInfos as $customer) {
+                Mail::to($customer->email)->send(new ReservationFormMail($booking, $fileName));
             }
-        ]);
 
-        // Get the raw PDF content
-        $pdfContent = $pdf->output();
-
-        // 6. Store the PDF file on disk
-        $filePath = 'reservation_forms/' . $fileName; // relative to "public" disk
-        Storage::disk('local')->put($filePath, $pdfContent);
-
-        $existingRF = ReservationForm::where('booking_id', $booking->id)->first();
-        if ($existingRF) {
-            $existingRF->update([
-                'file_path' => $filePath,
-                'status' => 'Pending',
+            // 8. Stream the newly created PDF
+            return response($pdfContent, Response::HTTP_CREATED, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => "attachment; filename=\"{$fileName}\"",
             ]);
-        } else {
-            // 7. Create a new ReservationForm record with status = "Pending"
-            ReservationForm::create([
-                'booking_id' => $booking->id,
-                'file_path' => $filePath,
-                'status' => 'Pending',
-            ]);
+        } catch (\Exception $ex) {
+            DB::rollback();
+            Log::error("RF Booking ID: {$booking->id} Generation Error: " . $ex->getMessage());
+            return response()->json(['error' => $ex->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-
-        // Send it by email!
-        foreach ($booking->customerInfos as $customer) {
-            Mail::to($customer->email)->send(new ReservationFormMail($booking, $fileName));
-        }
-
-        return response()->json(['message' => 'Reservation form emailed to customer(s) successfully.'], Response::HTTP_CREATED);
-
-
-        /*
-        // 8. Stream the newly created PDF
-        return response($pdfContent, Response::HTTP_CREATED, [
-            'Content-Type'        => 'application/pdf',
-            'Content-Disposition' => "attachment; filename=\"{$fileName}\"",
-        ]);
-        */
     }
 
     /**
@@ -298,9 +294,9 @@ class ReservationFormController extends Controller
 
         // 4. Update the ReservationForm record
         $reservationForm->update([
-            'status'             => 'Signed',
-            'signed_at'          => now(),
-            'signed_file_path'   => $filePath,
+            'status' => 'Signed',
+            'signed_at' => now(),
+            'signed_file_path' => $filePath,
         ]);
 
 
@@ -386,11 +382,11 @@ class ReservationFormController extends Controller
 
         // 6. Make approval
         Approval::create([
-            'ref_id'        => $reservationForm->id,
-            'ref_type'      => 'App\Models\ReservationForm',
-            'approved_by'   => $user->id,
+            'ref_id' => $reservationForm->id,
+            'ref_type' => 'App\Models\ReservationForm',
+            'approved_by' => $user->id,
             'approval_type' => $user->getRoleNames()->first(),
-            'status'        => 'Approved',
+            'status' => 'Approved',
         ]);
 
         // 7. Return the updated record

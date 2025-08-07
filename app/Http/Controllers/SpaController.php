@@ -7,14 +7,19 @@ use App\Mail\ReservationFormMail;
 use App\Mail\SalesPurchaseAgreementMail;
 use App\Models\Approval;
 use App\Models\Booking;
-use App\Models\SPA; // Your SPA model
+use App\Models\SPA;
+
+// Your SPA model
 use App\Services\PaymentPlanService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
-use Barryvdh\DomPDF\Facade\Pdf as PDF; // dompdf
+use Barryvdh\DomPDF\Facade\Pdf as PDF;
+
+// dompdf
 use Symfony\Component\HttpFoundation\Response;
 
 class SpaController extends Controller
@@ -45,20 +50,10 @@ class SpaController extends Controller
      *         required=true,
      *         @OA\Schema(type="integer", format="int64", example=42)
      *     ),
-     *
-     *     @OA\Response(
-     *         response=200,
-     *         description="Existing SPA PDF streamed successfully",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="SPA form emailed to customer(s) successfully.")
-     *         )
-     *     ),
      *     @OA\Response(
      *         response=201,
      *         description="New SPA PDF generated and streamed successfully",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="SPA form emailed to customer(s) successfully.")
-     *         )
+     *         @OA\MediaType(mediaType="application/pdf")
      *     ),
      *     @OA\Response(
      *         response=403,
@@ -103,76 +98,82 @@ class SpaController extends Controller
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        $fileName = 'SPA_' . $booking->id . '.pdf';
+        DB::beginTransaction();
+        try {
 
-        // 3. Ensure only one SPA per booking
-        /*
-        $existingSPA = SPA::where('booking_id', $booking->id)->first();
-        if ($existingSPA) {
-            // If file exists, return existing
-            if (Storage::disk('local')->exists($existingSPA->file_path)) {
-                foreach ($booking->customerInfos as $customer) {
-                    Mail::to($customer->email)->send(new SalesPurchaseAgreementMail($booking, $fileName));
+            $fileName = 'SPA_' . $booking->id . '.pdf';
+
+            // 3. Ensure only one SPA per booking
+            /*
+            $existingSPA = SPA::where('booking_id', $booking->id)->first();
+            if ($existingSPA) {
+                // If file exists, return existing
+                if (Storage::disk('local')->exists($existingSPA->file_path)) {
+                    foreach ($booking->customerInfos as $customer) {
+                        Mail::to($customer->email)->send(new SalesPurchaseAgreementMail($booking, $fileName));
+                    }
+
+                    return response()->json(['message' => 'SPA emailed to customer(s) successfully.'], Response::HTTP_OK);
+                } else {
+                    return response()->json([
+                        'error' => 'Existing SPA file not found on disk.'
+                    ], Response::HTTP_NOT_FOUND);
                 }
-
-                return response()->json(['message' => 'SPA emailed to customer(s) successfully.'], Response::HTTP_OK);
-            } else {
-                return response()->json([
-                    'error' => 'Existing SPA file not found on disk.'
-                ], Response::HTTP_NOT_FOUND);
             }
-        }
-        */
+            */
 
-        $booking->paymentPlan->dld_fee = round($booking->price * ($booking->paymentPlan->dld_fee_percentage / 100), 2);
+            $booking->paymentPlan->dld_fee = round($booking->price * ($booking->paymentPlan->dld_fee_percentage / 100), 2);
 
-        $booking->load([
-            'installments.paymentPlan',     // for grouping and headings
-            'unit',
-            'customerInfos'
-        ]);
-
-        // 4. Generate the PDF (using your Blade view, e.g. 'pdf.spa')
-        $pdf = PDF::loadView('pdf.spa', [
-            'booking'      => $booking,
-            'customerInfos' => $booking->customerInfos,
-            'paymentPlan'  => $booking->paymentPlan,
-            'unit'         => $booking->unit,
-        ]);
-
-        $pdfContent = $pdf->output();
-
-        // 5. Store the PDF file on disk
-        $filePath = 'spa_forms/' . $fileName;
-        Storage::disk('local')->put($filePath, $pdfContent);
-
-        $existingSPA = SPA::where('booking_id', $booking->id)->first();
-        if ($existingSPA) {
-            $existingSPA->update([
-                'file_path'  => $filePath,
-                'status'     => 'Pending',
+            $booking->load([
+                'installments.paymentPlan',     // for grouping and headings
+                'unit',
+                'customerInfos'
             ]);
-        } else {
-            // 6. Create a new SPA record with status = "Pending"
-            SPA::create([
-                'booking_id' => $booking->id,
-                'file_path'  => $filePath,
-                'status'     => 'Pending',
+
+            // 4. Generate the PDF (using your Blade view, e.g. 'pdf.spa')
+            $pdf = PDF::loadView('pdf.spa', [
+                'booking' => $booking,
+                'customerInfos' => $booking->customerInfos,
+                'paymentPlan' => $booking->paymentPlan,
+                'unit' => $booking->unit,
             ]);
+
+            $pdfContent = $pdf->output();
+
+            // 5. Store the PDF file on disk
+            $filePath = 'spa_forms/' . $fileName;
+            Storage::disk('local')->put($filePath, $pdfContent);
+
+            $existingSPA = SPA::where('booking_id', $booking->id)->first();
+            if ($existingSPA) {
+                $existingSPA->update([
+                    'file_path' => $filePath,
+                    'status' => 'Pending',
+                ]);
+            } else {
+                // 6. Create a new SPA record with status = "Pending"
+                SPA::create([
+                    'booking_id' => $booking->id,
+                    'file_path' => $filePath,
+                    'status' => 'Pending',
+                ]);
+            }
+
+            DB::commit();
+
+            foreach ($booking->customerInfos as $customer) {
+                Mail::to($customer->email)->send(new SalesPurchaseAgreementMail($booking, $fileName));
+            }
+
+            return response($pdfContent, Response::HTTP_CREATED, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => "attachment; filename=\"{$fileName}\"",
+            ]);
+        } catch (\Exception $ex) {
+            DB::rollback();
+            Log::error("SPA Booking ID: {$booking->id} Generation Error: " . $ex->getMessage());
+            return response()->json(['error' => $ex->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-
-        foreach ($booking->customerInfos as $customer) {
-            Mail::to($customer->email)->send(new SalesPurchaseAgreementMail($booking, $fileName));
-        }
-
-        return response()->json(['message' => 'SPA emailed to customer(s) successfully.'], Response::HTTP_CREATED);
-
-        /*
-        return response($pdfContent, Response::HTTP_CREATED, [
-            'Content-Type'        => 'application/pdf',
-            'Content-Disposition' => "attachment; filename=\"{$fileName}\"",
-        ]);
-        */
     }
 
     /**
@@ -237,9 +238,9 @@ class SpaController extends Controller
         $user = $request->user();
         Log::info("User {$user->id} is uploading a signed SPA for SPA ID: {$id}");
 
-         if (!$user->can('upload final spa')) {
-             return response()->json(['error' => 'Forbidden'], 403);
-         }
+        if (!$user->can('upload final spa')) {
+            return response()->json(['error' => 'Forbidden'], 403);
+        }
 
         // 1. Validate the uploaded file
         $validator = Validator::make($request->all(), [
@@ -271,9 +272,9 @@ class SpaController extends Controller
 
         // 4. Update the SPA record
         $spa->update([
-            'status'             => 'Signed',
-            'signed_at'          => now(),
-            'signed_file_path'   => $filePath,
+            'status' => 'Signed',
+            'signed_at' => now(),
+            'signed_file_path' => $filePath,
         ]);
 
         return response()->json(['message' => 'Signed SPA has been successfully uploaded'], Response::HTTP_OK);
@@ -328,9 +329,9 @@ class SpaController extends Controller
         $user = $request->user();
         Log::info("User {$user->id} is attempting to approve SPA ID: {$id}");
 
-         if (!$user->can('approve spa')) {
-             return response()->json(['error' => 'Forbidden'], 403);
-         }
+        if (!$user->can('approve spa')) {
+            return response()->json(['error' => 'Forbidden'], 403);
+        }
 
         // 1. Retrieve the SPA record
         $spa = Booking::findOrFail($id)
@@ -364,11 +365,11 @@ class SpaController extends Controller
 
         // 5. Make approval
         Approval::create([
-            'ref_id'        => $spa->id,
-            'ref_type'      => 'App\Models\SPA',
-            'approved_by'   => $user->id,
+            'ref_id' => $spa->id,
+            'ref_type' => 'App\Models\SPA',
+            'approved_by' => $user->id,
             'approval_type' => $user->getRoleNames()->first(),
-            'status'        => 'Approved',
+            'status' => 'Approved',
         ]);
 
         foreach ($spa->booking->customerInfos as $customer) {
