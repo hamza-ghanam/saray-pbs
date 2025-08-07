@@ -18,6 +18,9 @@ return new class extends Migration
             $table->decimal('discount', 15, 2)->default(0);
             $table->string('receipt_path')->nullable();
             $table->foreignId('confirmed_by')->nullable()->constrained('users');
+            $table->foreignId('agent_id')->nullable()->constrained('users');
+            $table->foreignId('sale_source')->nullable()->constrained('users');
+            $table->string('notes')->nullable();
             $table->timestamp('confirmed_at')->nullable();
             $table->timestamps();
             $table->softDeletes();

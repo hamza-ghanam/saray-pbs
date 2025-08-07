@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('status');
             $table->date('ecd');
             $table->string('image_path');
+            $table->string('plot_no');
             $table->foreignId('added_by_id')->constrained('users')->onDelete('cascade');
             $table->timestamps();
             $table->softDeletes();

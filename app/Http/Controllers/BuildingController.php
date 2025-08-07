@@ -22,12 +22,13 @@ use Symfony\Component\HttpFoundation\Response;
  *     schema="Building",
  *     type="object",
  *     title="Building",
- *     required={"id","name","location","status","ecd","added_by_id"},
+ *     required={"id","name","location","status","ecd","plot_no","added_by_id"},
  *     @OA\Property(property="id",           type="integer", format="int64", example=1),
  *     @OA\Property(property="name",         type="string",             example="Building A"),
  *     @OA\Property(property="location",     type="string",             example="Downtown"),
  *     @OA\Property(property="status",       type="string",             example="Off-Plan"),
  *     @OA\Property(property="ecd",          type="date",             example="2027-30-12"),
+ *     @OA\Property(property="plot_no",      type="string",             example="648-8586"),
  *     @OA\Property(property="added_by_id",  type="integer",            example=1),
  *     @OA\Property(property="created_at",   type="string", format="date-time", example="2025-01-01T00:00:00Z"),
  *     @OA\Property(property="updated_at",   type="string", format="date-time", example="2025-01-02T00:00:00Z"),
@@ -112,10 +113,11 @@ class BuildingController extends Controller
      *         @OA\MediaType(
      *             mediaType="multipart/form-data",
      *             @OA\Schema(
-     *                 required={"name","location","status","ecd"},
+     *                 required={"name","location","status","plot_no","ecd"},
      *                 @OA\Property(property="name",     type="string", example="Building A"),
      *                 @OA\Property(property="location", type="string", example="Downtown"),
      *                 @OA\Property(property="status",   type="string", example="Off-Plan"),
+     *                 @OA\Property(property="plot_no",  type="string", example="648-8586"),
      *                 @OA\Property(property="ecd",      type="date", example="2027-30-12"),
      *                 @OA\Property(
      *                     property="image",
@@ -149,6 +151,7 @@ class BuildingController extends Controller
             'name' => 'required|string|max:255',
             'location' => 'required|string|max:255',
             'status' => 'required|string|max:50',
+            'plot_no' => 'required|string|max:50',
             'ecd' => 'required|date',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
@@ -231,6 +234,7 @@ class BuildingController extends Controller
      *                 @OA\Property(property="name",     type="string", example="Building A Updated"),
      *                 @OA\Property(property="location", type="string", example="New Location"),
      *                 @OA\Property(property="status",   type="string", example="Off-Plan"),
+     *                 @OA\Property(property="plot_no",  type="string", example="648-8586"),
      *                 @OA\Property(property="ecd",      type="date", example="2027-30-12"),
      *                 @OA\Property(
      *                     property="image",
@@ -264,6 +268,7 @@ class BuildingController extends Controller
             'name' => 'sometimes|string|max:255',
             'location' => 'sometimes|string|max:255',
             'status' => 'sometimes|string|max:50',
+            'plot_no' => 'sometimes|string|max:50',
             'ecd' => 'sometimes|date',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
