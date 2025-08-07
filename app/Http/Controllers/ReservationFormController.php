@@ -49,6 +49,7 @@ class ReservationFormController extends Controller
      *         description="New Reservation Form PDF generated and streamed successfully",
      *         @OA\MediaType(mediaType="application/pdf")
      *     ),
+     *
      *     @OA\Response(response=403, description="Forbidden (no permission to generate reservation form)"),
      *     @OA\Response(response=404, description="Booking not found or existing PDF file missing on disk"),
      *     @OA\Response(response=422, description="Validation or business-rule error (e.g. unit/booking status invalid)")

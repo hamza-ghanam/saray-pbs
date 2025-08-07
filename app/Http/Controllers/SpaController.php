@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\DldDocumentMail;
 use App\Mail\ReservationFormMail;
 use App\Mail\SalesPurchaseAgreementMail;
 use App\Models\Approval;

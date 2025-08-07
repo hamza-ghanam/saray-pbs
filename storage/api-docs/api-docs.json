@@ -7,7 +7,7 @@
     "servers": [
         {
             "url": "http://localhost:8000/api",
-            "description": "URL"
+            "description": "Main API Server"
         }
     ],
     "paths": {
@@ -7439,6 +7439,7 @@
                 "type": "http",
                 "name": "Authorization",
                 "in": "header",
+                "bearerFormat": "JWT",
                 "scheme": "bearer"
             }
         }
