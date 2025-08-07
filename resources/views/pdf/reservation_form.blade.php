@@ -320,12 +320,12 @@
     <table class="info-table">
         <tr>
             <th class="left-th" style="width: 32%;">Agency Company Name</th>
-            <td style="text-align: center;"></td>
+            <td style="text-align: center;">{{ $booking->saleSource?->name ?? '-' }}</td>
             <th class="rtl-text right-th" style="width: 32%;">اسم شركة الوساطة</th>
         </tr>
         <tr>
             <th class="left-th" style="width: 32%;">Agent Name</th>
-            <td style="text-align: center;"></td>
+            <td style="text-align: center;">{{ $booking->agent?->name ?? '-' }}</td>
             <th class="rtl-text right-th" style="width: 32%;">اسم الوسيط</th>
         </tr>
     </table>

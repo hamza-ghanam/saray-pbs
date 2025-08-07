@@ -106,6 +106,7 @@ class SpaController extends Controller
         $fileName = 'SPA_' . $booking->id . '.pdf';
 
         // 3. Ensure only one SPA per booking
+        /*
         $existingSPA = SPA::where('booking_id', $booking->id)->first();
         if ($existingSPA) {
             // If file exists, return existing
@@ -121,6 +122,7 @@ class SpaController extends Controller
                 ], Response::HTTP_NOT_FOUND);
             }
         }
+        */
 
         $booking->paymentPlan->dld_fee = round($booking->price * ($booking->paymentPlan->dld_fee_percentage / 100), 2);
 
@@ -144,12 +146,20 @@ class SpaController extends Controller
         $filePath = 'spa_forms/' . $fileName;
         Storage::disk('local')->put($filePath, $pdfContent);
 
-        // 6. Create a new SPA record with status = "Pending"
-        SPA::create([
-            'booking_id' => $booking->id,
-            'file_path'  => $filePath,
-            'status'     => 'Pending',
-        ]);
+        $existingSPA = SPA::where('booking_id', $booking->id)->first();
+        if ($existingSPA) {
+            $existingSPA->update([
+                'file_path'  => $filePath,
+                'status'     => 'Pending',
+            ]);
+        } else {
+            // 6. Create a new SPA record with status = "Pending"
+            SPA::create([
+                'booking_id' => $booking->id,
+                'file_path'  => $filePath,
+                'status'     => 'Pending',
+            ]);
+        }
 
         foreach ($booking->customerInfos as $customer) {
             Mail::to($customer->email)->send(new SalesPurchaseAgreementMail($booking, $fileName));

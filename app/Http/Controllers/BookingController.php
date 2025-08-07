@@ -980,7 +980,7 @@ class BookingController extends Controller
         try {
             // Reset unit status
             if ($booking->unit) {
-                $booking->unit->status = 'Available';
+                $booking->unit->status = 'Pending';
                 $booking->unit->save();
             }
 

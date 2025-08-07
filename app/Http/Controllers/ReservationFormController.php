@@ -100,6 +100,7 @@ class ReservationFormController extends Controller
 
         // 4. Ensure only one Reservation Form per booking (or per unit)
         //    If you want exactly one RF per booking:
+        /*
         $existingRF = ReservationForm::where('booking_id', $booking->id)->first();
         if ($existingRF) {
             if (Storage::disk('local')->exists($existingRF->file_path)) {
@@ -115,6 +116,7 @@ class ReservationFormController extends Controller
                 ], Response::HTTP_NOT_FOUND);
             }
         }
+        */
 
         $booking->paymentPlan->dld_fee = round($booking->price * ($booking->paymentPlan->dld_fee_percentage / 100), 2);
 
@@ -156,12 +158,20 @@ class ReservationFormController extends Controller
         $filePath = 'reservation_forms/' . $fileName; // relative to "public" disk
         Storage::disk('local')->put($filePath, $pdfContent);
 
-        // 7. Create a new ReservationForm record with status = "Pending"
-        ReservationForm::create([
-            'booking_id' => $booking->id,
-            'file_path' => $filePath,
-            'status' => 'Pending',
-        ]);
+        $existingRF = ReservationForm::where('booking_id', $booking->id)->first();
+        if ($existingRF) {
+            $existingRF->update([
+                'file_path' => $filePath,
+                'status' => 'Pending',
+            ]);
+        } else {
+            // 7. Create a new ReservationForm record with status = "Pending"
+            ReservationForm::create([
+                'booking_id' => $booking->id,
+                'file_path' => $filePath,
+                'status' => 'Pending',
+            ]);
+        }
 
         // Send it by email!
         foreach ($booking->customerInfos as $customer) {
