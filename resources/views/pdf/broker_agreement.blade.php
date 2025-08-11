@@ -201,7 +201,7 @@
                     <li> <!-- 1.1. -->
                         In this Agreement unless the context otherwise requires the following words and expressions have
                         the respective meanings as set out below: <br/>
-                        <strong>"AED"</strong> means UAE Dirhams, the lawful currency of the UAE;<br/>
+                        <strong>"AED" or <img src="{{ public_path('images/aed_symbol.svg') }}" width="12" alt="AED" /></strong> means UAE Dirhams, the lawful currency of the UAE;<br/>
                         <strong>"Applicable Laws"</strong> means principally By-Law No. 3 of 2022regarding the
                         Regulation of Real Estate Brokers' Register in the Emirate of Dubai and any regulations and
                         codes of conduct issued by RERA, and any other laws, regulations or other guidance enacted or to
@@ -795,7 +795,7 @@
             <thead>
             <tr>
                 <th>Project Name</th>
-                <th>Sale Price Range (AED)</th>
+                <th>Sale Price Range (<img src="{{ public_path('images/aed_symbol.svg') }}" width="12" alt="AED" />)</th>
                 <th>Applicable Commission Rate</th>
             </tr>
             </thead>

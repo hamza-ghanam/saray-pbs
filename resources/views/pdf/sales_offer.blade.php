@@ -157,7 +157,7 @@
 
     <div class="section">
         @php
-        $dollar_rate = 3.65;
+            $dollar_rate = 3.65;
         @endphp
         <h2>Payment Plans</h2>
         @foreach($paymentPlans as $plan)

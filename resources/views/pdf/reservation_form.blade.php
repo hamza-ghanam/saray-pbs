@@ -173,7 +173,7 @@
             <th class="left-th">Purchase Price Incl. of VAT (<img src="{{ public_path('images/aed_symbol.svg') }}"
                                                                   width="12" alt="AED"/>)
             </th>
-            <td style="text-align: center;">{{ $unit->price }}</td>
+            <td style="text-align: center;">{{ $booking->price }}</td>
             <th class="rtl-text right-th">سعر الشراء شامل الضريبة (<img src="{{ public_path('images/aed_symbol.svg') }}"
                                                                         width="12" alt="AED"/>)
             </th>

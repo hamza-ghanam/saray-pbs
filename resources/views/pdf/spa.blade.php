@@ -206,8 +206,9 @@
             <h2>5. Purchase Price</h2>
             <p>
                 <span class="value">
-                    AED {{ number_format($unit->price, 2) }} (UAE Dirhams "{{ number_to_words($unit->price) }}" only)
+                    <img src="{{ public_path('images/aed_symbol.svg') }}" width="12" alt="AED" /> {{ number_format($booking->price, 2) }} (UAE Dirhams "{{ number_to_words($booking->price) }}" only)
                 </span>
+                </p>
                 </p>
             </div>
 
@@ -231,7 +232,7 @@
                 <h2>9. Late Payment Penalty</h2>
                 An amount calculated on a daily basis being, the sum of:
                 <ol type="a">
-                    <li>AED 500 (Five Hundred UAE Dirhams) per day; plus</li>
+                    <li><img src="{{ public_path('images/aed_symbol.svg') }}" width="12" alt="AED" /> 500 (Five Hundred UAE Dirhams) per day; plus</li>
                     <li>One percent (1%) per month (or part thereof) of the overdue amount,
                         calculated on a compounding basis.
                     </li>
@@ -300,7 +301,7 @@
                     Clause 14.2(b) provided that such fee shall not exceed the maximum prescribed by Applicable Law.
                 </p>
                 <p>
-                    <strong>AED</strong> means the lawful currency of the United Arab Emirates, being as of the Effective
+                    <strong>AED or <img src="{{ public_path('images/aed_symbol.svg') }}" width="12" alt="AED" /></strong> means the lawful currency of the United Arab Emirates, being as of the Effective
                     Date, Dirhams.
                 </p>
 
@@ -837,7 +838,7 @@
                     <strong>1.4.</strong> Without prejudice to the Seller’s other rights under this Agreement, in the event of non-payment on the due date of any amount payable by the Purchaser pursuant to this Agreement, the Purchaser shall pay the Late Payment Penalty as compensation for the delay in payment.
                 </p>
                 <p>
-                    <strong>1.5.</strong> Without prejudice to Clause 3.5, in the event a cheque is returned unpaid, the Seller may charge a fee of AED 500.00 (UAE Dirhams Five Hundred) as a handling fee in relation to each returned cheque.
+                    <strong>1.5.</strong> Without prejudice to Clause 3.5, in the event a cheque is returned unpaid, the Seller may charge a fee of <img src="{{ public_path('images/aed_symbol.svg') }}" width="12" alt="AED" /> 500.00 (UAE Dirhams Five Hundred) as a handling fee in relation to each returned cheque.
                 </p>
                 <p>
                     <strong>1.6.</strong> Each payment made by the Purchaser shall be allocated first to the discharge of any penalties, then to the payment of any other amounts due in terms hereof and thereafter to the reduction of the Purchase Price.
@@ -986,7 +987,7 @@
 
                 <p><strong>12.2.</strong> This Agreement may not be assigned or transferred by the Purchaser except:
                     <br>(a) with the prior written consent of the Seller given in the terms of a written assignment agreement in a form acceptable to the Seller, executed by the Parties and the assignee;
-                    <br>(b) upon payment of the Administration Fee by the Purchaser (which is currently set at AED 5,000 (UAE Dirhams Five Thousand) or the amount specified by the Owner as applicable in Dubai, and which amount may be amended by the Seller from time to time having regard to the maximum allowable pursuant to Applicable Law;
+                    <br>(b) upon payment of the Administration Fee by the Purchaser (which is currently set at <img src="{{ public_path('images/aed_symbol.svg') }}" width="12" alt="AED" /> 5,000 (UAE Dirhams Five Thousand) or the amount specified by the Owner as applicable in Dubai, and which amount may be amended by the Seller from time to time having regard to the maximum allowable pursuant to Applicable Law;
                     <br>(c) provided always that the Purchaser shall have paid a minimum of twenty five per cent (25%) of the Purchase Price to the Seller; and
                     <br>(d) on the basis that the Seller shall not be liable for the Fees or any other Land Department fees, charges or penalties in any way associated with the assignment all of which will be met by the Purchaser.
                 </p>
@@ -1067,14 +1068,14 @@
             <h2>Schedule A - Payment Plan</h2>
             @if($paymentPlan)
                 <p><span class="label">Plan Name:</span><span class="value">{{ $paymentPlan->name }}</span></p>
-                <p><span class="label">Selling Price:</span><span
-                        class="value">AED {{ number_format($unit->price, 2) }}</span></p>
+                <p><span class="label">Selling Price: </span><span
+                        class="value"><img src="{{ public_path('images/aed_symbol.svg') }}" width="12" alt="AED" /> {{ number_format($unit->price, 2) }}</span></p>
                 @if($booking->discount > 0)
                     <p><span class="label">Discount:</span> {{ $booking->discount }}%</p>
-                    <p><span class="label">Effective Price:</span> AED {{ number_format($booking->price, 2) }}</p>
+                    <p><span class="label">Effective Price:</span> <img src="{{ public_path('images/aed_symbol.svg') }}" width="12" alt="AED" /> {{ number_format($booking->price, 2) }}</p>
                 @endif
                 <p><strong>DLD Fee:</strong> {{ (int) $paymentPlan->dld_fee_percentage }}% |
-                    AED {{ number_format($paymentPlan->dld_fee, 2) }}</p>
+                    <img src="{{ public_path('images/aed_symbol.svg') }}" width="12" alt="AED" /> {{ number_format($paymentPlan->dld_fee, 2) }}</p>
                 <!-- Add more payment plan details or installments if needed -->
             @else
                 <p>No payment plan assigned.</p>
@@ -1084,36 +1085,49 @@
                 <table class="striped-table">
                     <colgroup>
                         <col>
+                        <col>
                         <col style="width:5%">
-                        <col><
                         <col>
                     </colgroup>
                     <thead>
-                    <tr>
-                        <th>Description</th>
-                        <th>Percentage</th>
-                        <th>Date</th>
-                        <th>Amount</th>
+                    <tr style="background-color: lightgrey;">
+                        <th class="left-th" style="width: 40%; padding: 10px;">
+                            Installment
+                        </th>
+                        <th class="left-th" style="width: 25%; padding: 10px;">
+                            Date
+                        </th>
+                        <th class="left-th" style="width: 10%; padding: 10px;">
+                            %
+                        </th>
+                        <th class="left-th" style="padding: 10px;">
+                            Amount <img src="{{ public_path('images/aed_symbol.svg') }}" width="12" alt="AED"/>
+                        </th>
                     </tr>
                     </thead>
                     <tbody>
-                    <tr>
-                        <td>Expression of interest (EOI)</td>
-                        <td>-</td>
-                        <td>-</td>
-                        <td>AED {{ number_format($paymentPlan->EOI, 2) }}</td>
-                    </tr>
                     @foreach($booking->installments as $installment)
                         <tr>
-                            <td>
+                            <td class="left-th" style="width: 40%; text-align: justify; padding: 10px;">
                                 {{ $installment->description }}
                                 @if($loop->first)
-                                    <br/><small>({{ (int) $installment->percentage }}% + {{ (int) $paymentPlan->dld_fee_percentage }}% DLD fee + Admin fee - EOI)</small>
+                                    <br/><small>({{ (int) $installment->percentage }}%
+                                        + {{ (int) $paymentPlan->dld_fee_percentage }}% DLD fee + Admin fee - EOI)</small>
                                 @endif
                             </td>
-                            <td>{{ (int) $installment->percentage }}%</td>
-                            <td>{{ \Carbon\Carbon::parse($installment->date)->format('Y-m-d') }}</td>
-                            <td>AED {{ number_format($installment->amount, 2) }}</td>
+                            <td class="left-th" style="width: 25%; text-align: center; padding: 10px;">
+                                {{ \Carbon\Carbon::parse($installment->date)->format('Y-m-d') }}
+                            </td>
+                            <td class="left-th" style="width: 10%; text-align: justify; padding: 10px;">
+                                @if($loop->first)
+                                    -
+                                @else
+                                    {{ (int) $installment->percentage }}%
+                                @endif
+                            </td>
+                            <td class="left-th" style="text-align: right; padding: 10px;">
+                                {{ number_format($installment->amount, 2) }}
+                            </td>
                         </tr>
                     @endforeach
                     </tbody>

@@ -352,6 +352,8 @@ class OneTimeLinkController extends Controller
                 // Email
                 Mail::to($validated['email'])->send(new BrokerAgreementMail($user, $pdfName));
             } else {
+                DB::commit();
+
                 $respData += [
                     'message' => "Contractor registered successfully, awaiting approval",
                     'docs' => $user->docs,
