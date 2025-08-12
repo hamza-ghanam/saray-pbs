@@ -414,6 +414,19 @@ class BookingController extends Controller
             return response()->json(['message' => 'Unauthorized'], Response::HTTP_FORBIDDEN);
         }
 
+        $isSales = $user->hasRole('Sales');
+        if ($isSales) {
+            $request->merge(['agent_id' => $user->id, 'current_user_is_sales' => 1]);
+        } else {
+            $request->merge(['current_user_is_sales' => 0]);
+        }
+
+        $messages = [
+            'agent_id.required_unless' => 'Agent field is required unless you are logged in as a sales user.',
+            'agent_id.exists' => 'The selected agent does not exist in our records.',
+            'agent_id.integer' => 'Agent must be a valid ID number.',
+        ];
+
         $validated = $request->validate([
             'unit_id'          => 'required|integer|exists:units,id',
             'payment_plan_id'  => 'nullable|integer|exists:payment_plans,id',
@@ -422,14 +435,17 @@ class BookingController extends Controller
             'notes'            => 'nullable|string',
 
             'agent_id'         => [
-                'required', 'integer', 'exists:users,id',
+                'required_unless:current_user_is_sales,1',
+                'integer',
+                'exists:users,id',
                 function ($attribute, $value, $fail) {
-                    $user = User::find($value);
-                    if ($user && $user->hasAnyRole(['Broker', 'Contractor'])) {
+                    $u = User::find($value);
+                    if ($u && $u->hasAnyRole(['Broker', 'Contractor'])) {
                         $fail("Selected agent cannot be a Broker or Contractor.");
                     }
-                }
+                },
             ],
+
             'sale_source_id'   => 'nullable|integer|exists:users,id',
 
             'customers'        => 'required|array|min:1',
@@ -444,7 +460,7 @@ class BookingController extends Controller
             'customers.*.phone_number'    => 'required|string|max:20',
             'customers.*.address'         => 'required|string|max:255',
             'customers.*.upload_token'    => 'nullable|string',
-        ]);
+        ], $messages);
 
         DB::beginTransaction();
 
