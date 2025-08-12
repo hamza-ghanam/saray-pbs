@@ -446,7 +446,19 @@ class BookingController extends Controller
                 },
             ],
 
-            'sale_source_id'   => 'nullable|integer|exists:users,id',
+            'sale_source_id' => [
+                'nullable',
+                'integer',
+                'exists:users,id',
+                function ($attribute, $value, $fail) {
+                    if ($value) {
+                        $user = User::find($value);
+                        if (! $user || ! $user->hasRole('Broker')) {
+                            $fail('The sale source must be a user with the Broker role.');
+                        }
+                    }
+                }
+            ],
 
             'customers'        => 'required|array|min:1',
             'customers.*.name'            => 'required|string|max:255',
