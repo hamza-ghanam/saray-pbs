@@ -37,6 +37,11 @@ return [
 
     'mailers' => [
 
+        'brevo' => [
+            'transport' => 'brevo',
+            'dsn' => env('MAIL_DSN'),
+        ],
+
         'smtp' => [
             'transport' => 'smtp',
             'scheme' => env('MAIL_SCHEME'),
