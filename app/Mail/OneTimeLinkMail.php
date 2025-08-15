@@ -9,12 +9,15 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class OneTimeLinkMail extends Mailable
+class OneTimeLinkMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
     public $otl;
     public $user;
+
+    public $tries = 3;
+    public $backoff = [30,120];
 
     public function __construct($otl = null, $user = null)
     {

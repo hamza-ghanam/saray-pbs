@@ -147,7 +147,7 @@ class OneTimeLinkController extends Controller
         ]);
 
         //Email
-        Mail::to($request->email)->send(new OneTimeLinkMail($otl));
+        Mail::to($request->email)->queue(new OneTimeLinkMail($otl));
 
         return response()->json([
             'message' => 'One-time link successfully generated and shared by email.',
@@ -350,7 +350,7 @@ class OneTimeLinkController extends Controller
                 ];
 
                 // Email
-                Mail::to($validated['email'])->send(new BrokerAgreementMail($user, $pdfName));
+                Mail::to($validated['email'])->queue(new BrokerAgreementMail($user, $pdfName));
             } else {
                 DB::commit();
 
@@ -425,7 +425,7 @@ class OneTimeLinkController extends Controller
         $user->status = 'Active';
         $user->save();
 
-        Mail::to($user->email)->send(new OneTimeLinkMail(null, $user));
+        Mail::to($user->email)->queue(new OneTimeLinkMail(null, $user));
 
         return response()->json([
             'message' => 'User approved successfully',

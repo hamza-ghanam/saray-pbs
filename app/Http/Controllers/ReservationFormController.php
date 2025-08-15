@@ -100,7 +100,7 @@ class ReservationFormController extends Controller
             if ($existingRF) {
                 if (Storage::disk('local')->exists($existingRF->file_path)) {
                     foreach ($booking->customerInfos as $customer) {
-                        Mail::to($customer->email)->send(new ReservationFormMail($booking, $fileName));
+                        Mail::to($customer->email)->queue(new ReservationFormMail($booking, $fileName));
                     }
 
                     return response()->json(['message' => 'Reservation form emailed to customer(s) successfully.'], Response::HTTP_OK);
@@ -172,7 +172,7 @@ class ReservationFormController extends Controller
 
             // Send it by email!
             foreach ($booking->customerInfos as $customer) {
-                Mail::to($customer->email)->send(new ReservationFormMail($booking, $fileName));
+                Mail::to($customer->email)->queue(new ReservationFormMail($booking, $fileName));
             }
 
             // 8. Stream the newly created PDF

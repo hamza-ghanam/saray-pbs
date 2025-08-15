@@ -9,12 +9,15 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class BrokerAgreementMail extends Mailable
+class BrokerAgreementMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
     public $user;
     public $fileName;
+
+    public $tries = 3;
+    public $backoff = [30,120];
 
     public function __construct($user, $fileName)
     {

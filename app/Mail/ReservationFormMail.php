@@ -9,12 +9,15 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class ReservationFormMail extends Mailable
+class ReservationFormMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
     public $booking;
     public $fileName;
+
+    public $tries = 3;
+    public $backoff = [30,120];
 
     public function __construct($booking, $fileName)
     {

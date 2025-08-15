@@ -109,7 +109,7 @@ class SpaController extends Controller
                 // If file exists, return existing
                 if (Storage::disk('local')->exists($existingSPA->file_path)) {
                     foreach ($booking->customerInfos as $customer) {
-                        Mail::to($customer->email)->send(new SalesPurchaseAgreementMail($booking, $fileName));
+                        Mail::to($customer->email)->queue(new SalesPurchaseAgreementMail($booking, $fileName));
                     }
 
                     return response()->json(['message' => 'SPA emailed to customer(s) successfully.'], Response::HTTP_OK);
@@ -161,7 +161,7 @@ class SpaController extends Controller
             DB::commit();
 
             foreach ($booking->customerInfos as $customer) {
-                Mail::to($customer->email)->send(new SalesPurchaseAgreementMail($booking, $fileName));
+                Mail::to($customer->email)->queue(new SalesPurchaseAgreementMail($booking, $fileName));
             }
 
             return response($pdfContent, Response::HTTP_CREATED, [
@@ -372,7 +372,7 @@ class SpaController extends Controller
         ]);
 
         foreach ($spa->booking->customerInfos as $customer) {
-            Mail::to($customer->email)->send(new SalesPurchaseAgreementMail($spa->booking, ''));
+            Mail::to($customer->email)->queue(new SalesPurchaseAgreementMail($spa->booking, ''));
         }
 
         return response()->json(['message' => 'SPA has been approved! Waiting for DLD document.'], Response::HTTP_OK);
