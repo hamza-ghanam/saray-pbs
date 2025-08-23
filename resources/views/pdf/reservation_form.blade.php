@@ -6,7 +6,7 @@
     <style>
         /* 1) Define your page size, margins, and hook up header/footer */
         @page {
-            margin: 150px 45px 100px 45px;
+            margin: 150px 45px 150px 45px;
         }
 
         @page {
@@ -101,6 +101,16 @@
 
 <!-- 8) Your named footer block (no html_ in the name) -->
 <htmlpagefooter name="MyFooter">
+    <div style="height: 30px; text-align: center;">
+        <table style="border-collapse:collapse; border:none; width: 100%">
+            <tr>
+                <td style="width: 48%; text-align: left; font-weight: bold;">Buyer Initial</td>
+                <td style="width: 4%; text-align: center; font-weight: bold;">{PAGENO}</td>
+                <td style="width: 48%; text-align: right; font-weight: bold;">Seller Initial</td>
+            </tr>
+        </table>
+    </div>
+
     <div style="      position: center;
       bottom: 0;       /* stick to the bottom of the page */
       left:   0;       /* ignore the left margin entirely */
