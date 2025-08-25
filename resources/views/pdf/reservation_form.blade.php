@@ -105,7 +105,7 @@
         <table style="border-collapse:collapse; border:none; width: 100%">
             <tr>
                 <td style="width: 48%; text-align: left; font-weight: bold;">Buyer Initial</td>
-                <td style="width: 4%; text-align: center; font-weight: bold;">{PAGENO}</td>
+                <td>{PAGENO}</td>
                 <td style="width: 48%; text-align: right; font-weight: bold;">Seller Initial</td>
             </tr>
         </table>
