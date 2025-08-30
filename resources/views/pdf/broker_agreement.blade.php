@@ -159,7 +159,8 @@
         <p>
             BETWEEN<br/>
             Unique Saray Development, a company duly registered in the Emirate of Dubai, United Arab Emirates with
-            license number 1343857 and having its address at PO Box ………. Bay Square, Business Bay Building, Dubai, United Arab
+            license number 1343857 and having its address at PO Box ………. Bay Square, Business Bay Building, Dubai,
+            United Arab
             Emirates, telephone: 04 554 8787,
             email id: info@uniquesaray.com (the "Seller");
 
@@ -201,7 +202,9 @@
                     <li> <!-- 1.1. -->
                         In this Agreement unless the context otherwise requires the following words and expressions have
                         the respective meanings as set out below: <br/>
-                        <strong>"AED" or <img src="{{ public_path('images/aed_symbol.svg') }}" width="12" alt="AED" /></strong> means UAE Dirhams, the lawful currency of the UAE;<br/>
+                        <strong>"AED" or <img src="{{ public_path('images/aed_symbol.svg') }}" width="12"
+                                              alt="AED"/></strong> means UAE Dirhams, the lawful currency of the
+                        UAE;<br/>
                         <strong>"Applicable Laws"</strong> means principally By-Law No. 3 of 2022regarding the
                         Regulation of Real Estate Brokers' Register in the Emirate of Dubai and any regulations and
                         codes of conduct issued by RERA, and any other laws, regulations or other guidance enacted or to
@@ -698,22 +701,56 @@
                             <li>Inability to complete the sale of a Unit</li>
                         </ol>
                     </li>
-                    <li>In the performance of its obligations under this Agreement, neither the Seller nor any of its
-                        group companies shall be liable to the Broker or to any third party... (truncated for brevity)
+                    <li>
+                        In the performance of its obligations under this Agreement, neither the Seller nor any of
+                        its group companies shall be liable to the Broker or to any third party for any act or omission
+                        of the Seller or any of its group companies, or any of their respective directors, officers,
+                        employees, agents or representatives, except only to the extent such liabilities, losses,
+                        damages, claims, costs and expenses arise out of or are caused by the gross negligence or wilful
+                        misconduct of the Seller or any of its group companies, subject to the maximum extent of the
+                        Commission paid by the Seller to the Broker.
                     </li>
-                    <li>The Broker hereby agrees and accepts that the Seller and its group companies shall in no
-                        circumstances be liable to the Broker...
+                    <li>
+                        The Broker hereby agrees and accepts that the Seller and its group companies shall in no
+                        circumstances be liable to the Broker or to a third party for any actions, statements,
+                        omissions, promises, representations or any other act of the Broker with regard to the
+                        Development, Units or any other matter related to this Agreement.
                     </li>
                 </ol>
             </li>
             <li class="main-title"> <!-- 8. -->
                 <h2>TERMINATION</h2>
                 <ol class="numeric">
-                    <li>The Seller may terminate this Agreement with or without cause...</li>
-                    <li>The Broker shall not be entitled to any Commission...</li>
-                    <li>In the event that any license, consent or permission...</li>
-                    <li>If a Fee has been paid to the Broker...</li>
-                    <li>The Broker shall have no claim or recourse...</li>
+                    <li>
+                        The Seller may terminate this Agreement with or without cause (and without the need for any
+                        judicial notice, arbitration award or court order or other action) at any time during the course
+                        of the Term by giving the Broker written notice of its intention to do so and the termination
+                        shall take immediate effect upon issuance of such notice. The Broker shall be entitled for any
+                        Commission in terms of Clause 5 for any Unit already sold by it up to the date of such
+                        termination
+                    </li>
+                    <li>
+                        The Broker shall not be entitled to any Commission for any Unit that has been sold if this
+                        Agreement is terminated by the Seller due to the Broker's breach of any of its obligations under
+                        this Agreement
+                    </li>
+                    <li>
+                        For the avoidance of doubt, in the event that any license, consent or permission issued to
+                        the Broker by RERA and/or Dubai Land Department or any other relevant authority is revoked,
+                        cancelled or otherwise withdrawn by RERA and/or Dubai Land Department or any other relevant
+                        authority, then the Seller shall be permitted to immediately terminate this Agreement without
+                        the requirement for a court order, any further action or legal notice.
+                    </li>
+                    <li>
+                        If a Fee has been paid to the Broker in relation to a Closed Transaction and the Prospective
+                        Purchaser subsequently terminates or otherwise fails to complete the acquisition of the Unit
+                        relating to such Closed Transaction as a result of a misrepresentation by the Broker or a breach
+                        of this Agreement by the Broker (the “Terminated Transaction”)
+                    </li>
+                    <li>
+                        The Broker shall have no claim or recourse against the Seller for any compensation, loss of
+                        agency rights, loss of goodwill or any other loss realized or otherwise due to any termination.
+                    </li>
                 </ol>
             </li>
             <li class="main-title"> <!-- 9. -->
@@ -721,42 +758,145 @@
                 <ol class="numeric">
                     <li>The Broker shall:
                         <ol class="nested-alpha">
-                            <li>Use the Intellectual Property solely in accordance with the Seller's instructions;</li>
-                            <li>Not take or authorise any action whereby...</li>
-                            <li>Not use any trademark, trade name...</li>
-                            <li>At the Seller's request and expense...</li>
-                            <li>Immediately inform the Seller of any actual...</li>
-                            <li>At the Seller's request, give the Seller reasonable assistance...</li>
+                            <li>
+                                Use the Intellectual Property solely in accordance with the Seller's instructions;
+                            </li>
+                            <li>
+                                Acknowledging that it has no rights in the Intellectual Property) not take or authorise
+                                any action whereby the Intellectual Property might be jeopardised or invalidated;
+                            </li>
+                            <li>
+                                Not use any trade mark, trade name, logos, brands and the like of the Seller other than
+                                as previously approved by the Seller in writing;
+                            </li>
+                            <li>
+                                At the Seller's request and expense, assist the Seller in maintaining the validity and
+                                enforceability of the Intellectual Property.
+                            </li>
+                            <li>
+                                Immediately inform the Seller of any actual or threatened infringement of the
+                                Intellectual Property of which it becomes aware; and
+                            </li>
+                            <li>
+                                At the Seller's request, give the Seller reasonable assistance in dealing with such
+                                infringements (including proceedings).
+                            </li>
                         </ol>
                     </li>
-                    <li>Any breach of this Clause “9” by the Broker shall entitle the Seller to terminate this Agreement
-                        with immediate effect...
+                    <li>
+                        Any breach of this Clause “9” by the Broker shall entitle the Seller to terminate this
+                        Agreement with immediate effect and to all rights and remedies afforded to the Seller under the
+                        Applicable Laws and this Agreement including in particular the provisions of Clause “8.2”.
                     </li>
                 </ol>
             </li>
             <li class="main-title"> <!-- 10. -->
                 <h2>GENERAL</h2>
                 <ol class="numeric">
-                    <li>This Agreement constitutes the whole agreement...</li>
-                    <li>The Broker agrees that its rights and obligations...</li>
-                    <li>Nothing in this Agreement shall create...</li>
-                    <li>This Agreement shall be effective and binding...</li>
-                    <li>During the Term and after termination...</li>
-                    <li>Any indulgence granted by the Seller...</li>
-                    <li>No variation of this Agreement shall be of any effect...</li>
-                    <li>If any provision of this Agreement is or becomes illegal...</li>
-                    <li>Where in this Agreement reference is made to the Broker...</li>
-                    <li>Any notice given under this Agreement shall be in writing...
+                    <li>
+                        Agreement constitutes the whole agreement between the Parties in relation to the subject
+                        matter contemplated by this Agreement and supersedes any arrangements, understandings or
+                        previous agreement (whether verbal or written) between them relating to the subject matter
+                        thereof.
+                    </li>
+                    <li>
+                        The Broker agree that its rights and obligations contained in this Agreement may not be
+                        assigned or transferred by the Broker without the written consent of the Seller. The Seller may
+                        assign this Agreement or any of its rights and obligations under this Agreement in favour of any
+                        affiliate or group company by giving written notice of such assignment to the Broker. The Broker
+                        hereby consents to any such assignment, and no further consent from the Seller shall be
+                        required, except to the extent required by Applicable Laws.
+                    </li>
+                    <li>
+                        Nothing in this Agreement shall create, or be deemed to create a partnership, franchise,
+                        sub-franchise, joint-venture, or employer/employee relationship between the Parties. This
+                        Agreement shall not constitute a commercial agency arrangement as contemplated under Federal Law
+                        No. 3 of 2022.
+                    </li>
+                    <li>
+                        This Agreement shall be effective and binding upon the Parties for the Term. Subject to the
+                        provisions of Clause 8, this Agreement shall survive its termination insofar as any rights and
+                        obligations contained herein are of continuing effect.
+                    </li>
+                    <li>
+                        During the Term and after termination of this Agreement, the Broker must not disclose any
+                        confidential information made available to it by the Seller in respect of the Seller, the
+                        Development and/or Units, unless such information is readily available in the public domain.
+                    </li>
+                    <li>
+                        Any indulgence granted by the Seller to the Broker in respect of the performance by the
+                        Broker of its obligations under this Agreement or any neglect or failure by the Seller to
+                        enforce any of the terms of this Agreement shall not be construed as a waiver or variation of
+                        this Agreement or otherwise prejudice any of the Seller's rights under it.
+                    </li>
+                    <li>
+                        No variation of this Agreement shall be of any effect unless made in writing and signed by
+                        both Parties.
+                    </li>
+                    <li>
+                        If any provision of this Agreement is or becomes illegal, invalid or unenforceable under
+                        the Applicable Laws, that shall not affect or impair the legality, validity or enforceability of
+                        that or any other provision of this Agreement. In such case, the Parties shall agree on a valid
+                        provision which comes commercially and legally closest to the invalid, illegal or otherwise
+                        unenforceable provision.
+                    </li>
+                    <li>
+                        Where in this Agreement reference is made to the Broker it includes the Broker's employees,
+                        representatives, successors, assigns, administrators and executors (as the case may be) and all
+                        obligations contained in this Agreement are binding on the Broker, its employees,
+                        representatives, successors, assigns, administrators and executors.
+                    </li>
+                    <li>
+                        Any notice given under this Agreement shall be in writing and shall be seed by delivering
+                        it personally or sending it by courier, fax or email to the address of the Parties set out in
+                        this Agreement. Any such notice shall be deemed to have been received:
                         <ol class="nested-alpha">
-                            <li>If delivered personally, on the date of delivery;</li>
-                            <li>In the case of courier, on the date of delivery...</li>
-                            <li>In the case of email upon sending it...</li>
+                            <li>
+                                if delivered personally, on the date of delivery;
+                            </li>
+                            <li>
+                                in the case of courier, on the date of delivery as evidenced by the records of the
+                                courier;
+                            </li>
+                            <li>
+                                in the case of email upon sending it to specified email address and expiry of 24
+                                hours from delivery if sent to the correct email address and no notice of delivery
+                                failure is received
+                            </li>
                         </ol>
                     </li>
-                    <li>This Agreement shall be governed by and construed...</li>
-                    <li>In the event of any dispute arising...</li>
-                    <li>In the event of any dispute in relation to whether the Agent...</li>
-                    <li>The provisions of Clauses 6, 9, 10.11, and 10.12 shall survive...</li>
+                    <li>
+                        This Agreement shall be governed by and construed in accordance with the Applicable Laws.
+                    </li>
+                    <li>
+                        In the event of any dispute arising between the Parties out of or relating to this
+                        Agreement, including the payment of Commission to the Broker, the Parties shall in the first
+                        instance refer the matter to RERA (as contemplated by By-Law No. 3 of 2022 regarding the
+                        Regulation of Real Estate Brokers' Register in the Emirate of Dubai) and the Parties shall
+                        consult and negotiate with each other in good faith under the supervision of RERA to reach an
+                        amicable resolution to the dispute. Any directions or guidance given by RERA in respect of the
+                        dispute shall be binding on the Parties. If the Parties are not able to reach an amicable
+                        resolution to such dispute and/or RERA does not Issue a direction on the dispute within a period
+                        of thirty· (30) days of the dispute being referred to RERA (unless such period is mutually
+                        extended by the Parties in writing), then the dispute shall be referred to and finally resolved
+                        by the Courts of the Emirate of Dubai.
+                    </li>
+                    <li>
+                        In the event of any dispute in relation to whether the Agent or another party has first
+                        submitted the prospective Purchaser to the Seller, it is necessary to refer first to the
+                        registration request for the prospective Purchaser submitted by the parties to find out who is
+                        the originator of the transaction, and in the event that it is not possible to obtain a previous
+                        registration application for another, the Seller should make a Verification to find out who is
+                        the actual originator of the transaction and the Seller has the option to obtain a written
+                        statement from the prospective Purchaser confirming this, and the Seller shall have no liability
+                        in relation to that statement, and in this case the Seller is the one who decides to whom the
+                        payable commission for any purchases should be paid for the purchases made by the prospective
+                        Purchaser.
+                    </li>
+                    <li>
+                        The provisions of Clauses 6, 9, 10.11, and 10.12 shall survive the termination of this
+                        Agreement.
+                    </li>
                 </ol>
             </li>
         </ol>
@@ -795,7 +935,7 @@
             <thead>
             <tr>
                 <th>Project Name</th>
-                <th>Sale Price Range (<img src="{{ public_path('images/aed_symbol.svg') }}" width="12" alt="AED" />)</th>
+                <th>Sale Price Range (<img src="{{ public_path('images/aed_symbol.svg') }}" width="12" alt="AED"/>)</th>
                 <th>Applicable Commission Rate</th>
             </tr>
             </thead>
