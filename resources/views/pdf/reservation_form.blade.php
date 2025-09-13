@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8"/>
-    <title>Sales Offer</title>
+    <title>Reservation Form</title>
     <style>
         /* 1) Define your page size, margins, and hook up header/footer */
         @page {

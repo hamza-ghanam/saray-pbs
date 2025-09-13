@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Storage;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 
 // dompdf
+use Mccarlosen\LaravelMpdf\Facades\LaravelMpdf as MYPDF;
 use Symfony\Component\HttpFoundation\Response;
 
 class SpaController extends Controller
@@ -129,6 +130,15 @@ class SpaController extends Controller
                 'customerInfos'
             ]);
 
+            $spaData = [
+                'booking' => $booking,
+                'customerInfos' => $booking->customerInfos,
+                'paymentPlan' => $booking->paymentPlan,
+                'installments' => $booking->installments,
+                'unit' => $booking->unit,
+            ];
+
+            /*
             // 4. Generate the PDF (using your Blade view, e.g. 'pdf.spa')
             $pdf = PDF::loadView('pdf.spa', [
                 'booking' => $booking,
@@ -136,6 +146,19 @@ class SpaController extends Controller
                 'paymentPlan' => $booking->paymentPlan,
                 'unit' => $booking->unit,
             ]);
+            */
+
+            // New SPA template || 12/9/2025
+            $pdf = MYPDF::loadView('pdf.spa2', $spaData, [], [
+                'instanceConfigurator' => function ($mpdf) {
+                    $mpdf->showImageErrors = true; // Show errors related to images
+                    $mpdf->debug = true; // Enable general debugging
+                    $mpdf->autoScriptToLang = true;
+                    $mpdf->autoLangToFont = true;
+                    $mpdf->allow_charset_conversion = false; // This is often crucial for Arabic/RTL
+                }
+            ]);
+
 
             $pdfContent = $pdf->output();
 
