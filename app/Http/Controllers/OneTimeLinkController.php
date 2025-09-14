@@ -8,6 +8,7 @@ use App\Mail\OneTimeLinkMail;
 use App\Mail\SalesPurchaseAgreementMail;
 use App\Models\OneTimeLink;
 use App\Models\User;
+use App\Services\BrevoMailer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -148,6 +149,16 @@ class OneTimeLinkController extends Controller
 
         //Email
         Mail::to($request->email)->queue(new OneTimeLinkMail($otl));
+
+        /*
+        $mailer = new BrevoMailer();
+        $mailer->sendView(
+            to:    [['email' => $request->email]],
+            subject: 'Your One-Time Access Link',
+            view: 'emails.otl',   // Blade view under resources/views/emails
+            data: ['otl' => $otl]
+        );
+        */
 
         return response()->json([
             'message' => 'One-time link successfully generated and shared by email.',

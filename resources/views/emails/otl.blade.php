@@ -70,20 +70,9 @@
 
         <p>Once registered, you will receive your official agreement to be signed and returned. After that, please wait for the verification process and final approval before proceeding..</p>
 
-        <p>
-                <a href="{{ env('FEND_URL') }}/one-time-links/register/Broker/{{ $otl->token }}"
-                   style="
-						display: inline-block;
-						padding: 12px 20px;
-						text-decoration: none;
-						background: dodgerblue;
-						color: #ffffff;
-						border-radius: 4px;
-						font-weight: bold;
-					">
-                    Register Here
-                </a>
-        </p>
+        <blockquote cite="/one-time-links/register/Broker/{{ $otl->token }}">
+            /one-time-links/register/Broker/{{ $otl->token }}
+        </blockquote>
 
         <p>Best regards,<br>
             <strong>Sales Team</strong></p>
