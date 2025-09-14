@@ -331,7 +331,7 @@
                     // Works for Collections
                     $c1 = $pair->get(0);
                     $c2 = $pair->get(1); // may be null if odd count
-                    $base = 3 + $key * 2
+                    $base = 2 + $key * 2
                 @endphp
 
                 <tr>
