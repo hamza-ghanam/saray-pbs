@@ -41,4 +41,6 @@ return [
         'sender_name'  => env('BREVO_SENDER_NAME', 'Unique Saray'),
     ],
 
+    'frontend_url' => env('FEND_URL', 'https://www.uniquesaray.ae'),
+
 ];

@@ -70,8 +70,8 @@
 
         <p>Once registered, you will receive your official agreement to be signed and returned. After that, please wait for the verification process and final approval before proceeding..</p>
 
-        <blockquote cite="/one-time-links/register/Broker/{{ $otl->token }}">
-            /one-time-links/register/Broker/{{ $otl->token }}
+        <blockquote cite="{{ config('services.frontend_url') }}/one-time-links/register/Broker/{{ $otl->token }}">
+            {{ config('services.frontend_url') }}/one-time-links/register/Broker/{{ $otl->token }}
         </blockquote>
 
         <p>Best regards,<br>
