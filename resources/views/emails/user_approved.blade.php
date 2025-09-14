@@ -70,22 +70,9 @@
 
         <p>Click the link below to log in to the portal and get started:</p>
 
-        <p style="text-align: center; margin: 30px 0;">
-            <a
-                href="{{ env('FEND_URL') }}"
-                style="
-						display: inline-block;
-						padding: 12px 20px;
-						text-decoration: none;
-						background: dodgerblue;
-						color: #ffffff;
-						border-radius: 4px;
-						font-weight: bold;
-					"
-            >
-                Log in to your account
-            </a>
-        </p>
+        <blockquote cite="{{ config('services.frontend_url') }}">
+            {{ config('services.frontend_url') }}
+        </blockquote>
 
         <p>Best regards,</p>
     </div>
