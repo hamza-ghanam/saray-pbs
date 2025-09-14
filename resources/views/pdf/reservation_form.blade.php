@@ -216,7 +216,9 @@
         <tr>
             <th class="left-th" style="width: 25%;">&nbsp;</th>
             <th class="left-th" style="width: 25%; text-align: center;">Purchaser</th>
-            <th class="left-th" style="width: 25%; text-align: center;">Jointly Purchaser</th>
+            <th class="left-th" style="width: 25%; text-align: center;">
+                {{ $customerInfos[1] ? "Joint Purchaser (1)" : '-' }}
+            </th>
             <th class="left-th" style="width: 25%;">&nbsp;</th>
         </tr>
         <tr>
@@ -241,14 +243,14 @@
         </tr>
         <tr>
             <th class="left-th" style="width: 25%;">Emirates ID No.</th>
-            <td class="" style="width: 25%; text-align: center"></td>
-            <td class="" style="width: 25%; text-align: center"></td>
+            <td class="" style="width: 25%; text-align: center">{{ $customerInfos[0]->emid ?? '-' }}</td>
+            <td class="" style="width: 25%; text-align: center">{{ ($customerInfos[1] ?? null)?->emid  ?? '-' }}</td>
             <th class="right-th" style="width: 25%;">رقم بطاقة الهوية الإماراتية</th>
         </tr>
         <tr>
             <th class="left-th" style="width: 25%;">P.O. Box/Postal Code</th>
-            <td class="" style="width: 25%; text-align: center"></td>
-            <td class="" style="width: 25%; text-align: center"></td>
+            <td class="" style="width: 25%; text-align: center">{{ $customerInfos[0]->po_box ?? '-' }}</td>
+            <td class="" style="width: 25%; text-align: center">{{ ($customerInfos[1] ?? null)?->po_box  ?? '-' }}</td>
             <th class="right-th" style="width: 25%;">صندوق بريد/الرمز البريدي</th>
         </tr>
         <tr>
@@ -260,8 +262,8 @@
         </tr>
         <tr>
             <th class="left-th" style="width: 25%;">City</th>
-            <td class="" style="width: 25%; text-align: center"></td>
-            <td class="" style="width: 25%; text-align: center"></td>
+            <td class="" style="width: 25%; text-align: center">{{ $customerInfos[0]->city ?? '-' }}</td>
+            <td class="" style="width: 25%; text-align: center">{{ ($customerInfos[1] ?? null)?->city  ?? '-' }}</td>
             <th class="right-th" style="width: 25%;">المدينة</th>
         </tr>
         <tr>
@@ -294,31 +296,153 @@
             <th class="left-th justified" style="width: 25%; font-weight: bold; padding-right: 5px;" lang="en">Note: If
                 the Purchaser is an entity, complete details above for company representative and insert details below
             </th>
-            <td class="" style="width: 25%; text-align: center"></td>
-            <td class="" style="width: 25%; text-align: center"></td>
+            <td class="" style="width: 25%; text-align: center">{{ $customerInfos[0]->legal_entity ?? '-' }}</td>
+            <td class="" style="width: 25%; text-align: center">{{ ($customerInfos[1] ?? null)?->legal_entity  ?? '-' }}</td>
             <th class="right-th" style="width: 25%; font-weight: bold;  text-align: justify; direction: rtl;">ملاحظة:
                 إذا كان المشتري جهة اعتبارية، يرجى تعبئة التفاصيل أعلاه لممثل الشركة وإدخال التفاصيل أدناه.
             </th>
         </tr>
         <tr>
             <th class="left-th" style="width: 25%;">Entity Name</th>
-            <td class="" style="width: 25%; text-align: center"></td>
-            <td class="" style="width: 25%; text-align: center"></td>
+            <td class="" style="width: 25%; text-align: center">{{ $customerInfos[0]->entity_name ?? '-' }}</td>
+            <td class="" style="width: 25%; text-align: center">{{ ($customerInfos[1] ?? null)?->entity_name  ?? '-' }}</td>
             <th class="right-th" style="width: 25%;">اسم الجهة</th>
         </tr>
         <tr>
             <th class="left-th" style="width: 25%;">Registration No</th>
-            <td class="" style="width: 25%; text-align: center"></td>
-            <td class="" style="width: 25%; text-align: center"></td>
+            <td class="" style="width: 25%; text-align: center">{{ $customerInfos[0]->entity_reg_no ?? '-' }}</td>
+            <td class="" style="width: 25%; text-align: center">{{ ($customerInfos[1] ?? null)?->entity_reg_no  ?? '-' }}</td>
             <th class="right-th" style="width: 25%;">رقم التسجيل</th>
         </tr>
         <tr>
             <th class="left-th" style="width: 25%;">Registration Authority</th>
-            <td class="" style="width: 25%; text-align: center"></td>
-            <td class="" style="width: 25%; text-align: center"></td>
+            <td class="" style="width: 25%; text-align: center">{{ $customerInfos[0]->entity_reg_auth ?? '-' }}</td>
+            <td class="" style="width: 25%; text-align: center">{{ ($customerInfos[1] ?? null)?->entity_reg_auth  ?? '-' }}</td>
             <th class="right-th" style="width: 25%;">جهة التسجيل</th>
         </tr>
     </table>
+
+    <br/>
+
+    @if($customerInfos->count() > 2)
+        <table class="info-table">
+            @foreach ($customerInfos->skip(2)->values()->chunk(2) as $key => $pair)
+                @php
+                    // Works for Collections
+                    $c1 = $pair->get(0);
+                    $c2 = $pair->get(1); // may be null if odd count
+                    $base = 3 + $key * 2
+                @endphp
+
+                <tr>
+                    <th class="left-th" style="width:25%">&nbsp;</th>
+                    <th style="width:25%; text-align:center">Joint Purchaser ({{ $base }})</th>
+                    <th style="width:25%; text-align:center">{{ $c2 ? "Joint Purchaser ($base"+1 .")" : '-' }}</th>
+                    <th class="right-th" style="width:25%">&nbsp;</th>
+                </tr>
+                <tr>
+                    <th class="left-th" style="width:25%">Purchaser Name</th>
+                    <td style="width:25%; text-align:center">{{ $c1->name ?? '-' }}</td>
+                    <td style="width:25%; text-align:center">{{ $c2->name ?? '-' }}</td>
+                    <th class="right-th" style="width:25%">اسم المشتري</th>
+                </tr>
+                <tr>
+                    <th class="left-th">Nationality</th>
+                    <td style="text-align:center">{{ $c1?->nationality ?? '-' }}</td>
+                    <td style="text-align:center">{{ $c2?->nationality ?? '-' }}</td>
+                    <th class="right-th">الجنسية</th>
+                </tr>
+                <tr>
+                    <th class="left-th">Passport No.</th>
+                    <td style="text-align:center">{{ $c1->passport_number ?? '-' }}</td>
+                    <td style="text-align:center">{{ $c2->passport_number ?? '-' }}</td>
+                    <th class="right-th">رقم جواز السفر</th>
+                </tr>
+                <tr>
+                    <th class="left-th" style="width: 25%;">Emirates ID No.</th>
+                    <td class="" style="width: 25%; text-align: center">{{ $c1->emid ?? '-' }}</td>
+                    <td class="" style="width: 25%; text-align: center">{{ $c2->emid ?? '-' }}</td>
+                    <th class="right-th" style="width: 25%;">رقم بطاقة الهوية الإماراتية</th>
+                </tr>
+                <tr>
+                    <th class="left-th" style="width: 25%;">P.O. Box/Postal Code</th>
+                    <td class="" style="width: 25%; text-align: center">{{ $c1->po_box ?? '-' }}</td>
+                    <td class="" style="width: 25%; text-align: center">{{ $c2->po_box ?? '-' }}</td>
+                    <th class="right-th" style="width: 25%;">صندوق بريد/الرمز البريدي</th>
+                </tr>
+                <tr>
+                    <th class="left-th" style="width: 25%;">Country</th>
+                    <td class="" style="width: 25%; text-align: center">{{ $c1->nationality ?? '-' }}</td>
+                    <td class=""
+                        style="width: 25%; text-align: center">{{ $c2->nationality ?? '-' }}</td>
+                    <th class="right-th" style="width: 25%;">الدولة</th>
+                </tr>
+                <tr>
+                    <th class="left-th" style="width: 25%;">City</th>
+                    <td class="" style="width: 25%; text-align: center">{{ $c1->city ?? '-' }}</td>
+                    <td class="" style="width: 25%; text-align: center">{{ $c2->city ?? '-' }}</td>
+                    <th class="right-th" style="width: 25%;">المدينة</th>
+                </tr>
+                <tr>
+                    <th class="left-th" style="width: 25%;">Address</th>
+                    <td class="" style="width: 25%; text-align: center">{{ $c1->address ?? '-' }}</td>
+                    <td class="" style="width: 25%; text-align: center">{{ $c2->address ?? '-' }}</td>
+                    <th class="right-th" style="width: 25%;">العنوان</th>
+                </tr>
+                <tr>
+                    <th class="left-th" style="width: 25%;">Mobile No.</th>
+                    <td class="" style="width: 25%; text-align: center">{{ $c1->phone_number ?? '-' }}</td>
+                    <td class=""
+                        style="width: 25%; text-align: center">{{ $c2->phone_number ?? '-' }}</td>
+                    <th class="right-th" style="width: 25%;">الهاتف المتحرك</th>
+                </tr>
+                <tr>
+                    <th class="left-th" style="width: 25%;">Telephone No.</th>
+                    <td class="" style="width: 25%; text-align: center">{{ $c1->phone_number ?? '-' }}</td>
+                    <td class=""
+                        style="width: 25%; text-align: center">{{ $c2->phone_number ?? '-' }}</td>
+                    <th class="right-th" style="width: 25%;">الهاتف</th>
+                </tr>
+                <tr>
+                    <th class="left-th" style="width: 25%;">Email</th>
+                    <td class="" style="width: 25%; text-align: center">{{ $c1->email ?? '-' }}</td>
+                    <td class="" style="width: 25%; text-align: center">{{ $c2->email ?? '-' }}</td>
+                    <th class="right-th" style="width: 25%;">البريد الإلكتروني</th>
+                </tr>
+                <tr>
+                    <th class="left-th justified" style="width: 25%; font-weight: bold; padding-right: 5px;" lang="en">
+                        Note: If
+                        the Purchaser is an entity, complete details above for company representative and insert details
+                        below
+                    </th>
+                    <td class="" style="width: 25%; text-align: center">{{ $c1->legal_entity ?? '-' }}</td>
+                    <td class="" style="width: 25%; text-align: center">{{ $c2->legal_entity ?? '-' }}</td>
+                    <th class="right-th" style="width: 25%; font-weight: bold;  text-align: justify; direction: rtl;">
+                        ملاحظة:
+                        إذا كان المشتري جهة اعتبارية، يرجى تعبئة التفاصيل أعلاه لممثل الشركة وإدخال التفاصيل أدناه.
+                    </th>
+                </tr>
+                <tr>
+                    <th class="left-th" style="width: 25%;">Entity Name</th>
+                    <td class="" style="width: 25%; text-align: center">{{ $c1->entity_name ?? '-' }}</td>
+                    <td class="" style="width: 25%; text-align: center">{{ $c2->entity_name ?? '-' }}</td>
+                    <th class="right-th" style="width: 25%;">اسم الجهة</th>
+                </tr>
+                <tr>
+                    <th class="left-th" style="width: 25%;">Registration No</th>
+                    <td class="" style="width: 25%; text-align: center">{{ $c1->entity_reg_no ?? '-' }}</td>
+                    <td class="" style="width: 25%; text-align: center">{{ $c2->entity_reg_no ?? '-' }}</td>
+                    <th class="right-th" style="width: 25%;">رقم التسجيل</th>
+                </tr>
+                <tr>
+                    <th class="left-th" style="width: 25%;">Registration Authority</th>
+                    <td class="" style="width: 25%; text-align: center">{{ $c1->entity_reg_auth ?? '-' }}</td>
+                    <td class="" style="width: 25%; text-align: center">{{ $c2->entity_reg_auth ?? '-' }}</td>
+                    <th class="right-th" style="width: 25%;">جهة التسجيل</th>
+                </tr>
+            @endforeach
+        </table>
+    @endif
 
     <table class="header-table">
         <tr>
@@ -1064,27 +1188,10 @@
                     &nbsp;{{ \Carbon\Carbon::now()->locale('ar')->isoFormat('D-MMM-YYYY') }}&nbsp;</h4>
             </td>
         </tr>
-        <tr>
-            <td class="left-th" style="line-height: 2.5; width: 49%; padding: 7px; text-align: justify;">
-                <h4>Name: {{ $customerInfos[0]->name }} </h4>
-                <h4>Signed: <img src="{{ public_path('images/black_line.svg') }}" width="250" height="2" alt="___"/>
-                </h4>
-                <h4>Date: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="{{ public_path('images/black_line.svg') }}"
-                                                             width="250" height="2" alt="___"/></h4>
-            </td>
-            <td style="text-align: center;"></td>
-            <td class="rtl-text right-th" style="line-height: 2.5; width: 49%; padding: 7px; text-align: justify;">
-                <h4>الاسم: {{ $customerInfos[0]->name }}  </h4>
-                <h4>التوقيع: <img src="{{ public_path('images/black_line.svg') }}" width="250" height="2" alt="___"/>
-                </h4>
-                <h4>التاريخ: &nbsp;&nbsp;<img src="{{ public_path('images/black_line.svg') }}" width="250" height="2"
-                                              alt="___"/></h4>
-            </td>
-        </tr>
-        @isset($customerInfos[1])
+        @foreach($customerInfos as $customerInfo)
             <tr>
-                <td class="left-th" style="width: 49%; padding: 7px; text-align: justify; line-height: 2.5;">
-                    <h4>Name: {{ ($customerInfos[1] ?? null)?->name }} </h4>
+                <td class="left-th" style="line-height: 2.5; width: 49%; padding: 7px; text-align: justify;">
+                    <h4>Name: {{ $customerInfo->name }} </h4>
                     <h4>Signed: <img src="{{ public_path('images/black_line.svg') }}" width="250" height="2" alt="___"/>
                     </h4>
                     <h4>Date: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="{{ public_path('images/black_line.svg') }}"
@@ -1092,14 +1199,14 @@
                 </td>
                 <td style="text-align: center;"></td>
                 <td class="rtl-text right-th" style="line-height: 2.5; width: 49%; padding: 7px; text-align: justify;">
-                    <h4>الاسم: {{ ($customerInfos[1] ?? null)?->name }}  </h4>
-                    <h4>التوقيع: <img src="{{ public_path('images/black_line.svg') }}" width="250" height="2"
-                                      alt="___"/></h4>
-                    <h4>التاريخ: &nbsp;&nbsp;<img src="{{ public_path('images/black_line.svg') }}" width="250"
-                                                  height="2" alt="___"/></h4>
+                    <h4>الاسم: {{ $customerInfo->name }}  </h4>
+                    <h4>التوقيع: <img src="{{ public_path('images/black_line.svg') }}" width="250" height="2" alt="___"/>
+                    </h4>
+                    <h4>التاريخ: &nbsp;&nbsp;<img src="{{ public_path('images/black_line.svg') }}" width="250" height="2"
+                                                  alt="___"/></h4>
                 </td>
             </tr>
-        @endisset
+        @endforeach
     </table>
     <!-- Example page break
 <div class="page-break"></div>
