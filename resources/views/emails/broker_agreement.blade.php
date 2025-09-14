@@ -70,22 +70,9 @@
 
         <p>Once signed, please use the following link to upload the signed copy:</p>
 
-        <p>
-            <strong>
-                <a href="{{ env('FEND_URL') }}/register/upload-signed-agreement"
-                       style="
-						display: inline-block;
-						padding: 12px 20px;
-						text-decoration: none;
-						background: dodgerblue;
-						color: #ffffff;
-						border-radius: 4px;
-						font-weight: bold;
-					">
-                    Upload Signed Agreement
-                </a>
-            </strong>
-        </p>
+        <blockquote cite="{{ config('services.frontend_url') }}/register/upload-signed-agreement">
+            {{ config('services.frontend_url') }}/register/upload-signed-agreement
+        </blockquote>
 
         <p>If you have any questions or require further assistance, please don’t hesitate to contact our sales team.</p>
 
