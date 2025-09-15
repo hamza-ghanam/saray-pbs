@@ -78,6 +78,14 @@
 
         <p>Once registered, you will receive your official agreement to be signed and returned. After that, please wait for the verification process and final approval before proceeding..</p>
 
+        <p style="text-align:center; margin: 22px 0;">
+            <a class="btn" href="{{ config('services.frontend_url') }}/one-time-links/register/Broker/{{ $otl->token }}">
+                Register
+            </a>
+        </p>
+
+        <p>If the button above doesn't work, copy and paste the following link into your browser:</p>
+
         <blockquote cite="{{ config('services.frontend_url') }}/one-time-links/register/Broker/{{ $otl->token }}">
             {{ config('services.frontend_url') }}/one-time-links/register/Broker/{{ $otl->token }}
         </blockquote>
