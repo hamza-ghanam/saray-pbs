@@ -166,7 +166,7 @@ class SalesOfferController extends Controller
 
         return response($pdfContent, Response::HTTP_CREATED, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => "attachment; filename=\"Sales_Offer_unit_{$unit->unit_no}\"",
+            'Content-Disposition' => "attachment; filename=\"Sales_Offer_unit_{$unit->unit_no}.pdf\"",
         ]);
     }
 }
