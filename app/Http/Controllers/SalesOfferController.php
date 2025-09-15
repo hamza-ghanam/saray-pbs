@@ -155,10 +155,13 @@ class SalesOfferController extends Controller
         $pdf = MYPDF::loadView('pdf.sales_offer2', $salesOfferData, [], [
             'instanceConfigurator' => function ($mpdf) {
                 $mpdf->showImageErrors = true; // Show errors related to images
-                $mpdf->debug = true; // Enable general debugging
+                $mpdf->debug = false; // Enable general debugging
                 $mpdf->autoScriptToLang = true;
                 $mpdf->autoLangToFont = true;
                 $mpdf->allow_charset_conversion = false; // This is often crucial for Arabic/RTL
+                $mpdf->useKerning       = false;
+                $mpdf->useLigatures     = false;
+                $mpdf->jpeg_quality   = 78;
             }
         ]);
 

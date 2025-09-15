@@ -325,7 +325,32 @@
 
     <div class="page-break"></div>
 
+    <section>
+        <h1 style="text-align: center;">{{ $unit->unit_type }}</h1>
+        <h3 style="text-align: center;">UNIT NO: {{ $unit->unit_no }}</h3>
 
+        @if($unit->floor_plan)
+            <div style="text-align:center; margin-bottom:30px;">
+                <img
+                    src="file:///{{ str_replace('\\','/', storage_path('app/private/' . $unit->floor_plan)) }}"
+                    alt="Floor Plan"
+                    style="width:90%; height:auto;"
+                >
+            </div>
+        @endif
+
+        <br/>
+
+        @if($unit->building->image_path)
+            <div style="text-align:center; margin-bottom:30px;">
+                <img
+                    src="file:///{{ str_replace('\\','/', storage_path('app/private/' . $unit->building->image_path)) }}"
+                    alt="Building image"
+                    style="width:90%; height:auto;"
+                >
+            </div>
+        @endif
+    </section>
 </main>
 </body>
 </html>
