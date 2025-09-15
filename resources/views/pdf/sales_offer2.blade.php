@@ -334,7 +334,7 @@
                 <img
                     src="file:///{{ str_replace('\\','/', storage_path('app/private/' . $unit->floor_plan)) }}"
                     alt="Floor Plan"
-                    style="width:90%; height:auto;"
+                    style="width:99%; height:auto;"
                 >
             </div>
         @endif
@@ -346,7 +346,7 @@
                 <img
                     src="file:///{{ str_replace('\\','/', storage_path('app/private/' . $unit->building->image_path)) }}"
                     alt="Building image"
-                    style="width:90%; height:auto;"
+                    style="width:99%; height:auto;"
                 >
             </div>
         @endif
