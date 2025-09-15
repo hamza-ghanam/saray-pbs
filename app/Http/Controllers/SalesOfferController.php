@@ -10,6 +10,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Mccarlosen\LaravelMpdf\Facades\LaravelMpdf as MYPDF;
 use Symfony\Component\HttpFoundation\Response;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Illuminate\Support\Collection;
@@ -146,7 +147,20 @@ class SalesOfferController extends Controller
 
         // Generate a PDF from the view 'pdf.sales_offer'.
         // Ensure you have created this view which accepts the provided data.
-        $pdf = PDF::loadView('pdf.sales_offer', $salesOfferData);
+
+        // Old
+        //$pdf = PDF::loadView('pdf.sales_offer', $salesOfferData);
+
+        // New | 15/9/2025
+        $pdf = MYPDF::loadView('pdf.sales_offer2', $salesOfferData, [], [
+            'instanceConfigurator' => function ($mpdf) {
+                $mpdf->showImageErrors = true; // Show errors related to images
+                $mpdf->debug = true; // Enable general debugging
+                $mpdf->autoScriptToLang = true;
+                $mpdf->autoLangToFont = true;
+                $mpdf->allow_charset_conversion = false; // This is often crucial for Arabic/RTL
+            }
+        ]);
 
         // Stream the PDF file directly to the browser.
         return $pdf->stream('sales_offer.pdf');
