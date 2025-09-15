@@ -71,7 +71,7 @@ class ResetPasswordController extends Controller
         );
 
         return $status === Password::PASSWORD_RESET
-            ? response()->json(['message' =>  __($status)], Response::HTTP_OK)
-            : response()->json(['message' =>  __($status)], Response::HTTP_BAD_REQUEST);
+            ? response()->json(['message' => __($status)], Response::HTTP_OK)
+            : response()->json(['message' => __($status)], Response::HTTP_BAD_REQUEST);
     }
 }

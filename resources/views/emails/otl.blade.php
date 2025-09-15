@@ -49,6 +49,14 @@
             color: #2c3e50;
             font-weight: bold;
         }
+
+        blockquote {
+            margin: 12px 0;
+            padding: 12px 16px;
+            background: #fff;
+            border-left: 4px solid #2c3e50;
+            word-break: break-word;
+        }
     </style>
 </head>
 <body>

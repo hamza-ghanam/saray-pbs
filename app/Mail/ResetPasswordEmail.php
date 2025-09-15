@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Password;
 
 class ResetPasswordEmail extends Mailable
 {
-        use Queueable, SerializesModels;
+    use Queueable, SerializesModels;
 
     public $user;
     public string $resetUrl;
@@ -25,14 +25,14 @@ class ResetPasswordEmail extends Mailable
 
         $frontend = config('services.frontend_url', config('app.url'));
 
-        $this->resetUrl = rtrim($frontend, '/') . '/reset-password?token=' 
-        . urlencode($token) . '&email=' . urlencode($user->email);
+        $this->resetUrl = rtrim($frontend, '/') . '/reset-password?token='
+            . urlencode($token) . '&email=' . urlencode($user->email);
     }
 
     public function build()
     {
         return $this->subject('Reset Your Password')
-            ->view('emails.reset-password')
+            ->view('emails.reset_password')
             ->with([
                 'user' => $this->user,
                 'resetUrl' => $this->resetUrl,

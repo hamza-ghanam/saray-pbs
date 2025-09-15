@@ -19,6 +19,8 @@ use App\Http\Controllers\BrokerController;
 use App\Http\Controllers\UnitUpdateController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\CustomerInfoController;
+use App\Http\Controllers\ForgotPasswordController;
+use App\Http\Controllers\ResetPasswordController;
 
 //Index
 Route::get('/', function () {
@@ -32,6 +34,9 @@ Route::get('/user', function (Request $request) {
 //Route::post('/register', [AuthController::class, 'register']);
 Route::post('/auth/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->post('/auth/logout', [AuthController::class, 'logout']);
+
+Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail']);
+Route::post('/reset-password', [ResetPasswordController::class, 'reset']);
 
 // Building Management
 Route::middleware('auth:sanctum')->group(function () {

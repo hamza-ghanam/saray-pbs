@@ -45,7 +45,8 @@ class ForgotPasswordController extends Controller
      *     )
      * )
      */
-    public function sendResetLinkEmail(Request $request) {
+    public function sendResetLinkEmail(Request $request)
+    {
         $validator = Validator::make($request->all(), [
             'email' => 'required|email|exists:users,email',
         ]);
@@ -54,7 +55,7 @@ class ForgotPasswordController extends Controller
             return response()->json(['errors' => $validator->errors()], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        $user = User::where('email', $request->email);
+        $user = User::firstWhere('email', $request->email);
 
         Mail::to($user->email)->queue(new ResetPasswordEmail($user));
 
