@@ -73,9 +73,13 @@ class PaymentPlanService
 
         foreach ($blocks as $block) {
             if ($block['type'] === 'single') {
-                $dt = !empty($block['date'])
-                    ? Carbon::parse($block['date'])
-                    : $this->applyOffset($base, $block['offset']);
+                if ($block['description'] === 'Down payment') {
+                    $dt = Carbon::now();
+                } else {
+                    $dt = !empty($block['date'])
+                        ? Carbon::parse($block['date'])
+                        : $this->applyOffset($base, $block['offset']);
+                }
 
                 $isBooking = !$firstSingle;
                 $firstSingle = true;
