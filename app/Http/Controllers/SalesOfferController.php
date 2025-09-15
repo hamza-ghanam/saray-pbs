@@ -162,7 +162,11 @@ class SalesOfferController extends Controller
             }
         ]);
 
-        // Stream the PDF file directly to the browser.
-        return $pdf->stream('sales_offer.pdf');
+        $pdfContent = $pdf->output();
+
+        return response($pdfContent, Response::HTTP_CREATED, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => "attachment; filename=\"Sales_Offer_unit_{$unit->unit_no}\"",
+        ]);
     }
 }
