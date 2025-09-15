@@ -57,6 +57,10 @@ class ForgotPasswordController extends Controller
 
         $user = User::firstWhere('email', $request->email);
 
+        if (!$user) {
+            return response()->json(['message' => 'User Not Found!'], Response::HTTP_NOT_FOUND);
+        }
+
         Mail::to($user->email)->queue(new ResetPasswordEmail($user));
 
         return response()->json(['message' => 'Password reset email sent!'], Response::HTTP_OK);
