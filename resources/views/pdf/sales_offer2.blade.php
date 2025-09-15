@@ -330,23 +330,21 @@
         <h3 style="text-align: center;">UNIT NO: {{ $unit->unit_no }}</h3>
 
         @if($unit->floor_plan)
-            <div style="text-align:center; margin-bottom:30px;">
+            <div style="text-align:center; margin-bottom:20px;">
                 <img
                     src="file:///{{ str_replace('\\','/', storage_path('app/private/' . $unit->floor_plan)) }}"
                     alt="Floor Plan"
-                    style="width:99%; height:auto;"
+                    style="width:90%; height:auto;"
                 >
             </div>
         @endif
 
-        <br/>
-
         @if($unit->building->image_path)
-            <div style="text-align:center; margin-bottom:30px;">
+            <div style="text-align:center;">
                 <img
                     src="file:///{{ str_replace('\\','/', storage_path('app/private/' . $unit->building->image_path)) }}"
                     alt="Building image"
-                    style="width:99%; height:auto;"
+                    style="width:90%; height:auto;"
                 >
             </div>
         @endif
