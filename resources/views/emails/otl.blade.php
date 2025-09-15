@@ -50,6 +50,16 @@
             font-weight: bold;
         }
 
+        .btn {
+            display: inline-block;
+            padding: 12px 20px;
+            text-decoration: none;
+            background: dodgerblue;
+            color: #ffffff;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
         blockquote {
             margin: 12px 0;
             padding: 12px 16px;
