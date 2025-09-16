@@ -18,7 +18,7 @@
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.10.1",
         "maatwebsite/excel": "^3.1",
-        "mindee/mindee": "^1.16",
+        "mindee/mindee": "^2.0",
         "rakibdevs/mrz-parser": "^1.2",
         "spatie/laravel-permission": "^6.15",
         "symfony/brevo-mailer": "^7.3",
