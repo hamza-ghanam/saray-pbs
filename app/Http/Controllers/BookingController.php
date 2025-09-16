@@ -359,69 +359,8 @@ class BookingController extends Controller
 
             $data['issuance_date'] = $fields->getSimpleField('date_of_issue')->value ?? null;
         } catch (\Exception $ex) {
-            Log::error("OCR extractionss failed: " . $ex->getMessage());
-            return response()->json(['error' => $ex->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-
-        $filePath = $file->store('passports', 'local');
-
-        // File path token
-        $token = (string)Str::uuid();
-        DB::table('uploads')->insert([
-            'token' => $token,
-            'path' => $filePath,
-            'user_id' => $user->id,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        // Return the parsed passport data along with the file token
-        return response()->json([
-            'passport' => $data,
-            'upload_token' => $token,
-        ], Response::HTTP_OK);
-    }
-
-    public function scanPassportOld(Request $request)
-    {
-        $user = $request->user();
-        Log::info("User {$user->id} is scanning a customer passport.");
-
-        if (!$user->can('book unit')) {
-            return response()->json(['message' => 'Unauthorized'], Response::HTTP_FORBIDDEN);
-        }
-
-        // Validate file upload (accepting images and PDFs)
-        $validator = Validator::make($request->all(), [
-            'document' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
-
-        $file = $request->file('document');
-        $path = $file->getRealPath();
-
-        try {
-            // 1. Parse the passport MRZ using Mindee
-            $mindeeClient = new Client('1391e370bb8f620821566ec76857a455');
-            $inputSource = $mindeeClient->sourceFromPath($path);
-            $apiResponse = $mindeeClient->parse(PassportV1::class, $inputSource);
-
-            // 2. Extract the MRZ lines (mrz1 + mrz2)
-            $mrz1 = $apiResponse->document->inference->prediction->mrz1->value ?? '';
-            $mrz2 = $apiResponse->document->inference->prediction->mrz2->value ?? '';
-            $mrz = $mrz1 . "\n" . $mrz2;
-
-            // 3. Parse the combined MRZ lines via MrzParser
-            $data = MrzParser::parse($mrz);
-
-            // 4. Issuance date, if exists
-            $data['issuance_date'] = $apiResponse->document->inference->prediction->issuanceDate?->value ?? null;
-        } catch (\Exception $ex) {
-            Log::error("OCR extraction failed: " . $ex->getMessage());
-            return response()->json(['error' => 'OCR extraction failed'], Response::HTTP_INTERNAL_SERVER_ERROR);
+            Log::error("OCR extractions failed: " . $ex->getMessage());
+            return response()->json(['error' => 'OCR extractions failed.'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
         $filePath = $file->store('passports', 'local');
