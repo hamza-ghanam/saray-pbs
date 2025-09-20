@@ -9,6 +9,16 @@ class Unit extends Model
 {
     use SoftDeletes;
 
+    public const STATUS_PENDING = 'Pending';
+    public const STATUS_AVAILABLE = 'Available';
+    public const STATUS_CANCELLED = 'Cancelled';
+    public const STATUS_PRE_BOOKED = 'Pre-Booked';
+    public const STATUS_BOOKED = 'Booked';
+    public const STATUS_PRE_HOLD = 'Pre-Hold';
+    public const STATUS_HOLD = 'Hold';
+    public const STATUS_COMPLETED = 'Completed';
+    public const STATUS_PROCESSED = 'Processed';
+
     protected $fillable = [
         'prop_type',
         'unit_type',

@@ -496,8 +496,8 @@ class BookingController extends Controller
                 ->where('status', 'Hold')
                 ->first();
 
-            if (!in_array($unit->status, ['Available', 'Cancelled']) &&
-                !($myHold && $unit->status === 'Hold')) {
+            if (!in_array($unit->status, [Unit::STATUS_AVAILABLE, Unit::STATUS_CANCELLED]) &&
+                !($myHold && $unit->status === Unit::STATUS_HOLD)) {
                 return response()->json([
                     'error' => "Unit status must be 'Available' or 'Cancelled' to book (unless you hold it)."
                 ], Response::HTTP_UNPROCESSABLE_ENTITY);
@@ -1020,7 +1020,7 @@ class BookingController extends Controller
         try {
             // Reset unit status
             if ($booking->unit) {
-                $booking->unit->status = 'Pending';
+                $booking->unit->status = Unit::STATUS_PENDING;
                 $booking->unit->save();
             }
 
@@ -1107,7 +1107,7 @@ class BookingController extends Controller
 
             // Reset unit status
             if ($booking->unit) {
-                $booking->unit->status = 'Available';
+                $booking->unit->status = Unit::STATUS_AVAILABLE;
                 $booking->unit->save();
             }
 
@@ -1331,7 +1331,7 @@ class BookingController extends Controller
             $booking->status = 'RF Pending';
             $booking->save();
 
-            $booking->unit->status = 'Booked';
+            $booking->unit->status = Unit::STATUS_BOOKED;
             $booking->unit->status_changed_at = now();
             $booking->unit->save();
 
@@ -1370,7 +1370,7 @@ class BookingController extends Controller
             $booking->status = 'RF Pending';
             $booking->save();
 
-            $booking->unit->status = 'Booked';
+            $booking->unit->status = Unit::STATUS_BOOKED;
             $booking->unit->save();
 
             $ceoUsers = User::role('CEO')->with('deviceTokens')->get();

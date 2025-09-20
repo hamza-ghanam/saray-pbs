@@ -10,6 +10,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use Mccarlosen\LaravelMpdf\Facades\LaravelMpdf as MYPDF;
 use Symfony\Component\HttpFoundation\Response;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
@@ -73,12 +74,26 @@ class SalesOfferController extends Controller
 
         // Validate incoming request data.
         $validator = Validator::make($request->all(), [
-            'unit_id' => 'required|exists:units,id',
-            'notes' => 'nullable|string',
-            'payment_plan_ids' => 'nullable|array',
+            'unit_id' => [
+                'bail',
+                'required',
+                'integer',
+                'exists:units,id',
+            ],
+            'notes' => ['nullable', 'string', 'max:2000'],
+            'payment_plan_ids' => ['nullable', 'array'],
             'payment_plan_ids.*' => 'integer|exists:payment_plans,id',
-            'discount' => 'nullable|numeric|min:0|max:100'
+            'discount' => 'nullable|numeric|between:0,100'
         ]);
+
+        $validator->after(function ($validator) use ($request) {
+            if ($request->filled('unit_id')) {
+                $unit = Unit::find($request->unit_id);
+                if ($unit && ! in_array($unit->status, [Unit::STATUS_AVAILABLE, Unit::STATUS_CANCELLED])) {
+                    $validator->errors()->add('unit_id', 'Unit is not available anymore!');
+                }
+            }
+        });
 
         if ($validator->fails()) {
             return response()->json($validator->errors(), Response::HTTP_UNPROCESSABLE_ENTITY);

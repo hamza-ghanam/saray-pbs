@@ -608,15 +608,15 @@ class UnitController extends Controller
 
         // Sales‐only guard
         if ($user->hasRole('Sales')) {
-            $isOpen = in_array($unit->status, ['Available', 'Cancelled']);
+            $isOpen = in_array($unit->status, [Unit::STATUS_AVAILABLE, Unit::STATUS_CANCELLED]);
             $hasMyBooking = $unit->bookings()
                     ->where('created_by', $salesId)
                     ->where('status', '!=', 'Cancelled')
-                    ->exists() && in_array($unit->status, ['Pre-Booked', 'Booked']);
+                    ->exists() && in_array($unit->status, [Unit::STATUS_PRE_BOOKED, Unit::STATUS_BOOKED]);
             $hasMyHolding = $unit->holdings()
                     ->where('created_by', $salesId)
                     ->whereIn('status', ['Hold', 'Pre-Hold', 'Processed'])
-                    ->exists() && in_array($unit->status, ['Hold', 'Pre-Hold', 'Processed']);
+                    ->exists() && in_array($unit->status, [Unit::STATUS_HOLD, Unit::STATUS_PRE_HOLD, Unit::STATUS_PROCESSED]);
 
             if (!($isOpen || $hasMyBooking || $hasMyHolding)) {
                 return response()->json([
@@ -731,7 +731,7 @@ class UnitController extends Controller
         }
 
         // For Sales role, only allow update if unit status is "Available" or "Cancelled"
-        if ($user->hasRole('Sales') && !in_array($unit->status, ['Available', 'Cancelled'])) {
+        if ($user->hasRole('Sales') && !in_array($unit->status, [Unit::STATUS_AVAILABLE, Unit::STATUS_CANCELLED])) {
             return response()->json(['message' => 'Unit cannot be updated as it is not available or cancelled'], Response::HTTP_FORBIDDEN);
         }
 
@@ -854,14 +854,14 @@ class UnitController extends Controller
         }
 
         // Ensure the unit is in a state that can be approved (e.g., Pending)
-        if ($unit->status !== 'Pending') {
+        if ($unit->status !== Unit::STATUS_PENDING) {
             return response()->json(['message' => 'Unit is not in pending status'], Response::HTTP_BAD_REQUEST);
         }
 
         DB::beginTransaction();
 
         try {
-            $unit->status = 'Available';
+            $unit->status = Unit::STATUS_AVAILABLE;
             $unit->status_changed_at = now();
             $unit->save();
 
