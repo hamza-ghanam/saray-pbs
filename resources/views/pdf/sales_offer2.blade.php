@@ -32,6 +32,10 @@
             page-break-before: always;
         }
 
+        h2 {
+            border-bottom: 1px solid #E5E5E5; /* Adjust color, width, and style as needed */
+        }
+
         /* 6) RTL helper */
         .rtl-text {
             direction: rtl;

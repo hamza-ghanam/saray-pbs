@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Booking;
 use App\Models\DldDocument;
+use App\Models\Unit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -94,7 +95,7 @@ class DldDocumentController extends Controller
             return response()->json(['error' => 'Forbidden'], Response::HTTP_FORBIDDEN);
         }
 
-        if (! $booking->unit || $booking->unit->status !== 'Completed' || $booking->status !== 'Completed') {
+        if (! $booking->unit || $booking->unit->status !== Unit::STATUS_COMPLETED || $booking->status !== 'Completed') {
             return response()->json([
                 'error' => 'Cannot upload DLD unless the unit is in Completed status.'
             ], Response::HTTP_UNPROCESSABLE_ENTITY);

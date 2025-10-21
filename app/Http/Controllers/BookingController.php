@@ -25,6 +25,11 @@ use Mindee\Product\Passport\PassportV1;
 use Illuminate\Support\Str;
 use App\Services\FCMService;
 
+use Mindee\ClientV2;
+use Mindee\Input\InferenceParameters;
+use Mindee\Input\PathInput;
+use Mindee\Error\MindeeException;
+
 /**
  * @OA\Schema(
  *     schema="CustomerInfo",
@@ -223,17 +228,17 @@ class BookingController extends Controller
             $booking->saleSource->type = 'Broker Agency';
         } else {
             $booking->sale_source = [
-                'id'        => null,
-                'name'      => null,
-                'email'     => null,
-                'status'    => null,
-                'type'      => 'Direct',
+                'id' => null,
+                'name' => null,
+                'email' => null,
+                'status' => null,
+                'type' => 'Direct',
             ];
         }
 
         $booking->load('customerInfos', 'installments', 'agent');
 
-        return response()->json( $booking, Response::HTTP_OK);
+        return response()->json($booking, Response::HTTP_OK);
     }
 
     /**
@@ -331,24 +336,31 @@ class BookingController extends Controller
         $path = $file->getRealPath();
 
         try {
-            // 1. Parse the passport MRZ using Mindee
-            $mindeeClient = new Client('1391e370bb8f620821566ec76857a455');
-            $inputSource = $mindeeClient->sourceFromPath($path);
-            $apiResponse = $mindeeClient->parse(PassportV1::class, $inputSource);
+            $apiKey = config('services.mindee.api_key');
+            $modelId = config('services.mindee.model_id');
 
-            // 2. Extract the MRZ lines (mrz1 + mrz2)
-            $mrz1 = $apiResponse->document->inference->prediction->mrz1->value ?? '';
-            $mrz2 = $apiResponse->document->inference->prediction->mrz2->value ?? '';
-            $mrz = $mrz1 . "\n" . $mrz2;
+            $mindeeClient = new ClientV2($apiKey);
 
-            // 3. Parse the combined MRZ lines via MrzParser
+            $inferenceParams = new InferenceParameters($modelId);
+
+            $inputSource = new PathInput($path);
+
+            $response = $mindeeClient->enqueueAndGetInference(
+                $inputSource,
+                $inferenceParams
+            );
+
+            $fields = $response->inference->result->fields;
+            $mrzLine1 = $fields->getSimpleField('mrz_line_1')->value ?? null;
+            $mrzLine2 = $fields->getSimpleField('mrz_line_2')->value ?? null;
+            $mrz = $mrzLine1 . "\n" . $mrzLine2;
+
             $data = MrzParser::parse($mrz);
 
-            // 4. Issuance date, if exists
-            $data['issuance_date'] = $apiResponse->document->inference->prediction->issuanceDate?->value ?? null;
+            $data['issuance_date'] = $fields->getSimpleField('date_of_issue')->value ?? null;
         } catch (\Exception $ex) {
-            Log::error("OCR extraction failed: " . $ex->getMessage());
-            return response()->json(['error' => 'OCR extraction failed'], Response::HTTP_INTERNAL_SERVER_ERROR);
+            Log::error("OCR extractions failed: " . $ex->getMessage());
+            return response()->json(['error' => 'OCR extractions failed.'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
         $filePath = $file->store('passports', 'local');
@@ -410,7 +422,7 @@ class BookingController extends Controller
         $user = $request->user();
         Log::info("User {$user->id} is attempting to book unit {$request->unit_id}.");
 
-        if (! $user->can('book unit')) {
+        if (!$user->can('book unit')) {
             return response()->json(['message' => 'Unauthorized'], Response::HTTP_FORBIDDEN);
         }
 
@@ -428,13 +440,13 @@ class BookingController extends Controller
         ];
 
         $validated = $request->validate([
-            'unit_id'          => 'required|integer|exists:units,id',
-            'payment_plan_id'  => 'nullable|integer|exists:payment_plans,id',
-            'receipt'          => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
-            'discount'         => 'nullable|numeric|min:0|max:100',
-            'notes'            => 'nullable|string',
+            'unit_id' => 'required|integer|exists:units,id',
+            'payment_plan_id' => 'nullable|integer|exists:payment_plans,id',
+            'receipt' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'discount' => 'nullable|numeric|min:0|max:100',
+            'notes' => 'nullable|string',
 
-            'agent_id'         => [
+            'agent_id' => [
                 'required_unless:current_user_is_sales,1',
                 'integer',
                 'exists:users,id',
@@ -453,25 +465,25 @@ class BookingController extends Controller
                 function ($attribute, $value, $fail) {
                     if ($value) {
                         $user = User::find($value);
-                        if (! $user || ! $user->hasRole('Broker')) {
+                        if (!$user || !$user->hasRole('Broker')) {
                             $fail('The sale source must be a user with the Broker role.');
                         }
                     }
                 }
             ],
 
-            'customers'        => 'required|array|min:1',
-            'customers.*.name'            => 'required|string|max:255',
+            'customers' => 'required|array|min:1',
+            'customers.*.name' => 'required|string|max:255',
             'customers.*.passport_number' => 'required|string|max:50',
-            'customers.*.birth_date'      => 'required|date',
-            'customers.*.gender'          => 'required|string|max:10',
-            'customers.*.nationality'     => 'required|string|max:255',
-            'customers.*.issuance_date'      => 'nullable|date',
-            'customers.*.expiry_date'     => 'nullable|date',
-            'customers.*.email'           => 'required|email|max:255',
-            'customers.*.phone_number'    => 'required|string|max:20',
-            'customers.*.address'         => 'required|string|max:255',
-            'customers.*.upload_token'    => 'nullable|string',
+            'customers.*.birth_date' => 'required|date',
+            'customers.*.gender' => 'required|string|max:10',
+            'customers.*.nationality' => 'required|string|max:255',
+            'customers.*.issuance_date' => 'nullable|date',
+            'customers.*.expiry_date' => 'nullable|date',
+            'customers.*.email' => 'required|email|max:255',
+            'customers.*.phone_number' => 'required|string|max:20',
+            'customers.*.address' => 'required|string|max:255',
+            'customers.*.upload_token' => 'nullable|string',
         ], $messages);
 
         DB::beginTransaction();
@@ -484,8 +496,8 @@ class BookingController extends Controller
                 ->where('status', 'Hold')
                 ->first();
 
-            if (! in_array($unit->status, ['Available', 'Cancelled']) &&
-                ! ($myHold && $unit->status === 'Hold')) {
+            if (!in_array($unit->status, [Unit::STATUS_AVAILABLE, Unit::STATUS_CANCELLED]) &&
+                !($myHold && $unit->status === Unit::STATUS_HOLD)) {
                 return response()->json([
                     'error' => "Unit status must be 'Available' or 'Cancelled' to book (unless you hold it)."
                 ], Response::HTTP_UNPROCESSABLE_ENTITY);
@@ -498,7 +510,7 @@ class BookingController extends Controller
                 ? PaymentPlan::find($paymentPlanId)
                 : PaymentPlan::where('is_default', true)->first();
 
-            if (! $paymentPlan) {
+            if (!$paymentPlan) {
                 throw new \Exception('Selected payment plan does not exist for this unit.');
             }
 
@@ -516,17 +528,17 @@ class BookingController extends Controller
 
             // 5. Create Booking (customer_info_id removed)
             $booking = Booking::create([
-                'unit_id'         => $unit->id,
+                'unit_id' => $unit->id,
                 'payment_plan_id' => $paymentPlan->id,
-                'status'          => 'Pre-Booked',
-                'discount'        => $discountPct,
-                'price'           => $bookingPrice,
-                'receipt_path'    => $receiptPath,
-                'created_by'      => $user->id,
-                'notes'           => $validated['notes'] ?? null,
+                'status' => 'Pre-Booked',
+                'discount' => $discountPct,
+                'price' => $bookingPrice,
+                'receipt_path' => $receiptPath,
+                'created_by' => $user->id,
+                'notes' => $validated['notes'] ?? null,
 
-                'agent_id'        => $validated['agent_id'] ?? null,
-                'sale_source_id'  => $validated['sale_source_id'] ?? null,
+                'agent_id' => $validated['agent_id'] ?? null,
+                'sale_source_id' => $validated['sale_source_id'] ?? null,
             ]);
 
             // 6. Create CustomerInfo entries
@@ -539,7 +551,7 @@ class BookingController extends Controller
                         ->where('user_id', $user->id)
                         ->first();
 
-                    if (! $upload) {
+                    if (!$upload) {
                         throw new \Exception("Invalid or expired token for customer '{$customer['name']}'");
                     }
 
@@ -564,10 +576,10 @@ class BookingController extends Controller
 
             $rows = $template->map(fn($i) => [
                 'payment_plan_id' => $paymentPlan->id,
-                'description'     => $i->description,
-                'percentage'      => $i->percentage,
-                'date'            => $i->date,
-                'amount'          => $i->amount,
+                'description' => $i->description,
+                'percentage' => $i->percentage,
+                'date' => $i->date,
+                'amount' => $i->amount,
             ])->all();
 
             $saved = $booking->installments()->createMany($rows);
@@ -575,7 +587,7 @@ class BookingController extends Controller
 
             // 8. Update unit status
             $unit->update([
-                'status'            => 'Pre-Booked',
+                'status' => 'Pre-Booked',
                 'status_changed_at' => now(),
             ]);
 
@@ -589,11 +601,11 @@ class BookingController extends Controller
                 $booking->saleSource->type = 'Broker Agency';
             } else {
                 $booking->sale_source = [
-                    'id'        => null,
-                    'name'      => null,
-                    'email'     => null,
-                    'status'    => null,
-                    'type'      => 'Direct',
+                    'id' => null,
+                    'name' => null,
+                    'email' => null,
+                    'status' => null,
+                    'type' => 'Direct',
                 ];
             }
 
@@ -676,7 +688,7 @@ class BookingController extends Controller
 
         $validator = Validator::make($request->all(), [
             'id_document' => 'sometimes|file|mimes:pdf,jpg,jpeg,png|max:2048',
-            'receipt'     => 'sometimes|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'receipt' => 'sometimes|file|mimes:pdf,jpg,jpeg,png|max:2048',
             'customer_id' => 'required_if:id_document,!=,null|integer|exists:customer_infos,id',
         ]);
 
@@ -708,7 +720,7 @@ class BookingController extends Controller
                     ->where('id', $request->customer_id)
                     ->first();
 
-                if (! $customer) {
+                if (!$customer) {
                     return response()->json(['message' => 'Customer not found in this booking'], Response::HTTP_NOT_FOUND);
                 }
 
@@ -813,21 +825,21 @@ class BookingController extends Controller
         Log::info("User {$user->id} is updating the booking ID: {$id}.");
 
         $validator = Validator::make($request->all(), [
-            'name'             => 'sometimes|required|string|max:255',
-            'passport_number'  => 'sometimes|required|string|max:50',
-            'birth_date'       => 'sometimes|required|date',
-            'gender'           => 'sometimes|required|string|max:10',
-            'nationality'      => 'sometimes|required|string|max:255',
-            'payment_plan_id'  => 'sometimes|integer|exists:payment_plans,id',
-            'receipt'          => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'name' => 'sometimes|required|string|max:255',
+            'passport_number' => 'sometimes|required|string|max:50',
+            'birth_date' => 'sometimes|required|date',
+            'gender' => 'sometimes|required|string|max:10',
+            'nationality' => 'sometimes|required|string|max:255',
+            'payment_plan_id' => 'sometimes|integer|exists:payment_plans,id',
+            'receipt' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
             'customer_id' => [
                 'required_with:name,passport_number,birth_date,gender,nationality',
                 'integer',
                 'exists:customer_infos,id'
             ],
 
-            'notes'            => 'nullable|string',
-            'agent_id'         => [
+            'notes' => 'nullable|string',
+            'agent_id' => [
                 'sometimes', 'integer', 'exists:users,id',
                 function ($attribute, $value, $fail) {
                     $user = User::find($value);
@@ -836,7 +848,7 @@ class BookingController extends Controller
                     }
                 }
             ],
-            'sale_source_id'   => 'sometimes|integer|exists:users,id',
+            'sale_source_id' => 'sometimes|integer|exists:users,id',
 
         ]);
 
@@ -1008,7 +1020,7 @@ class BookingController extends Controller
         try {
             // Reset unit status
             if ($booking->unit) {
-                $booking->unit->status = 'Pending';
+                $booking->unit->status = Unit::STATUS_PENDING;
                 $booking->unit->save();
             }
 
@@ -1095,7 +1107,7 @@ class BookingController extends Controller
 
             // Reset unit status
             if ($booking->unit) {
-                $booking->unit->status = 'Available';
+                $booking->unit->status = Unit::STATUS_AVAILABLE;
                 $booking->unit->save();
             }
 
@@ -1319,7 +1331,7 @@ class BookingController extends Controller
             $booking->status = 'RF Pending';
             $booking->save();
 
-            $booking->unit->status = 'Booked';
+            $booking->unit->status = Unit::STATUS_BOOKED;
             $booking->unit->status_changed_at = now();
             $booking->unit->save();
 
@@ -1358,7 +1370,7 @@ class BookingController extends Controller
             $booking->status = 'RF Pending';
             $booking->save();
 
-            $booking->unit->status = 'Booked';
+            $booking->unit->status = Unit::STATUS_BOOKED;
             $booking->unit->save();
 
             $ceoUsers = User::role('CEO')->with('deviceTokens')->get();
@@ -1397,7 +1409,8 @@ class BookingController extends Controller
         ], Response::HTTP_CREATED);
     }
 
-    private function getSaleSourceType($saleSource) {
+    private function getSaleSourceType($saleSource)
+    {
         return $saleSource
             ? array_merge(
                 $saleSource->only(['id', 'name', 'email', 'status']),

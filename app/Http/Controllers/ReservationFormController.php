@@ -6,6 +6,7 @@ use App\Mail\ReservationFormMail;
 use App\Models\Approval;
 use App\Models\Booking;
 use App\Models\ReservationForm;
+use App\Models\Unit;
 use App\Services\PaymentPlanService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -82,7 +83,7 @@ class ReservationFormController extends Controller
         //        - the unit has status "Booked"
         //        - the booking status is "RF Pending", "SPA Pending", or "Booked"
         $validBookingStatuses = ['RF Pending', 'SPA Pending', 'Booked'];
-        if ($booking->unit->status !== 'Booked' ||
+        if ($booking->unit->status !== Unit::STATUS_BOOKED ||
             !in_array($booking->status, $validBookingStatuses)) {
             return response()->json([
                 'error' => 'Cannot generate RF unless unit is "Booked" and booking is in "RF Pending", "SPA Pending", or "Booked" status.'

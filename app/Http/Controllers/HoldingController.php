@@ -144,7 +144,7 @@ class HoldingController extends Controller
                 'created_by' => $user->id,
             ]);
 
-            $unit->status = 'Pre-Hold';
+            $unit->status = Unit::STATUS_PRE_HOLD;
             $unit->save();
 
             DB::commit();
@@ -235,12 +235,12 @@ class HoldingController extends Controller
 
         if ($action === 'approve') { // approve
             $holding->status = 'Hold';
-            $unit->status = 'Hold';
+            $unit->status = Unit::STATUS_HOLD;
             $approvalStatus = 'Approved';
             $messageText = "Holding approved by {$role}.";
         } else { // reject
             $holding->status = 'Rejected';
-            $unit->status = 'Available';
+            $unit->status = Unit::STATUS_AVAILABLE;
             $approvalStatus = 'Rejected';
             $messageText = "Holding rejected by {$role}.";
         }
@@ -290,7 +290,7 @@ class HoldingController extends Controller
             abort(Response::HTTP_UNPROCESSABLE_ENTITY, 'Holding is not in Pre-Hold status.');
         }
 
-        if ($unit->status !== 'Pre-Hold') {
+        if ($unit->status !== Unit::STATUS_PRE_HOLD) {
             abort(Response::HTTP_UNPROCESSABLE_ENTITY, 'Unit is not in Pre-Hold status.');
         }
 

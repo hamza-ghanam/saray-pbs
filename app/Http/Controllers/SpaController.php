@@ -9,6 +9,7 @@ use App\Models\Booking;
 use App\Models\SPA;
 
 // Your SPA model
+use App\Models\Unit;
 use App\Services\PaymentPlanService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -91,7 +92,7 @@ class SpaController extends Controller
         //      - the unit has status "Booked"
         //      - the booking status is "SPA Pending" or "Booked"
         $validBookingStatuses = ['SPA Pending', 'Booked'];
-        if ($booking->unit->status !== 'Booked' ||
+        if ($booking->unit->status !== Unit::STATUS_BOOKED ||
             !in_array($booking->status, $validBookingStatuses)) {
             return response()->json([
                 'error' => 'Cannot generate SPA unless unit is "Booked" and booking is in "SPA Pending" or "Booked" status.'
