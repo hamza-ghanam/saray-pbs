@@ -20,7 +20,7 @@ class PaymentPlanService
 
         // booking/handover/construction % as before
         $bookingPct = $blocks
-            ->filter(fn($b) => str_contains(strtolower($b['description']), 'booking'))
+            ->filter(fn($b) => str_contains(strtolower(str_replace(' ', '', $b['description'])), 'downpayment'))
             ->sum('percentage');
         $handoverPct = $data['handover_percentage'];
 
@@ -108,7 +108,7 @@ class PaymentPlanService
             $insts->push($inst);
             $usedPct += (float) $inst->percentage;
         }
-        
+
         foreach ($blocks as $block) {
             if ($block['type'] !== 'repeat') continue;
 
