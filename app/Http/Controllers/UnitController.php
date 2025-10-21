@@ -134,7 +134,7 @@ use ZipArchive;
  *     schema="PaymentPlan",
  *     type="object",
  *     title="Payment Plan",
- *     required={"unit_id", "name", "dld_fee_percentage", "admin_fee", "EOI", "booking_percentage", "handover_percentage", "construction_percentage"},
+ *     required={"unit_id", "name", "dld_fee_percentage", "admin_fee", "EOI", "booking_percentage", "handover_percentage"},
  *     @OA\Property(property="id", type="integer", readOnly=true, example=1),
  *     @OA\Property(property="unit_id", type="integer", example=1),
  *     @OA\Property(property="name", type="string", example="60/40"),
@@ -143,7 +143,6 @@ use ZipArchive;
  *     @OA\Property(property="EOI", type="number", format="float", example=100000.00),
  *     @OA\Property(property="booking_percentage", type="number", format="float", example=20),
  *     @OA\Property(property="handover_percentage", type="number", format="float", example=40),
- *     @OA\Property(property="construction_percentage", type="number", format="float", example=40),
  *     @OA\Property(property="created_at", type="string", format="date-time", readOnly=true, example="2025-01-01T00:00:00Z"),
  *     @OA\Property(property="updated_at", type="string", format="date-time", readOnly=true, example="2025-01-02T00:00:00Z")
  * )

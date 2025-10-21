@@ -23,9 +23,8 @@ class PaymentPlanService
             ->filter(fn($b) => str_contains(strtolower($b['description']), 'booking'))
             ->sum('percentage');
         $handoverPct = $data['handover_percentage'];
-        $constructionPct = 100 - $bookingPct - $handoverPct;
 
-        return DB::transaction(function () use ($data, $bookingPct, $handoverPct, $constructionPct) {
+        return DB::transaction(function () use ($data, $bookingPct, $handoverPct) {
             return PaymentPlan::create([
                 'name' => $data['name'],
                 'dld_fee_percentage' => $data['dld_fee_percentage'],
@@ -34,7 +33,6 @@ class PaymentPlanService
                 'blocks' => $data['blocks'],
                 'booking_percentage' => $bookingPct,
                 'handover_percentage' => $handoverPct,
-                'construction_percentage' => $constructionPct,
                 'is_default' => false,
             ]);
         });
@@ -57,10 +55,10 @@ class PaymentPlanService
             if ($block['type'] === 'single') {
                 $dt = !empty($block['date'])
                     ? Carbon::parse($block['date'])
-                    : $this->applyOffset($base, $block['offset']);
+                    : $this->applyOffset($base, $block['offset'] ?? []);
             } else {
                 // for repeats, we just check the very first occurrence
-                $dt = $this->applyOffset($base, $block['start_offset']);
+                $dt = $this->applyOffset($base, $block['start_offset'] ?? []);
             }
 
             if ($dt->gt($completionDate)) {
@@ -71,47 +69,90 @@ class PaymentPlanService
             }
         }
 
+        $singlesPct = collect($blocks)
+            ->where('type', 'single')
+            ->sum('percentage');
+
+        $maxBeforeHandover = 100 - (float) $plan->handover_percentage;
+        if ($singlesPct - $maxBeforeHandover > 1e-9) {
+            throw new \InvalidArgumentException(
+                "Singles total percentage ($singlesPct%) exceeds the available space before handover ({$maxBeforeHandover}%)."
+            );
+        }
+
+        $usedPct = 0.0;
+
         foreach ($blocks as $block) {
-            if ($block['type'] === 'single') {
-                if ($block['description'] === 'Down payment') {
-                    $dt = Carbon::now();
-                } else {
-                    $dt = !empty($block['date'])
-                        ? Carbon::parse($block['date'])
-                        : $this->applyOffset($base, $block['offset']);
-                }
+            if ($block['type'] !== 'single') continue;
 
-                $isBooking = !$firstSingle;
-                $firstSingle = true;
-
-                $insts->push($this->makeInstallment(
-                    $plan,
-                    $block,
-                    $dt,
-                    $isBooking,
-                    $price
-                ));
-
+            $processed = strtolower(str_replace(' ', '', $block['description']));
+            if ($processed === 'downpayment') {
+                $dt = Carbon::now();
             } else {
-                // only one repeat-block allowed: auto-calc count to deadline
-                $dt = $this->applyOffset($base, $block['start_offset']);
-                while ($dt->lte($completionDate)) {
-                    $insts->push($this->makeInstallment(
-                        $plan,
-                        ['description' => $block['description'], 'percentage' => $block['percentage']],
-                        $dt,
-                        false,
-                        $price
-                    ));
-                    $dt = $this->applyOffset($dt, $block['frequency']);
+                $dt = !empty($block['date'])
+                    ? Carbon::parse($block['date'])
+                    : $this->applyOffset($base, $block['offset']);
+            }
+
+            $isBooking = !$firstSingle;
+            $firstSingle = true;
+
+            $inst = $this->makeInstallment(
+                $plan,
+                $block,
+                $dt,
+                $isBooking,
+                $price
+            );
+
+            $insts->push($inst);
+            $usedPct += (float) $inst->percentage;
+        }
+        
+        foreach ($blocks as $block) {
+            if ($block['type'] !== 'repeat') continue;
+
+            $dt = $this->applyOffset($base, $block['start_offset'] ?? []);
+            $blockPct = (float) $block['percentage'];
+
+            while ($dt->lt($completionDate)) {
+                $remainingPct = 100 - (float) $plan->handover_percentage - $usedPct;
+
+                if ($remainingPct <= 1e-9) {
+                    // لم يعد هناك مساحة قبل الـHandover
+                    break;
                 }
+
+                // خذ الأقل: نسبة البلوك أو المتبقي
+                $thisPct = min($blockPct, $remainingPct);
+
+                // لا تنشئ قسط شبه صفري
+                if ($thisPct < 1e-6) break;
+
+                $inst = $this->makeInstallment(
+                    $plan,
+                    ['description' => $block['description'], 'percentage' => $thisPct],
+                    $dt,
+                    false,
+                    $price
+                );
+                $insts->push($inst);
+                $usedPct += (float) $inst->percentage;
+
+                // إن كنا قلّصنا النسبة عن blockPct بسبب الcap، نتوقف (آخر قسط متكرر)
+                if ($thisPct + 1e-9 < $blockPct) {
+                    break;
+                }
+
+                // انتقل للتاريخ التالي
+                $dt = $this->applyOffset($dt, $block['frequency'] ?? []);
             }
         }
 
         // leftover percentage
-        $usedPct = $insts->sum('percentage');
-        $leftover = 100 - $usedPct - $plan->handover_percentage;
-        if ($leftover > 0) {
+        // 3) إن بقي نقص قبل الـHandover أضِف Balance عند تاريخ الإكمال
+        $leftover = 100 - $usedPct - (float) $plan->handover_percentage;
+        if ($leftover > 1e-9) {
             $insts->push($this->makeInstallment(
                 $plan,
                 ['description' => 'Balance at completion', 'percentage' => $leftover],
@@ -119,12 +160,13 @@ class PaymentPlanService
                 false,
                 $price
             ));
+            $usedPct += $leftover;
         }
 
-        // 3) Finally, auto-add the handover at completion date
+        // 4) أضف الـHandover دائمًا في تاريخ الـECD
         $insts->push($this->makeInstallment(
             $plan,
-            ['description' => 'Handover Installment', 'percentage' => $plan->handover_percentage],
+            ['description' => 'Handover Installment', 'percentage' => (float) $plan->handover_percentage],
             $completionDate,
             false,
             $price

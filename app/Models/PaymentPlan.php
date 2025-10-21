@@ -23,7 +23,6 @@ class PaymentPlan extends Model
         'EOI',
         'booking_percentage',
         'handover_percentage',
-        'construction_percentage',
         'is_default',
         'blocks',
     ];
