@@ -360,7 +360,7 @@ class BookingController extends Controller
             $data['issuance_date'] = $fields->getSimpleField('date_of_issue')->value ?? null;
         } catch (\Exception $ex) {
             Log::error("OCR extractions failed: " . $ex->getMessage());
-            return response()->json(['error' => 'OCR extractions failed.'], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return response()->json(['error' => $ex->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
         $filePath = $file->store('passports', 'local');

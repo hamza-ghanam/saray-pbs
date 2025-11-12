@@ -89,7 +89,7 @@ class SalesOfferController extends Controller
         $validator->after(function ($validator) use ($request) {
             if ($request->filled('unit_id')) {
                 $unit = Unit::find($request->unit_id);
-                if ($unit && ! in_array($unit->status, [Unit::STATUS_AVAILABLE, Unit::STATUS_CANCELLED])) {
+                if ($unit && !in_array($unit->status, [Unit::STATUS_AVAILABLE, Unit::STATUS_CANCELLED, Unit::STATUS_PRE_HOLD, Unit::STATUS_HOLD])) {
                     $validator->errors()->add('unit_id', 'Unit is not available anymore!');
                 }
             }
@@ -127,7 +127,7 @@ class SalesOfferController extends Controller
 
         $basePrice = $unit->price;
         $discountPct = $request->input('discount', 0);
-        $offerPrice   = $discountPct > 0
+        $offerPrice = $discountPct > 0
             ? round($basePrice * (1 - $discountPct / 100), 2)
             : $basePrice;
 
@@ -143,21 +143,21 @@ class SalesOfferController extends Controller
         });
 
         $salesOffer = SalesOffer::create([
-            'unit_id'           => $unit->id,
-            'generated_by_id'   => auth()->id(),
-            'offer_date'        => now(),
-            'offer_price'       => $offerPrice,
-            'discount'          => $discountPct,
-            'notes'             => $request->input('notes', null),
+            'unit_id' => $unit->id,
+            'generated_by_id' => auth()->id(),
+            'offer_date' => now(),
+            'offer_price' => $offerPrice,
+            'discount' => $discountPct,
+            'notes' => $request->input('notes', null),
         ]);
 
         // Prepare the data array for the PDF view.
         $salesOfferData = [
-            'salesOffer'    => $salesOffer,
-            'unit'          => $unit,
-            'notes'         => $data['notes'] ?? null,
-            'paymentPlans'  => $allPlans,
-            'generated_by'  => $user,
+            'salesOffer' => $salesOffer,
+            'unit' => $unit,
+            'notes' => $data['notes'] ?? null,
+            'paymentPlans' => $allPlans,
+            'generated_by' => $user,
         ];
 
         // Generate a PDF from the view 'pdf.sales_offer'.
@@ -174,9 +174,9 @@ class SalesOfferController extends Controller
                 $mpdf->autoScriptToLang = true;
                 $mpdf->autoLangToFont = true;
                 $mpdf->allow_charset_conversion = false; // This is often crucial for Arabic/RTL
-                $mpdf->useKerning       = false;
-                $mpdf->useLigatures     = false;
-                $mpdf->jpeg_quality   = 78;
+                $mpdf->useKerning = false;
+                $mpdf->useLigatures = false;
+                $mpdf->jpeg_quality = 78;
             }
         ]);
 

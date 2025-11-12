@@ -75,7 +75,7 @@ class HoldingController extends Controller
         }
 
         // Retrieve the dynamic limit from the request (default: 10, max: 100)
-        $limit = min((int) $request->get('limit', 10), 100);
+        $limit = min((int)$request->get('limit', 10), 100);
 
         // Sort such that "Pre-Hold" statuses appear first. The CASE statement sets Pre-Hold to 0 (highest priority).
         $holdings = Holding::with(['user', 'unit'])
@@ -130,7 +130,7 @@ class HoldingController extends Controller
             return response()->json(['error' => 'Unit not found'], Response::HTTP_NOT_FOUND);
         }
 
-        if (!in_array($unit->status, ['Available', 'Cancelled'])) {
+        if (!in_array($unit->status, [Unit::STATUS_AVAILABLE, Unit::STATUS_CANCELLED])) {
             return response()->json([
                 'error' => 'Cannot hold a unit unless it is "Available" or "Cancelled".'
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
@@ -139,8 +139,8 @@ class HoldingController extends Controller
         DB::beginTransaction();
         try {
             $holding = Holding::create([
-                'unit_id'    => $id,
-                'status'     => 'Pre-Hold',
+                'unit_id' => $id,
+                'status' => 'Pre-Hold',
                 'created_by' => $user->id,
             ]);
 
@@ -151,6 +151,137 @@ class HoldingController extends Controller
             return response()->json([
                 'message' => 'Holding is created and pending approval.',
                 'holding' => $holding
+            ], Response::HTTP_OK);
+        } catch (\Exception $ex) {
+            DB::rollback();
+            return response()->json(['error' => $ex->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Release a held unit (remove hold).
+     *
+     * Cancels the latest active holding record for the unit and changes the unit status to "Available".
+     * Only allowed if the unit is currently "Hold" and the latest holding is also "Hold".
+     *
+     * @OA\Post(
+     *     path="/units/{id}/release",
+     *     summary="Release a unit (remove hold)",
+     *     description="Cancels the active holding for the unit and sets its status to Available. Requires the user to have the 'release unit' permission.",
+     *     tags={"Units"},
+     *     security={{"sanctum":{}}},
+     *
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID of the unit to release",
+     *         required=true,
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Unit successfully released",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unit successfully released."),
+     *             @OA\Property(
+     *                 property="unit",
+     *                 type="object",
+     *                 description="The updated unit",
+     *                 example={
+     *                     "id": 10,
+     *                     "status": "Available",
+     *                     "status_changed_at": "2025-11-12T15:10:00Z",
+     *                     "building_id": 3,
+     *                     "number": "A-1204",
+     *                     "updated_at": "2025-11-12T15:10:00Z",
+     *                     "created_at": "2025-09-20T08:30:00Z"
+     *                 }
+     *             )
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=403,
+     *         description="Forbidden (user lacks 'release unit' permission)",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="Forbidden")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=404,
+     *         description="Unit not found or no active holding found",
+     *         @OA\JsonContent(
+     *             oneOf={
+     *                 @OA\Schema(
+     *                     @OA\Property(property="error", type="string", example="Unit not found")
+     *                 ),
+     *                 @OA\Schema(
+     *                     @OA\Property(property="error", type="string", example="No active holding found for this unit.")
+     *                 )
+     *             }
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=422,
+     *         description="Business rule violation (unit/holding not in Hold state)",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="Cannot release a unit unless it is Hold.")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="Unexpected error")
+     *         )
+     *     )
+     * )
+     */
+    public function release(Request $request, $id)
+    {
+        $user = $request->user();
+        Log::info("User {$user->id} is attempting to release a unit with ID: {$id}");
+
+        if (!$user->can('release unit')) {
+            return response()->json(['error' => 'Forbidden'], Response::HTTP_FORBIDDEN);
+        }
+
+        $unit = Unit::find($id);
+        if (!$unit) {
+            return response()->json(['error' => 'Unit not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $holding = Holding::where('unit_id', $id)
+            ->latest()
+            ->first();
+
+        if (!$holding) {
+            return response()->json(['error' => 'No active holding found for this unit.'], Response::HTTP_NOT_FOUND);
+        }
+
+        if ($unit->status !== Unit::STATUS_HOLD || $holding->status !== Holding::STATUS_HOLD) {
+            return response()->json([
+                'error' => "Cannot release a unit unless it is 'Hold'",
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        DB::beginTransaction();
+        try {
+            $holding->status = Holding::STATUS_CANCELLED;
+            $holding->save();
+
+            $unit->status = Unit::STATUS_AVAILABLE;
+            $unit->status_changed_at = now();
+            $unit->save();
+
+            DB::commit();
+            return response()->json([
+                'message' => 'Unit successfully released.',
+                'unit' => $unit
             ], Response::HTTP_OK);
         } catch (\Exception $ex) {
             DB::rollback();
@@ -234,12 +365,12 @@ class HoldingController extends Controller
         }
 
         if ($action === 'approve') { // approve
-            $holding->status = 'Hold';
+            $holding->status = Holding::STATUS_HOLD;
             $unit->status = Unit::STATUS_HOLD;
             $approvalStatus = 'Approved';
             $messageText = "Holding approved by {$role}.";
         } else { // reject
-            $holding->status = 'Rejected';
+            $holding->status = Holding::STATUS_REJECTED;
             $unit->status = Unit::STATUS_AVAILABLE;
             $approvalStatus = 'Rejected';
             $messageText = "Holding rejected by {$role}.";
@@ -251,15 +382,15 @@ class HoldingController extends Controller
             $holding->save();
             $unit->save();
             $approval = Approval::create([
-                'ref_id'        => $holding->id,
-                'ref_type'      => 'App\Models\Holding',
-                'approved_by'   => $user->id,
+                'ref_id' => $holding->id,
+                'ref_type' => 'App\Models\Holding',
+                'approved_by' => $user->id,
                 'approval_type' => $role,
-                'status'        => $approvalStatus,
+                'status' => $approvalStatus,
             ]);
             DB::commit();
             return response()->json([
-                'message'  => $messageText,
+                'message' => $messageText,
                 'approval' => $approval,
             ], Response::HTTP_OK);
         } catch (\Exception $ex) {
@@ -271,7 +402,7 @@ class HoldingController extends Controller
     /**
      * Retrieve the holding and associated unit, ensuring both are in "Pre-Hold" status.
      *
-     * @param  int $id
+     * @param int $id
      * @return array An array containing [$holding, $unit]
      */
     private function getHoldingAndUnitOrFail($id): array
@@ -286,7 +417,7 @@ class HoldingController extends Controller
             abort(Response::HTTP_NOT_FOUND, 'Unit not found');
         }
 
-        if ($holding->status !== 'Pre-Hold') {
+        if ($holding->status !== Holding::STATUS_PRE_HOLD) {
             abort(Response::HTTP_UNPROCESSABLE_ENTITY, 'Holding is not in Pre-Hold status.');
         }
 

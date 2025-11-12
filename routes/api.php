@@ -121,6 +121,7 @@ Route::middleware('auth:sanctum')->group(function () {
 // Unit Hold
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/units/{id}/hold', [HoldingController::class, 'hold']);
+    Route::post('/units/{id}/release', [HoldingController::class, 'release']);
     Route::post('/units/hold/{id}/respond', [HoldingController::class, 'respondHold']);
 });
 

@@ -2359,6 +2359,141 @@
                 ]
             }
         },
+        "/units/{id}/release": {
+            "post": {
+                "tags": [
+                    "Units"
+                ],
+                "summary": "Release a unit (remove hold)",
+                "description": "Cancels the active holding for the unit and sets its status to Available. Requires the user to have the 'release unit' permission.",
+                "operationId": "fe56493ded5ddb747d50174f4687c573",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the unit to release",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Unit successfully released",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unit successfully released."
+                                        },
+                                        "unit": {
+                                            "description": "The updated unit",
+                                            "type": "object",
+                                            "example": {
+                                                "id": 10,
+                                                "status": "Available",
+                                                "status_changed_at": "2025-11-12T15:10:00Z",
+                                                "building_id": 3,
+                                                "number": "A-1204",
+                                                "updated_at": "2025-11-12T15:10:00Z",
+                                                "created_at": "2025-09-20T08:30:00Z"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden (user lacks 'release unit' permission)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Forbidden"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Unit not found or no active holding found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Unit not found"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "No active holding found for this unit."
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Business rule violation (unit/holding not in Hold state)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Cannot release a unit unless it is Hold."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Unexpected error"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/units/hold/{id}/respond": {
             "post": {
                 "tags": [
@@ -7469,8 +7604,7 @@
                     "admin_fee",
                     "EOI",
                     "booking_percentage",
-                    "handover_percentage",
-                    "construction_percentage"
+                    "handover_percentage"
                 ],
                 "properties": {
                     "id": {
@@ -7507,11 +7641,6 @@
                         "example": 20
                     },
                     "handover_percentage": {
-                        "type": "number",
-                        "format": "float",
-                        "example": 40
-                    },
-                    "construction_percentage": {
                         "type": "number",
                         "format": "float",
                         "example": 40

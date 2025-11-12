@@ -9,6 +9,12 @@ class Holding extends Model
 {
     use SoftDeletes;
 
+    public const STATUS_PRE_HOLD = 'Pre-Hold';
+    public const STATUS_HOLD = 'Hold';
+    public const STATUS_REJECTED = 'Rejected';
+    public const STATUS_CANCELLED = 'Cancelled';
+    public const STATUS_PROCESSED = 'Processed';
+
     protected $fillable = [
         'unit_id',
         'status',
