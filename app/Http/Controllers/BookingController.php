@@ -184,6 +184,7 @@ class BookingController extends Controller
      *                 @OA\Property(property="status",     type="string",  example="Pending"),
      *                 @OA\Property(property="agent_id", type="integer", example=3),
      *                 @OA\Property(property="sale_source_id", type="integer",example=7),
+     *                 @OA\Property(property="agency_com_agent", type="string", example="John Smith"),
      *                 @OA\Property(property="note",     type="string",  example="Mr. Feras"),
      *                 @OA\Property(property="signed_at",  type="string",  format="date-time", nullable=true, example=null),
      *                 @OA\Property(
@@ -401,6 +402,7 @@ class BookingController extends Controller
      *                 @OA\Property(property="receipt", type="string", format="binary"),
      *                 @OA\Property(property="discount", type="number", format="float", example=5),
      *                 @OA\Property(property="agent_id", type="integer", nullable=true, example=3, description="User ID of the agent (must not be Broker or Contractor)"),
+     *                 @OA\Property(property="agency_com_agent", type="string", example="John Smith."),
      *                 @OA\Property(property="sale_source_id", type="integer", nullable=true, example=7, description="User ID of the source of sale"),
      *                 @OA\Property(property="notes", type="string", example="Customer requests early handover."),
      *                 @OA\Property(
@@ -472,6 +474,8 @@ class BookingController extends Controller
                 }
             ],
 
+            'agency_com_agent' => 'nullable|string|max:255',
+
             'customers' => 'required|array|min:1',
             'customers.*.name' => 'required|string|max:255',
             'customers.*.passport_number' => 'required|string|max:50',
@@ -539,6 +543,7 @@ class BookingController extends Controller
 
                 'agent_id' => $validated['agent_id'] ?? null,
                 'sale_source_id' => $validated['sale_source_id'] ?? null,
+                'agency_com_agent' => $validated['agency_com_agent'] ?? null,
             ]);
 
             // 6. Create CustomerInfo entries
@@ -849,7 +854,7 @@ class BookingController extends Controller
                 }
             ],
             'sale_source_id' => 'sometimes|integer|exists:users,id',
-
+            'agency_com_agent' => 'nullable|string|max:255',
         ]);
 
         if ($validator->fails()) {
@@ -891,6 +896,10 @@ class BookingController extends Controller
 
             if ($request->has('sale_source_id')) {
                 $booking->sale_source_id = $request->sale_source_id;
+            }
+
+            if ($request->has('agency_com_agent')) {
+                $booking->agency_com_agent = $request->agency_com_agent;
             }
 
             if ($request->has('notes')) {

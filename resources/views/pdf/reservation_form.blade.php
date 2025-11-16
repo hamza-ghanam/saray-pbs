@@ -458,6 +458,11 @@
             <th class="rtl-text right-th" style="width: 32%;">اسم شركة الوساطة</th>
         </tr>
         <tr>
+            <th class="left-th" style="width: 32%;">Agency Company Agent</th>
+            <td style="text-align: center;">{{ $booking->agency_com_agent ?? '-' }}</td>
+            <th class="rtl-text right-th" style="width: 32%;">وسيط شركة الوساطة</th>
+        </tr>
+        <tr>
             <th class="left-th" style="width: 32%;">Agent Name</th>
             <td style="text-align: center;">{{ $booking->agent?->name ?? '-' }}</td>
             <th class="rtl-text right-th" style="width: 32%;">اسم الوسيط</th>
