@@ -156,7 +156,7 @@
         </tr>
         <tr>
             <th class="left-th">Project:</th>
-            <td style="text-align: center;">{{ $unit->building->name }}</td>
+            <td style="text-align: center;">{{ $unit->building->name }} ({{ $unit->project_no }})</td>
             <th class="rtl-text right-th">المشروع:</th>
         </tr>
         <tr>
@@ -575,7 +575,7 @@
                     {{ $installment->description }}
                     @if($loop->first)
                         <br/><small>({{ (int) $installment->percentage }}%
-                            + {{ (int) $paymentPlan->dld_fee_percentage }}% DLD fee + Admin fee - EOI)</small>
+                            + {{ (int) $paymentPlan->dld_fee_percentage }}% DLD fee + Admin fee + EOI)</small>
                     @endif
                 </td>
                 <td class="left-th" style="width: 25%; text-align: center; padding: 10px;">
@@ -930,7 +930,7 @@
                 Bank Name
             </td>
             <td class="left-th" style="width: 50%; text-align: center;  padding: 10px;">
-                &nbsp;
+                Emirates NBD Bank PJSC
             </td>
             <td class="rtl-text right-th" style="width: 25%;  padding: 10px;">
                 اسم المصرف
@@ -952,7 +952,7 @@
                 Account No.
             </td>
             <td class="left-th" style="width: 50%; text-align: center;  padding: 10px;">
-                &nbsp;
+                0205931383803
             </td>
             <td class="rtl-text right-th" style="width: 25%;  padding: 10px;">
                 رقم الحساب
@@ -963,7 +963,7 @@
                 IBAN
             </td>
             <td class="left-th" style="width: 50%; text-align: center;  padding: 10px;">
-                &nbsp;
+                AE180260000205931383803
             </td>
             <td class="rtl-text right-th" style="width: 25%;  padding: 10px;">
                 آيبان
@@ -974,7 +974,7 @@
                 Currency
             </td>
             <td class="left-th" style="width: 50%; text-align: center; padding: 10px;">
-                &nbsp;
+                AED (<img src="{{ public_path('images/aed_symbol.svg') }}" width="12" alt="AED"/>)
             </td>
             <td class="rtl-text right-th" style="width: 25%;  padding: 10px;">
                 العملة
@@ -982,13 +982,13 @@
         </tr>
         <tr>
             <td class="left-th" style="width: 25%;  padding: 10px;">
-                Swift
+                BIC Code
             </td>
             <td class="left-th" style="width: 50%; text-align: center;  padding: 10px;">
-                &nbsp;
+                EBILAEADXXX
             </td>
             <td class="rtl-text right-th" style="width: 25%;  padding: 10px;">
-                سويفت
+                رمز BIC
             </td>
         </tr>
     </table>

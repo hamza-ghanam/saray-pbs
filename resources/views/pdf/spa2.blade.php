@@ -342,7 +342,7 @@
         </tr>
         <tr>
             <th class="left-th">Project:</th>
-            <td style="text-align: center;">{{ $unit->building->name }}</td>
+            <td style="text-align: center;">{{ $unit->building->name }} ({{ $unit->project_no }})</td>
             <th class="rtl-text right-th">المشروع:</th>
         </tr>
         <tr>
@@ -3093,7 +3093,7 @@
                     {{ $installment->description }}
                     @if($loop->first)
                         <br/><small>({{ (int) $installment->percentage }}%
-                            + {{ (int) $paymentPlan->dld_fee_percentage }}% DLD fee + Admin fee - EOI)</small>
+                            + {{ (int) $paymentPlan->dld_fee_percentage }}% DLD fee + Admin fee + EOI)</small>
                     @endif
                 </td>
                 <td class="left-th" style="width: 25%; text-align: center; padding: 10px;">

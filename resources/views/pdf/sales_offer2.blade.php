@@ -279,24 +279,13 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <tr>
-                        <td>Expression of interest (EOI)</td>
-                        <td>-</td>
-                        <td>-</td>
-                        <td>
-                            <img src="{{ public_path('images/aed_symbol.svg') }}" width="12"
-                                 alt="AED"/> {{ number_format($plan->EOI, 2) }}
-                            <br/>
-                            <strong>$ </strong>{{ number_format($plan->EOI / $dollar_rate, 2) }}
-                        </td>
-                    </tr>
                     @foreach($plan->installments as $installment)
                         <tr>
                             <td>
                                 {{ $installment->description }}
                                 @if($loop->first)
                                     <br/><small>({{ (int) $installment->percentage }}%
-                                        + {{ (int) $plan->dld_fee_percentage }}% DLD fee + Admin fee - EOI)</small>
+                                        + {{ (int) $plan->dld_fee_percentage }}% DLD fee + Admin fee + EOI)</small>
                                 @endif
                             </td>
                             <td>
