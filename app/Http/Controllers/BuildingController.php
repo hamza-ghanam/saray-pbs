@@ -114,7 +114,7 @@ class BuildingController extends Controller
      *         @OA\MediaType(
      *             mediaType="multipart/form-data",
      *             @OA\Schema(
-     *                 required={"name","location","status","plot_no","ecd"},
+     *                 required={"name","location","status","plot_no","project_no","ecd"},
      *                 @OA\Property(property="name",     type="string", example="Building A"),
      *                 @OA\Property(property="location", type="string", example="Downtown"),
      *                 @OA\Property(property="status",   type="string", example="Off-Plan"),

@@ -1324,6 +1324,7 @@
                                     "location",
                                     "status",
                                     "plot_no",
+                                    "project_no",
                                     "ecd"
                                 ],
                                 "properties": {
@@ -1342,6 +1343,10 @@
                                     "plot_no": {
                                         "type": "string",
                                         "example": "648-8586"
+                                    },
+                                    "project_no": {
+                                        "type": "string",
+                                        "example": "4058"
                                     },
                                     "ecd": {
                                         "type": "string",
@@ -1468,6 +1473,10 @@
                                     "plot_no": {
                                         "type": "string",
                                         "example": "648-8586"
+                                    },
+                                    "project_no": {
+                                        "type": "string",
+                                        "example": "4058"
                                     },
                                     "ecd": {
                                         "type": "string",
@@ -7323,6 +7332,10 @@
                     "plot_no": {
                         "type": "string",
                         "example": "648-8586"
+                    },
+                    "project_no": {
+                        "type": "string",
+                        "example": "4058"
                     },
                     "added_by_id": {
                         "type": "integer",
