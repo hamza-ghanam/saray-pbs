@@ -318,6 +318,10 @@
                                                     "type": "integer",
                                                     "example": 7
                                                 },
+                                                "agency_com_agent": {
+                                                    "type": "string",
+                                                    "example": "John Smith"
+                                                },
                                                 "note": {
                                                     "type": "string",
                                                     "example": "Mr. Feras"
@@ -712,6 +716,10 @@
                                         "type": "integer",
                                         "example": 3,
                                         "nullable": true
+                                    },
+                                    "agency_com_agent": {
+                                        "type": "string",
+                                        "example": "John Smith."
                                     },
                                     "sale_source_id": {
                                         "description": "User ID of the source of sale",
@@ -1343,6 +1351,10 @@
                                         "type": "string",
                                         "example": "648-8586"
                                     },
+                                    "project_no": {
+                                        "type": "string",
+                                        "example": "4058"
+                                    },
                                     "ecd": {
                                         "type": "string",
                                         "format": "date",
@@ -1468,6 +1480,10 @@
                                     "plot_no": {
                                         "type": "string",
                                         "example": "648-8586"
+                                    },
+                                    "project_no": {
+                                        "type": "string",
+                                        "example": "4058"
                                     },
                                     "ecd": {
                                         "type": "string",
@@ -7323,6 +7339,10 @@
                     "plot_no": {
                         "type": "string",
                         "example": "648-8586"
+                    },
+                    "project_no": {
+                        "type": "string",
+                        "example": "4058"
                     },
                     "added_by_id": {
                         "type": "integer",
