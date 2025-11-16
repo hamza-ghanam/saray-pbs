@@ -1332,6 +1332,7 @@
                                     "location",
                                     "status",
                                     "plot_no",
+                                    "project_no",
                                     "ecd"
                                 ],
                                 "properties": {
