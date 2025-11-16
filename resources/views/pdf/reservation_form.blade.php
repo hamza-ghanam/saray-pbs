@@ -156,7 +156,7 @@
         </tr>
         <tr>
             <th class="left-th">Project:</th>
-            <td style="text-align: center;">{{ $unit->building->name }} ({{ $unit->project_no }})</td>
+            <td style="text-align: center;">{{ $unit->building->name }} ({{ $unit->building->project_no }})</td>
             <th class="rtl-text right-th">المشروع:</th>
         </tr>
         <tr>
