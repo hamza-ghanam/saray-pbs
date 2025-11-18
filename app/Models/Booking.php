@@ -20,6 +20,7 @@ class Booking extends Model
         'payment_plan_id',
         'agent_id',
         'sale_source_id',
+        'agency_com_agent',
     ];
 
     protected $hidden = ['receipt_path'];

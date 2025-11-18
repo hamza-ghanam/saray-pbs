@@ -283,7 +283,7 @@ class BuildingController extends Controller
         }
 
         $building = Building::findOrFail($id);
-        $data = $request->only(['name', 'location', 'status', 'ecd']);
+        $data = $request->only(['name', 'location', 'status', 'ecd', 'plot_no', 'project_no']);
 
         // If there's a new image, delete the old one and store the new
         if ($request->hasFile('image')) {
