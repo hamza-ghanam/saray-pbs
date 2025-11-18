@@ -131,7 +131,7 @@ class Booking extends Model
     {
         return in_array($this->status, [
             self::STATUS_PRE_BOOKED,
-            self::STATUS_BOOKED
+            // self::STATUS_BOOKED
         ]);
     }
 }
