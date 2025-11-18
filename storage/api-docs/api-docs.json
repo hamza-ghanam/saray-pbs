@@ -365,9 +365,9 @@
                 "tags": [
                     "Bookings"
                 ],
-                "summary": "Update a booking (and a specific customer info) by ID",
-                "description": "Update a booking and a specific customer info record.",
-                "operationId": "6f58c5d17bbc7034b229d97390054811",
+                "summary": "Update an existing booking",
+                "description": "Update booking details (payment plan, agent, notes, etc.) and optionally update one customer that belongs to this booking.",
+                "operationId": "updateBooking",
                 "parameters": [
                     {
                         "name": "id",
@@ -376,65 +376,43 @@
                         "required": true,
                         "schema": {
                             "type": "integer",
-                            "example": 42
-                        }
-                    },
-                    {
-                        "name": "customer_id",
-                        "in": "query",
-                        "description": "ID of the customer info to update (required if customer fields are included)",
-                        "required": false,
-                        "schema": {
-                            "type": "integer",
-                            "example": 101
+                            "example": 123
                         }
                     }
                 ],
                 "requestBody": {
-                    "required": true,
+                    "description": "Booking fields and optional customer data to update.",
+                    "required": false,
                     "content": {
                         "multipart/form-data": {
                             "schema": {
-                                "properties": {
-                                    "name": {
-                                        "type": "string",
-                                        "example": "John Smith"
-                                    },
-                                    "passport_number": {
-                                        "type": "string",
-                                        "example": "N001234567"
-                                    },
-                                    "birth_date": {
-                                        "type": "string",
-                                        "format": "date",
-                                        "example": "1992-02-05"
-                                    },
-                                    "gender": {
-                                        "type": "string",
-                                        "example": "Male"
-                                    },
-                                    "nationality": {
-                                        "type": "string",
-                                        "example": "Syrian Arab Republic"
-                                    },
-                                    "payment_plan_id": {
-                                        "type": "integer",
-                                        "example": 5
-                                    },
-                                    "receipt": {
-                                        "description": "Optional new receipt file",
-                                        "type": "string",
-                                        "format": "binary"
-                                    }
-                                },
-                                "type": "object"
+                                "$ref": "#/components/schemas/BookingUpdateRequest"
+                            }
+                        },
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BookingUpdateRequest"
+                            },
+                            "example": {
+                                "payment_plan_id": 5,
+                                "discount": 10,
+                                "notes": "Customer requested to update passport and agent.",
+                                "agent_id": 12,
+                                "sale_source_id": 4,
+                                "agency_com_agent": "2% external commission",
+                                "customer_id": 33,
+                                "name": "John Doe",
+                                "passport_number": "A1234567",
+                                "birth_date": "1991-01-15",
+                                "gender": "Male",
+                                "nationality": "Jordanian"
                             }
                         }
                     }
                 },
                 "responses": {
                     "200": {
-                        "description": "Booking updated successfully",
+                        "description": "Booking updated successfully.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -443,17 +421,32 @@
                             }
                         }
                     },
+                    "403": {
+                        "description": "Forbidden. The authenticated user is not allowed to update this booking."
+                    },
                     "404": {
-                        "description": "Booking not found"
+                        "description": "Booking not found, or specified customer does not belong to this booking."
                     },
                     "422": {
-                        "description": "Validation error"
-                    },
-                    "403": {
-                        "description": "Forbidden"
+                        "description": "Validation error.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                },
+                                "example": {
+                                    "payment_plan_id": [
+                                        "The selected payment plan id is invalid."
+                                    ],
+                                    "customer_id": [
+                                        "The customer id field is required when name is present."
+                                    ]
+                                }
+                            }
+                        }
                     },
                     "500": {
-                        "description": "Internal Server Error"
+                        "description": "Unexpected server error while updating the booking."
                     }
                 },
                 "security": [
@@ -7299,6 +7292,85 @@
                         "type": "string",
                         "format": "date-time",
                         "example": "2025-05-02T16:00:00Z"
+                    }
+                },
+                "type": "object"
+            },
+            "BookingUpdateRequest": {
+                "description": "Fields allowed when updating a booking. Supports partial updates and file upload.",
+                "properties": {
+                    "payment_plan_id": {
+                        "description": "Payment plan ID (must belong to the same unit as the booking)",
+                        "type": "integer",
+                        "example": 5,
+                        "nullable": true
+                    },
+                    "discount": {
+                        "description": "The applicable discount of the booking price, required ONLY IF the payment_plan_id is passed.",
+                        "type": "number",
+                        "example": 10,
+                        "nullable": true
+                    },
+                    "notes": {
+                        "description": "Booking-level internal notes",
+                        "type": "string",
+                        "example": "Customer asked to change payment plan",
+                        "nullable": true
+                    },
+                    "agent_id": {
+                        "description": "Sales agent ID (cannot be a Broker or Contractor)",
+                        "type": "integer",
+                        "example": 12,
+                        "nullable": true
+                    },
+                    "sale_source_id": {
+                        "description": "Sale source user ID",
+                        "type": "integer",
+                        "example": 4,
+                        "nullable": true
+                    },
+                    "agency_com_agent": {
+                        "description": "Agency commission text",
+                        "type": "string",
+                        "example": "2% commission for external broker",
+                        "nullable": true
+                    },
+                    "customer_id": {
+                        "description": "ID of the customer (from customer_infos table) to update",
+                        "type": "integer",
+                        "example": 33,
+                        "nullable": true
+                    },
+                    "name": {
+                        "description": "Customer full name",
+                        "type": "string",
+                        "example": "John Doe",
+                        "nullable": true
+                    },
+                    "passport_number": {
+                        "description": "Customer passport number",
+                        "type": "string",
+                        "example": "A1234567",
+                        "nullable": true
+                    },
+                    "birth_date": {
+                        "description": "Customer date of birth (YYYY-MM-DD)",
+                        "type": "string",
+                        "format": "date",
+                        "example": "1991-01-15",
+                        "nullable": true
+                    },
+                    "gender": {
+                        "description": "Customer gender",
+                        "type": "string",
+                        "example": "Male",
+                        "nullable": true
+                    },
+                    "nationality": {
+                        "description": "Customer nationality",
+                        "type": "string",
+                        "example": "Jordanian",
+                        "nullable": true
                     }
                 },
                 "type": "object"

@@ -82,7 +82,7 @@ class ReservationFormController extends Controller
         //    e.g., only generate RF if:
         //        - the unit has status "Booked"
         //        - the booking status is "RF Pending", "SPA Pending", or "Booked"
-        $validBookingStatuses = ['RF Pending', 'SPA Pending', 'Booked'];
+        $validBookingStatuses = [Booking::STATUS_RF_PENDING, Booking::STATUS_SPA_PENDING, Booking::STATUS_BOOKED];
         if ($booking->unit->status !== Unit::STATUS_BOOKED ||
             !in_array($booking->status, $validBookingStatuses)) {
             return response()->json([
@@ -378,7 +378,7 @@ class ReservationFormController extends Controller
 
         // 5. Change the status ob the Booking to be "Pending SPA"
         if ($reservationForm->booking) {
-            $reservationForm->booking->status = 'SPA Pending';
+            $reservationForm->booking->status = Booking::STATUS_SPA_PENDING;
             $reservationForm->booking->save();
         }
 

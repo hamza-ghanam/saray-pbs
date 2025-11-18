@@ -91,7 +91,7 @@ class SpaController extends Controller
         //    only generate SPA if:
         //      - the unit has status "Booked"
         //      - the booking status is "SPA Pending" or "Booked"
-        $validBookingStatuses = ['SPA Pending', 'Booked'];
+        $validBookingStatuses = [Booking::STATUS_SPA_PENDING, Booking::STATUS_BOOKED];
         if ($booking->unit->status !== Unit::STATUS_BOOKED ||
             !in_array($booking->status, $validBookingStatuses)) {
             return response()->json([

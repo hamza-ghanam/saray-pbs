@@ -85,6 +85,109 @@ use Mindee\Error\MindeeException;
  *     @OA\Property(property="created_at",         type="string",  format="date-time", example="2025-05-02T16:00:00Z"),
  *     @OA\Property(property="updated_at",         type="string",  format="date-time", example="2025-05-02T16:00:00Z")
  * )
+ *
+ * @OA\Schema(
+ *     schema="BookingUpdateRequest",
+ *     type="object",
+ *     description="Fields allowed when updating a booking. Supports partial updates and file upload.",
+ *
+ *     @OA\Property(
+ *         property="payment_plan_id",
+ *         type="integer",
+ *         nullable=true,
+ *         description="Payment plan ID (must belong to the same unit as the booking)",
+ *         example=5
+ *     ),
+ *
+ *     @OA\Property(
+ *         property="discount",
+ *         type="number",
+ *         nullable=true,
+ *         description="The applicable discount of the booking price, required ONLY IF the payment_plan_id is passed.",
+ *         example=10
+ *     ),
+ *
+ *     @OA\Property(
+ *         property="notes",
+ *         type="string",
+ *         nullable=true,
+ *         description="Booking-level internal notes",
+ *         example="Customer asked to change payment plan"
+ *     ),
+ *
+ *     @OA\Property(
+ *         property="agent_id",
+ *         type="integer",
+ *         nullable=true,
+ *         description="Sales agent ID (cannot be a Broker or Contractor)",
+ *         example=12
+ *     ),
+ *
+ *     @OA\Property(
+ *         property="sale_source_id",
+ *         type="integer",
+ *         nullable=true,
+ *         description="Sale source user ID",
+ *         example=4
+ *     ),
+ *
+ *     @OA\Property(
+ *         property="agency_com_agent",
+ *         type="string",
+ *         nullable=true,
+ *         description="Agency commission text",
+ *         example="2% commission for external broker"
+ *     ),
+ *
+ *     @OA\Property(
+ *         property="customer_id",
+ *         type="integer",
+ *         nullable=true,
+ *         description="ID of the customer (from customer_infos table) to update",
+ *         example=33
+ *     ),
+ *
+ *     @OA\Property(
+ *         property="name",
+ *         type="string",
+ *         nullable=true,
+ *         description="Customer full name",
+ *         example="John Doe"
+ *     ),
+ *
+ *     @OA\Property(
+ *         property="passport_number",
+ *         type="string",
+ *         nullable=true,
+ *         description="Customer passport number",
+ *         example="A1234567"
+ *     ),
+ *
+ *     @OA\Property(
+ *         property="birth_date",
+ *         type="string",
+ *         format="date",
+ *         nullable=true,
+ *         description="Customer date of birth (YYYY-MM-DD)",
+ *         example="1991-01-15"
+ *     ),
+ *
+ *     @OA\Property(
+ *         property="gender",
+ *         type="string",
+ *         nullable=true,
+ *         description="Customer gender",
+ *         example="Male"
+ *     ),
+ *
+ *     @OA\Property(
+ *         property="nationality",
+ *         type="string",
+ *         nullable=true,
+ *         description="Customer nationality",
+ *         example="Jordanian"
+ *     )
+ * )
  */
 class BookingController extends Controller
 {
@@ -576,19 +679,7 @@ class BookingController extends Controller
             }
 
             // 7. Create installments
-            $template = $this->paymentPlanService
-                ->generateInstallments($unit, $paymentPlan, $discountPct);
-
-            $rows = $template->map(fn($i) => [
-                'payment_plan_id' => $paymentPlan->id,
-                'description' => $i->description,
-                'percentage' => $i->percentage,
-                'date' => $i->date,
-                'amount' => $i->amount,
-            ])->all();
-
-            $saved = $booking->installments()->createMany($rows);
-            $booking->setRelation('installments', $saved);
+            $this->generateInstallmentOfPaymentPlan($unit, $paymentPlan, $discountPct, $booking);
 
             // 8. Update unit status
             $unit->update([
@@ -703,7 +794,7 @@ class BookingController extends Controller
 
         if (!$request->hasFile('id_document') && !$request->hasFile('receipt')) {
             return response()->json([
-                'error' => 'You must upload either id_document or receipt.'
+                'error' => 'You must upload either id_document or receipt, or both of them.'
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
@@ -729,7 +820,7 @@ class BookingController extends Controller
                     return response()->json(['message' => 'Customer not found in this booking'], Response::HTTP_NOT_FOUND);
                 }
 
-                $path = $request->file('id_document')->store('customer_docs', 'local');
+                $path = $request->file('id_document')->store('passports', 'local');
                 $customer->update(['document_path' => $path]);
             }
 
@@ -772,62 +863,97 @@ class BookingController extends Controller
     }
 
     /**
-     * Update a booking and a specific customer info record.
-     *
      * @OA\Put(
      *     path="/bookings/{id}",
-     *     summary="Update a booking (and a specific customer info) by ID",
+     *     summary="Update an existing booking",
+     *     description="Update booking details (payment plan, agent, notes, etc.) and optionally update one customer that belongs to this booking.",
+     *     operationId="updateBooking",
      *     tags={"Bookings"},
      *     security={{"sanctum":{}}},
+     *
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
+     *         required=true,
      *         description="ID of the booking to update",
-     *         required=true,
-     *         @OA\Schema(type="integer", example=42)
+     *         @OA\Schema(type="integer", example=123)
      *     ),
-     *     @OA\Parameter(
-     *         name="customer_id",
-     *         in="query",
-     *         description="ID of the customer info to update (required if customer fields are included)",
-     *         required=false,
-     *         @OA\Schema(type="integer", example=101)
-     *     ),
+     *
      *     @OA\RequestBody(
-     *         required=true,
+     *         required=false,
+     *         description="Booking fields and optional customer data to update.",
+     *
+     *             @OA\JsonContent(
+     *                 ref="#/components/schemas/BookingUpdateRequest",
+     *                 example={
+     *                     "payment_plan_id": 5,
+     *                     "discount": 10,
+     *                     "notes": "Customer requested to update passport and agent.",
+     *                     "agent_id": 12,
+     *                     "sale_source_id": 4,
+     *                     "agency_com_agent": "2% external commission",
+     *                     "customer_id": 33,
+     *                     "name": "John Doe",
+     *                     "passport_number": "A1234567",
+     *                     "birth_date": "1991-01-15",
+     *                     "gender": "Male",
+     *                     "nationality": "Jordanian"
+     *                 }
+     *             ),
+     *
      *         @OA\MediaType(
      *             mediaType="multipart/form-data",
-     *             @OA\Schema(
-     *                 @OA\Property(property="name",             type="string", example="John Smith"),
-     *                 @OA\Property(property="passport_number",  type="string", example="N001234567"),
-     *                 @OA\Property(property="birth_date",       type="string", format="date", example="1992-02-05"),
-     *                 @OA\Property(property="gender",           type="string", example="Male"),
-     *                 @OA\Property(property="nationality",      type="string", example="Syrian Arab Republic"),
-     *                 @OA\Property(property="payment_plan_id",  type="integer", example=5),
-     *                 @OA\Property(
-     *                     property="receipt",
-     *                     type="string",
-     *                     format="binary",
-     *                     description="Optional new receipt file"
-     *                 )
-     *             )
+     *             @OA\Schema(ref="#/components/schemas/BookingUpdateRequest")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Booking updated successfully.",
+     *         @OA\JsonContent(ref="#/components/schemas/Booking")
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Forbidden. The authenticated user is not allowed to update this booking."
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Booking not found, or specified customer does not belong to this booking."
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             example={
+     *                 "payment_plan_id": {"The selected payment plan id is invalid."},
+     *                 "customer_id": {"The customer id field is required when name is present."}
+     *             }
      *         )
      *     ),
      *     @OA\Response(
-     *         response=200,
-     *         description="Booking updated successfully",
-     *         @OA\JsonContent(ref="#/components/schemas/Booking")
-     *     ),
-     *     @OA\Response(response=404, description="Booking not found"),
-     *     @OA\Response(response=422, description="Validation error"),
-     *     @OA\Response(response=403, description="Forbidden"),
-     *     @OA\Response(response=500, description="Internal Server Error")
+     *         response=500,
+     *         description="Unexpected server error while updating the booking."
+     *     )
      * )
      */
     public function update(Request $request, $id)
     {
         $user = $request->user();
         Log::info("User {$user->id} is updating the booking ID: {$id}.");
+
+        $booking = Booking::with('customerInfos')->find($id);
+        if (!$booking) {
+            return response()->json(['message' => 'Booking not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        if (!$user->can('edit booking', $booking)) {
+            return response()->json(['message' => 'Forbidden'], Response::HTTP_FORBIDDEN);
+        }
+
+        if ($user->hasRole('Sales') && $booking->created_by !== $user->id) {
+            return response()->json(['message' => 'Forbidden'], Response::HTTP_FORBIDDEN);
+        }
 
         $validator = Validator::make($request->all(), [
             'name' => 'sometimes|required|string|max:255',
@@ -836,7 +962,6 @@ class BookingController extends Controller
             'gender' => 'sometimes|required|string|max:10',
             'nationality' => 'sometimes|required|string|max:255',
             'payment_plan_id' => 'sometimes|integer|exists:payment_plans,id',
-            'receipt' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
             'customer_id' => [
                 'required_with:name,passport_number,birth_date,gender,nationality',
                 'integer',
@@ -855,23 +980,12 @@ class BookingController extends Controller
             ],
             'sale_source_id' => 'sometimes|integer|exists:users,id',
             'agency_com_agent' => 'nullable|string|max:255',
+
+            'discount' => 'nullable|numeric|min:0|max:100|prohibited_if:payment_plan_id,null',
         ]);
 
         if ($validator->fails()) {
             return response()->json($validator->errors(), Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
-
-        $booking = Booking::with('customerInfos')->find($id);
-        if (!$booking) {
-            return response()->json(['message' => 'Booking not found'], Response::HTTP_NOT_FOUND);
-        }
-
-        if (!$user->can('edit booking', $booking)) {
-            return response()->json(['message' => 'Forbidden'], Response::HTTP_FORBIDDEN);
-        }
-
-        if ($user->hasRole('Sales') && $booking->created_by !== $user->id) {
-            return response()->json(['message' => 'Forbidden'], Response::HTTP_FORBIDDEN);
         }
 
         DB::beginTransaction();
@@ -879,8 +993,13 @@ class BookingController extends Controller
         try {
             // Update booking fields
             if ($request->has('payment_plan_id')) {
+                if (!$booking->canChangePaymentPlan()) {
+                    return response()->json([
+                        'message' => 'Payment plan can only be changed for Pre-Booked or Booked bookings.'
+                    ], Response::HTTP_FORBIDDEN);
+                }
+
                 $paymentPlan = PaymentPlan::where('id', $request->payment_plan_id)
-                    ->where('unit_id', $booking->unit_id)
                     ->first();
 
                 if (!$paymentPlan) {
@@ -888,6 +1007,24 @@ class BookingController extends Controller
                 }
 
                 $booking->payment_plan_id = $paymentPlan->id;
+
+                // Update Booking price details as per the new PP
+                $unit = $booking->unit;
+                $basePrice = $unit->price;
+                $discountPct = $request->discount ?? 0;
+
+                $bookingPrice = $discountPct > 0
+                    ? round($basePrice * (1 - $discountPct / 100), 2)
+                    : $basePrice;
+
+                $booking->discount = $discountPct;
+                $booking->price = $bookingPrice;
+
+                // Delete all installments of the old PP
+                $booking->installments()->delete();
+
+                // Generate installment of the new PP
+                $this->generateInstallmentOfPaymentPlan($unit, $paymentPlan, $discountPct, $booking);
             }
 
             if ($request->has('agent_id')) {
@@ -904,11 +1041,6 @@ class BookingController extends Controller
 
             if ($request->has('notes')) {
                 $booking->notes = $request->notes;
-            }
-
-            if ($request->hasFile('receipt')) {
-                $receiptPath = $request->file('receipt')->store('receipts', 'local');
-                $booking->receipt_path = $receiptPath;
             }
 
             $booking->save();
@@ -1034,7 +1166,7 @@ class BookingController extends Controller
             }
 
             // Delete the booking
-            $booking->status = 'Cancelled';
+            $booking->status = Booking::STATUS_CANCELLED;
             $booking->save();
 
             DB::commit();
@@ -1337,7 +1469,7 @@ class BookingController extends Controller
                 'status' => 'Approved',
             ]);
 
-            $booking->status = 'RF Pending';
+            $booking->status = Booking::STATUS_RF_PENDING;
             $booking->save();
 
             $booking->unit->status = Unit::STATUS_BOOKED;
@@ -1376,7 +1508,7 @@ class BookingController extends Controller
         // If we have both "CSO" and "Accountant", then the booking is fully approved
         if ($rolesApproved->contains('CSO') && $rolesApproved->contains('Accountant')) {
             // e.g., finalize the booking or set status
-            $booking->status = 'RF Pending';
+            $booking->status = Booking::STATUS_RF_PENDING;
             $booking->save();
 
             $booking->unit->status = Unit::STATUS_BOOKED;
@@ -1416,6 +1548,30 @@ class BookingController extends Controller
             'message' => "Booking approved by {$role}",
             'approval' => $approval,
         ], Response::HTTP_CREATED);
+    }
+
+    /**
+     * @param $unit
+     * @param $paymentPlan
+     * @param $discountPct
+     * @param mixed $booking
+     * @return void
+     */
+    public function generateInstallmentOfPaymentPlan($unit, $paymentPlan, $discountPct, mixed $booking): void
+    {
+        $template = $this->paymentPlanService
+            ->generateInstallments($unit, $paymentPlan, $discountPct);
+
+        $rows = $template->map(fn($i) => [
+            'payment_plan_id' => $paymentPlan->id,
+            'description' => $i->description,
+            'percentage' => $i->percentage,
+            'date' => $i->date,
+            'amount' => $i->amount,
+        ])->all();
+
+        $saved = $booking->installments()->createMany($rows);
+        $booking->setRelation('installments', $saved);
     }
 
     private function getSaleSourceType($saleSource)

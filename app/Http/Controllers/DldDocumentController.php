@@ -95,7 +95,7 @@ class DldDocumentController extends Controller
             return response()->json(['error' => 'Forbidden'], Response::HTTP_FORBIDDEN);
         }
 
-        if (! $booking->unit || $booking->unit->status !== Unit::STATUS_COMPLETED || $booking->status !== 'Completed') {
+        if (! $booking->unit || $booking->unit->status !== Unit::STATUS_COMPLETED || $booking->status !== Booking::STATUS_COMPLETED) {
             return response()->json([
                 'error' => 'Cannot upload DLD unless the unit is in Completed status.'
             ], Response::HTTP_UNPROCESSABLE_ENTITY);

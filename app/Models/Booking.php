@@ -9,6 +9,13 @@ class Booking extends Model
 {
     use SoftDeletes;
 
+    public const STATUS_PRE_BOOKED = 'Pre-Booked';
+    public const STATUS_BOOKED = 'Hold';
+    public const STATUS_RF_PENDING = 'RF Pending';
+    public const STATUS_SPA_PENDING = 'SPA Pending';
+    public const STATUS_CANCELLED = 'Cancelled';
+    public const STATUS_COMPLETED = 'Completed';
+
     protected $fillable = [
         'unit_id',
         'customer_info_id',
@@ -118,5 +125,13 @@ class Booking extends Model
     public function saleSource()
     {
         return $this->belongsTo(User::class, 'sale_source_id');
+    }
+
+    public function canChangePaymentPlan()
+    {
+        return in_array($this->status, [
+            self::STATUS_PRE_BOOKED,
+            self::STATUS_BOOKED
+        ]);
     }
 }
