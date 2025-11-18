@@ -995,7 +995,7 @@ class BookingController extends Controller
             if ($request->has('payment_plan_id')) {
                 if (!$booking->canChangePaymentPlan()) {
                     return response()->json([
-                        'message' => 'Payment plan can only be changed for Pre-Booked or Booked bookings.'
+                        'message' => 'Payment plan can only be changed for Pre-Booked bookings.'
                     ], Response::HTTP_FORBIDDEN);
                 }
 
