@@ -361,7 +361,69 @@
                     }
                 ]
             },
-            "put": {
+            "delete": {
+                "tags": [
+                    "Bookings"
+                ],
+                "summary": "Delete a booking and reset its unit to Available",
+                "operationId": "destroyBooking",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the booking to delete",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64",
+                            "example": 42
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Booking deleted successfully, unit status reset to Available"
+                    },
+                    "403": {
+                        "description": "Forbidden — user lacks deletion permission",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Forbidden"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found — booking does not exist",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Booking not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "patch": {
                 "tags": [
                     "Bookings"
                 ],
@@ -447,68 +509,6 @@
                     },
                     "500": {
                         "description": "Unexpected server error while updating the booking."
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
-            },
-            "delete": {
-                "tags": [
-                    "Bookings"
-                ],
-                "summary": "Delete a booking and reset its unit to Available",
-                "operationId": "destroyBooking",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID of the booking to delete",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "format": "int64",
-                            "example": 42
-                        }
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "Booking deleted successfully, unit status reset to Available"
-                    },
-                    "403": {
-                        "description": "Forbidden — user lacks deletion permission",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Forbidden"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found — booking does not exist",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Booking not found"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
                     }
                 },
                 "security": [
@@ -1127,6 +1127,109 @@
                 "security": [
                     {
                         "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/bookings/{id}/customers": {
+            "patch": {
+                "tags": [
+                    "Bookings"
+                ],
+                "summary": "Bulk update customers of a booking",
+                "description": "Update multiple customer_infos of a specific booking in a single request. Only the provided fields for each customer will be updated.",
+                "operationId": "updateBookingCustomers",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the booking whose customers will be updated",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 123
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "List of customers belonging to this booking to update",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "customers"
+                                ],
+                                "properties": {
+                                    "customers": {
+                                        "type": "array",
+                                        "items": {
+                                            "$ref": "#/components/schemas/BookingCustomerUpdate"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "example": {
+                                "customers": [
+                                    {
+                                        "id": 1,
+                                        "name": "Buyer One",
+                                        "passport_number": "X1234567",
+                                        "birth_date": "1990-01-01",
+                                        "gender": "Male",
+                                        "nationality": "Syrian",
+                                        "issuance_date": "2020-01-01",
+                                        "expiry_date": "2030-01-01",
+                                        "email": "buyer.one@example.com",
+                                        "phone_number": "+971501234567",
+                                        "address": "Al Reem Island, Abu Dhabi, UAE"
+                                    },
+                                    {
+                                        "id": 2,
+                                        "name": "Buyer Two",
+                                        "passport_number": "Y9876543",
+                                        "birth_date": "1992-05-10",
+                                        "gender": "Female",
+                                        "nationality": "Jordanian",
+                                        "issuance_date": "2019-06-15",
+                                        "expiry_date": "2029-06-15",
+                                        "email": "buyer.two@example.com",
+                                        "phone_number": "+971509998888",
+                                        "address": "Muroor Road, Abu Dhabi, UAE"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Customers updated successfully. Returns the booking with all its customers.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Booking"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden. The authenticated user is not allowed to edit this booking."
+                    },
+                    "404": {
+                        "description": "Booking not found, or one or more customers do not belong to this booking."
+                    },
+                    "422": {
+                        "description": "Validation error."
+                    },
+                    "500": {
+                        "description": "Unexpected server error while updating customers."
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
                     }
                 ]
             }
@@ -7334,42 +7437,83 @@
                         "type": "string",
                         "example": "2% commission for external broker",
                         "nullable": true
-                    },
-                    "customer_id": {
-                        "description": "ID of the customer (from customer_infos table) to update",
+                    }
+                },
+                "type": "object"
+            },
+            "BookingCustomerUpdate": {
+                "description": "Fields allowed when updating a single customer of a booking.",
+                "required": [
+                    "id"
+                ],
+                "properties": {
+                    "id": {
+                        "description": "ID of the customer_info record to update (must belong to this booking).",
                         "type": "integer",
-                        "example": 33,
-                        "nullable": true
+                        "example": 1
                     },
                     "name": {
-                        "description": "Customer full name",
+                        "description": "Customer full name.",
                         "type": "string",
-                        "example": "John Doe",
+                        "example": "Buyer One",
                         "nullable": true
                     },
                     "passport_number": {
-                        "description": "Customer passport number",
+                        "description": "Customer passport number.",
                         "type": "string",
-                        "example": "A1234567",
+                        "example": "X1234567",
                         "nullable": true
                     },
                     "birth_date": {
-                        "description": "Customer date of birth (YYYY-MM-DD)",
+                        "description": "Customer date of birth (YYYY-MM-DD).",
                         "type": "string",
                         "format": "date",
-                        "example": "1991-01-15",
+                        "example": "1990-01-01",
                         "nullable": true
                     },
                     "gender": {
-                        "description": "Customer gender",
+                        "description": "Customer gender.",
                         "type": "string",
                         "example": "Male",
                         "nullable": true
                     },
                     "nationality": {
-                        "description": "Customer nationality",
+                        "description": "Customer nationality.",
                         "type": "string",
-                        "example": "Jordanian",
+                        "example": "Syrian",
+                        "nullable": true
+                    },
+                    "issuance_date": {
+                        "description": "Document issuance date (must be today or in the past).",
+                        "type": "string",
+                        "format": "date",
+                        "example": "2020-01-01",
+                        "nullable": true
+                    },
+                    "expiry_date": {
+                        "description": "Document expiry date (must be after issuance_date).",
+                        "type": "string",
+                        "format": "date",
+                        "example": "2030-01-01",
+                        "nullable": true
+                    },
+                    "email": {
+                        "description": "Customer email address.",
+                        "type": "string",
+                        "format": "email",
+                        "example": "buyer.one@example.com",
+                        "nullable": true
+                    },
+                    "phone_number": {
+                        "description": "Customer phone number (international format recommended).",
+                        "type": "string",
+                        "example": "+971501234567",
+                        "nullable": true
+                    },
+                    "address": {
+                        "description": "Customer address.",
+                        "type": "string",
+                        "example": "Al Reem Island, Abu Dhabi, UAE",
                         "nullable": true
                     }
                 },

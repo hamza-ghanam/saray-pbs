@@ -21,6 +21,7 @@ class CustomerInfo extends Model
         'phone_number',
         'address',
         'document_path',
+        'booking_id'         // if exists
     ];
 
     protected $hidden = ['document_path'];

@@ -138,54 +138,93 @@ use Mindee\Error\MindeeException;
  *         description="Agency commission text",
  *         example="2% commission for external broker"
  *     ),
+ * )
+ *
+ * @OA\Schema(
+ *     schema="BookingCustomerUpdate",
+ *     type="object",
+ *     required={"id"},
+ *     description="Fields allowed when updating a single customer of a booking.",
  *
  *     @OA\Property(
- *         property="customer_id",
+ *         property="id",
  *         type="integer",
- *         nullable=true,
- *         description="ID of the customer (from customer_infos table) to update",
- *         example=33
+ *         description="ID of the customer_info record to update (must belong to this booking).",
+ *         example=1
  *     ),
- *
  *     @OA\Property(
  *         property="name",
  *         type="string",
  *         nullable=true,
- *         description="Customer full name",
- *         example="John Doe"
+ *         description="Customer full name.",
+ *         example="Buyer One"
  *     ),
- *
  *     @OA\Property(
  *         property="passport_number",
  *         type="string",
  *         nullable=true,
- *         description="Customer passport number",
- *         example="A1234567"
+ *         description="Customer passport number.",
+ *         example="X1234567"
  *     ),
- *
  *     @OA\Property(
  *         property="birth_date",
  *         type="string",
  *         format="date",
  *         nullable=true,
- *         description="Customer date of birth (YYYY-MM-DD)",
- *         example="1991-01-15"
+ *         description="Customer date of birth (YYYY-MM-DD).",
+ *         example="1990-01-01"
  *     ),
- *
  *     @OA\Property(
  *         property="gender",
  *         type="string",
  *         nullable=true,
- *         description="Customer gender",
+ *         description="Customer gender.",
  *         example="Male"
  *     ),
- *
  *     @OA\Property(
  *         property="nationality",
  *         type="string",
  *         nullable=true,
- *         description="Customer nationality",
- *         example="Jordanian"
+ *         description="Customer nationality.",
+ *         example="Syrian"
+ *     ),
+ *     @OA\Property(
+ *         property="issuance_date",
+ *         type="string",
+ *         format="date",
+ *         nullable=true,
+ *         description="Document issuance date (must be today or in the past).",
+ *         example="2020-01-01"
+ *     ),
+ *     @OA\Property(
+ *         property="expiry_date",
+ *         type="string",
+ *         format="date",
+ *         nullable=true,
+ *         description="Document expiry date (must be after issuance_date).",
+ *         example="2030-01-01"
+ *     ),
+ *     @OA\Property(
+ *         property="email",
+ *         type="string",
+ *         format="email",
+ *         nullable=true,
+ *         description="Customer email address.",
+ *         example="buyer.one@example.com"
+ *     ),
+ *     @OA\Property(
+ *         property="phone_number",
+ *         type="string",
+ *         nullable=true,
+ *         description="Customer phone number (international format recommended).",
+ *         example="+971501234567"
+ *     ),
+ *     @OA\Property(
+ *         property="address",
+ *         type="string",
+ *         nullable=true,
+ *         description="Customer address.",
+ *         example="Al Reem Island, Abu Dhabi, UAE"
  *     )
  * )
  */
@@ -863,7 +902,7 @@ class BookingController extends Controller
     }
 
     /**
-     * @OA\Put(
+     * @OA\Patch(
      *     path="/bookings/{id}",
      *     summary="Update an existing booking",
      *     description="Update booking details (payment plan, agent, notes, etc.) and optionally update one customer that belongs to this booking.",
@@ -956,18 +995,6 @@ class BookingController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'name' => 'sometimes|required|string|max:255',
-            'passport_number' => 'sometimes|required|string|max:50',
-            'birth_date' => 'sometimes|required|date',
-            'gender' => 'sometimes|required|string|max:10',
-            'nationality' => 'sometimes|required|string|max:255',
-            'payment_plan_id' => 'sometimes|integer|exists:payment_plans,id',
-            'customer_id' => [
-                'required_with:name,passport_number,birth_date,gender,nationality',
-                'integer',
-                'exists:customer_infos,id'
-            ],
-
             'notes' => 'nullable|string',
             'agent_id' => [
                 'sometimes', 'integer', 'exists:users,id',
@@ -981,6 +1008,7 @@ class BookingController extends Controller
             'sale_source_id' => 'sometimes|integer|exists:users,id',
             'agency_com_agent' => 'nullable|string|max:255',
 
+            'payment_plan_id' => 'sometimes|integer|exists:payment_plans,id',
             'discount' => 'nullable|numeric|min:0|max:100|prohibited_if:payment_plan_id,null',
         ]);
 
@@ -1044,33 +1072,6 @@ class BookingController extends Controller
             }
 
             $booking->save();
-
-            // Update specific customer info
-            if ($request->filled('customer_id')) {
-                $customer = $booking->customerInfos()->find($request->customer_id);
-
-                if (!$customer) {
-                    return response()->json(['message' => 'Customer not found in this booking'], Response::HTTP_NOT_FOUND);
-                }
-
-                if ($request->has('name')) {
-                    $customer->name = $request->input('name');
-                }
-                if ($request->has('passport_number')) {
-                    $customer->passport_number = $request->input('passport_number');
-                }
-                if ($request->has('birth_date')) {
-                    $customer->birth_date = $request->input('birth_date');
-                }
-                if ($request->has('gender')) {
-                    $customer->gender = $request->input('gender');
-                }
-                if ($request->has('nationality')) {
-                    $customer->nationality = $request->input('nationality');
-                }
-
-                $customer->save();
-            }
 
             DB::commit();
             $booking->load('customerInfos', 'agent', 'saleSource');
@@ -1548,6 +1549,177 @@ class BookingController extends Controller
             'message' => "Booking approved by {$role}",
             'approval' => $approval,
         ], Response::HTTP_CREATED);
+    }
+
+    /**
+     * @OA\Patch(
+     *     path="/api/bookings/{id}/customers",
+     *     summary="Bulk update customers of a booking",
+     *     description="Update multiple customer_infos of a specific booking in a single request. Only the provided fields for each customer will be updated.",
+     *     operationId="updateBookingCustomers",
+     *     tags={"Bookings"},
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="ID of the booking whose customers will be updated",
+     *         @OA\Schema(type="integer", example=123)
+     *     ),
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *         description="List of customers belonging to this booking to update",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             required={"customers"},
+     *             @OA\Property(
+     *                 property="customers",
+     *                 type="array",
+     *                 @OA\Items(ref="#/components/schemas/BookingCustomerUpdate")
+     *             ),
+     *             example={
+     *                 "customers"={
+     *                     {
+     *                         "id"=1,
+     *                         "name"="Buyer One",
+     *                         "passport_number"="X1234567",
+     *                         "birth_date"="1990-01-01",
+     *                         "gender"="Male",
+     *                         "nationality"="Syrian",
+     *                         "issuance_date"="2020-01-01",
+     *                         "expiry_date"="2030-01-01",
+     *                         "email"="buyer.one@example.com",
+     *                         "phone_number"="+971501234567",
+     *                         "address"="Al Reem Island, Abu Dhabi, UAE"
+     *                     },
+     *                     {
+     *                         "id"=2,
+     *                         "name"="Buyer Two",
+     *                         "passport_number"="Y9876543",
+     *                         "birth_date"="1992-05-10",
+     *                         "gender"="Female",
+     *                         "nationality"="Jordanian",
+     *                         "issuance_date"="2019-06-15",
+     *                         "expiry_date"="2029-06-15",
+     *                         "email"="buyer.two@example.com",
+     *                         "phone_number"="+971509998888",
+     *                         "address"="Muroor Road, Abu Dhabi, UAE"
+     *                     }
+     *                 }
+     *             }
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Customers updated successfully. Returns the booking with all its customers.",
+     *         @OA\JsonContent(ref="#/components/schemas/Booking")
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Forbidden. The authenticated user is not allowed to edit this booking."
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Booking not found, or one or more customers do not belong to this booking."
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error."
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Unexpected server error while updating customers."
+     *     )
+     * )
+     */
+    public function updateCustomers(Request $request, Booking $booking)
+    {
+        $user = $request->user();
+        Log::info("User {$user->id} is bulk-updating customers for booking ID: {$booking->id}.");
+
+        // Same permission logic as update()
+        if (!$user->can('edit booking', $booking)) {
+            return response()->json(['message' => 'Forbidden'], Response::HTTP_FORBIDDEN);
+        }
+
+        if ($user->hasRole('Sales') && $booking->created_by !== $user->id) {
+            return response()->json(['message' => 'Forbidden'], Response::HTTP_FORBIDDEN);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'customers' => 'required|array|min:1',
+            'customers.*.id' => 'required|integer|distinct|exists:customer_infos,id',
+            'customers.*.name' => 'sometimes|required|string|max:255',
+            'customers.*.passport_number' => 'sometimes|required|string|max:50',
+            'customers.*.birth_date' => 'sometimes|required|date',
+            'customers.*.gender' => 'sometimes|required|string|max:10',
+            'customers.*.nationality' => 'sometimes|required|string|max:255',
+            'customers.*.issuance_date' => 'sometimes|required|date|before_or_equal:today',
+            'customers.*.expiry_date' => 'sometimes|required|date|after:customers.*.issuance_date',
+            'customers.*.email' => 'sometimes|required|string|max:255',
+            'customers.*.phone_number' => 'sometimes|required|string|max:20',
+            'customers.*.address' => 'sometimes|required|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $payloadCustomers = collect($request->input('customers'));
+
+            // Ensure ALL provided customers really belong to this booking
+            $ids = $payloadCustomers->pluck('id')->all();
+            $count = $booking->customerInfos()->whereIn('id', $ids)->count();
+
+            if ($count !== count($ids)) {
+                return response()->json(
+                    ['message' => 'One or more customers do not belong to this booking.'],
+                    Response::HTTP_NOT_FOUND
+                );
+            }
+
+            foreach ($payloadCustomers as $custData) {
+                /** @var \App\Models\CustomerInfo $customer */
+                $customer = $booking->customerInfos()->find($custData['id']);
+
+                // Only update provided fields (partial update)
+                $customer->fill(Arr::only($custData, [
+                    'name',
+                    'passport_number',
+                    'birth_date',
+                    'gender',
+                    'nationality',
+                    'issuance_date',
+                    'expiry_date',
+                    'email',
+                    'phone_number',
+                    'address',
+                ]));
+
+                $customer->save();
+            }
+
+            DB::commit();
+
+            $booking->load('customerInfos');
+
+            // return full booking (nice for UI to refresh state)
+            return response()->json($booking, Response::HTTP_OK);
+
+        } catch (\Exception $ex) {
+            DB::rollBack();
+
+            return response()->json(
+                ['error' => $ex->getMessage()],
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
+        }
     }
 
     /**
