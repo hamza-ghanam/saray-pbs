@@ -959,8 +959,7 @@ class BookingController extends Controller
      *         @OA\JsonContent(
      *             type="object",
      *             example={
-     *                 "payment_plan_id": {"The selected payment plan id is invalid."},
-     *                 "customer_id": {"The customer id field is required when name is present."}
+     *                 "payment_plan_id": {"The selected payment plan id is invalid."}
      *             }
      *         )
      *     ),
