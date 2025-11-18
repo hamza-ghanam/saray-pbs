@@ -930,13 +930,7 @@ class BookingController extends Controller
      *                     "notes": "Customer requested to update passport and agent.",
      *                     "agent_id": 12,
      *                     "sale_source_id": 4,
-     *                     "agency_com_agent": "2% external commission",
-     *                     "customer_id": 33,
-     *                     "name": "John Doe",
-     *                     "passport_number": "A1234567",
-     *                     "birth_date": "1991-01-15",
-     *                     "gender": "Male",
-     *                     "nationality": "Jordanian"
+     *                     "agency_com_agent": "Johnny Depp"
      *                 }
      *             ),
      *
