@@ -1551,7 +1551,7 @@ class BookingController extends Controller
      *     description="Update multiple customer_infos of a specific booking in a single request. Only the provided fields for each customer will be updated.",
      *     operationId="updateBookingCustomers",
      *     tags={"Bookings"},
-     *     security={{"bearerAuth":{}}},
+     *     security={{"sanctum":{}}},
      *
      *     @OA\Parameter(
      *         name="id",
@@ -1702,7 +1702,7 @@ class BookingController extends Controller
 
             $booking->load('customerInfos');
 
-            // return full booking (nice for UI to refresh state)
+            // return full booking
             return response()->json($booking, Response::HTTP_OK);
 
         } catch (\Exception $ex) {
