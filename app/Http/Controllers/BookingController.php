@@ -103,7 +103,7 @@ use Mindee\Error\MindeeException;
  *         property="discount",
  *         type="number",
  *         nullable=true,
- *         description="The applicable discount of the booking price, required ONLY IF the payment_plan_id is passed.",
+ *         description="The applicable discount of the booking price, can be passed ONLY IF the payment_plan_id is passed.",
  *         example=10
  *     ),
  *
