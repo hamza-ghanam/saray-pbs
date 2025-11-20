@@ -1546,7 +1546,7 @@ class BookingController extends Controller
 
     /**
      * @OA\Patch(
-     *     path="/api/bookings/{id}/customers",
+     *     path="/bookings/{id}/customers",
      *     summary="Bulk update customers of a booking",
      *     description="Update multiple customer_infos of a specific booking in a single request. Only the provided fields for each customer will be updated.",
      *     operationId="updateBookingCustomers",
