@@ -191,7 +191,7 @@ class PaymentPlanService
             $amount = ($price * $pct / 100)
                 + ($price * $plan->dld_fee_percentage / 100)
                 + $plan->admin_fee
-                + $plan->EOI;
+                - $plan->EOI;
         } else {
             $amount = $price * $pct / 100;
         }
