@@ -190,8 +190,7 @@ class PaymentPlanService
         if ($isBooking) {
             $amount = ($price * $pct / 100)
                 + ($price * $plan->dld_fee_percentage / 100)
-                + $plan->admin_fee
-                + $plan->EOI;
+                + $plan->admin_fee;
         } else {
             $amount = $price * $pct / 100;
         }
