@@ -38,14 +38,36 @@
             direction: rtl;
         }
 
-        table.info-table, table.info-table td, table.info-table th {
+        table.contract-table, table.contract-table td, table.contract-table th {
             border: 1px solid #ddd; /* light gray, slim border */
             padding: 5px;
         }
 
-        .info-table {
+        .contract-table {
             width: 100%;
             border-collapse: collapse;
+        }
+
+        .contract-table td {
+            padding: 15px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+        }
+
+        /* English column */
+        .contract-table .en {
+            width: 49%;
+            direction: ltr;
+            text-align: justify;
+            line-height: 1.3;
+        }
+
+        /* Arabic column */
+        .contract-table .ar {
+            width: 49%;
+            direction: rtl;
+            text-align: justify;
+            line-height: 1.5;
         }
 
         .header-table {
@@ -57,6 +79,8 @@
         .left-th {
             text-align: left;
             padding-left: 5px;
+            white-space: pre-line;
+            font-weight: bold;
         }
 
         .right-th {
@@ -77,7 +101,7 @@
         }
 
         .spaced-text {
-            line-height: 1.5;
+            line-height: 1.6;
         }
 
         .meaning {
@@ -142,18 +166,46 @@
 
 <!-- 9) Your main content -->
 <main>
+    <h1 class="" style="text-align:center;">
+        Saray Prime Residence Tower<br/>Residential Building
+    </h1>
+    <br/>
+    @if($unit->building->image_path)
+        <div style="text-align:center;">
+            <img
+                src="file:///{{ str_replace('\\','/', storage_path('app/private/' . $unit->building->image_path)) }}"
+                alt="Building image"
+                style="width:90%; height:auto;"
+            >
+        </div>
+    @endif
     <h2 class="" style="text-align:center;">
-        Sales and Purchase Agreement (SPA) اتفاقية بيع وشراء
+        Residential Unit Sale and Purchase Agreement (SPA)
     </h2>
+    <br/>
+    <h4 class="" style="text-align:center;">
+        Wadi Al safa 5<br/>
+        Dubai Land – Dubai<br/>
+        Plot No. (6488586)
+    </h4>
+    <br/>
+    @foreach($customerInfos as $customerInfo)
+        <h5 style="text-align: center">{{ $customerInfo->name }}</h5>
+    @endforeach
+    <h6 style="text-align: center;">____________________________________________</h6>
+    <h5 style="text-align: center">Unit Number: {{ $unit->unit_no }}</h5>
 
-    <table class="info-table">
+    <div class="page-break"></div>
+
+
+    <table class="contract-table">
         <tr>
-            <th class="left-th" style="width: 50%;">
+            <th class="en">
                 Saray Primmum Residence Tower – Residential Building <br/>
                 Residential Unit Sale and Purchase Agreement <br>
                 Dubai Wadi Al Safa 5 – Dubai Land - Dubai
             </th>
-            <th class="rtl-text right-th">
+            <th class="ar">
                 سراي بريميوم ريزدنس - بناية سكنية<br/>
                 اتفاقية بيع وشراء وحدة سكنية<br/>
                 وادي الصفا 5 – دبي لاند - دبي<br/>
@@ -167,174 +219,224 @@
             <th class="rtl-text right-th">بيانات الاتفاقية</th>
         </tr>
     </table>
-    <table class="info-table">
+
+    <table class="contract-table">
         <tr>
-            <th class="left-th" style="width: 20%;">1. Effective Date:</th>
-            <td style="text-align: center;">
+            <td class="en">
+                <b>1. Effective Date:</b>
                 {{ \Carbon\Carbon::now()->format('d-M-Y') }}
             </td>
-            <td class="rtl-text spaced-text" style="text-align: center;">
-                {{ \Carbon\Carbon::now()->locale('ar')->isoFormat('D-MMM-YYYY') }}
+            <td class="separator"></td>
+            <td class="ar">
+                <b>1. تاريخ بدء السريان:</b>
+                {{ \Carbon\Carbon::now()->locale('ar')->isoFormat('D-MMM-YYYY') }}&nbsp;
             </td>
-            <th class="rtl-text right-th" style="width: 20%;">1. تاريخ بدء السريان:</th>
         </tr>
         <tr>
-            <th class="left-th">2. Seller:</th>
-            <td style="text-align: justify;">
-                <strong>Unique Saray Properties L.L.C</strong>, of office 301 & 308,
-                building 2, , Bay
-                Square, Business bay, Dubai, UAE, PO Box [•], Dubai, UAE, its nominees, successors in title and assigns.
+            <td class="en">
+                <b>2. Seller:</b>
+                <strong>Unique Saray Properties L.L.C</strong>,Licensed by Dubai Department of Economy and Tourism under
+                license No. (1343857), and licensed as a real estate developer by the DLD under license No. (2055).
+                office 301 & 308, building 2, , Bay Square, Business bay, Dubai, UAE, PO Box [000000], Dubai, UAE<br/>
+                Phone No.: +971 4 55 48787.<br/>
+                Email: crm@uniquesaray.com,<br/>
+                Its nominees, successors in title and assigns.
             </td>
-            <td class="rtl-text spaced-text" style="padding: 10px; text-align: justify;">
-                <strong>شركة يونيك سراي للعقارت ش.ذ.م.م.</strong> الكائنة في
-                دبي، منطقة الخليج التجاري، بي سيكوير، المبنى رقم (2)، مكتب رقم (301،302)، والأشخاص التي تعينهم والورثة
-                في الملكية والمتنازل إليهم.
+            <td class="separator"></td>
+            <td class="ar">
+                <b>2. البائع:</b>
+                <strong>شركة يونيك سراي للعقارت ش.ذ.م.م.</strong>
+                والمرخصة لدى دبي للاقتصاد والسياحة برقم (1343857)، والمرخصة كمطور عقاري من دائرة الأراضي والأملاك دبي
+                برقم (2055)
+                الكائنة في دبي، منطقة الخليج التجاري، بي سيكوير، المبنى رقم (2)، مكتب رقم (301،302).<br/>
+                هاتف رقم: [+971 4 55 48787.],<br/>
+                البريد الالكتروني: crm@uniquesaray.com<br/>
+                والأشخاص التي تعينهم والورثة في الملكية والمتنازل إليهم.
             </td>
-            <th class="rtl-text right-th">2. البائع:</th>
         </tr>
     </table>
-
-    <table class="info-table">
+    <table class="contract-table">
         <tr>
             <th class="left-th" style="width: 27%;">3. Purchaser</th>
-            <td style="text-align: center;">&nbsp;</td>
+            <td style="text-align: center;" colspan="2">&nbsp;</td>
             <th class="rtl-text right-th" style="width: 27%;">3. المشتري</th>
         </tr>
         <tr>
-            <th class="left-th">Name:</th>
-            <td style="text-align: center;">{{ $customerInfos[0]->name }}</td>
-            @isset($customerInfos[1])
-                <td style="text-align: center;">{{ $customerInfos[1]->name }}</td>
-            @endisset
-            <th class="rtl-text right-th">الاسم:</th>
+            <th class="left-th">Name(s):</th>
+            <td style="text-align: center;" colspan="2">
+                {{ $customerInfos[0]->name }}
+                @if($customerInfos->count() > 1)
+                    @foreach($customerInfos->slice(1) as $customerInfo)
+                        <br/>{{ $customerInfo->name }}
+                    @endforeach
+                @endif
+            </td>
+            <th class="rtl-text right-th">الاسم (الأسماء):</th>
         </tr>
         <tr>
-            <th class="left-th">For individuals:</th>
-            <td style="text-align: center;">&nbsp;</td>
-            <th class="rtl-text right-th">بالنسبة للأفراد:</th>
+            <th class="left-th" style="text-decoration: underline;">For individuals:</th>
+            <td style="text-align: center;" colspan="2">&nbsp;</td>
+            <th class="rtl-text right-th" style="text-decoration: underline;">بالنسبة للأفراد:</th>
         </tr>
         <tr>
             <th class="left-th">Nationality:</th>
-            <td style="text-align: center;">{{ $customerInfos[0]->nationality }}</td>
-            @isset($customerInfos[1])
-                <td style="text-align: center;">{{ $customerInfos[1]->nationality }}</td>
-            @endisset
+            <td style="text-align: center;" colspan="2">
+                {{ $customerInfos[0]->nationality }}
+                @if($customerInfos->count() > 1)
+                    @foreach($customerInfos->slice(1) as $customerInfo)
+                        <br/>{{ $customerInfo->nationality }}
+                    @endforeach
+                @endif
+            </td>
             <th class="rtl-text right-th">الجنسية:</th>
         </tr>
         <tr>
             <th class="left-th">Passport NO.:</th>
-            <td style="text-align: center;">{{ $customerInfos[0]->passport }}</td>
-            @isset($customerInfos[1])
-                <td style="text-align: center;">{{ $customerInfos[1]->passport }}</td>
-            @endisset
+            <td style="text-align: center;" colspan="2">
+                {{ $customerInfos[0]->passport }}
+                @if($customerInfos->count() > 1)
+                    @foreach($customerInfos->slice(1) as $customerInfo)
+                        <br/>{{ $customerInfo->passport }}
+                    @endforeach
+                @endif
+            </td>
             <th class="rtl-text right-th">رقم جواز السفر:</th>
         </tr>
         <tr>
             <th class="left-th">Address:</th>
-            <td style="text-align: center;">{{ $customerInfos[0]->address }}</td>
-            @isset($customerInfos[1])
-                <td style="text-align: center;">{{ $customerInfos[1]->address }}</td>
-            @endisset
+            <td style="text-align: center;" colspan="2">
+                {{ $customerInfos[0]->address }}
+                @if($customerInfos->count() > 1)
+                    @foreach($customerInfos->slice(1) as $customerInfo)
+                        <br/>{{ $customerInfo->address }}
+                    @endforeach
+                @endif
+            </td>
             <th class="rtl-text right-th">العنوان:</th>
         </tr>
         <tr>
             <th class="left-th">Physical Address:</th>
-            <td style="text-align: center;">{{ $customerInfos[0]->address }}</td>
-            @isset($customerInfos[1])
-                <td style="text-align: center;">{{ $customerInfos[1]->address }}</td>
-            @endisset
+            <td style="text-align: center;" colspan="2">
+                {{ $customerInfos[0]->address }}
+                @if($customerInfos->count() > 1)
+                    @foreach($customerInfos->slice(1) as $customerInfo)
+                        <br/>{{ $customerInfo->address }}
+                    @endforeach
+                @endif
+            </td>
             <th class="rtl-text right-th">العنوان الفعلي:</th>
         </tr>
         <tr>
             <th class="left-th">Phone NO.:</th>
-            <td style="text-align: center;">{{ $customerInfos[0]->phone_number }}</td>
-            @isset($customerInfos[1])
-                <td style="text-align: center;">{{ $customerInfos[1]->phone_number }}</td>
-            @endisset
+            <td style="text-align: center;" colspan="2">
+                {{ $customerInfos[0]->phone_number }}
+                @if($customerInfos->count() > 1)
+                    @foreach($customerInfos->slice(1) as $customerInfo)
+                        <br/>{{ $customerInfo->phone_number }}
+                    @endforeach
+                @endif
+            </td>
             <th class="rtl-text right-th">رقم الهاتف:</th>
         </tr>
         <tr>
             <th class="left-th">Fax NO.:</th>
-            <td style="text-align: center;">&nbsp;</td>
-            @isset($customerInfos[1])
-                <td style="text-align: center;">&nbsp;</td>
-            @endisset
+            <td style="text-align: center;" colspan="2">
+                @if($customerInfos->count() > 1)
+                    @foreach($customerInfos->slice(1) as $customerInfo)
+                        <br/>
+                    @endforeach
+                @endif
+            </td>
             <th class="rtl-text right-th">رقم الفاكس:</th>
         </tr>
         <tr>
             <th class="left-th">Email address:</th>
-            <td style="text-align: center;">{{ $unit->email }}</td>
-            @isset($customerInfos[1])
-                <td style="text-align: center;">{{ $customerInfos[1]->email }}</td>
-            @endisset
+            <td style="text-align: center;" colspan="2">
+                {{ $customerInfos[0]->email }}
+                @if($customerInfos->count() > 1)
+                    @foreach($customerInfos->slice(1) as $customerInfo)
+                        <br/>{{ $customerInfo->email }}
+                    @endforeach
+                @endif
+            </td>
             <th class="rtl-text right-th">البريد الإلكتروني:</th>
         </tr>
         <tr>
-            <th class="left-th">For corporations:</th>
-            <td style="text-align: center;">&nbsp;</td>
-            <th class="rtl-text right-th">بالنسبة للشركات:</th>
+            <th class="left-th" style="text-decoration: underline;">For corporations:</th>
+            <td style="text-align: center;" colspan="2">&nbsp;</td>
+            <th class="rtl-text right-th" style="text-decoration: underline;">بالنسبة للشركات:</th>
         </tr>
         <tr>
             <th class="left-th">Nationality:</th>
-            <td style="text-align: center;">&nbsp;</td>
+            <td style="text-align: center;" colspan="2">&nbsp;</td>
             <th class="rtl-text right-th">الجنسية:</th>
         </tr>
         <tr>
             <th class="left-th">License/Registration NO.:</th>
-            <td style="text-align: center;">&nbsp;</td>
+            <td style="text-align: center;" colspan="2">&nbsp;</td>
             <th class="rtl-text right-th">رقم الترخيص/رقم التسجيل:</th>
         </tr>
         <tr>
             <th class="left-th">Address:</th>
-            <td style="text-align: center;">&nbsp;</td>
+            <td style="text-align: center;" colspan="2">&nbsp;</td>
             <th class="rtl-text right-th">العنوان:</th>
         </tr>
         <tr>
             <th class="left-th">Physical Address:</th>
-            <td style="text-align: center;">&nbsp;</td>
+            <td style="text-align: center;" colspan="2">&nbsp;</td>
             <th class="rtl-text right-th">العنوان الفعلي:</th>
         </tr>
         <tr>
             <th class="left-th">P.O. Box:</th>
-            <td style="text-align: center;">&nbsp;</td>
+            <td style="text-align: center;" colspan="2">&nbsp;</td>
             <th class="rtl-text right-th">ص.ب.:</th>
         </tr>
         <tr>
             <th class="left-th">Phone NO.:</th>
-            <td style="text-align: center;">&nbsp;</td>
+            <td style="text-align: center;" colspan="2">&nbsp;</td>
             <th class="rtl-text right-th">رقم الهاتف:</th>
         </tr>
         <tr>
             <th class="left-th">Fax NO.:</th>
-            <td style="text-align: center;">&nbsp;</td>
+            <td style="text-align: center;" colspan="2">&nbsp;</td>
             <th class="rtl-text right-th">رقم الفاكس:</th>
         </tr>
         <tr>
             <th class="left-th">Email address:</th>
-            <td style="text-align: center;">&nbsp;</td>
+            <td style="text-align: center;" colspan="2">&nbsp;</td>
             <th class="rtl-text right-th">البريد الإلكتروني:</th>
         </tr>
         <tr>
             <th class="left-th">4. Property Details</th>
-            <td style="text-align: center;">&nbsp;</td>
+            <td style="text-align: center;" colspan="2">&nbsp;</td>
             <th class="rtl-text right-th">4. بيانات العقار:</th>
         </tr>
         <tr>
             <th class="left-th">Relevant Unit No</th>
-            <td style="text-align: center;">{{ $unit->unit_no }}</td>
+            <td style="text-align: center;" colspan="2">{{ $unit->unit_no }}</td>
             <th class="rtl-text right-th">رقم الوحدة المعنية</th>
         </tr>
         <tr>
-            <th class="left-th">Unit Area</th>
-            <td style="text-align: center;">{{ $unit->total_square }}</td>
-            <th class="rtl-text right-th">مساحة الوحدة</th>
+            <th class="left-th">
+                Total Unit Area
+                <small>
+                    (including any balconies & terraces).
+                </small>
+            </th>
+            <td style="text-align: center;" colspan="2">{{ $unit->total_square }} square
+                feet/{{ $unit->getTotalSquareMAttribute() }}square metres
+            </td>
+            <th class="rtl-text right-th">
+                مساحة الوحدة
+                <small>(شامل أية بلكونات وشرفات)</small>
+            </th>
         </tr>
         <tr>
             <th class="left-th">
                 Number of car parking spaces:
                 <small>to be allocated in accordance with Clause 4.6)</small>
             </th>
-            <td style="text-align: center;">{{ $unit->parking }}</td>
+            <td style="text-align: center;" colspan="2">{{ $unit->parking }}</td>
             <th class="rtl-text right-th">
                 عدد مواقف السيارات:
                 <small>(تخصص بموجب أحكام البند 4.6)</small>
@@ -342,50 +444,121 @@
         </tr>
         <tr>
             <th class="left-th">Project:</th>
-            <td style="text-align: center;">{{ $unit->building->name }} ({{ $unit->building->project_no }})</td>
+            <td style="text-align: center;" colspan="2">{{ $unit->building->name }} Residential Building, Project
+                No: {{ $unit->building->project_no }}<br/>
+                سراي برايم ريزدنس - بناية سكنية، مشروع رقم: {{ $unit->building->project_no }}
+            </td>
             <th class="rtl-text right-th">المشروع:</th>
         </tr>
         <tr>
             <th class="left-th">5. Purchase Price Incl. of VAT
                 (<img src="{{ public_path('images/aed_symbol.svg') }}" width="12" alt="AED"/>)
             </th>
-            <td style="text-align: center;">{{ $booking->price }}</td>
+            <td style="text-align: center;" colspan="2">{{ $booking->price }}</td>
             <th class="rtl-text right-th">5. سعر الشراء شـامل الضريبة (<img
                     src="{{ public_path('images/aed_symbol.svg') }}"
                     width="12" alt="AED"/>)
             </th>
         </tr>
-    </table>
-    <br/>
-    <table class="info-table">
         <tr>
             <th class="left-th" style="width: 27%;">6. Payment Schedule</th>
-            <td style="text-align: center;">Set out in Schedule (A)</td>
-            <td class="rtl-text" style="text-align: center;">منصوص عليه في الجدول (أ)</td>
+            <td style="text-align: center;" colspan="2">
+                Set out in Schedule (A)<br/>
+                <span style="direction: rtl; text-align: right !important;">
+                    منصوص عليه في الجدول (أ)
+                </span>
+            </td>
             <th class="rtl-text right-th" style="width: 27%;">6. جدول سداد الدفعات</th>
         </tr>
         <tr>
             <th class="left-th">
-                7. Anticipated Completion Date
+                7. Escrow Account
+            </th>
+            <td style="text-align: center;" colspan="2"></td>
+            <th class="rtl-text right-th">7. حساب الضمان:</th>
+        </tr>
+        <tr>
+            <td class="left-th">
+                Bank Name:
+            </td>
+            <td style="text-align: center;" colspan="2">Emirates NBD Bank PJSC</td>
+            <th class="rtl-text right-th">
+                اسم البنك:
+            </th>
+        </tr>
+        <tr>
+            <td class="left-th">
+                Bank Branch Name and Address:
+            </td>
+            <td style="text-align: center;" colspan="2">Main Brach</td>
+            <th class="rtl-text right-th">
+                اسم وعنوان فرع البنك:
+            </th>
+        </tr>
+        <tr>
+            <td class="left-th">
+                Account Name:
+            </td>
+            <td style="text-align: center;" colspan="2">SARAY PRIME RESIDENCE</td>
+            <th class="rtl-text right-th">
+                اسم الحساب:
+            </th>
+        </tr>
+        <tr>
+            <td class="left-th">
+                Account Number:
+            </td>
+            <td style="text-align: center;" colspan="2">0205931383803</td>
+            <th class="rtl-text right-th">
+                رقم الحساب:
+            </th>
+        </tr>
+        <tr>
+            <td class="left-th">
+                Swift Code:
+            </td>
+            <td style="text-align: center;" colspan="2">EBILAEADXXX</td>
+            <th class="rtl-text right-th">
+                رمز SWIFT:
+            </th>
+        </tr>
+        <tr>
+            <td class="left-th">
+                IBAN No:
+            </td>
+            <td style="text-align: center;" colspan="2">AE180260000205931383803</td>
+            <th class="rtl-text right-th">
+                رقم IBAN:
+            </th>
+        </tr>
+        <tr>
+            <th class="left-th">
+                8. Anticipated Completion Date
                 <small>(subject to extension or earlier completion in accordance with Clause 4.1)</small>
             </th>
-            <td style="text-align: center;">{{ \Carbon\Carbon::parse($unit->building->ecd)->format('D-M-Y') }}</td>
-            <td class="rtl-text"
-                style="text-align: center;">{{ \Carbon\Carbon::parse($unit->building->ecd)->locale('ar')->isoFormat('D-MMM-YYYY') }}</td>
-            <th class="rtl-text right-th">7. التاريخ المتوقع للإنجاز
+            <td style="text-align: center;"
+                colspan="2">{{ \Carbon\Carbon::parse($unit->building->ecd)->format('d-M-Y') }}</td>
+            <th class="rtl-text right-th">8. التاريخ المتوقع للإنجاز
                 <small> (عرضة للتمديد أو الإنجاز المبكر بموجب أحكام البند 4-1)</small>
             </th>
         </tr>
+    </table>
+    <table class="contract-table">
         <tr>
-            <th class="left-th">8. Permitted Use</th>
-            <td style="text-align: center;">Residential Apartment Use</td>
-            <td style="text-align: center;">الاستخدام للأغراض السكنية</td>
-            <th class="rtl-text right-th">8. الاستخدام المصرح به</th>
+            <td class="en">
+                <b>9. Permitted Use: </b>
+                Residential Apartment Use
+            </td>
+            <td class="separator"></td>
+            <td class="ar">
+                <b>9. الاستخدام المصرح به: </b>
+                الاستخدام للأغراض السكنية
+            </td>
         </tr>
         <tr>
-            <th class="left-th">9. Late Payment Penalty</th>
-            <td class="spaced-text" style="text-align: justify;">
-                An amount calculated on a daily basis being, the sum of:
+            <td class="en">
+                <b>10. Late Payment Penalty </b>
+                An amount calculated on a daily basis being, the sum of:<br/>
                 <ol type="a">
                     <li>
                         <img src="{{ public_path('images/aed_symbol.svg') }}" width="12" alt="AED"/> 500 (Five Hundred
@@ -397,8 +570,10 @@
                     </li>
                 </ol>
             </td>
-            <td class="rtl-text spaced-text" style="text-align: justify;">
-                مبلغ يحسب على أساس يومي وقدره:
+            <td class="separator"></td>
+            <td class="ar">
+                <b>10. غرامة تأخير السداد</b>
+                مبلغ يحسب على أساس يومي وقدره:<br/>
                 <ol type="a">
                     <li>
                         500 درهم (خمسمائة درهم إماراتي) في اليوم؛ بالإضافة إلى
@@ -408,47 +583,41 @@
                     </li>
                 </ol>
             </td>
-            <th class="rtl-text right-th">9. غرامة تأخير السداد</th>
         </tr>
         <tr>
-            <td colspan="2" class="spaced-text" style="padding: 10px;text-align: justify;">
+            <td class="en">
                 The Seller agrees to sell the Relevant Unit to the Purchaser and the Purchaser agrees to purchase the
                 Relevant Unit from the Seller for the Purchase Price set out above.
             </td>
-            <td colspan="2" class="rtl-text spaced-text" style="padding: 10px; text-align: justify;">
+            <td class="separator"></td>
+            <td class="ar">
                 يوافق البائع على أن يبيع الوحدة المعنية إلى المشتري ويوافق المشتري على أن يشتري الوحدة المعنية من البائع
                 في مقابل سعر الشراء المنصوص عليه أعلاه.
             </td>
         </tr>
-    </table>
-
-    <br/>
-    <br/>
-
-    <table class="info-table">
         <tr>
-            <th class="justified" style="width: 25%;">
+            <th class="en">
                 This Agreement shall comprise and be subject to and the Particulars, and the Schedules which form an
                 integral part of this Agreement. The Purchaser hereby confirms that he/she has read and understood this
                 Agreement and agrees and undertakes to be bound by its terms:
             </th>
-            <td style="text-align: center;"></td>
-            <th class="justified spaced-text" style="direction: rtl; width: 25%;">
+            <td class="separator"></td>
+            <th class="ar">
                 تضم هذه الاتفاقية بيانات الاتفاقية والملاحق التي تشكل جزءا لا يتجزأ من هذه الاتفاقية. ويؤكد المشتري
                 بموجبه أنه قد اطلع على هذه الاتفاقية وفهم مضمونها ويوافق على الالتزام بشروطها ويتعهد بذلك:
             </th>
         </tr>
         <tr>
-            <td class="left-th" style="line-height: 2.5; width: 49%; padding: 7px; text-align: justify;">
-                Signed & delivered for and on behalf of the Seller:
+            <td class="en">
+                <b>Signed & delivered for and on behalf of the Seller:</b>
                 <h4>Name: <img src="{{ public_path('images/black_line.svg') }}" width="250" height="2" alt="___"/></h4>
                 <h4>Signature: <img src="{{ public_path('images/black_line.svg') }}" width="220" height="2" alt="___"/>
                 </h4>
                 <h4>Date: &nbsp;&nbsp;&nbsp;{{ \Carbon\Carbon::now()->format('d-M-Y') }}&nbsp;&nbsp;</h4>
             </td>
-            <td style="text-align: center;"></td>
-            <td class="rtl-text right-th" style="line-height: 2.5; width: 49%; padding: 7px; text-align: justify;">
-                وقع على هذه الاتفاقية وإبرامها نيابة عن البائع:
+            <td class="separator"></td>
+            <td class="ar">
+                <b> وقع على هذه الاتفاقية وإبرامها نيابة عن البائع:</b>
                 <h4>الاسم: <img src="{{ public_path('images/black_line.svg') }}" width="250" height="2" alt="___"/></h4>
                 <h4>التوقيع: <img src="{{ public_path('images/black_line.svg') }}" width="243" height="2" alt="___"/>
                 </h4>
@@ -457,8 +626,8 @@
             </td>
         </tr>
         <tr>
-            <td class="left-th" style="line-height: 2.5; width: 49%; padding: 7px; text-align: left;">
-                Signed and delivered by named Purchaser / Purchaser’s Authorised Signatory:
+            <td class="en">
+                <b>Signed and delivered by named Purchaser / Purchaser’s Authorised Signatory:</b>
                 <h4>Name: <img src="{{ public_path('images/black_line.svg') }}" width="250" height="2" alt="___"/></h4>
                 <h4>Position: <img src="{{ public_path('images/black_line.svg') }}" width="232" height="2" alt="___"/>
                 </h4>
@@ -466,9 +635,9 @@
                 </h4>
                 <h4>Date: &nbsp;&nbsp;&nbsp;{{ \Carbon\Carbon::now()->format('d-M-Y') }}&nbsp;&nbsp;</h4>
             </td>
-            <td style="text-align: center;"></td>
-            <td class="rtl-text right-th" style="line-height: 2.5; width: 49%; padding: 7px; text-align: justify;">
-                أبرم هذه الاتفاقية ووقع عليها المشتري المسمى/ المفوض بالتوقيع نيابة عن المشتري:
+            <td class="separator"></td>
+            <td class="ar">
+                <b> أبرم هذه الاتفاقية ووقع عليها المشتري المسمى/ المفوض بالتوقيع نيابة عن المشتري:</b>
                 <h4>الاسم: <img src="{{ public_path('images/black_line.svg') }}" width="250" height="2" alt="___"/></h4>
                 <h4>الصفة: <img src="{{ public_path('images/black_line.svg') }}" width="247" height="2" alt="___"/></h4>
                 <h4>التوقيع: <img src="{{ public_path('images/black_line.svg') }}" width="243" height="2" alt="___"/>
@@ -478,77 +647,78 @@
             </td>
         </tr>
     </table>
+
     <div class="page-break"></div>
 
-    <table class="info-table">
+    <table class="contract-table">
         <tr>
-            <td class="left-th" style="width: 49%; text-align: justify; padding: 10px;">
+            <td class="en">
                 <strong>THIS AGREEMENT</strong> is made on the Effective Date.
             </td>
-            <td style="text-align: center;"></td>
-            <td class="rtl-text right-th spaced-text" style="width: 49%; padding: 10px; text-align: justify;">
+            <td class="separator"></td>
+            <td class="ar">
                 أبرمت <strong>هذه الاتفاقية</strong> في تاريخ بدء السريان.
             </td>
         </tr>
         <tr>
-            <th class="left-th" style="width: 49%; text-align: justify; padding: 10px;">
+            <td class="en">
                 BETWEEN:
-            </th>
-            <td style="text-align: center;"></td>
-            <td class="rtl-text right-th spaced-text" style="width: 49%; padding: 10px; text-align: justify;">
+            </td>
+            <td class="separator"></td>
+            <td class="ar">
                 فيما بين كل من:
             </td>
         </tr>
         <tr>
-            <td class="left-th" style="width: 49%; text-align: justify; padding: 10px;">
+            <td class="en">
                 (1) The Seller named in Item 2 of the Particulars; and
             </td>
             <td class="separator"></td>
-            <td class="rtl-text right-th spaced-text" style="width: 49%; padding: 10px; text-align: justify;">
+            <td class="ar">
                 (1) البائع المسمى في البند (2) من بيانات الاتفاقية؛
             </td>
         </tr>
         <tr>
-            <td class="left-th" style="width: 49%; text-align: justify; padding: 10px;">
+            <td class="en">
                 (2) The Purchaser named in Item 3 of the Particulars.
             </td>
             <td class="separator"></td>
-            <td class="rtl-text right-th spaced-text" style="width: 49%; padding: 10px; text-align: justify;">
+            <td class="ar">
                 (2) المشتري المسمى في البند (3) من بيانات الاتفاقية؛
             </td>
         </tr>
         <tr>
-            <th class="left-th" style="width: 49%; text-align: justify; padding: 10px;">
+            <td class="en">
                 <strong>IT IS AGREED</strong> as follows:
-            </th>
+            </td>
             <td class="separator"></td>
-            <td class="rtl-text right-th spaced-text" style="width: 49%; padding: 10px; text-align: justify;">
+            <td class="ar">
                 وقد <strong>اتفق الطرفان تراضيا</strong> على ما يلي:
             </td>
         </tr>
         <tr>
-            <th class="left-th" style="width: 49%; text-align: justify; padding: 10px;">
+            <th class="en">
                 1. INTERPRETATION
             </th>
             <td class="separator"></td>
-            <th class="rtl-text right-th spaced-text" style="width: 49%; padding: 10px; text-align: justify;">
+            <th class="ar">
                 1. التفسير
             </th>
         </tr>
         <tr>
-            <td class="left-th" style="width: 49%; text-align: justify; padding: 10px;">
+            <td class="en">
                 1.1 In this Agreement, except where the context otherwise requires, the following words shall have the
                 following meaning
             </td>
             <td class="separator"></td>
-            <td class="rtl-text right-th spaced-text" style="width: 49%; padding: 10px; text-align: justify;">
+            <td class="ar">
                 1.1 في هذه الاتفاقية، ما لم يتطلب السياق خلاف ذلك، يكون للكلمات التالية المعاني المبينة قرين كل منها على
                 النحو التالي:
             </td>
         </tr>
     </table>
 
-    <table class="info-table">
+    <table class="contract-table">
         <tr>
             <th class="left-th" style="width: 12%;">
                 Administration Fee
@@ -575,8 +745,8 @@
             </td>
             <td>&nbsp;</td>
             <td class="rtl-text meaning spaced-text">
-                يقصد بها الرسوم الإدارية التي يفرضها البائع طبقا للبند 13-2(ب)، بشرط ألا تتجاوز تلك الرسوم الحد الأقصى
-                المنصوص عليه في القانون المعمول به.
+                يقصد به الدرهم وهو العملة الرسمية لدولة الإمارات العربية المتحدة اعتبارا من تاريخ بدء سريان هذه
+                الاتفاقية.
             </td>
             <th class="rtl-text right-th">
                 درهم أو <img src="{{ public_path('images/aed_symbol.svg') }}" width="12" alt="AED"/>
@@ -748,19 +918,29 @@
         <tr>
             <th class="left-th">Directions</th>
             <td class="meaning">means the Directions promulgated pursuant to the Jointly Owned Property Law
-                including: the Direction for Association Constitution; the Direction for General Regulation; the
-                Direction for Jointly Owned Property Declaration; and the Survey Directions.
+                including:
+                <ol type="A">
+                    <li>the Direction for Association Constitution;</li>
+                    <li>the Direction for General Regulation;</li>
+                    <li>the Direction for Jointly Owned Property Declaration;</li>
+                    <li>and the Survey Directions.</li>
+                </ol>
             </td>
             <td>&nbsp;</td>
             <td class="rtl-text meaning spaced-text">يقصد بها التوجيهات الصادرة طبقا لقانون ملكية العقارات المشتركة، بما
-                في ذلك: التوجيه بشأن النظام الأساسي لجمعية الملاك ؛ التوجيه بشأن النظام العام؛ التوجيه
-                بشأن نظام الملكية المشتركة؛ توجيهات المسح.
+                في ذلك:
+                <ol type="A">
+                    <li>التوجيه بشأن النظام الأساسي لجمعية الملاك؛</li>
+                    <li>التوجيه بشأن النظام العام؛</li>
+                    <li>التوجيه بشأن نظام الملكية المشتركة؛</li>
+                    <li>توجيهات المسح.</li>
+                </ol>
             </td>
             <th class="rtl-text right-th">التوجيهات</th>
         </tr>
         <tr>
             <th class="left-th">Effective Date</th>
-            <td class="meaning">means the date stated in Item 1 of the Particulars or, where no such date is
+            <td class="meaning">means the date stated in Item (1) of the Particulars or, where no such date is
                 apparent, the date this Agreement is signed by the last of the Parties.
             </td>
             <td>&nbsp;</td>
@@ -773,9 +953,13 @@
         <tr>
             <th class="left-th">Entitlement</th>
             <td class="meaning">means the proportion determined in accordance with the Directions in which each
-                Unit Owner shares in the Common Areas which will also be used to determine: the value of the vote of the
-                Unit Owner in any case where a poll is called at any General Assembly; and/or the proportion in which a
-                Unit Owner shall contribute towards the Service Charges.
+                Unit Owner shares in the Common Areas which will also be used to determine:
+                <ol type="A">
+                    <li>the value of the vote of the Unit Owner in any case where a poll is called at any General
+                        Assembly; and/or
+                    </li>
+                    <li>the proportion in which a Unit Owner shall contribute towards the Service Charges.</li>
+                </ol>
             </td>
             <td>&nbsp;</td>
             <td class="rtl-text meaning spaced-text">يقصد به النسبة المحددة بموجب التوجيهات التي يشترك فيها كل مالك وحدة
@@ -904,16 +1088,34 @@
         </tr>
         <tr>
             <th class="left-th">Jointly Owned Property Declaration</th>
-            <td class="meaning">has the meaning ascribed to the term in the Directions, which will include: the
-                community rules governing the management, administration and maintenance of the Common Areas; the
-                relevant Entitlements; the relevant Common Areas plans; the draft form of which, for the Project, is set
-                out in Schedule C, and which is subject to amendment at the sole and absolute discretion of the Seller.
+            <td class="meaning">has the meaning ascribed to the term in the Directions, which will include:
+                <ol type="A">
+                    <li>the community rules governing the management, administration and maintenance of the Common
+                        Areas;
+                    </li>
+                    <li>the relevant Entitlements;</li>
+                    <li>the relevant Common Areas plans; the draft form of which, for the Project, is set
+                        out in Schedule C, and which is subject to amendment at the sole and absolute discretion of the
+                        Seller.
+                    </li>
+                </ol>
             </td>
             <td>&nbsp;</td>
-            <td class="rtl-text meaning spaced-text">يكون لهذا المصطلح المعنى المحدد له في التوجيهات، ويتضمن: قواعد
-                المجمع التي تحكم إدارة وتسيير المساحات المشتركة وصيانتها؛ المستحقات ذات الصلة؛ المخططات ذات
-                الصلة للمساحات المشتركة؛ مسودة نموذج للمشروع حسبما هو مرفق ببيان الإفصاح وتخضع للتعديل حسب التقدير
-                المطلق والوحيد للبائع.
+            <td class="rtl-text meaning spaced-text">يكون لهذا المصطلح المعنى المحدد له في التوجيهات، ويتضمن:
+                <ol type="A">
+                    <li>قواعد
+                        المجمع التي تحكم إدارة وتسيير المساحات المشتركة وصيانتها؛
+                    </li>
+                    <li>
+                        المستحقات ذات الصلة؛
+                    </li>
+                    <li>
+                        المخططات ذات
+                        الصلة للمساحات المشتركة؛ مسودة نموذج للمشروع حسبما هو مرفق ببيان الإفصاح وتخضع للتعديل حسب
+                        التقدير
+                        المطلق والوحيد للبائع.
+                    </li>
+                </ol>
             </td>
             <th class="rtl-text right-th">نظام الملكية المشتركة</th>
         </tr>
@@ -976,14 +1178,14 @@
         <tr>
             <th class="left-th">Master Community</th>
             <td class="meaning">means the master community in which the Project Plot is situated currently known
-                as BUSINESS BAY (or such other name as the community in which the Project Plot is situated may become
+                as Dubai Land (or such other name as the community in which the Project Plot is situated may become
                 known) comprising municipal type infrastructure which is or will be subdivided into Plots and Communal
                 Facilities generally and includes all and any extensions or contractions of the Master Community from
                 time to time.
             </td>
             <td>&nbsp;</td>
             <td class="rtl-text meaning spaced-text">يقصد به المجمع الرئيسي التي تقع فيه أرض المشروع والمعروفة في الوقت
-                الحالي باسم (الخليج التجاري) ، (أو أي اسم آخر قد يعرف به المجمع الذي تقع فيه أرض المشروع) ويتضمن
+                الحالي باسم (دبي لاند)، (أو أي اسم آخر قد يعرف به المجمع الذي تقع فيه أرض المشروع) ويتضمن
                 بنية تحتية بلدية النوع تقسم أو سوف تقسم إلى قطع أرض ومرافق مشتركة بصفة عامة، ويتضمن كافة وأية توسعات
                 أو اختصارات للمجمع الرئيسي من حين لآخر.
             </td>
@@ -1054,7 +1256,8 @@
         </tr>
         <tr>
             <th class="left-th">Parties</th>
-            <td class="meaning">means collectively the Seller and the Purchaser and “Party” means either one of
+            <td class="meaning">means collectively the Seller and the Purchaser and &quot;Party&quot; means either one
+                of
                 them.
             </td>
             <td>&nbsp;</td>
@@ -1116,9 +1319,16 @@
                 Single Ownership Plot.
             </td>
             <td>&nbsp;</td>
-            <td class="rtl-text meaning spaced-text">يقصد بها مالك أي قطعة أرض، بما في ذلك: جمعية الملاك (في حال إذا
-                كانت القطعة مملوكة ملكية مشتركة)؛ أي شخص آخر أو أشخاص آخرين (سواء أكان شخصا طبيعيا أو
-                اعتباريا) في حال إذا كانت القطعة مملوكة ملكية فردية.
+            <td class="rtl-text meaning spaced-text">يقصد بها مالك أي قطعة أرض، بما في ذلك:
+                <ol>
+                    <li>جمعية الملاك (في حال إذا
+                        كانت القطعة مملوكة ملكية مشتركة)؛
+                    </li>
+                    <li>
+                        أي شخص آخر أو أشخاص آخرين (سواء أكان شخصا طبيعيا أو
+                        اعتباريا) في حال إذا كانت القطعة مملوكة ملكية فردية.
+                    </li>
+                </ol>
             </td>
             <th class="rtl-text right-th">مالك (ملاك) قطعة الأرض</th>
         </tr>
@@ -1421,78 +1631,75 @@
             <th class="rtl-text right-th">أيام العمل</th>
         </tr>
     </table>
-    <table class="info-table">
+    <table class="contract-table">
         <tr>
-            <td class="left-th" style="width: 49%; text-align: justify; padding: 10px;">
+            <td class="en">
                 1.1. The clause headings are included for convenience only and shall not affect the interpretation of
                 this Agreement.
             </td>
             <td class="separator"></td>
-            <td class="rtl-text right-th spaced-text" style="width: 49%; padding: 10px; text-align: justify;">
+            <td class="ar">
                 1-1 يتم الاشتمال على عناوين البنود لسهولة الرجوع إليها فقط ولن تؤثر على تفسير هذه الاتفاقية.
             </td>
         </tr>
         <tr>
-            <td class="left-th" style="width: 49%; text-align: justify; padding: 10px;">
+            <td class="en">
                 1.2. All dates and periods shall be determined by reference to the Gregorian calendar.
             </td>
             <td class="separator"></td>
-            <td class="rtl-text right-th spaced-text" style="width: 49%; padding: 10px; text-align: justify;">
+            <td class="ar">
                 1-2 تحدد كافة التواريخ والفترات عن طريق الرجوع إلى التقويم الميلادي.
             </td>
         </tr>
         <tr>
-            <td class="left-th" style="width: 49%; text-align: justify; padding: 10px;">
+            <td class="en">
                 1.3. The following Schedules form part of this Agreement and shall have effect as if set out in full in
                 the body of this Agreement and any reference to this Agreement includes the Schedules:
             </td>
             <td class="separator"></td>
-            <td class="rtl-text right-th spaced-text" style="width: 49%; padding: 10px; text-align: justify;">
+            <td class="ar">
                 1-3 تشكل الملاحق التالية جزءا من هذه الاتفاقية وتسري كما لو كانت قد نص عليها كاملة ضمن هذه الاتفاقية،
                 وأية إشارة إلى هذه الاتفاقية تشمل الملاحق:
             </td>
         </tr>
         <tr>
-            <td class="left-th" style="width: 49%; text-align: justify; padding: 10px 10px 10px 35px;">
+            <td class="en" style="padding: 10px 10px 10px 35px;">
                 <strong>Schedule A:</strong> Payment Schedule
             </td>
             <td class="separator"></td>
-            <td class="rtl-text right-th spaced-text"
-                style="width: 49%; padding: 10px 35px 10px 10px; text-align: justify;">
+            <td class="ar" style="padding: 10px 35px 10px 10px;">
                 <strong>الملحق (أ):</strong> جدول سداد الدفعات
             </td>
         </tr>
         <tr>
-            <td class="left-th" style="width: 49%; text-align: justify; padding: 10px 10px 10px 35px;">
+            <td class="en" style="padding: 10px 10px 10px 35px;">
                 <strong>Schedule B:</strong> Relevant Unit Specifications, including the Relevant Unit Plan (Draft) and
                 the Schedule of Furniture, Fixtures, Fittings and Finishes.
             </td>
             <td class="separator"></td>
-            <td class="rtl-text right-th spaced-text"
-                style="width: 49%; padding: 10px 35px 10px 10px; text-align: justify;">
+            <td class="ar" style="padding: 10px 35px 10px 10px;">
                 <strong>الملحق (ب):</strong> مواصفات الوحدة المعنية، وتشمل مخطط الوحدة المعنية (مشروع المخطط) وجدول
                 التركيبات والتمديدات والتشطيبات.
             </td>
         </tr>
         <tr>
-            <td class="left-th" style="width: 49%; text-align: justify; padding: 10px 10px 10px 35px;">
+            <td class="en" style="padding: 10px 10px 10px 35px;">
                 <strong>Schedule C:</strong> Jointly Owned Property Declaration
             </td>
             <td class="separator"></td>
-            <td class="rtl-text right-th spaced-text"
-                style="width: 49%; padding: 10px 35px 10px 10px; text-align: justify;">
+            <td class="ar" style="padding: 10px 35px 10px 10px;">
                 <strong>الملحق (هـ):</strong> نظام الملكية المشتركة.
             </td>
         </tr>
         <tr>
-            <td class="left-th" style="width: 49%; text-align: justify; padding: 10px;">
+            <td class="en">
                 1.4 If any provision in a definition in this Agreement is a substantive provision conferring rights or
                 imposing obligations then, notwithstanding that it is only in the interpretation clause of this
                 Agreement, effect shall be given to it as if it were a substantive provision in the body of this
                 Agreement.
             </td>
             <td class="separator"></td>
-            <td class="rtl-text right-th spaced-text" style="width: 49%; padding: 10px; text-align: justify;">
+            <td class="ar">
                 1-4 في حال إذا كان أي حكم في بند التعريفات في هذه الاتفاقية حكما جوهريا يمنح حقوقا أو يفرض التزامات،
                 فحينئذ يصبح ذلك الحكم، رغم أنه قد نص عليه في بند التعريفات والتفسير بهذه الاتفاقية، ساريا كما لو كان
                 حكما جوهريا مذكورا في صلب هذه الاتفاقية.
@@ -1500,16 +1707,16 @@
         </tr>
         <!-- 2 -->
         <tr>
-            <th class="left-th" style="width: 49%; text-align: justify; padding: 10px;">
+            <th class="en">
                 2. THE SALE
             </th>
             <td class="separator"></td>
-            <th class="rtl-text right-th spaced-text" style="width: 49%; padding: 10px; text-align: justify;">
+            <th class="ar">
                 2- البيع
             </th>
         </tr>
         <tr>
-            <td class="left-th" style="width: 49%; text-align: justify; padding: 10px;">
+            <td class="en">
                 2.1. The Seller sells to the Purchaser who hereby purchases the Property on the terms and conditions
                 contained in this Agreement.
             </td>
@@ -1519,38 +1726,49 @@
                 الاتفاقية.
             </td>
         </tr>
-
         <tr>
-            <th class="left-th section-heading" style="width:49%; text-align:justify; padding:10px;">3. Purchase Price
-                and Payment
-            </th>
-            <td class="separator" style="width:2%;"></td>
-            <th class="rtl-text right-th spaced-text section-heading"
-                style="width:49%; text-align:justify; padding:10px;">3- سعر الشراء ودفعه
-            </th>
+            <td class="en">
+                2.2. This Agreement is a personal contract between the Seller and the Purchaser, and, for the
+                avoidance of doubt, the Parties agree that the Master Developer is not a party to this Agreement and has
+                no liability and gives no warranty under it.
+            </td>
+            <td class="separator"></td>
+            <td class="rtl-text right-th spaced-text" style="width: 49%; padding: 10px; text-align: justify;">
+                2-2 هذه الاتفاقية هي عقد شخصي بين البائع والمشتري ، ولتفادي الشك ، يتفق الطرفان على أن المطور الرئيسي
+                ليس طرفا في هذه الاتفاقية ولا يتحمل أي مسؤولية ولا يقدم أي ضمان بموجبها. "
+            </td>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">
+            <th class="en">
+                3. Purchase Price and Payment
+            </th>
+            <td class="separator"></td>
+            <th class="ar">
+                3- سعر الشراء ودفعه
+            </th>
+        </tr>
+        <tr>
+            <td class="en">
                 3.1 The Purchase Price shall be paid by the Purchaser to the Seller free of exchange or variance, and
                 without any deduction or set off in accordance with the Payment Schedule and Payment Schedule Notes.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">3-1 يلتزم
+            <td class="separator"></td>
+            <td class="ar">3-1 يلتزم
                 المشتري بأن يدفع سعر الشراء إلى البائع بغض النظر عن تقلب أسعار الصرف، وخالصا من أي استقطاع أو تقاص بموجب
                 جدول سداد الدفعات والملاحظات على جدول سداد الدفعات.
             </td>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">3.2. The Purchaser shall pay each
+            <td class="en">3.2. The Purchaser shall pay each
                 instalment payment as described in the Payment Schedule by transferring each instalment payment to the
                 bank account nominated by the Seller in writing or by delivering the payment via regular cheque or
                 manager cheque to the Seller’s office in Dubai, UAE on or before the due date of the instalment payment
                 set out in the Payment Schedule.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">3-2 يتعهد
+            <td class="separator"></td>
+            <td class="ar">3-2 يتعهد
                 المشتري بدفع كل قسط على النحو الموضح في جدول الدفع عن طريق تحويل كل قسط إلى الحساب البنكي الذي حدده
                 البائع كتابة أو الدفع في شكل شيك عادي أو شيك مصدق إلى مكتب البائع في دبي بالإمارات العربية المتحدة وذلك
                 في تاريخ استحقاق القسط الموضح في جدول الدفع أو قبل ذلك التاريخ.
@@ -1558,7 +1776,7 @@
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">3.3. The payment of each Payment
+            <td class="en">3.3. The payment of each Payment
                 Instalment shall be due on the Instalment Date, or in respect of the Final Instalment ten (10) Working
                 Days from the date the Seller provides written confirmation to the Purchaser that the Project Manager
                 has determined that completion of the Project has occurred. Determination that completion of the Project
@@ -1566,8 +1784,8 @@
                 discretion and the Project Manager’s confirmation in writing of the same shall be conclusive proof that
                 the same has been attained and shall be final and binding on the Parties.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">3-3 يكون سداد
+            <td class="separator"></td>
+            <td class="ar">3-3 يكون سداد
                 دفعة كل قسط في تاريخ القسط؛ أو بالنسبة إلى الدفعة الأخيرة عشرة (10) أيام عمل من تاريخ تقديم البائع
                 تأكيدا خطيا إلى المشتري بأن مدير المشاريع قد قرر أن إنجاز المشروع قد تم. ويكون تحديد إنجاز المشروع
                 وتأكيد تاريخ الإنجاز حسب تقدير مدير المشروع وحده ويكون تأكيده الخطي على نسبة الإنجاز هذه دليلا قاطعا على
@@ -1576,51 +1794,57 @@
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">3.4. Without prejudice to the Seller’s
+            <td class="en">3.4. Without prejudice to the
+                Seller’s
                 other rights under this Agreement, in the event of non-payment on the due date of any amount payable by
                 the Purchaser pursuant to this Agreement, the Purchaser shall pay the Late Payment Penalty as
-                compensation for the delay in payment.
+                compensation for the delay in payment, In accordance with the provisions set forth in Clause No. 10.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">3-4 مع مراعاة
+            <td class="separator"></td>
+            <td class="ar">3-4 مع مراعاة
                 عدم الإخلال بحقوق البائع الأخرى المنصوص عليها بموجب هذه الاتفاقية، في حال عدم سداد أي مبلغ مستحق على
                 المشتري طبقا لهذه الاتفاقية في تاريخ استحقاقه، يتعين على المشتري أن يدفع غرامة تأخير سداد تعويضا عن
-                التأخير في سداد المبلغ المستحق.
+                التأخير في سداد المبلغ المستحق وفقا لأحكام البند رقم 10.
             </td>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">3.5. Without prejudice to Clause 3.5, in
-                the event a cheque is returned unpaid, the Seller may charge a fee of AED 500.00 (UAE Dirhams Five
-                Hundred ) as a handling fee in relation to each returned cheque.
+            <td class="en">3.5. Without prejudice to Clause
+                3.5, in
+                the event a cheque is returned unpaid, the Seller may charge a fee of AED 1,500.00 (UAE Dirhams One
+                Thousand Five Hundred) as a handling fee in relation to each returned cheque.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">3-5 مع مراعاة
-                عدم الإخلال بالبند (5-3)، في حال إذا ارتجع شيك دون دفعه، فحينئذ يجوز للبائع أن يفرض رسما قيمته خمسمائة
-                درهم (500 درهم) كرسم خدمة فيما يتعلق بكل شيك يرتجع.
+            <td class="separator"></td>
+            <td class="ar">3-5 مع مراعاة
+                عدم الإخلال بالبند (5-3)، في حال إذا ارتجع شيك دون دفعه، فحينئذ يجوز للبائع أن يفرض رسما قيمته ألف
+                وخمسمئة
+                درهم إماراتي (500 درهم) كرسم خدمة فيما يتعلق بكل شيك يرتجع.
             </td>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">3.6. Each payment made by the Purchaser
+            <td class="en">3.6. Each payment made by the
+                Purchaser
                 shall be allocated first to the discharge of any penalties, then to the payment of any other amounts due
                 in terms hereof and thereafter to the reduction of the Purchase Price.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">3-6 وتستخدم
+            <td class="separator"></td>
+            <td class="ar">3-6 وتستخدم
                 كل دفعة يسددها المشتري للوفاء أولا بأية غرامات، ثم لسداد أية مبالغ أخرى مستحقة بموجب هذه الاتفاقية، ثم
                 بعد ذلك للخصم من سعر الشراء.
             </td>
         </tr>
 
+
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">3.7. The Purchaser hereby represents,
+            <td class="en">3.7. The Purchaser hereby
+                represents,
                 undertakes and warrants that all funds utilised by the Purchaser in respect of the payment of the
                 Purchase Price or any other payments anticipated under this Agreement are derived from legitimate
                 sources and are not related to proceeds of crime or money laundering either directly or indirectly.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">3-7 ويتعهد
+            <td class="separator"></td>
+            <td class="ar">3-7 ويتعهد
                 المشتري ويؤكد بموجبه أن كافة المبالغ التي يستغلها المشتري سدادا لسعر الشراء أو سدادا لأية دفعات أخرى
                 متوقعة بموجب هذه الاتفاقية قد حققها المشتري من مصادر مشروعة وليست لها أية صلة، مباشرة كانت أو غير
                 مباشرة، بمتحصلات نتجت عن جرم أو غسيل أموال.
@@ -1628,17 +1852,17 @@
         </tr>
 
         <tr>
-            <th class="left-th section-heading" style="width:49%; text-align:justify; padding:10px;">4. Possession and
+            <th class="en">4. Possession and
                 Risk
             </th>
-            <td class="separator" style="width:2%;"></td>
-            <th class="rtl-text right-th spaced-text section-heading"
-                style="width:49%; text-align:justify; padding:10px;">4- الحيازة والمخاطر
+            <td class="separator"></td>
+            <th class="ar">4- الحيازة والمخاطر
             </th>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">4.1. It is recorded that the Anticipated
+            <td class="en">4.1. It is recorded that the
+                Anticipated
                 Completion Date represents the date upon which it is presently expected that the Seller will hand over
                 possession of the Property to the Purchaser. The Seller reserves the right, by notice in writing to the
                 Purchaser at any time in accordance with Clause 5-1 (or any other method of delivery permitted at law),
@@ -1648,8 +1872,9 @@
                 the right, at its sole discretion, to require the Completion Date to occur earlier than the Anticipated
                 Completion Date.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">4-1 من المقرر أن
+            <td class="separator"></td>
+            <td class="ar">4-1 من المقرر
+                أن
                 تاريخ الإنجاز المتوقع يمثل التاريخ المتوقع في الوقت الحالي أن يسلم البائع فيه حيازة العقار إلى المشتري.
                 يحتفظ البائع بالحق، عن طريق إخطار خطي إلى المشتري في أي وقت وفقا للبند 5-1 (أو أي طريقة أخرى يسمح بها
                 القانون)، أن يمدد التاريخ المتوقع للإنجاز في مناسبة واحدة أو أكثر ولفترة واحدة أو أكثر بشرط ألا يتجاوز
@@ -1660,36 +1885,41 @@
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">4.2. The Seller shall in any event give
+            <td class="en">4.2. The Seller shall in any event
+                give
                 the Purchaser not less than thirty (30) days’ notice in writing of the Completion Date and the
                 Completion Date shall only be deemed to have been determined when such notice has been given.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">4-2 يتعين على
+            <td class="separator"></td>
+            <td class="ar">4-2 يتعين على
                 البائع، في أي حال من الأحوال، أن يرسل إخطارا خطيا مدته لا تقل عن ثلاثين (30) يوم بتاريخ الإنجاز، ويعتبر
                 تاريخ الإنجاز قد حدد فقط عندما يرسل ذلك الإخطار.
             </td>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">4.3. Possession and occupation of the
+            <td class="en">4.3. Possession and occupation of
+                the
                 Property shall be given to and taken by the Purchaser on the Completion Date, subject to Clause 4.4.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">4-3 ويمنح المشتري
-                ويتسلم حيازة وإشغال العقار في تاريخ الإنجاز، مع مراعاة عدم الإخلال بالبند )4-4).
+            <td class="separator"></td>
+            <td class="ar">4-3 ويمنح
+                المشتري
+                ويتسلم حيازة وإشغال العقار في تاريخ الإنجاز، مع مراعاة عدم الإخلال بالبند (4-4).
             </td>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">4.4. All risk and benefit in respect of
+            <td class="en">4.4. All risk and benefit in
+                respect of
                 the Property shall pass to the Purchaser on the Completion Date, which is also the date that the
                 Purchaser is required to take possession of the Property. The Seller is entitled (but not obligated) to
                 decline to hand over possession and occupation of the Property to the Purchaser if the Purchaser has
                 failed to:
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">4-4 تنتقل كافة
+            <td class="separator"></td>
+            <td class="ar">4-4 تنتقل
+                كافة
                 المخاطر والفوائد المتعلقة بالعقار إلى المشتري في تاريخ الإنجاز، وهو أيضا التاريخ الذي يطلب فيه من
                 المشتري أن يتولى حيازة العقار. يحق للبائع (دون التزام عليه) أن يرفض تسليم حيازة وإشغال العقار إلى
                 المشتري إذا قصر المشتري في أي مما يلي:
@@ -1697,27 +1927,30 @@
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">(a) make any of the payments referred
+            <td class="en">(a) make any of the payments
+                referred
                 to in Clauses 3, 6.3 and 6.5;
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">أ) سداد أي من
+            <td class="separator"></td>
+            <td class="ar">أ) سداد أي من
                 الدفعات المشار إليها في البند (3) والبند (6-3) والبند (6-5)؛
             </td>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">(b) comply with any other provision of
+            <td class="en">(b) comply with any other provision
+                of
                 this Agreement;
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">ب) الالتزام بأي
+            <td class="separator"></td>
+            <td class="ar">ب) الالتزام
+                بأي
                 حكم آخر من أحكام هذه الاتفاقية؛
             </td>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">provided that, notwithstanding the
+            <td class="en">provided that, notwithstanding the
                 Seller declining handover pursuant to this Clause 4.4, all risk in the Property shall pass to the
                 Purchaser on the Completion Date, irrespective of whether physical possession and occupation has been
                 provided to or taken by the Purchaser and, accordingly, the Purchaser shall not be relieved from
@@ -1725,8 +1958,8 @@
                 (including without limitation the obligation to pay the Final Instalment and/or the Service Charges
                 pursuant to Clauses 3, 6.3 and 6.5).
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">على أنه
+            <td class="separator"></td>
+            <td class="ar">على أنه
                 يشترط، رغم رفض البائع التسليم بموجب هذا البند (4-4)، أن تنتقل كافة المخاطر في العقار إلى المشتري في
                 تاريخ الإنجاز، بغض النظر عما إذا كانت الحيازة والإشغال الفعلي قد تم توفيرها إلى المشتري أو قد حصل عليها
                 المشتري، ومن ثم لا يعفى المشتري من تنفيذ أي من التزاماته، المنصوص عليها بموجب هذه الاتفاقية، التي تنشأ
@@ -1736,13 +1969,14 @@
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">4.5. The Purchaser shall from and after
+            <td class="en">4.5. The Purchaser shall from and
+                after
                 the Completion Date or transfer of title whichever is earlier indemnify and hold the Seller and their
                 respective agents and affiliates harmless against all claims, proceedings, costs, damages, expenses and
                 losses including attorney’s fees and expenses arising out of or relating to:
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">4-5 يتعين على
+            <td class="separator"></td>
+            <td class="ar">4-5 يتعين على
                 المشتري اعتبارا من تاريخ الإنجاز أو نقل الملكية وبعده، أيهما يقع أولا، أن يعوض البائع والمطور أو أيهما
                 ووكلائهم ومنتسبيهم وأن يحجب الضرر عنهم ضد كافة المطالبات والدعاوى والتكاليف والأضرار والمصاريف والخسائر
                 بما في ذلك مصاريف وأتعاب المحاماة الناشئة عن أو المرتبطة بأي مما يلي:
@@ -1750,39 +1984,43 @@
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">(a) defective or damaged condition of
+            <td class="en">(a) defective or damaged condition
+                of
                 any part of the Property or any other structure constructed thereon and any fixtures, fittings or
                 electrical wiring therein caused or installed by (as the case may be) the Purchaser;
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">أ) الحالة
+            <td class="separator"></td>
+            <td class="ar">أ) الحالة
                 المعيبة أو التالفة لأي جزء من العقار أو أي هيكل آخر أنشئ عليه وأية تركيبات أو تمديدات أو أسلاك كهربائية
                 تسبب فيها المشتري أو ركبها المشتري (حسب الأحوال)
             </td>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">(b) the spread of fire or smoke or the
+            <td class="en">(b) the spread of fire or smoke or
+                the
                 flow of water from any part of the Property cause by the Purchaser; or
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">ب) انتشار الحريق
+            <td class="separator"></td>
+            <td class="ar">ب) انتشار
+                الحريق
                 أو الدخان أو تدفق المياه من أي جزء من العقار بسبب المشتري
             </td>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">(c) the act, default or negligence of
+            <td class="en">(c) the act, default or negligence
+                of
                 the Purchaser or the Purchaser’s occupiers, his agents or contractors.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">ت) أي فعل أو
+            <td class="separator"></td>
+            <td class="ar">ت) أي فعل أو
                 تقصير أو إهمال من جانب المشتري أو شاغلي عقار المشتري أو وكلائه أو مقاوليه.
             </td>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">4.6. As soon as reasonably possible
+            <td class="en">4.6. As soon as reasonably possible
                 following the Completion Date, the Seller will allocate any Parking Bay(s) to the Purchaser on a
                 temporary basis provided that the exact position of the Parking Bay(s) may not be confirmed until such
                 time as the title deed is issued and Jointly Owned Property Declaration is finalised. The Seller shall
@@ -1790,8 +2028,9 @@
                 Unit and the Purchaser shall not be entitled to raise an objection to the allocation and position of
                 such Parking Bay(s).
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">4-6 في أقرب وقت
+            <td class="separator"></td>
+            <td class="ar">4-6 في أقرب
+                وقت
                 ممكن على نحو معقول عقب تاريخ الإنجاز، للبائع أن يخصص أي موقف سيارة (مواقف سيارات) للمشتري بصفة مؤقتة
                 بشرط ألا يتم تأكيد الموقف (المواقف) بدقة حتى يتم الانتهاء من استصدار سند الملكية ونظام الملكية المشتركة.
                 يتعين على البائع أن يبذل قصارى جهده لتخصيص مواقف للسيارة (مواقف للسيارات) في موقع مناسب فيما يتعلق
@@ -1803,14 +2042,14 @@
             <th class="left-th section-heading" style="width:49%; text-align:justify; padding:10px;">5. Transfer of
                 Title
             </th>
-            <td class="separator" style="width:2%;"></td>
+            <td class="separator"></td>
             <th class="rtl-text right-th spaced-text section-heading"
                 style="width:49%; text-align:justify; padding:10px;">5- نقل سند الملكية
             </th>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">5.1. The Purchaser acknowledges and
+            <td class="en">5.1. The Purchaser acknowledges and
                 agrees that the Seller will not transfer title to the Property to the Purchaser until the Completion
                 Date. The Seller shall transfer a clear and unencumbered title in respect of the Property to the
                 Purchaser and shall procure registration of such transfer in favour of the Purchaser with the Land
@@ -1818,8 +2057,9 @@
                 provided the Purchaser is not otherwise in breach of its obligations under this Agreement (and insofar
                 as the Seller is reasonably capable of doing so).
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">5-1 يقر المشتري
+            <td class="separator"></td>
+            <td class="ar">5-1 يقر
+                المشتري
                 ويوافق على أن البائع لن ينقل سند ملكية العقار إلى المشتري حتى تاريخ الإنجاز. ويتعين على البائع أن ينقل
                 ملكية العقار إلى المشتري خالصة وغير محملة برهون أو أعباء، وأن يضمن تسجيل نقل تلك الملكية لصالح المشتري
                 لدى دائرة الأراضي والأملاك في السجل العقاري في أقرب وقت ممكن على نحو معقول في تاريخ الإنجاز أو بعده،
@@ -1829,33 +2069,33 @@
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">5.2. Once title to the Property has been
-                registered in the name of the Purchaser in the Land Department, the Purchaser may deal in his Property
-                as set out in Clause 14.3. The Purchaser may finance the purchase of the Property with the Seller’s
-                prior written consent and upon such terms and conditions as the Seller may reasonably require prior to
-                the registration of title. The Seller makes no representations or warranties as to the ability of the
-                Purchaser to finance the purchase of the Property, and the Purchaser warrants it has sufficient
-                resources to meet its obligations under this Agreement without the need to obtain finance.
+            <td class="en">5.2 Once title to the Property has been registered in the name of the Purchaser in the
+                Land Department, the Purchaser may deal in his Property. The Purchaser may finance the purchase of the
+                Property with the Seller’s prior written consent and upon such terms and conditions as the Seller may
+                reasonably require prior to the registration of title. The Seller makes no representations or warranties
+                as to the ability of the Purchaser to finance the purchase of the Property, and the Purchaser warrants
+                it has sufficient resources to meet its obligations under this Agreement without the need to obtain
+                finance.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">5-2 بمجرد تسجيل
-                ملكية العقار باسم المشتري في دائرة الأراضي والأملاك، يجوز للمشتري أن يتصرف في العقار على النحو المنصوص
-                عليه في البند (14-3(. ويجوز للمشتري أن يمول شراء العقار بموافقة خطية مسبقة من البائع وبناء على تلك
-                الشروط والأحكام التي يطلبها البائع بشكل معقول قبل تسجيل الملكية. وليس للبائع أن يقدم أية تعهدات أو
-                تأكيدات بشأن قدرة المشتري على تمويل العقار، ويؤكد المشتري أنه لديه الموارد الكافية للوفاء بالتزاماته
-                المنصوص عليها بموجب هذه الاتفاقية دون حاجة للحصول على التمويل.
+            <td class="separator"></td>
+            <td class="ar">5-2 بمجرد تسجيل ملكية العقار باسم المشتري في دائرة الأراضي والأملاك، يجوز للمشتري أن
+                يتصرف في العقار. ويجوز للمشتري أن يمول شراء العقار بموافقة خطية مسبقة من البائع وبناء على تلك الشروط
+                والأحكام التي يطلبها البائع بشكل معقول قبل تسجيل الملكية. وليس للبائع أن يقدم أية تعهدات أو تأكيدات بشأن
+                قدرة المشتري على تمويل العقار، ويؤكد المشتري أنه لديه الموارد الكافية للوفاء بالتزاماته المنصوص عليها
+                بموجب هذه الاتفاقية دون حاجة للحصول على التمويل.
             </td>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">5.3. The Purchaser shall supply to the
+            <td class="en">5.3. The Purchaser shall supply to
+                the
                 Seller all information and sign any document as may be reasonably required by the Land Department and
                 any other respective authorities to effect transfer of title and give effect to this Agreement and the
                 Purchaser shall bear the cost of all fees and expenses as required by the respective authorities to
                 effect such transfer and issue of title.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">5-3 يتعين على
+            <td class="separator"></td>
+            <td class="ar">5-3 يتعين على
                 المشتري أن يوفر للبائع كافة المعلومات ويوقع على أي مستند حسبما تتطلب دائرة الأرضي وأية سلطات معنية أخرى
                 بشكل معقول لتنفيذ نقل الملكية ووضع هذه الاتفاقية في حيز النفاذ، ويتعين على المشتري أن يتحمل تكلفة كافة
                 الرسوم والمصاريف التي تتطلبها السلطات المعنية لتنفيذ نقل وإصدار الملكية المذكور.
@@ -1863,13 +2103,15 @@
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">5.4. The Purchaser shall accept transfer
+            <td class="en">5.4. The Purchaser shall accept
+                transfer
                 of title to the Property subject to such easements and restrictions benefiting or burdening the Property
                 in terms of this Agreement, the Strata Scheme Documentation or as imposed by Applicable Law or any
                 Relevant Authority.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">5-4 يقبل المشتري
+            <td class="separator"></td>
+            <td class="ar">5-4 يقبل
+                المشتري
                 نقل ملكية العقار مع مراعاة عدم الإخلال بحقوق الارتفاق والقيود التي تستفيد من العقار أو تحمله بأعباء
                 بالنسبة لهذه الاتفاقية أو مستندات قواعد الملكية المشتركة أو حسبما يفرض القانون المعمول به أو حسبما تفرض
                 السلطة المعنية.
@@ -1877,7 +2119,8 @@
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">5.5. The Purchaser shall on demand pay
+            <td class="en">5.5. The Purchaser shall on demand
+                pay
                 any and all costs, expenses and/or fees in connection with and/or incidental to the registration of this
                 Agreement and the registration of transfer of title to the Property in the name of the Purchaser at the
                 Land Department and, if applicable, in the Interim Real Estate Register (the “Fees”), including any part
@@ -1891,8 +2134,8 @@
                 without limitation, fines or penalties levied by the Land Department) arising or in any way connected
                 with the Purchaser’s failure to pay the Fees when demanded.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">5-5 يلتزم
+            <td class="separator"></td>
+            <td class="ar">5-5 يلتزم
                 المشتري، عندما يطلب منه، بأن يدفع جميع التكاليف والمصاريف والرسوم المرتبطة بتسجيل هذه الاتفاقية وتسجيل
                 نقل ملكية العقار باسم المشتري في دائرة الأراضي والأملاك وفي السجل العقاري المؤقت إذا كان ذلك ينطبق
                 ("الرسوم")، بما في ذلك أي جزء من الرسوم التي يتم تقييمها على البائع وأي رسوم تفرض في الوقت الحالي أو
@@ -1910,14 +2153,15 @@
             <th class="left-th section-heading" style="width:49%; text-align:justify; padding:10px;">6. Purchaser’s
                 Acknowledgements and Undertakings
             </th>
-            <td class="separator" style="width:2%;"></td>
+            <td class="separator"></td>
             <th class="rtl-text right-th spaced-text section-heading"
                 style="width:49%; text-align:justify; padding:10px;">6- إقرارات وتعهدات المشتري
             </th>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">6.1 The Purchaser shall be responsible
+            <td class="en">6.1 The Purchaser shall be
+                responsible
                 for and shall be liable to pay for water, electricity, gas, sewage, chilled water, telephone,
                 information, technology and communication services and other utility connection and consumption charges,
                 all charges imposed directly by any Relevant Authority or Utility Provider for these services to the
@@ -1927,8 +2171,9 @@
                 Charges and the Purchaser undertakes to settle such consumption or usage charges as provided by the
                 Owners Association promptly and without delay when requested to do so.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">6-1 يكون المشتري
+            <td class="separator"></td>
+            <td class="ar">6-1 يكون
+                المشتري
                 مسؤولا عن دفع قيمة خدمات المياه والكهرباء والغاز والصرف الصحي والمياه المبردة والهاتف وخدمات تكنولوجيا
                 المعلومات والاتصالات وتوصيلات المرافق الأخرى ومصاريف الاستهلاك وكافة المصاريف التي تفرضها بشكل مباشر
                 السلطة المختصة أو الجهة المقدمة لخدمات المرافق نظير تقديم هذه الخدمات للعقار وأية ضرائب عقارية أو ضرائب
@@ -1940,15 +2185,16 @@
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">6.2. The Purchaser acknowledges and
+            <td class="en">6.2. The Purchaser acknowledges and
                 agrees that the Purchaser shall pay their portion of Service Charges, on and from the Completion Date
                 (and regardless of whether the Purchaser takes possession of or title to the Property) calculated and
                 payable in accordance with the Entitlement of the Relevant Unit as this forms part of the total
                 Entitlement of all Units as well as such other criteria set down in Applicable Law and the Strata Scheme
                 Documentation.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">6-2 يقر ويوافق
+            <td class="separator"></td>
+            <td class="ar">6-2 يقر
+                ويوافق
                 المشتري على أن يلتزم المشتري بدفع نسبته من مصاريف الخدمة اعتبارا من تاريخ الإنجاز (وبغض النظر عما إذا
                 كان المشتري قد حاز العقار أو أصبح له سند ملكيته أم لا) تحسب وتستحق بموجب النصيب المستحق من الوحدة
                 المعنية حسبما يشكل ذلك جزءا من إجمالي النصيب المستحق من كافة الوحدات إضافة إلى تلك المعايير الأخرى
@@ -1957,63 +2203,78 @@
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">6.3. The Purchaser acknowledges that the
+            <td class="en">6.3. The Purchaser hereby agrees to comply with all terms, conditions, covenants, and
+                obligations set forth in the Master Community Declaration, as may be amended from time to time.
+            </td>
+            <td class="separator"></td>
+            <td class="ar">6-3 يوافق المشتري بموجب هذا على الامتثال لجميع الشروط والأحكام والعهود والالتزامات
+                المنصوص عليها في إعلان المجتمع الرئيسي، حسبما يتم تعديله من وقت لآخر.
+            </td>
+        </tr>
+
+        <tr>
+            <td class="en">6.4. The Purchaser acknowledges
+                that the
                 Service Charges will also include a share of the Community Charges assessed on the Project Plot pursuant
                 to the Master Community Declaration and levied upon the relevant Owners Association.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">6-3 يقر المشتري
+            <td class="separator"></td>
+            <td class="ar">6-4 يقر
+                المشتري
                 أن مصاريف الخدمة تشمل أيضا مصاريف المجمع التي يتم تقييمها على أرض المشروع طبقا لنظام المجمع الرئيسي ويتم
                 فرضها على جمعية الملاك المعنية.
             </td>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">6.4. The Service Charges for the twelve
+            <td class="en">6.5. The Service Charges for the
+                twelve
                 (12) month period commencing on the Completion Date shall be payable in advance by the Purchaser to the
                 Manager on the Completion Date.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">6-4 تكون مصاريف
+            <td class="separator"></td>
+            <td class="ar">6-5 تكون
+                مصاريف
                 الخدمة عن مدة الاثني عشر (12) شهر التي تبدأ في تاريخ الإنجاز مستحقا دفعها على المشتري إلى المدير في
                 تاريخ الإنجاز.
             </td>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">6.5. The Purchaser agrees and
+            <td class="en">6.6. The Purchaser agrees and
                 understands that the Property may only be used for the Permitted Use which for the avoidance of doubt
                 comprises Residential Apartment Use for family use , The Purchaser shall:
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">6-5 يدرك المشتري
+            <td class="separator"></td>
+            <td class="ar">6-6 يدرك
+                المشتري
                 ويوافق على أنه لا يجوز له أن يستخدم العقار إلا لغرض الاستخدام المصرح به والذي يعني، قطعا للشك باليقين،
                 استخدام العقار كشقة سكنية للسكن العائلي و يجب على المشتري:
             </td>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">- comply in all respects with the
+            <td class="en">- comply in all respects with the
                 provisions of all Applicable Law and the terms of Strata Scheme Documentation or rules and regulations
                 promulgated there under now or from time to time in force in relation to the Property.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">- أن يلتزم في
+            <td class="separator"></td>
+            <td class="ar">- أن يلتزم في
                 جميع النواحي بكافة أحكام القانون المعمول به وكافة شروط مستندات قواعد الملكية المشتركة أو بالقواعد
                 واللوائح الصادرة بموجبها في الوقت الحالي أو السارية من وقت لآخر فيما يخص العقار.
             </td>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">6.6. The Purchaser and its
+            <td class="en">6.7. The Purchaser and its
                 successors-in-title of the Property will be required to enter into agreement(s) as referred to and
                 required in the Strata Scheme Documentation for the exclusive installation, utilisation and servicing of
                 the infrastructure, information technology and communication services, any district cooling water system
                 (for air-conditioning purposes) or any other similar arrangements for the delivery or charging of
                 infrastructure, utilities and similar services.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">6-6 يطلب من
+            <td class="separator"></td>
+            <td class="ar">6-7 يطلب من
                 المشتري وورثته في ملكية العقار أن يبرموا اتفاقية (اتفاقيات) حسبما يشار إليه ويطلب في مستندات قواعد
                 الملكية المشتركة من أجل التركيب الحصري والاستغلال وأداء الخدمة للبنية التحتية وخدمات تكنولوجيا المعلومات
                 وخدمات الاتصالات وأية نظم تبريد المناطق (لأغراض تكييف الهواء) أو أية ترتيبات مشابهة لتقديم أو توفير
@@ -2022,14 +2283,16 @@
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">6.7. The Purchaser acknowledges that on
+            <td class="en">6.8. The Purchaser acknowledges
+                that on
                 the Completion Date other Units, Common Areas, and similar projects within the Master Community as well
                 as the Communal Facilities may be incomplete and that inconvenience may be suffered as a result of the
                 building activities which shall be in progress. The Purchaser shall have no claim against the Seller,
                 the Manager, the Owners Association or the Master Developer for such inconvenience.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">6-7 يقر المشتري
+            <td class="separator"></td>
+            <td class="ar">6-8 يقر
+                المشتري
                 أنه في تاريخ الإنجاز من الممكن أن تكون وحدات، مساحات مشتركة ومشاريع مشابهة داخل المجمع الرئيسي إضافة إلى
                 المرافق المشتركة غير مكتملة وقد تحدث أعطال نتيجة أنشطة المبنى التي يتعين أن تكون مستمرة. وليس للمشتري أن
                 يرفع أية مطالبة ضد البائع أو المدير أو جمعية الملاك أو المطور الرئيسي بخصوص تلك الأعطال.
@@ -2037,7 +2300,7 @@
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">6.8. The Purchaser acknowledges and
+            <td class="en">6.9. The Purchaser acknowledges and
                 agrees that while the Relevant Unit Plan is as accurate as possible, it is not yet final and adjustments
                 to the final measurements and Entitlements may need to be made. If the final measurement of the Relevant
                 Unit as determined in accordance with the Seller’s criteria differs by more than five present (5%) from
@@ -2050,8 +2313,9 @@
                 Property as a result of any change in area of the Relevant Unit or the corresponding change in the
                 Entitlement upon full survey being completed or pursuant to this Agreement generally.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">6-8 يقر ويوافق
+            <td class="separator"></td>
+            <td class="ar">6-9 يقر
+                ويوافق
                 المشتري على أنه رغم دقة مخطط الوحدة المعنية قدر الإمكان، إلا أنه ليس نهائيا وقد تدعو الحاجة إلى إجراء
                 تعديلات على القياسات النهائية والاستحقاقات النهائية. وإذا اختلف القياس النهائي للوحدة المعنية المحدد
                 بموجب معايير البائع بما نسبته أكثر من خمسة بالمائة (5%) عن مساحة الوحدة الإجمالية، فحينئذ يتعين زيادة
@@ -2065,14 +2329,15 @@
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">6.9. The Purchaser acknowledges and
+            <td class="en">6.10. The Purchaser acknowledges and
                 agrees that if any of the materials required by the Seller to construct the Relevant Unit (including as
                 set out in the Schedule of Furniture, Fixtures, Fittings and Finishes), the Relevant Unit Specifications
                 and the Project are not available within a reasonable time or at a reasonable cost, the Seller may
                 substitute such materials with an equivalent materials and which are reasonably obtainable at such time.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">6-9 يقر المشتري
+            <td class="separator"></td>
+            <td class="ar">6-10 يقر
+                المشتري
                 ويوافق على أنه في حال إذا طلب البائع أية خامات لتشييد الوحدة المعنية (بما في ذلك حسبما هو منصوص عليه في
                 جدول التركيبات والتمديدات والتشطيبات)، ولم تستوف مواصفات الوحدة المعنية والمشروع في خلال وقت معقول أو
                 بتكلفة معقولة، فيجوز للبائع أن يستبدل تلك الخامات بخامات معادلة لها وممكن الحصول عليها في ذلك الوقت.
@@ -2080,14 +2345,16 @@
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">6.10. The Purchaser acknowledges and
+            <td class="en">6.11. The Purchaser acknowledges
+                and
                 agrees that the Relevant Unit Plan and all architecture details shown on the Relevant Unit Plan are
                 indicative only and may not accord with the final as-built architectural details and the Purchaser shall
                 be deemed to accept such changes and shall have no right or claim against the Seller should the final
                 as-built architectural details differ from that set out in the Relevant Unit Plan.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">6-10 يقر ويوافق
+            <td class="separator"></td>
+            <td class="ar">6-11 يقر
+                ويوافق
                 المشتري على أن مخطط الوحدة المعنية وكافة التفاصيل المعمارية المبينة في مخطط الوحدة المعنية ما هي إلا على
                 سبيل الإيضاح فقط ومن الممكن ألا تتطابق والتفاصيل المعمارية النهائية، ويعتبر المشتري قد قبل تلك التغييرات
                 ولن يكون له أي حق أو مطالبة ضد البائع في حال إذا اختلفت تلك التفاصيل المعمارية النهائية عن تلك المنصوص
@@ -2096,7 +2363,8 @@
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">6.11. The Purchaser undertakes to allow
+            <td class="en">6.12. The Purchaser undertakes to
+                allow
                 the Manager, the Seller and/or any of their affiliates to have the right to place logos, promotional
                 signage, hoardings and all other forms of signage in the Project and/or in the Common Areas free of
                 charge and, other than with respect to the initial capital costs of instating the same, at the Owners
@@ -2109,38 +2377,97 @@
                 of doubt, the Seller’s rights pursuant to this Clause shall include the right to erect the signage and
                 branding in accordance with the Brand Standards.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">6-11 يتعهد المشتري
+            <td class="separator"></td>
+            <td class="ar">6-12 يتعهد
+                المشتري
                 بأن يسمح للمدير والبائع و/ أو أي من منتسبيهم بأن يكون لهم الحق في وضع شعارات ولافتات ترويجية وكافة أشكال
                 الإعلانات في المبنى والمساحات المشتركة أو أيهما مجانا، بخلاف التكاليف الرأسمالية الأولية لتركيبها على
                 حساب جمعية الملاك من جميع النواحي، إلى جانب الحق الحصري في تنظيم وإدارة أية مناسبات عامة أيا كانت في
                 المبنى والمساحات المشتركة أو في أيهما، وأن يسمح للمدير والبائع وأي من تابعيهم بوضع كافة المعايير
                 والضوابط العامة للإعلان. وقطعا للشك باليقين، لا يجوز للمشتري أن يطالب بأي تعويض عن أي إزعاج أيا كان
                 سببه. ويلتزم المشتري بأن يعوض المدير والبائع والمطور عن أية خسائر وأضرار ومصاريف يتحملها المدير والمطور
-                أو أحدهما دفاعا عن حقوقه بموجب هذه المادة )6-13). وقطعا للشك باليقين، يجب أن تتضمن حقوق البائع وفقا لهذا
-                البند الحق في تركيب اللافتات والعلامات التجارية وفقا لمعايير العلامة التجارية التي يتم تركيبها .
+                أو أحدهما دفاعا عن حقوقه بموجب هذه المادة (6-13). وقطعا للشك باليقين، يجب أن تتضمن حقوق البائع وفقا لهذا
+                البند الحق في تركيب اللافتات والعلامات التجارية وفقا لمعايير العلامة التجارية التي يتم تركيبها.
             </td>
         </tr>
 
         <tr>
-            <th class="left-th section-heading" style="width:49%; text-align:justify; padding:10px;">7. Seller’s General
+            <td class="en">6.13. The Purchaser acknowledges and agrees the:
+                <ol type="A">
+                    <li>the Purchaser has received, read, and understood, Disclosure Statement;</li>
+                    <li>the Seller has prepared the Disclosure Statement on a best endeavours basis and the
+                        information therein is in a draft from, and may change from time to time; and
+                    </li>
+                    <li>the Seller has complied with all of its obligation under applicable law with respect the
+                        Disclosure Statement.
+                    </li>
+                </ol>
+            </td>
+            <td class="separator"></td>
+            <td class="ar">6-13 يقر المشتري على ما يلي:
+                <ol type="A">
+                    <li>أن المشتري قد تسلم بيان الإفصاح وقرأه وفهمه؛</li>
+                    <li>أن البائع قد بذل أقصى جهده في إعداد بيان الإفصاح، إلا أن المعلومات الواردة تمثل مسودة يجوز
+                        تغييرها من وقت لأخر؛
+                    </li>
+                    <li>أن البائع قد التزم بكافة التزاماته المنصوص عليها بموجب القانون المعمول بخصوص بيان الإفصاح.</li>
+                </ol>
+            </td>
+        </tr>
+
+        <tr>
+            <td class="en">6.14 The Seller may amend the Strata Scheme Documentation) including for avoidance of
+                doubt the Common Areas plans (to create the signage areas and rights referred to in clause 6.12
+                including but not limited to the creation of Units, rights of “Exclusive Use” or other rights in
+                perpetuity over such signage areas. Such rights shall include a right of access and egress to such
+                signage areas as well as the unimpeded flow from and to such signage areas of any utilities. The
+                Manager, the Operator, the Seller or their affiliates also have the right to remove such signage at any
+                time.
+            </td>
+            <td class="separator"></td>
+            <td class="ar">6-14 يجوز للبائع تعديل وثائق مخطط الملكية المشتركة، بما في ذلك، وعلى سبيل التوضيح لا
+                الحصر، مخططات المناطق المشتركة، وذلك لإنشاء مناطق اللوحات الإعلانية والحقوق المشار إليها في البند 6.12،
+                بما في ذلك، دون أن تقتصر على، إنشاء وحدات، وحقوق "الاستخدام الحصري"، أو أي حقوق دائمة أخرى على تلك
+                المناطق الخاصة باللوحات الإعلانية. وتشمل هذه الحقوق حق الدخول والخروج من وإلى مناطق اللوحات الإعلانية،
+                بالإضافة إلى التدفق غير المعيق للمرافق من وإلى تلك المناطق. ويحتفظ المدير، والمشغل، والبائع، أو أي من
+                الشركات التابعة لهم، بحق إزالة تلك اللوحات الإعلانية في أي وقت.
+            </td>
+        </tr>
+
+        <tr>
+            <td class="en">6.15 The Purchaser hereby agrees to comply with all terms, conditions, covenants, and
+                obligations set forth in the Master Community Declaration, as may be amended from time to time. This
+                includes, without limitation, the obligation to pay Community Charges and to adhere to any rules,
+                regulations, or architectural guidelines issued by the Master Developer or the relevant community
+                management entity.
+            </td>
+            <td class="separator"></td>
+            <td class="ar">6-15 يوافق المشتري بموجب هذا على الامتثال لجميع الشروط والأحكام والعهود والالتزامات
+                المنصوص عليها في إعلان المجتمع الرئيسي، حسبما يتم تعديله من وقت لآخر. ويشمل ذلك، دون حصر، الالتزام بدفع
+                الرسوم المجتمعية والامتثال لأي قواعد أو لوائح أو إرشادات معمارية تصدر عن المطور الرئيسي أو الجهة المعنية
+                بإدارة المجتمع.
+            </td>
+        </tr>
+
+        <tr>
+            <th class="en">7. Seller’s General
                 Covenants
             </th>
-            <td class="separator" style="width:2%;"></td>
-            <th class="rtl-text right-th spaced-text section-heading"
-                style="width:49%; text-align:justify; padding:10px;">7- التعهدات العامة للبائع
+            <td class="separator"></td>
+            <th class="ar">7- التعهدات العامة للبائع
             </th>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">7.1. The Seller will, following the
+            <td class="en">7.1. The Seller will, following the
                 Completion Date and provided the Purchaser is not otherwise in breach of this Agreement, assign to the
                 Purchaser the benefit of any manufacturer’s warranties in respect of any furniture, fixtures or fittings
                 (if any) installed by or on behalf of the Seller in the Relevant Unit insofar as they are current or
                 capable of being assigned.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">7-1 يلتزم البائع،
+            <td class="separator"></td>
+            <td class="ar">7-1 يلتزم
+                البائع،
                 عقب تاريخ الإنجاز وبشرط عدم إخلال المشتري بهذه الاتفاقية، بأن يتنازل إلى المشتري عن الفائدة في أية
                 كفالات شركة مصنعة بخصوص أية تركيبات أو تمديدات (إن وجد) تم تركيبها بواسطة البائع أو نيابة عنها في الوحدة
                 المعنية طالما أنها سارية وقابلة للتنازل عنها.
@@ -2148,15 +2475,17 @@
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">7.2. For a period of twelve (12) months
+            <td class="en">7.2. For a period of twelve (12)
+                months
                 from the Completion Date, the Seller shall use best endeavours to rectify any defective works within the
                 Relevant Unit, as soon as reasonably practicable from the date of the Seller receiving written notice of
                 any such defective works from the Purchaser, in accordance with the provisions of this Agreement. The
                 Purchaser hereby acknowledges that the Seller shall not be responsible in respect of any such defective
                 works notified to the Seller after the expiry of the twelve (12) month period.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">7-2 لمدة اثني عشر
+            <td class="separator"></td>
+            <td class="ar">7-2 لمدة اثني
+                عشر
                 (12) شهرا من تاريخ الإنجاز، يتعين على البائع أن يبذل قصارى جهده لتصحيح أية أعمال معيبة داخل الوحدة
                 المعنية بمجرد أن يكون ذلك ممكنا تنفيذه على نحو معقول وذلك اعتبارا من تاريخ استلام البائع إخطارا خطيا من
                 المشتري بأية أعمال معيبة من هذا القبيل، بموجب أحكام هذه الاتفاقية. ويقر المشتري بموجبه أن البائع لن يكون
@@ -2165,35 +2494,100 @@
         </tr>
 
         <tr>
+            <td class="en">
+                7.3 Except for any delay caused by Force Majeure circumstances:
+                <ol type="A">
+                    <li>
+                        In the event the Purchaser has fulfilled all of his obligations under this Agreement
+                        (including, without limitation, the payment obligations), and the Seller fails to complete of
+                        the unit to the Purchaser by the Completion Date, the Purchaser shall have the right—by serving
+                        a prior written notice of thirty (30) days to the Seller, which may only be given after the
+                        lapse of six (6)
+                        months from the final Completion Date—to request that the Seller pay interest at a rate of one
+                        percent
+                        (1%) per
+                        annum on the amounts paid by the Purchaser towards the value of the unit, to be settled in
+                        quarterly
+                        instalments.
+                    </li>
+                    <li>
+                        b) Furthermore, the Purchaser shall have the right—but not the obligation—to terminate this
+                        Agreement
+                        upon the lapse of twelve (12) months from the final Completion Date in the event the completion
+                        has not
+                        occurred. In such case, the Seller shall refund the amounts previously paid by the Purchaser,
+                        excluding
+                        any payments made to the competent authority, and subject to applicable laws, together with the
+                        aforementioned interest, payable in quarterly instalments.
+                    </li>
+                </ol>
+                The Purchaser acknowledges and agrees that such interest in case of delay, along with the refund
+                of
+                payments and interest in the event of delay exceeding twelve (12) months, shall constitute the
+                sole and
+                exclusive remedy available to the Purchaser under these circumstances, and the Purchaser hereby
+                waives
+                and releases the Seller from any and all rights to claim specific performance or any losses,
+                costs,
+                damages, taxes, expenses, or liabilities of any kind.
+            </td>
+            <td class="separator"></td>
+            <td class="ar">
+                7-3 فيما عدا أي تأخير بسبب القوى القاهرة في حال:
+                <ol type="A">
+                    <li>
+                        قام المشترى بالوفاء بكافة التزاماته تحت هذه الاتفاقية (شاملا بدون الحصر التزام المشتري في
+                        الدفعات بهذه الاتفاقية)، وكان البائع غير قادر على إنجاز تملك الوحدة السكنية إلى المشتري في تاريخ
+                        الانجاز فإنه يجوز للمشتري بإخطار خطي مسبق ب (30) يوما إلى البائع يتم إعطاؤه بعد مضي (6) أشهر من
+                        تاريخ الإنجاز النهائي، يطلب فيه من البائع دفع فائدة وقدرها (1%) سنويا من قيمة ما سدد من دفعات
+                        قيمة الوحدة، إذ يتم دفعها على أساس أقساط ربع سنوية.
+                    </li>
+                    <li>
+                        قام المشترى بالوفاء بكافة التزاماته تحت هذه الاتفاقية (شاملا بدون الحصر التزام المشتري في
+                        الدفعات بهذه الاتفاقية)، وكان البائع غير قادر على إنجاز تملك الوحدة السكنية إلى المشتري في تاريخ
+                        الانجاز فإنه يجوز للمشتري بإخطار خطي مسبق ب (30) يوما إلى البائع يتم إعطاؤه بعد مضي (6) أشهر من
+                        تاريخ الإنجاز النهائي، يطلب فيه من البائع دفع فائدة وقدرها (1%) سنويا من قيمة ما سدد من دفعات
+                        قيمة الوحدة، إذ يتم دفعها على أساس أقساط ربع سنوية.
+                    </li>
+                </ol>
+                يوافق المشتري على أن هذه الفائدة في حال التأخير وإعادة الدفعات ودفع الفائدة في حال التأخير أكثر من (12)
+                شهرا تعتبر المعالجة الوحيدة للمشتري في هذه الظروف ويسقط حق المشتري في أي حق لمطالبة البائع عن (ويعفي
+                ويبرأ ذمة البائع من) أي أداء محدد وأي خسائر، تكاليف، أضرار، ضرائب أو مصاريف أو مسؤوليات مهما كانت.
+            </td>
+        </tr>
+
+        <tr>
             <th class="left-th section-heading" style="width:49%; text-align:justify; padding:10px;">8. The STRATA
                 SCHEME
             </th>
-            <td class="separator" style="width:2%;"></td>
+            <td class="separator"></td>
             <th class="rtl-text right-th spaced-text section-heading"
                 style="width:49%; text-align:justify; padding:10px;">8- قواعد الملكية المشتركة
             </th>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">8.1. It is the Seller's intention to
+            <td class="en">8.1. It is the Seller's intention
+                to
                 implement the Strata Scheme through use of the Strata Scheme Documentation.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">8-1 تتمثل نية
+            <td class="separator"></td>
+            <td class="ar">8-1 تتمثل نية
                 البائع في تطبيق قواعد الملكية المشتركة من خلال استخدام مستندات قواعد الملكية المشتركة.
             </td>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">8.2. The Purchaser acknowledges and
+            <td class="en">8.2. The Purchaser acknowledges and
                 accepts that the Strata Scheme Documentation for the Project are to be finalised on or as soon as
                 reasonably practicable after the Completion Date. The Purchaser acknowledges and agrees that the Seller
                 shall be entitled to determine, at the Seller’s discretion, the form of the Strata Scheme Documentation
                 adopted for the Project provided the same are not determined to be contrary to Applicable Law or
                 requirements of the Relevant Authority.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">8-2 ويقر ويقبل
+            <td class="separator"></td>
+            <td class="ar">8-2 ويقر
+                ويقبل
                 المشتري أن مستندات قواعد الملكية المشتركة بشأن المشروع يتوجب الانتهاء منها في تاريخ الإنجاز أو في أقرب
                 وقت ممكن بعده بشكل معقول. كما يقر ويوافق المشتري على أنه يحق للبائع أن يحدد، حسب تقدير البائع، صيغة
                 مستندات قواعد الملكية المشتركة المتبعة بشأن المشروع بشرط ألا يقرر أنها مخالفة للقانون المعمول به أو
@@ -2202,14 +2596,15 @@
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">8.3. In the event that the Owners
+            <td class="en">8.3. In the event that the Owners
                 Association for the Project is not yet formed and registered pursuant to Applicable Law, the Purchaser
                 acknowledges and understands that the powers and functions of the Owners Association will be delegated
                 to the Seller or its agent until such time as it is duly formed and registered pursuant to Applicable
                 Law.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">8-3 وفي حال إذا
+            <td class="separator"></td>
+            <td class="ar">8-3 وفي حال
+                إذا
                 لم تشكل وتسجل بعد جمعية الملاك بشأن المشروع طبقا للقانون المعمول به، يقر المشتري ويفهم أن صلاحيات
                 واختصاصات جمعية الملاك سوف تفوض إلى البائع أو وكيله حتى تشكل وتسجل جمعية الملاك أصوليا طبقا للقانون
                 المعمول به.
@@ -2217,25 +2612,27 @@
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">8.4. The delegation of the powers and
+            <td class="en">8.4. The delegation of the powers
+                and
                 functions of the Owners Association will be performed by the Manager pursuant to the Management
                 Agreement.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">8-4 يتعين على
+            <td class="separator"></td>
+            <td class="ar">8-4 يتعين على
                 المدير أن ينفذ التفويض بصلاحيات واختصاصات جمعية الملاك وفقا لاتفاقية الإدارة.
             </td>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">8.5. The Purchaser acknowledges and
+            <td class="en">8.5. The Purchaser acknowledges and
                 accepts that an Owners Association must comply with and enforce the Strata Scheme Documentation to
                 ensure the proper management, administration, maintenance and control of the Project generally and for
                 the benefit of all Unit Owners and Plot Owners including, without limitation, to a standard consistent
                 with the Brand Standards.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">8-5 يقر المشتري
+            <td class="separator"></td>
+            <td class="ar">8-5 يقر
+                المشتري
                 ويقبل أن جمعية ملاك يجب أن تلتزم بمستندات قواعد الملكية المشتركة وتنفذها لضمان إدارة وتسيير وصيانة
                 ومراقبة المشروع عموما على نحو سليم ولمصلحة كافة ملاك الوحدات وقطع الأرض بما في ذلك، على سبيل المثال لا
                 الحصر، معيار متوافق مع معايير العلامة التجارية.
@@ -2243,14 +2640,15 @@
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">8.6. The Purchaser acknowledges and
+            <td class="en">8.6. The Purchaser acknowledges and
                 agrees that, upon taking transfer of the Property, the Purchaser and his heirs, successors-in-title,
                 successors or assignees will become a member of the applicable Owners Association for as long as he is a
                 Unit Owner and he agrees and undertakes to be legally bound by and comply with the Strata Scheme
                 Documentation.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">8-6 يقر ويوافق
+            <td class="separator"></td>
+            <td class="ar">8-6 يقر
+                ويوافق
                 المشتري على أنه، فور استلام نقل ملكية العقار، يصبح المشتري أو خلفاؤه أو ورثته في الملكية أو المتنازل
                 إليهم عضوا بجمعية الملاك المعنية طالما أنه مالك وحدة، ويوافق ويتعهد بأن يلتزم قانونا بمستندات قواعد
                 الملكية المشتركة.
@@ -2258,7 +2656,8 @@
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">8.7. Every Unit is sold subject to the
+            <td class="en">8.7. Every Unit is sold subject to
+                the
                 terms of the Strata Scheme Documentation and all possible steps will be undertaken by the Parties so
                 that the registration of the Property in the Land Department will be made subject to the terms of the
                 Strata Scheme Documentation in the form of a restriction on title. If this is not possible, the
@@ -2266,8 +2665,9 @@
                 the benefit of the Seller and the other Unit Owners that the Strata Scheme Documentation has the form of
                 a restriction in a document and is equally binding on each Unit Owner.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">8-7 تباع كل وحدة
+            <td class="separator"></td>
+            <td class="ar">8-7 تباع كل
+                وحدة
                 شريطة عدم الإخلال بشروط مستندات قواعد الملكية المشتركة ويتولى الطرفان تنفيذ كافة الإجراءات الممكنة بحيث
                 ينفذ تسجيل العقار لدى دائرة الأراضي والأملاك مع مراعاة عدم الإخلال بشروط مستندات قواعد الملكية المشتركة
                 الواردة في صيغة القيود على الملكية. وإذا لم يكن ذلك ممكنا، يقر المشتري شخصيا ونيابة عن ورثته أو المتنازل
@@ -2277,7 +2677,7 @@
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">8.8. To the extent that the Strata
+            <td class="en">8.8. To the extent that the Strata
                 Scheme Documentation, the Management Agreement or are not finalised by the Seller at the Effective Date
                 or at any time thereafter and/or approved by the Relevant Authority (if applicable), the Purchaser
                 hereby: (a) irrevocably authorises the Seller as the Purchaser’s agent; and (b) irrevocably appoints the
@@ -2290,8 +2690,9 @@
                 Documentation, the Management Agreement and the Operating Agreement and the exercise of the Seller’s
                 rights under this Clause 8.8.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">8-8 في حال إذا لم
+            <td class="separator"></td>
+            <td class="ar">8-8 في حال
+                إذا لم
                 ينته البائع من مستندات قواعد الملكية المشتركة أو اتفاقية الإدارة في تاريخ بدء السريان أو أي وقت بعدها أو
                 لم توافق عليها السلطة المختصة (إن كان ذلك مطبقا)، يتعين على المشتري بموجبه: (أ) أن يفوض البائع تفويضا لا
                 رجعة فيه بصفته وكيل المشتري؛ (ب) أن يعين البائع تعيينا نهائيا لا رجعة فيه ليكون وكيلا للمشتري، إلى الحد
@@ -2300,12 +2701,13 @@
                 قواعد الملكية المشتركة واتفاقية الإدارة (بما في ذلك الموافقة على أي تعديلات لمستندات قواعد الملكية
                 المشتركة أو لاتفاقية الإدارة لضمان الامتثال لمعايير العلامة التجارية). ويتنازل المشتري تنازلا كاملا
                 ونهائيا وغير قابل للنقض عن أية مطالبات تستحق له أو يمكن أن تستحق له ضد البائع فيما يتعلق بمستندات قواعد
-                الملكية المشتركة واتفاقية الإدارة وممارسة حقوق البائع بموجب هذا البند (8-8().
+                الملكية المشتركة واتفاقية الإدارة وممارسة حقوق البائع بموجب هذا البند (8-8).
             </td>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">8.9. Without in any way limiting this
+            <td class="en">8.9. Without in any way limiting
+                this
                 Clause 8, the Purchaser acknowledges and understands that the Property and the Project are part of the
                 Master Community and that the Project Plot and certain adjoining land may be developed into a
                 homogeneous residential, commercial and leisure community which may comprise Plots and Communal
@@ -2316,8 +2718,9 @@
                 Declaration as deemed necessary by the Master Developer and as may be required by the Relevant
                 Authority.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">8-9 دون حصر هذا
+            <td class="separator"></td>
+            <td class="ar">8-9 دون حصر
+                هذا
                 البند (8) بأي حال من الأحوال، يقر ويفهم المشتري أن العقار والمشروع جزء من المجمع الرئيسي وأن أرض المشروع
                 ومساحة معينة من الأرض المجاورة سوف يتم تطويرها لتصبح مجمعا سكنيا وتجاريا وترفيهيا متجانسا ويمكن أن يتألف
                 من قطع الأرض والمرافق المشتركة. يقر ويفهم المشتري، مع مراعاة عدم الإخلال بشروط نظام المجمع الرئيسي، أن
@@ -2328,14 +2731,15 @@
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">8.10. The Purchaser further acknowledges
+            <td class="en">8.10. The Purchaser further
+                acknowledges
                 that the Project shall be managed exclusively by the Manager for a term determined by the Seller in its
                 absolute discretion. If the term of the Management Agreement determined by the Seller is not acceptable
                 under the Applicable Laws then the term of the Management Agreement shall be the maximum duration
                 permitted under the Applicable Laws.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">8-10 كما يقر
+            <td class="separator"></td>
+            <td class="ar">8-10 كما يقر
                 المشتري أن المشروع يتعين أن يديره المدير وحده لمدة يحددها البائع وفقا لتقديره المنفرد. وإذا لم تكن المدة
                 التي يحددها البائع مقبولة بموجب القوانين المعمول بها، يتعين أن تكون مدة اتفاقية الإدارة هي الحد الأقصى
                 للمدة المسموح بها بموجب القوانين المعمول بها.
@@ -2344,14 +2748,15 @@
 
         <tr>
             <th class="left-th section-heading" style="width:49%; text-align:justify; padding:10px;">9. VIEWING</th>
-            <td class="separator" style="width:2%;"></td>
+            <td class="separator"></td>
             <th class="rtl-text right-th spaced-text section-heading"
                 style="width:49%; text-align:justify; padding:10px;">9- المعاينة
             </th>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">9.1. The Purchaser may after receiving
+            <td class="en">9.1. The Purchaser may after
+                receiving
                 the notice of the Completion Date, book an appointment with the Seller, at a convenient time to the
                 Seller, to view the Relevant Unit provided it is in the sole opinion of the Project Manager safe to do
                 so. Such appointment has to be booked for a date no later than two (2) months after receiving the notice
@@ -2359,8 +2764,9 @@
                 Unit on an as is basis and the Purchaser shall be deemed to have accepted the physical condition of the
                 Relevant Unit.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">9-1 يجوز للمشتري،
+            <td class="separator"></td>
+            <td class="ar">9-1 يجوز
+                للمشتري،
                 بعد استلامه الإخطار بتاريخ الإنجاز، أن يحجز موعدا مع البائع لمعاينة الوحدة المعنية بشرط أن يتراءى لمدير
                 المشاريع وحده أن ذلك لا يتعارض مع اشتراطات الأمن والسلامة. ويتعين ألا يتجاوز تاريخ الموعد المحجوز شهرين
                 (2) بعد استلامه الإخطار بتاريخ الإنجاز. وفي حال عدم حجز موعد، يحق للبائع أن يسلم الوحدة المعنية على أساس
@@ -2369,29 +2775,32 @@
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">9.2. The Purchaser shall be accompanied
+            <td class="en">9.2. The Purchaser shall be
+                accompanied
                 by a representative of the Seller and such inspection shall take place during normal business hours.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">9-2 يتعين على
+            <td class="separator"></td>
+            <td class="ar">9-2 يتعين على
                 المشتري أن يرافقه ممثل البائع وتجرى تلك المعاينة أثناء ساعات العمل الاعتيادية.
             </td>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">9.3. The Purchaser will comply with all
+            <td class="en">9.3. The Purchaser will comply with
+                all
                 safety directions given in regard to access to the Relevant Unit and the Project for all the purposes of
                 this clause and will cause no undue interference in exercising access.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">9-3 يتعين على
+            <td class="separator"></td>
+            <td class="ar">9-3 يتعين على
                 المشتري أن يلتزم بكافة توجيهات السلامة الصادرة بخصوص الدخول إلى الوحدة المعنية والمشروع لكافة أغراض هذا
                 البند، وألا يتسبب في أي تعارض لا داعي له في ممارسة حق الدخول.
             </td>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">9.4. At the viewing, the Parties shall
+            <td class="en">9.4. At the viewing, the Parties
+                shall
                 prepare and sign a complete list of any defects and deficiencies (the “Defects”), if any, and shall
                 agree the date by which the Defects shall be repaired. The Seller shall as soon as reasonable remedy the
                 Defects by the date agreed by the Parties provided that the Purchaser shall not be entitled to hold back
@@ -2402,9 +2811,10 @@
                 not be allowed access to the Relevant Unit or the Project prior to the Completion Date, without the
                 prior written authorisation of the Seller.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">9-4 عند المعاينة،
-                يتعين على الطرفين أن يعدا ويوقعا على قائمة كاملة بأية عيوب ونواقص (" العيوب ")، إن وجد، وأن يتفقا على
+            <td class="separator"></td>
+            <td class="ar">9-4 عند
+                المعاينة،
+                يتعين على الطرفين أن يعدا ويوقعا على قائمة كاملة بأية عيوب ونواقص ("العيوب")، إن وجد، وأن يتفقا على
                 تاريخ يجرى بحلوله إصلاح العيوب. ويتعين على البائع، بمجرد أن يكون ذلك معقولا، أن يتدارك العيوب بحلول
                 التاريخ الذي اتفق عليه الطرفان، بشرط ألا يحق للمشتري أن يحتجز أي جزء من سعر الشراء أو يؤخر تنفيذ أية
                 التزامات أخرى بسبب أية عيوب. وفي حال حدوث أي نزاع، يكون قرار مدير المشاريع نهائيا وملزما على الطرفين.
@@ -2415,13 +2825,15 @@
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">9.5. The Purchaser agrees that it shall
+            <td class="en">9.5. The Purchaser agrees that it
+                shall
                 not be entitled to make any objection, claim, withhold any payment towards the Purchase Price or delay
                 or refuse to complete the sale and purchase of the Property, and/or take hand over of the Property as a
                 result of any matters, and/or Defects related to the Property.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">9-5 يوافق المشتري
+            <td class="separator"></td>
+            <td class="ar">9-5 يوافق
+                المشتري
                 على أنه لن يحق له أن يبدي أي اعتراض أو يرفع أية مطالبة أو يحتجز أية دفعة من سعر الشراء أو يؤخر أو يرفض
                 إتمام بيع وشراء العقار أو يرفض أن يستلم العقار نتيجة أية أمور أو عيوب تتعلق بالعقار.
             </td>
@@ -2431,14 +2843,15 @@
             <th class="left-th section-heading" style="width:49%; text-align:justify; padding:10px;">10. Default and
                 Termination
             </th>
-            <td class="separator" style="width:2%;"></td>
+            <td class="separator"></td>
             <th class="rtl-text right-th spaced-text section-heading"
                 style="width:49%; text-align:justify; padding:10px;">10- الإخلال وفسخ الاتفاقية
             </th>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">10.1. If the Purchaser fails to make
+            <td class="en">10.1. If the Purchaser fails to
+                make
                 payments to the Seller in accordance with the terms and conditions of this Agreement and/or does not
                 fulfil any of the terms and conditions of this Agreement, then the Seller shall be entitled but not
                 obligated to give the Purchaser thirty (30) days prior notice in writing calling on the Purchaser to
@@ -2446,8 +2859,9 @@
                 entitled, without further notice, without the requirement for a court order or other formality, and
                 without prejudice to any other rights available in law:
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">10-1 في حال إذا
+            <td class="separator"></td>
+            <td class="ar">10-1 في حال
+                إذا
                 قصر المشتري في سداد الدفعات المستحقة إلى البائع بموجب شروط وأحكام هذه الاتفاقية ولم يف بأي من شروط
                 وأحكام هذه الاتفاقية، يحق للبائع، دون إلزام عليه، أن يرسل إلى المشتري إخطارا خطيا مسبقا مدته ثلاثون (30)
                 يوما يطالب فيه المشتري أن يتدارك حالات الإخلال التي وقعت، وإذا قصر المشتري في الالتزام بمضمون هذا
@@ -2457,35 +2871,68 @@
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px 10px 10px 35px;">(a) to terminate this Agreement and
+            <td class="en" style="padding:10px 10px 10px 35px;">(a) A) Without
+                prejudice to the Seller’s right to terminate this Agreement and any resulting legal consequences, the
+                Seller shall be entitled to impose a delay penalty of 2% for each month of delay in the Purchaser’s
+                payment of any due installment under the provisions of this Agreement, calculated on the outstanding
+                unpaid amount
+                (For the avoidance of doubt, the penalty shall be calculated as follows):
+                If (30) days pass from the due date of any amount without payment, the Seller shall have the right to
+                impose a penalty of 2% of the outstanding amount, calculated from the original due date. One day or any
+                part thereof shall be deemed as a full month.
+                The penalty amount shall take priority in allocation upon any payment made by the Buyer.To clarify, when
+                the Buyer makes any payment to the Seller, the accrued penalties (resulting from delayed payments) shall
+                be deducted first, before allocating the remaining amount to the outstanding installments.
+            </td>
+            <td class="separator"></td>
+            <td class="ar" style="padding:10px 35px 10px 10px;">
+                أ) دون الإخلال بحقه بفسخ الاتفاقية وما يتنتج عنه من أثار قانونية، يحق للبائع فرض غرامة تأخير بنسبة 2% عن
+                كل شهر يتأخر فيه المشتري عن سداد أي دفعة مترتبة عليه بموجب أحكام هذه الاتفاقية، وتحتسب من قيمة المبلغ
+                غير المسدد.
+                (ولإزالة أي غموض، تحتسب الغرامة المذكورة على النحو التالي):
+                في حال مضت (30) يوما من تاريخ استحقاق أي مبلغ دون سداد، يحق للبائع فرض غرامة بنسبة 2% من قيمة المبلغ
+                المستحق، وتحتسب من تاريخ الاستحقاق. يعتبر اليوم الواحد أو أي جزء منه شهر كامل.
+                ويكون لمبالغ الغرامات المفروضة الأولوية في الاستيفاء عند قيام المشتري بسداد أي مبالغ، وبمعنى أوضح، عند
+                سداد أي مبلغ للبائع، يتم أولا خصم قيمة الغرامات المتراكمة (الناتجة عن التأخير في السداد)، قبل احتساب
+                المبلغ المتبقي من الدفعات الأخرى المستحقة.
+            </td>
+        </tr>
+
+        <tr>
+            <td class="en" style="padding:10px 10px 10px 35px;">(b) to terminate
+                this Agreement and
                 Deregister the Property; and
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px 35px 10px 10px;">أ) أن يفسخ هذه
+            <td class="separator"></td>
+            <td class="rtl-text right-th spaced-text"
+                style="width:49%; text-align:justify; padding:10px 35px 10px 10px;">ب) أن يفسخ هذه
                 الاتفاقية ويلغي تسجيل العقار.
             </td>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px 10px 10px 35px;">(b) to retain an amount equivalent to
+            <td class="en" style="padding:10px 10px 10px 35px;">(c) to retain an
+                amount equivalent to
                 the greater of:
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px 35px 10px 10px;">ب) أن يحتجز
+            <td class="separator"></td>
+            <td class="rtl-text right-th spaced-text"
+                style="width:49%; text-align:justify; padding:10px 35px 10px 10px;">ت) أن يحتجز
                 مبلغا يعادل أعلى القيمتين التاليتين:
             </td>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px 10px 10px 50px;">(i) forty per cent (40%) of the
+            <td class="en" style="padding:10px 10px 10px 50px;">(i) forty per cent
+                (40%) of the
                 Purchase Price as pre-estimated liquidated damages which the Purchaser expressly agrees is a true and
                 reasonable pre-estimate of the damages that will be suffered by the Seller as a result of the
                 Purchaser’s default and if the amount of the Purchase Price paid by the Purchaser by the date of
                 termination is insufficient to meet the Seller’s entitlement to damages then the Purchaser shall remain
                 liable to pay the shortfall on demand; or
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px 50px 10px 10px;">1) ما نسبته
+            <td class="separator"></td>
+            <td class="ar" style="padding:10px 50px 10px 10px;">1) ما نسبته
                 أربعون بالمائة (40%) من سعر الشراء على سبيل التعويض المقدر مسبقا عن الأضرار بقيمة نقدية ويوافق المشتري
                 صراحة أن هذه النسبة تقدير مسبق حقيقي ومعقول للأضرار التي سيتعرض لها البائع نتيجة إخلال المشتري، وفي حال
                 إذا كان مبلغ سعر الشراء الذي دفعه المشتري بحلول تاريخ فسخ الاتفاقية غير كاف للوفاء بمستحقات البائع
@@ -2494,34 +2941,38 @@
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px 10px 10px 50px;">(ii) such amount as the Seller may be
+            <td class="en" style="padding:10px 10px 10px 50px;">(ii) such amount as
+                the Seller may be
                 entitled to retain and/or forfeit in accordance with Applicable Law; and
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px 50px 10px 10px;">2) ذلك المبلغ
+            <td class="separator"></td>
+            <td class="ar" style="padding:10px 50px 10px 10px;">2) ذلك المبلغ
                 الذي يحق للبائع أن يحتجزه أو يصادره بموجب القانون المعمول به؛
             </td>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px 10px 10px 35px;">(c) take any other action or uphold any
+            <td class="en" style="padding:10px 10px 10px 35px;">(d) take any other
+                action or uphold any
                 further entitlement afforded to the Seller in accordance with the terms of this Agreement and/or
                 Applicable Law.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px 35px 10px 10px;"> ت) أن يتخذ أي
+            <td class="separator"></td>
+            <td class="ar" style="padding:10px 35px 10px 10px;"> ث) أن يتخذ أي
                 إجراء آخر أو يحتجز أي مستحقات أخرى تجاز للبائع بموجب شروط هذه الاتفاقية والقانون المعمول به أو أيهما.
             </td>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">10.2. For the avoidance of doubt, no
+            <td class="en">10.2. For the avoidance of doubt,
+                no
                 refund of monies paid (once all applicable damages, fees, costs and other charges are deducted by the
                 Seller) shall be made by the Seller to the Purchaser until the Property is sold, transferred or
                 otherwise disposed of and the Seller is in receipt of the sales proceeds in cleared funds.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">10-2 قطعا للشك
+            <td class="separator"></td>
+            <td class="ar">10-2 قطعا
+                للشك
                 باليقين، لا يلتزم البائع بأن يعيد إلى المشتري أية مبالغ دفعها المشتري (بمجرد استقطاع البائع كافة
                 التعويضات المعمول بها عن الأضرار واستقطاع الرسوم والتكاليف والمصاريف الأخرى) حتى يباع العقار أو تنقل
                 ملكيته أو خلاف ذلك يتم التصرف فيه وحتى يتسلم البائع متحصلات عمليات البيع نقدا أو بشيكات مستحقة السداد.
@@ -2529,13 +2980,15 @@
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">10.3. Where termination of this Agreement
+            <td class="en">10.3. Where termination of this
+                Agreement
                 takes place pursuant to Clause 10.1 above, and the Seller takes action against the Purchaser to
                 repossess the Property, the Purchaser undertakes to fully indemnify the Seller against all third party
                 losses, damages, claims, demands, and/or suits arising from or in connection with such repossession.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">10-3 في حال إذا
+            <td class="separator"></td>
+            <td class="ar">10-3 في حال
+                إذا
                 وقع فسخ هذه الاتفاقية طبقا للبند (10-1) السالف ذكره، واتخذ البائع إجراء قانونيا ضد المشتري لإعادة حيازة
                 العقار، يتعهد المشتري أن يعوض البائع تعويضا كاملا عن كافة خسائر الأطراف الخارجية وأضرارهم ومطالباتهم
                 ومطالبهم ودعواهم الناشئة عن إعادة الحيازة المذكورة أو المتعلقة بها.
@@ -2543,7 +2996,8 @@
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">10.4. In the event that the Purchaser has
+            <td class="en">10.4. In the event that the
+                Purchaser has
                 sold the Property or assigned this Agreement to any third party in breach of this Agreement or
                 Applicable Law, which event has resulted in the termination of the Agreement in accordance with this
                 Clause 10, then the Purchaser undertakes to: (a) meet any and all claims from such third parties buying
@@ -2551,8 +3005,9 @@
                 from or against any loss, damage or claim from such third parties or otherwise arising out of the
                 Purchaser’s breach.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">10-4 في حال إذا
+            <td class="separator"></td>
+            <td class="ar">10-4 في حال
+                إذا
                 باع المشتري العقار أو تنازل عن هذه الاتفاقية إلى أي طرف خارجي إخلالا بأحكام هذه الاتفاقية أو القانون
                 المعمول به، ونتج عن ذلك فسخ الاتفاقية بموجب هذا البند (10)، فحينئذ يتعهد المشتري بما يلي: (أ) أن يفي
                 بجميع المطالبات المرفوعة من تلك الأطراف الخارجية الذين يشترون العقار أو يقبلون نقل ملكية العقار أو
@@ -2562,12 +3017,13 @@
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">10.5. In the event of the Seller, the
+            <td class="en">10.5. In the event of the Seller,
+                the
                 Purchaser shall, on demand from the Seller and at the Purchaser’s sole cost, take such steps required by
                 the Seller and/or the Land Department to Deregister the Property including but not limited to:
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">10-5 وفي حالة
+            <td class="separator"></td>
+            <td class="ar">10-5 وفي حالة
                 البائع، يتعين على المشتري، عند الطلب من البائع وعلى نفقة المشتري وحده، أن يتخذ تلك الإجراءات التي
                 يتطلبها البائع أو دائرة الأراضي والأملاك لإلغاء تسجيل العقار، وتشمل هذه الإجراءات على سبيل المثال، لا
                 الحصر:
@@ -2575,43 +3031,49 @@
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px 10px 10px 35px;">(a) signing any documents required by
+            <td class="en" style="padding:10px 10px 10px 35px;">(a) signing any
+                documents required by
                 the Seller or the Land Department;
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px 35px 10px 10px;">أ) التوقيع على
+            <td class="separator"></td>
+            <td class="ar" style="padding:10px 35px 10px 10px;">أ) التوقيع على
                 أية مستندات يتطلبها البائع أو تتطلبها دائرة الأراضي والأملاك؛
             </td>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px 10px 10px 35px;">(b) paying the Deregistration Fees
+            <td class="en" style="padding:10px 10px 10px 35px;">(b) paying the
+                Deregistration Fees
                 including any of such fees assessed against the Seller; and
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px 35px 10px 10px;"> ب) دفع رسوم
+            <td class="separator"></td>
+            <
+            <td class="ar" style="padding:10px 35px 10px 10px;"> ب) دفع رسوم
                 إلغاء التسجيل بما في ذلك أية رسوم يتم تقييمها على البائع؛
             </td>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px 10px 10px 35px;">(c) in the case of any termination
+            <td class="en" style="padding:10px 10px 10px 35px;">(c) in the case of
+                any termination
                 pursuant to Clause 10.1 paying any administration fees levied by the Seller in respect of any such
                 Deregistration.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px 35px 10px 10px;"> ت) في حال أي
+            <td class="separator"></td>
+            <td class="ar" style="padding:10px 35px 10px 10px;"> ت) في حال أي
                 فسخ للاتفاقية طبقا للبند (10-1)، دفع أية رسوم إدارية يفرضها البائع بخصوص أي إلغاء تسجيل من هذا القبيل.
             </td>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">10.6. The Purchaser shall indemnify the
+            <td class="en">10.6. The Purchaser shall indemnify
+                the
                 Seller against any losses, costs, claims or penalties the Seller may incur arising out of the Purchasers
                 failure to comply with Clause 10.5.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">10-6 يتعين على
+            <td class="separator"></td>
+            <td class="ar">10-6 يتعين
+                على
                 المشتري أن يعوض البائع عن أية خسائر أو تكاليف أو مطالبات أو غرامات يمكن أن يتحملها البائع نتيجة تقصير
                 المشتري في الالتزام بالبند (10-5)
             </td>
@@ -2620,14 +3082,15 @@
         <tr>
             <th class="left-th section-heading" style="width:49%; text-align:justify; padding:10px;">11. Force Majeure
             </th>
-            <td class="separator" style="width:2%;"></td>
+            <td class="separator"></td>
             <th class="rtl-text right-th spaced-text section-heading"
                 style="width:49%; text-align:justify; padding:10px;">11- القوة القاهرة
             </th>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">11.1. The Seller shall not be liable for
+            <td class="en">11.1. The Seller shall not be
+                liable for
                 any failure or delay to perform its obligations under this Agreement due to Force Majeure Events
                 provided the Seller gives to the Purchaser a written notice within thirty (30) days indicating the
                 beginning of such circumstances. Any date, period or deadline imposed upon the Seller by this Agreement
@@ -2636,8 +3099,8 @@
                 limited to the Completion Date) or an estimate of the duration of the delay, followed by a new date,
                 period or deadline when it can be determined.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">11-1 لا يكون
+            <td class="separator"></td>
+            <td class="ar">11-1 لا يكون
                 البائع مسؤولا عن أي تقصير أو تأخير في تنفيذ التزاماته المنصوص عليها بموجب هذه الاتفاقية بسبب وقوع أحداث
                 القوة القاهرة، بشرط أن يرسل البائع إخطارا خطيا إلى المشتري في خلال ثلاثين (30) يوما يبين بداية تلك
                 الظروف. ويتعين تمديد أية تاريخ أو فترة أو موعد نهائي مفروض على البائع في هذه الاتفاقية لمدة تساوي تلك
@@ -2648,25 +3111,29 @@
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">11.2. Payment by the Purchaser of any
+            <td class="en">11.2. Payment by the Purchaser of
+                any
                 part of the Purchase Price or any other amount due under this Agreement when due shall not be excused or
                 delayed due to a Force Majeure Event.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">11-2 لن يصبح وقوع
+            <td class="separator"></td>
+            <td class="ar">11-2 لن يصبح
+                وقوع
                 حدث القوة القاهرة سببا يعذر أو يؤخر دفع المشتري سعر الشراء أو أي مبلغ آخر مستحق بموجب هذه الاتفاقية عند
                 حلول موعد استحقاقه.
             </td>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">11.3. Upon the occurrence of a Force
+            <td class="en">11.3. Upon the occurrence of a
+                Force
                 Majeure Event, both Parties shall take all reasonable measures to minimise the effect of such event and
                 use their best endeavours to continue to perform their obligations under this Agreement insofar as this
                 is reasonably practicable.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">11-3 فور وقوع حدث
+            <td class="separator"></td>
+            <td class="ar">11-3 فور وقوع
+                حدث
                 القوة القاهرة، يتعين على الطرفين أن يتخذا كافة التدابير المعقولة لتقليل أثر ذلك الحدث وأن يبذلا قصارى
                 جهدهما للاستمرار في تنفيذ التزاماتهما بموجب هذه الاتفاقية طالما أن ذلك ممكنا إجراؤه على نحو معقول.
             </td>
@@ -2674,83 +3141,129 @@
 
         <tr>
             <th class="left-th section-heading" style="width:49%; text-align:justify; padding:10px;">12. General</th>
-            <td class="separator" style="width:2%;"></td>
+            <td class="separator"></td>
             <th class="rtl-text right-th spaced-text section-heading"
                 style="width:49%; text-align:justify; padding:10px;">12- شروط عامة
             </th>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">12.1. No variation of this Agreement
+            <td class="en">12.1. No variation of this
+                Agreement
                 shall be valid unless it is in writing and signed by each of the Parties or their authorised
                 representatives.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">12-1 لن يسري أي
+            <td class="separator"></td>
+            <td class="ar">12-1 لن يسري
+                أي
                 تغيير أو تعديل على هذه الاتفاقية ما لم يحرر خطيا ويوقع عليه من كل طرف من الطرفين أو ممثله المخول قانونا.
             </td>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">12.2. This Agreement may not be assigned
+            <td class="en">12.2. This Agreement may not be
+                assigned
                 or transferred by the Purchaser except:
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">12-2 لا يجوز
+            <td class="separator"></td>
+            <td class="ar">12-2 لا يجوز
                 للمشتري التنازل عن هذه الاتفاقية أو إسنادها إلا في الحالات التالية:
             </td>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px 10px 10px 35px;">(a) with the prior written consent of
+            <
+            <td class="en" style="padding:10px 10px 10px 35px;">(a) with the prior
+                written consent of
                 the Seller given in the terms of a written assignment agreement in a form acceptable to the Seller,
                 executed by the Parties and the assignee;
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px 35px 10px 10px;">أ) بموافقة خطية
+            <td class="separator"></td>
+            <td class="ar" style="padding:10px 35px 10px 10px;">أ) بموافقة خطية
                 مسبقة من البائع تمنح بحسب شروط اتفاقية التنازل الخطية بصيغة يقبلها البائع، ويحررها الطرفان والمتنازل
                 إليه؛
             </td>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px 10px 10px 35px;">(b) upon payment of the Administration
-                Fee by the Purchaser (which is currently set at <img src="{{ public_path('images/aed_symbol.svg') }}" width="12" alt="AED"/> 5,000 (UAE Dirhams Five Thousand) Or the amount
-                specified by the Owner as applicable in Dubai, and which amount may be amended by the Seller from time
-                to time having regard to the maximum allowable pursuant to Applicable Law;
+            <td class="en" style="padding:10px 10px 10px 35px;">
+                (b) obtains a No Objection Certificate (NOC) from the Seller.
+                The issuance of the NOC is subject to the following conditions:
+                <ul>
+                    <li>The Buyer must have paid more than 60% of the purchase price, after deducting any penalties
+                        imposed on the Buyer under the provisions of this Agreement.
+                    </li>
+                    <li>
+                        In the event the Buyer has already paid 80% or more of the purchase price, the Buyer must
+                        settle the full outstanding balance before the NOC is granted.
+                    </li>
+                </ul>
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px 35px 10px 10px;"> ب) بعد دفع
-                المشتري الرسوم الإدارية (التي تبلغ حاليا 5000 درهم (خمسة آلاف درهم) أو المبلغ الذي يحدده البائع وفقا
-                للمعمول به في امارة دبي حيث يجوز للبائع تعديل ذلك المبلغ من وقت لآخر حسبما يتعلق بالحد الأقصى المسموح به
-                وطبقا للقانون المعمول به.
-            </td>
-        </tr>
-
-        <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px 10px 10px 35px;">(c) provided always that the Purchaser
-                shall have paid a minimum of twenty-five per cent (25%) of the Purchase Price to the Seller; and
-            </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px 35px 10px 10px;"> ت) يشترط دوما
-                أن يكون المشتري قد دفع حدا أدنى بما نسبته خمسة وعشرون بالمائة (25%) من سعر الشراء إلى البائع؛
-            </td>
-        </tr>
-
-        <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px 10px 10px 35px;">(d) on the basis that the Seller shall
-                not be liable for the Fees or any other Land Department fees, charges or penalties in any way associated
-                with the assignment all of which will be met by the Purchaser.
-            </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px 35px 10px 10px;"> ث) على أساس أن
-                البائع لن يتحمل المسؤولية عن الرسوم أو أية رسوم أو مصاريف أو غرامات أخرى لدائرة الأراضي والأملاك ترتبط
-                بأي حال من الأحوال بالتنازل ويتعين على المشتري الوفاء بها جميعا.
+            <td class="separator"></td>
+            <td class="ar" style="padding:10px 35px 10px 10px;">
+                (ب) حصوله على شهادة عدم ممانعة صادرة من البائع. <br/>
+                وتخضع شهادة عدم الممانعة للشروط التالية:
+                <ul>
+                    <li>
+                        أن يكون المشتري قد سدد ما يزيد عن 60% من سعر الشراء، وذلك بعد خصم أي غرامات تم فرضها عليه بموجب
+                        أحكام هذه الاتفاقية، بغض النظر عن نسبة إنجاز المشروع.
+                    </li>
+                    <li>
+                        في حال كان المشتري قد سدد أصلا 80% من سعر الشراء أو أكثر، يتعين عليه سداد كامل سعر الشراء قبل
+                        منحه شهادة عدم الممانعة.
+                    </li>
+                </ul>
             </td>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">12.3. Unless otherwise provided in this
+            <td class="en" style="padding:10px 10px 10px 35px;">
+                (c) upon payment of the Administration Fee by the Purchaser (which is currently set at AED 5,000
+                (UAE Dirhams Five Thousand) Or the amount specified by the Owner as applicable in Dubai, and which
+                amount may be amended by the Seller from time to time having regard to the maximum allowable pursuant to
+                Applicable Law;
+            </td>
+            <td class="separator"></td>
+            <td class="ar" style="padding:10px 35px 10px 10px;">
+                (ت) بعد دفع المشتري الرسوم الإدارية (التي تبلغ حاليا 5000 درهم (خمسة آلاف درهم) او المبلغ الذي يحدده
+                البائع وفقا للمعمول به في امارة دبي حيث يجوز للبائع تعديل ذلك المبلغ من وقت لآخر حسبما يتعلق بالحد
+                الأقصى المسموح به وطبقا للقانون المعمول به.
+            </td>
+        </tr>
+
+        <tr>
+            <td class="en" style="padding:10px 10px 10px 35px;">
+                (d) on the basis that the Seller shall not be liable for the Fees or any other Land Department fees,
+                charges or penalties in any way associated with the assignment all of which will be met by the
+                Purchaser.
+            </td>
+            <td class="separator"></td>
+            <td class="ar" style="padding:10px 35px 10px 10px;">
+                (ث) على أساس أن البائع لن يتحمل المسؤولية عن الرسوم أو أية رسوم أو مصاريف أو غرامات أخرى لدائرة الأراضي
+                والأملاك ترتبط بأي حال من الأحوال بالتنازل ويتعين على المشتري الوفاء بها جميعا.
+            </td>
+        </tr>
+
+        <tr>
+            <td class="en" style="padding:10px 10px 10px 35px;">
+                (e) The Purchaser shall procure that any transferee or assignee of the Unit executes a declaration
+                of adherence to the Master Community Declaration, in a form acceptable to the Master Developer, and
+                delivers a signed copy thereof to the Seller promptly upon execution or completion of the transfer. This
+                obligation shall survive completion and remain binding on the Purchaser until such signed declaration is
+                duly provided to the Seller.
+            </td>
+            <td class="separator"></td>
+            <td class="ar" style="padding:10px 35px 10px 10px;">
+                (ج) يتعهد المشتري بأن يقوم بضمان توقيع المتنازل له أو المتنازل إليه عن الوحدة، على نسخة من "إقرار
+                الالتزام بإعلان المجتمع الرئيسي"، وذلك بصيغة مقبولة من قبل المطور الرئيسي، على أن يتم تسليم نسخة موقعة
+                من هذا الإقرار إلى البائع فور استكمال إجراءات التنازل أو نقل الملكية. يبقى هذا الالتزام قائما وملزما
+                للمشتري حتى يتم تسليم الإقرار الموقع للبائع حسب الأصول.
+            </td>
+        </tr>
+
+        <tr>
+            <td class="en">12.3. Unless otherwise provided in
+                this
                 Agreement, once title to the Property has passed to the Purchaser, the Purchaser may exercise all the
                 rights of a property owner, including the right to mortgage his Property or (upon issuance of any
                 required clearance certificates following execution of declarations of adherence by the prospective
@@ -2758,17 +3271,20 @@
                 parties. Until the clearance certificates have been issued, the Purchaser shall continue to be jointly
                 and severally liable with his successor for the due performance of obligations pursuant to the Strata
                 Scheme Documentation.
+                <br/>
                 “For the avoidance of doubt, any resale under clause 13.3 of this Agreement shall be a personal contract
                 between the Purchaser and the party to whom the Property is resold. The Master Developer shall not be a
                 party to such resale and shall have no liability nor give any warranty under that sale agreement.”
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">12-3 ما لم ينص على
+            <td class="separator"></td>
+            <td class="ar">12-3 ما لم
+                ينص على
                 خلاف ذلك في هذه الاتفاقية، بمجرد أن تنتقل ملكية العقار إلى المشتري، يجوز للمشتري أن يمارس كافة حقوق مالك
                 العقار بما في ذلك الحق في أن يرهن عقاره أو (فور إصدار أية شهادات مخالصة مطلوبة بعد تحرير المشتري المحتمل
                 إقرار الالتزام بالنسبة لمستندات قواعد الملكية المشتركة) أن يبيع أو ينقل ملكية هذا العقار أو يهبه إلى
                 أطراف خارجية. وحتى تصدر شهادات المخالصة، يتعين على المشتري أن يظل مسؤولا مسؤولية تضامنية وتكافلية مع
                 ورثته عن تنفيذ الالتزامات على نحو قانوني طبقا لمستندات قواعد الملكية المشتركة.
+                <br/>
                 "لتجنب الشك، يجب أن يكون أي إعادة بيع بموجب المادة 13.3 من هذه الاتفاقية عقدا شخصيا بين المشتري والطرف
                 الذي أعيد بيع العقار إليه. لن يكون المطور الرئيسي طرفا في عملية إعادة البيع هذه ولن يتحمل أي مسؤولية ولا
                 يقدم أي ضمان بموجب اتفاقية البيع ".
@@ -2776,13 +3292,15 @@
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">12.4. No concession or other indulgence
+            <td class="en">12.4. No concession or other
+                indulgence
                 granted by the Seller to the Purchaser whether in respect of time for payment or otherwise in regard to
                 the terms and conditions of this Agreement or Strata Scheme Documentation shall be deemed to be a waiver
                 of its rights in terms of this Agreement or Strata Scheme Documentation.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">12-4 لن يعتبر أي
+            <td class="separator"></td>
+            <td class="ar">12-4 لن يعتبر
+                أي
                 امتياز أو تساهل آخر يمنحه البائع إلى المشتري، سواء بخصوص موعد الدفع أو خلاف ذلك بخصوص شروط وأحكام هذه
                 الاتفاقية أو مستندات قواعد الملكية المشتركة، لن يعتبر تنازلا عن حقوقه المنصوص عليها بموجب هذه الاتفاقية
                 أو مستندات قواعد الملكية المشتركة.
@@ -2790,37 +3308,40 @@
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">12.5. If there is more than one (1)
+            <td class="en">12.5. If there is more than one (1)
                 Purchaser in terms of this Agreement, the liability of each shall be joint and several.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">12-5 في حال وجود
+            <td class="separator"></td>
+            <td class="ar">12-5 في حال
+                وجود
                 أكثر من مشتر واحد (1) حسب هذه الاتفاقية، يتعين أن تكون مسؤولية كل منهم على أساس التضامن والتكافل.
             </td>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">12.6. Each of the Parties shall
+            <td class="en">12.6. Each of the Parties shall
                 immediately upon being requested to do so, sign/execute all such documents in connection with the
                 transfer of title and generally as are necessary to give effect to this Agreement.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">12-6 ويتعين على كل
+            <td class="separator"></td>
+            <td class="ar">12-6 ويتعين
+                على كل
                 طرف من الطرفين، فور الطلب، أن يوقع/يحرر كافة تلك المستندات المتعلقة بنقل الملكية والضرورية عموما لوضع
                 هذه الاتفاقية موضوع التنفيذ.
             </td>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">12.7. This Agreement constitutes the
+            <td class="en">12.7. This Agreement constitutes
+                the
                 entire agreement between the Parties relating to the subject matter of this Agreement and supersedes all
                 previous verbal or written agreements and negotiations between the Parties, including any Booking Form.
                 The Purchaser acknowledges that any advertising or promotional material is indicative only and warrants
                 that they have not relied upon any such promotional or advertising material and have relied solely upon
                 the terms of this Agreement.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">12-7 تشكل هذه
+            <td class="separator"></td>
+            <td class="ar">12-7 تشكل هذه
                 الاتفاقية الاتفاق الكامل بين الطرفين بخصوص موضوع هذه الاتفاقية، وتلغي كافة الاتفاقيات والمفاوضات الشفهية
                 أو الخطية السابقة بين الطرفين، بما في ذلك أي نموذج حجز. يقر المشتري أن أية مواد دعائية أو ترويجية تكون
                 على سبيل الإيضاح فقط، ويؤكد أنه لم يعتمد على أية مواد دعائية أو ترويجية من هذا القبيل وقد اعتمد فقط على
@@ -2829,7 +3350,8 @@
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">12.8. The Parties further agree that if
+            <td class="en">12.8. The Parties further agree
+                that if
                 any provision of this Agreement or the Strata Scheme Documentation conflicts with Applicable Law, then
                 the relevant provisions of this Agreement or the Strata Scheme Documentation shall be appropriately
                 amended, replaced, repealed or varied by Applicable Law provided that the remaining terms and conditions
@@ -2838,8 +3360,9 @@
                 not conflict with any terms and conditions that are amended, replaced, repealed or varied by
                 Applicable Law.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">12-8 كما يوافق
+            <td class="separator"></td>
+            <td class="ar">12-8 كما
+                يوافق
                 الأطراف على أنه في حال إذا تعارض أي حكم بهذه الاتفاقية أو مستندات قواعد الملكية المشتركة مع القانون
                 المعمول به، فيتعين أن تعدل الأحكام المعنية من هذه الاتفاقية أو مستندات قواعد الملكية المشتركة أو تستبدل
                 أو تلغى على نحو يناسب القانون المعمول به بشرط أن يكون باقي الشروط والأحكام الواردة في هذه الاتفاقية أو
@@ -2849,46 +3372,48 @@
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">12.9. The Seller may assign this
+            <td class="en">12.9. The Seller may assign this
                 Agreement at any time to any subsidiary or affiliate company or to any other third party without the
                 need for the consent of the Purchaser and without the need to notify the Purchaser that any such
                 assignment or transfer has taken place.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">12-9 يجوز للبائع
+            <td class="separator"></td>
+            <td class="ar">12-9 يجوز
+                للبائع
                 أن يتنازل عن هذه الاتفاقية في أي وقت إلى أي شركة تابعة أو فرعية أو إلى أي طرف خارجي دون حاجة إلى موافقة
                 من المشتري ودون حاجة إلى إخطار المشتري بحدوث ذلك التنازل أو نقل الملكية.
             </td>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">12.10. This Agreement has been negotiated
+            <td class="en">12.10. This Agreement has been
+                negotiated
                 and drafted in Arabic language. If there is any inconsistency between the English and the Arabic
                 translation, the Arabic text and interpretation shall prevail.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">12-10 تم التفاوض
+            <td class="separator"></td>
+            <td class="ar">12-10 تم
+                التفاوض
                 على هذه الاتفاقية وصياغتها باللغة العربية. إذا كان هناك أي تناقض بين النص الإنجليزي والنص العربي، فإن
                 النص العربي وتفسيره يسود.
             </td>
         </tr>
 
         <tr>
-            <th class="left-th section-heading" style="width:49%; text-align:justify; padding:10px;">13. Notices</th>
-            <td class="separator" style="width:2%;"></td>
-            <th class="rtl-text right-th spaced-text section-heading"
-                style="width:49%; text-align:justify; padding:10px;">13- الإخطارات
+            <th class="en section-heading" style="width:49%; text-align:justify; padding:10px;">13. Notices</th>
+            <td class="separator"></td>
+            <th class="ar section-heading">13- الإخطارات
             </th>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">Any notice given under this
+            <td class="en">Any notice given under this
                 Agreement shall be in writing and shall be served by delivering it personally or sending it by courier
                 or email to the address. or email address as set out in this Agreement. Any such notice shall be deemed
                 to have been received:
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;"> يتعين أن
+            <td class="separator"></td>
+            <td class="ar"> يتعين أن
                 تحرر خطيا أية إخطارات تقدم بموجب هذه الاتفاقية وأن ترسل عن طريق تسليمها تسليما شخصيا أو إرسالها بالبريد
                 السريع أو البريد الإلكتروني إلى العنوان أو عنوان البريد الإلكتروني المنصوص عليه في هذه الاتفاقية. ويعتبر
                 أي إخطار من هذا القبيل قد تم استلامه:
@@ -2896,76 +3421,75 @@
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">(a) if delivered personally, at the
+            <td class="en">(a) if delivered personally, at the
                 time of delivery;
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">أ) إذا سلم
+            <td class="separator"></td>
+            <td class="ar">أ) إذا سلم
                 تسليما شخصيا، في موعد التسليم؛
             </td>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">(b) in the case of courier, on the date
+            <td class="en">(b) in the case of courier, on the
+                date
                 of delivery as evidenced by the records of the courier;
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;"> ب) في حال
+            <td class="separator"></td>
+            <td class="ar"> ب) في حال
                 الإرسال بالبريد السريع، في تاريخ التسليم حسبما تثبت سجلات البريد السريع؛
             </td>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">(c) in case of an email or on email
+            <td class="en">(c) in case of an email or on email
                 receipt.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;"> ت) في حالة
+            <td class="separator"></td>
+            <td class="ar"> ت) في حالة
                 الإرسال عبر البريد الإلكتروني، عند استلام رسالة البريد الإلكتروني.
             </td>
         </tr>
 
         <tr>
-            <th class="left-th section-heading" style="width:49%; text-align:justify; padding:10px;">14. Governing Law
+            <th class="en section-heading" style="width:49%; text-align:justify; padding:10px;">14. Governing Law
                 and Jurisdiction
             </th>
-            <td class="separator" style="width:2%;"></td>
-            <th class="rtl-text right-th spaced-text section-heading"
-                style="width:49%; text-align:justify; padding:10px;">14- القانون النافذ والاختصاص القضائي
+            <td class="separator"></td>
+            <th class="ar section-heading">14- القانون النافذ والاختصاص القضائي
             </th>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">This Agreement and the rights of
+            <td class="en">This Agreement and the rights of
                 the Parties hereunder shall be governed by the Laws of Dubai and the Federal Laws of the UAE and the
                 Parties agree that any legal action or proceeding with respect to this Agreement shall be subject to the
                 exclusive jurisdiction of the Courts of Dubai.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">تخضع هذه
+            <td class="separator"></td>
+            <td class="ar">تخضع هذه
                 الاتفاقية وحقوق الطرفين فيها إلى قوانين دبي والقوانين الاتحادية لدولة الإمارات العربية المتحدة، ويوافق
                 الطرفان على اختصاص محاكم دبي الحصري بالفصل في أي دعوى أو إجراء قانوني يتعلق بهذه الاتفاقية.
             </td>
         </tr>
 
         <tr>
-            <th class="left-th section-heading" style="width:49%; text-align:justify; padding:10px;">15. Effective
+            <th class="en section-heading" style="width:49%; text-align:justify; padding:10px;">15. Effective
                 Date
             </th>
-            <td class="separator" style="width:2%;"></td>
-            <th class="rtl-text right-th spaced-text section-heading"
-                style="width:49%; text-align:justify; padding:10px;">15- تاريخ بدء السريان
+            <td class="separator"></td>
+            <th class="ar section-heading">15- تاريخ بدء السريان
             </th>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">This Agreement shall be effective
+            <td class="en">This Agreement shall be effective
                 and binding upon the Parties from the Effective Date. Unless terminated earlier pursuant to the
                 provisions of Clause 10, this Agreement shall survive the Completion Date insofar as any rights and
                 obligations contained herein are of continuing effect.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">تسري هذه
+            <td class="separator"></td>
+            <td class="ar">تسري هذه
                 الاتفاقية وتكون ملزمة على الطرفين اعتبارا من تاريخ بدء السريان. ما لم تفسخ هذه الاتفاقية قبل موعدها طبقا
                 لأحكام البند (10)، يستمر سريان هذه الاتفاقية بعد تاريخ الإنجاز طالما استمر سريان أية حقوق والتزامات
                 منصوص عليها فيها.
@@ -2973,23 +3497,26 @@
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;"><strong>IN WITNESS WHEREOF</strong> the Parties have
+            <td class="en"><strong>IN WITNESS WHEREOF</strong>
+                the Parties have
                 executed this Agreement on the dates set forth below, to be effective as of the Effective Date.
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;"><strong>واستنادا لما
-                    تقدم</strong>، فقد حرر الطرفان هذه الاتفاقية في التاريخ المنصوص عليه أدناه، وتسري هذه الاتفاقية اعتبارا من تاريخ
+            <td class="separator"></td>
+            <td class="ar"><strong>واستنادا
+                    لما
+                    تقدم</strong>، فقد حرر الطرفان هذه الاتفاقية في التاريخ المنصوص عليه أدناه، وتسري هذه الاتفاقية
+                اعتبارا من تاريخ
                 بدء السريان.
             </td>
         </tr>
 
         <tr>
-            <td class="left-th" style="width:49%; text-align:justify; padding:10px;">The Purchaser hereby confirms to
+            <td class="en">The Purchaser hereby confirms to
                 have read and understood the terms of this Agreement, the Particulars and Schedules to this Agreement
                 and agrees and undertakes to be bound by them:
             </td>
-            <td class="separator" style="width:2%;"></td>
-            <td class="rtl-text right-th spaced-text" style="width:49%; text-align:justify; padding:10px;">يؤكد المشتري
+            <td class="separator"></td>
+            <td class="ar">يؤكد المشتري
                 بموجبه أنه قد قرأ وفهم شروط هذه الاتفاقية وبيانات الاتفاقية والملاحق المرفقة بهذه الاتفاقية ويوافق
                 ويتعهد بأن يلتزم بها.
             </td>
@@ -3006,15 +3533,17 @@
         </tr>
     </table>
 
-    <table class="info-table">
+    <table class="contract-table">
         <tr>
             <td class="left-th" style="line-height: 2.5; width: 49%; padding: 7px; text-align: justify;">
                 <strong>Name: Unique Saray Properties L.L.C </strong> by its authorised representative
-                <h4>Signed: <img src="{{ public_path('images/black_line.svg') }}" width="250" height="2" alt="___"/></h4>
+                <h4>Signed: <img src="{{ public_path('images/black_line.svg') }}" width="250" height="2" alt="___"/>
+                </h4>
                 <h4>Date: &nbsp;&nbsp;&nbsp;{{ \Carbon\Carbon::now()->format('d-M-Y') }}&nbsp;&nbsp;</h4>
                 <br/>
                 <h4>Name: <img src="{{ public_path('images/black_line.svg') }}" width="260" height="2" alt="___"/></h4>
-                <h4>Witness: <img src="{{ public_path('images/black_line.svg') }}" width="245" height="2" alt="___"/></h4>
+                <h4>Witness: <img src="{{ public_path('images/black_line.svg') }}" width="245" height="2" alt="___"/>
+                </h4>
             </td>
             <td style="text-align: center;"></td>
             <td class="rtl-text right-th" style="line-height: 2.5; width: 49%; padding: 7px; text-align: justify;">
@@ -3039,21 +3568,27 @@
                     <h4>Signed: <img src="{{ public_path('images/black_line.svg') }}" width="250" height="2" alt="___"/>
                     </h4>
                     <h4>Date: &nbsp;&nbsp;<img src="{{ public_path('images/black_line.svg') }}" width="260" height="2"
-                                                  alt="___"/></h4>
+                                               alt="___"/></h4>
                     <br/>
-                    <h4>Name: <img src="{{ public_path('images/black_line.svg') }}" width="260" height="2" alt="___"/></h4>
-                    <h4>Witness: <img src="{{ public_path('images/black_line.svg') }}" width="245" height="2" alt="___"/></h4>
+                    <h4>Name: <img src="{{ public_path('images/black_line.svg') }}" width="260" height="2" alt="___"/>
+                    </h4>
+                    <h4>Witness: <img src="{{ public_path('images/black_line.svg') }}" width="245" height="2"
+                                      alt="___"/></h4>
                 </td>
                 <td class="separator" style="width: 2%;"></td>
                 <td class="rtl-text right-th" style="line-height: 2.5; width: 49%; padding: 7px; text-align: justify;">
                     <h4>الاسم: {{ $name }}  </h4>
-                    <h4>التوقيع: <img src="{{ public_path('images/black_line.svg') }}" width="250" height="2" alt="___"/>
+                    <h4>التوقيع: <img src="{{ public_path('images/black_line.svg') }}" width="250" height="2"
+                                      alt="___"/>
                     </h4>
-                    <h4>التاريخ: &nbsp;&nbsp;<img src="{{ public_path('images/black_line.svg') }}" width="250" height="2"
+                    <h4>التاريخ: &nbsp;&nbsp;<img src="{{ public_path('images/black_line.svg') }}" width="250"
+                                                  height="2"
                                                   alt="___"/></h4>
                     <br/>
-                    <h4>الاسم: <img src="{{ public_path('images/black_line.svg') }}" width="255" height="2" alt="___"/></h4>
-                    <h4>شاهد: <img src="{{ public_path('images/black_line.svg') }}" width="255" height="2" alt="___"/></h4>
+                    <h4>الاسم: <img src="{{ public_path('images/black_line.svg') }}" width="255" height="2" alt="___"/>
+                    </h4>
+                    <h4>شاهد: <img src="{{ public_path('images/black_line.svg') }}" width="255" height="2" alt="___"/>
+                    </h4>
                 </td>
             </tr>
         @endforeach
@@ -3064,7 +3599,7 @@
     <h3 class="left-th" style="text-align: center;">Schedule A - Payment Schedule</h3>
     <h3 class="right-th rtl-text" style="text-align: center;">الملحق (أ) - جدول سداد الدفعات</h3>
 
-    <table class="info-table">
+    <table class="contract-table">
         <colgroup>
             <col>
             <col>
@@ -3108,6 +3643,259 @@
                 </td>
                 <td class="left-th" style="text-align: right; padding: 10px;">
                     {{ number_format($installment->amount, 2) }}
+                </td>
+            </tr>
+        @endforeach
+    </table>
+
+    <div class="page-break"></div>
+
+    <br/>
+
+    <h3 class="left-th" style="text-align: center;">Schedule B - UNIT PLAN</h3>
+    <h3 class="right-th rtl-text" style="text-align: center;">الملحق (ب) - خطة الوحدة</h3>
+
+
+    <br/>
+    <br/>
+    <br/>
+    <br/>
+    <br/>
+
+    <h1 class="left-th" style="text-align: center;">(FLOOR PLAN DRAFT)</h1>
+
+    <div class="page-break"></div>
+
+
+    <table class="contract-table">
+        <tr>
+            <td colspan="3">
+                <h4 style="text-align: center;">Finishing & Furnishing Specification</h4>
+            </td>
+        </tr>
+        <tr>
+            <td class="en">
+                1. Flooring <br/>
+                - Living Room, Dining, Corridors: High-quality porcelain tiles, scratch-resistant and
+                moisture-resistant. <br/>
+                - Bedrooms: Porcelain tiles or engineered parquet as per design. <br/>
+                - Bathrooms: Premium anti-slip porcelain tiles. <br/>
+                - Kitchen: Heat and humidity-resistant porcelain tiles. <br/>
+                <br/>
+                2. Wall Finishes <br/>
+                - Living Room, Bedrooms, Corridors: Premium emulsion paint. <br/>
+                - Kitchen: Reconstituted stone panels or tiles. <br/>
+                - Bathrooms: Full-height porcelain tiling. <br/>
+                - Service Room: Paint or tiles as per layout. <br/>
+                <br/>
+                3. Ceilings <br/>
+                - Gypsum false ceiling with premium paint, spotlights, and cove lighting. <br/>
+                <br/>
+                4. Countertops <br/>
+                - Kitchen: High-quality quartz stone. <br/>
+                - Bathrooms: Durable engineered stone. <br/>
+                <br/>
+                5. Joinery <br/>
+                - Bedroom Wardrobes: Moisture-resistant melamine with soft-close hinges. <br/>
+                - Kitchen Cabinets: High-quality cabinetry with superior metal accessories. <br/>
+                <br/>
+                6. Appliances <br/>
+                (Applicable for furnished units) <br/>
+                - Oven – Hood – Dishwasher. <br/>
+                - Refrigerator – Washing Machine – Microwave. <br/>
+                - All appliances comply with European standards or equivalent. <br/>
+                <br/>
+                7. Sanitary & Fittings <br/>
+                - High-quality mixers. <br/>
+                - Premium ceramic sanitary fixtures. <br/>
+                - Durable bathroom accessories. <br/>
+                <br/>
+                8. Doors & Ironmongery
+                - High-quality wooden or composite internal doors. <br/>
+                - Premium hinges and handles. <br/>
+                <br/>
+                9. Fully Furnished Package <br/>
+                (When applicable) <br/>
+                - Living Room: Sofa – Coffee Table – TV Unit – Curtains – Accessories. <br/>
+                - Master Bedroom: Bed – Mattress – Side Tables – Dressing Table – Curtains – Wall Art. <br/>
+                - Other Bedrooms: Full setup. <br/>
+                - Dining: Table + Chairs. <br/>
+                - Balcony: Outdoor seating. <br/>
+                - Decorative Lighting: Pendants + LED Lines. <br/>
+                <br/>
+                Important Note: <br/>
+                The developer may replace any material with an equivalent or higher-quality product without affecting
+                the overall specifications. <br/>
+            </td>
+            <td class="separator"></td>
+            <td class="ar">
+                أولا: تشطيبات الأرضيات <br/>
+                - غرف المعيشة، السفرة، والممرات: بلاط بورسلان عالي الجودة، مقاوم للخدش والرطوبة. <br/>
+                - غرف النوم: بلاط بورسلان أو باركيه هندسي حسب التصميم المعتمد. <br/>
+                - الحمامات: بلاط بورسلان مضاد للانزلاق بجودة فاخرة. <br/>
+                - المطبخ: بلاط بورسلان مقاوم للحرارة والرطوبة. <br/>
+                <br/>
+                ثانيا: تشطيبات الجدران <br/>
+                - الريسبشن، غرف النوم، الممرات: دهان فاخر متعدد الطبقات. <br/>
+                - المطبخ: ألواح حجر صناعي أو بلاط حسب التصميم المعتمد. <br/>
+                - الحمامات: بلاط بورسلان كامل الارتفاع. <br/>
+                - غرف الخدمات: دهان أو بلاط حسب المخطط. <br/>
+                <br/>
+                ثالثا: الأسقف <br/>
+                - سقف جبسي مستعار بطلاء فاخر مع سبوت لايت وإضاءة مخفية. <br/>
+                <br/>
+                رابعا: أسطح الكاونتر <br/>
+                - المطبخ: سطح حجر صناعي كوارتز. <br/>
+                - الحمامات: أسطح حجر صناعي متينة. <br/>
+                <br/>
+                خامسا: الخزائن <br/>
+                - خزائن غرف النوم: ميلامين مقاوم للرطوبة مع مفصلات إغلاق ناعم. <br/>
+                - خزائن المطبخ: وحدات عالية الجودة بإكسسوارات ممتازة. <br/>
+                <br/>
+                سادسا: الأجهزة الكهربائية <br/>
+                (في حال كانت الوحدة مفروشة بالكامل) <br/>
+                - فرن – غطاء شفاط – غسالة صحون. <br/>
+                - ثلاجة – غسالة ملابس – مايكروويف. <br/>
+                - جميع الأجهزة بمعايير أوروبية أو ما يعادلها. <br/>
+                <br/>
+                سابعا: تجهيزات السباكة <br/>
+                - خلاطات عالية الجودة. <br/>
+                - مراحيض وأحواض سيراميكية ممتازة. <br/>
+                - إكسسوارات حمام متينة.<br/>
+                <br/>
+                ثامنا: الأبواب والحديديات <br/>
+                - أبواب خشبية أو مركبة بجودة عالية. <br/>
+                - مقابض ومفصلات عالية الجودة<br/>
+                <br/>
+                تاسعا: الفرش الكامل <br/>
+                (عند توفره بالمشروع) <br/>
+                - غرفة المعيشة: كنبة – طاولة وسط – طاولة تلفزيون – ستائر – إكسسوارات. <br/>
+                - غرفة النوم الرئيسية: سرير – فرشة فندقية – كومودينات – طاولة تزيين – ستائر – لوحات. <br/>
+                - غرف النوم الأخرى: تجهيز كامل. <br/>
+                - السفرة: طاولة + كراسي. <br/>
+                - الشرفة: جلسة خارجية. <br/>
+                - الإضاءة الديكورية: Pendants + LED Lines. <br/>
+                <br/>
+                ملاحظة مهمة: <br/>
+                يحق للمطور استبدال أي مادة بمنتج مكافئ أو أعلى جودة دون الإخلال بالمواصفات <br/>
+            </td>
+        </tr>
+    </table>
+
+    <div class="page-break"></div>
+
+    <h3 class="left-th" style="text-align: center;">Schedule C</h3>
+    <h3 class="right-th rtl-text" style="text-align: center;">الملحق هـ</h3>
+
+    <p class="left-th" style="text-align: center;">
+        DECLARATION OF ADHERENCE TO THE ASSOCIATION CONSTITUTION AND JOINTLY OWNED PROPERTY DECLARATION (RULES OF THE
+        ASSOCIATION)
+    </p>
+    <p class="right-th rtl-text" style="text-align: center;">
+        إعلان الالتزام بالنظام الأساسي الجمعية وإعلان الملكية المشتركة (قواعد الجمعية)
+    </p>
+    <br/>
+    <table class="contract-table">
+        <tr>
+            <td class="en">
+                WHEREAS: <br/>
+
+                A. The Purchaser proposes to take title to Unit No. {{ $unit->unit_no }} located in the project Saray
+                Prime Residence, Dubai, United Arab Emirates.
+                <br/>
+                B. The Purchaser has read and understood the Association Constitution and the Jointly Owned Property
+                Declaration (“Rules of the Association”) and agrees to be bound by their terms.
+            </td>
+            <td class="separator"></td>
+            <td class="ar">
+                حيث أن: <br/>
+
+                أ. المشتري يرغب بتملك الوحدة رقم: {{ $unit->unit_no }} ضمن مشروع Saray Prime Residence الكائن في إمارة
+                دبي، الإمارات العربية المتحدة.
+                <br/>
+                ب. وقد قام المشتري بقراءة وفهم دستور الجمعية و نظام الملكية المشتركة ("قواعد الجمعية")، ويقر بالموافقة
+                على الالتزام بجميع ما ورد فيها.
+            </td>
+        </tr>
+        <tr>
+            <td class="en">
+                NOW, THE PURCHASER AGREES AS FOLLOWS: <br/>
+                1. Expressions defined in the Constitution and the Jointly Owned Property Declaration (“Rules of the
+                Association”) shall have the same meaning when used in this Declaration of Adherence unless the context
+                otherwise requires. <br/>
+                2. The Purchaser undertakes and covenants to the Association and to the other Owners to comply with all
+                the provisions applicable to the Unit and all obligations in the Constitution and Jointly Owned Property
+                Declaration (“Rules of the Association”), and to observe and perform such obligations from the date
+                hereof and thereafter.
+            </td>
+            <td class="separator"></td>
+            <td class="ar">
+                وعليه، يقر المشتري بما يلي: <br/>
+                1. يكون للتعابير الواردة في دستور الجمعية ونظام الملكية المشتركة (“قواعد الجمعية”) نفس المعاني أينما
+                وردت في هذا الإقرار، ما لم يقتض السياق خلاف ذلك. <br/>
+                2. يلتزم المشتري بالتقيد بجميع الأحكام الواردة في دستور الجمعية ونظام الملكية المشتركة (“قواعد
+                الجمعية”)، وبكافة الالتزامات المفروضة على مالكي الوحدات، ويتعهد بأدائها والامتثال لها اعتبارا من تاريخ
+                التوقيع وما بعده
+            </td>
+        </tr>
+    </table>
+    <br>
+    <table class="contract-table">
+        <tr>
+            <td class="en" style="line-height: 2.5;">
+                <strong>Name: Unique Saray Properties L.L.C </strong> by its authorised representative
+                <h4>Signed: <img src="{{ public_path('images/black_line.svg') }}" width="250" height="2" alt="___"/>
+                </h4>
+                <h4>Date: &nbsp;&nbsp;&nbsp;{{ \Carbon\Carbon::now()->format('d-M-Y') }}&nbsp;&nbsp;</h4>
+                <br/>
+                <h4>Name: <img src="{{ public_path('images/black_line.svg') }}" width="260" height="2" alt="___"/></h4>
+                <h4>Witness: <img src="{{ public_path('images/black_line.svg') }}" width="245" height="2" alt="___"/>
+                </h4>
+            </td>
+            <td style="text-align: center;"></td>
+            <td class="ar" style="line-height: 2.5;">
+                <strong>الاسم: يونيك سراي للعقارت ش.ذ.م.م</strong> من قبل الممثل المفوض
+                <h4>التوقيع: <img src="{{ public_path('images/black_line.svg') }}" width="250" height="2" alt="___"/>
+                </h4>
+                <h4 style="unicode-bidi: embed;">التاريخ:&nbsp;&nbsp;
+                    &nbsp;{{ \Carbon\Carbon::now()->locale('ar')->isoFormat('D-MMM-YYYY') }}&nbsp;</h4>
+                <br/>
+                <h4>الاسم: <img src="{{ public_path('images/black_line.svg') }}" width="255" height="2" alt="___"/></h4>
+                <h4>شاهد: <img src="{{ public_path('images/black_line.svg') }}" width="255" height="2" alt="___"/></h4>
+            </td>
+        </tr>
+        @php
+            $signers = collect($customerInfos ?? [])->values();
+        @endphp
+        @foreach($signers as $customer)
+            @php $name = data_get($customer, 'name'); @endphp
+            <tr>
+                <td class="en" style="line-height: 2.5;">
+                    <h4>Name: {{ $name }}  </h4>
+                    <h4>Signed: <img src="{{ public_path('images/black_line.svg') }}" width="250" height="2" alt="___"/>
+                    </h4>
+                    <h4>Date: &nbsp;&nbsp;<img src="{{ public_path('images/black_line.svg') }}" width="260" height="2"
+                                               alt="___"/></h4>
+                    <br/>
+                    <h4>Name: <img src="{{ public_path('images/black_line.svg') }}" width="260" height="2" alt="___"/>
+                    </h4>
+                    <h4>Witness: <img src="{{ public_path('images/black_line.svg') }}" width="245" height="2"
+                                      alt="___"/></h4>
+                </td>
+                <td class="separator" style="width: 2%;"></td>
+                <td class="ar" style="line-height: 2.5;">
+                    <h4>الاسم: {{ $name }}  </h4>
+                    <h4>التوقيع: <img src="{{ public_path('images/black_line.svg') }}" width="250" height="2"
+                                      alt="___"/>
+                    </h4>
+                    <h4>التاريخ: &nbsp;&nbsp;<img src="{{ public_path('images/black_line.svg') }}" width="250"
+                                                  height="2"
+                                                  alt="___"/></h4>
+                    <br/>
+                    <h4>الاسم: <img src="{{ public_path('images/black_line.svg') }}" width="255" height="2" alt="___"/>
+                    </h4>
+                    <h4>شاهد: <img src="{{ public_path('images/black_line.svg') }}" width="255" height="2" alt="___"/>
+                    </h4>
                 </td>
             </tr>
         @endforeach
