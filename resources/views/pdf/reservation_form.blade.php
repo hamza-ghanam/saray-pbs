@@ -870,7 +870,7 @@
                 Account Name
             </td>
             <td class="left-th" style="width: 50%; text-align: center; padding: 10px;">
-                UNIQUE SARAY PROPERTIES LLC
+                UNIQUE SARAY PROPERTIES LLC.
             </td>
             <td class="rtl-text right-th" style="width: 25%; padding: 10px;">
                 اسم الحساب

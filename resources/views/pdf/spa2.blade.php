@@ -19,6 +19,12 @@
             footer: html_MyFooter;
         }
 
+        @page :first {
+            margin: 150px 45px 150px 45px;  /* نفس الهوامش لو حابب */
+            header: html_MyHeader;          /* خلي الهيدر موجود عادي */
+            footer: html_FirstFooter;                 /* بدون تذييل في الصفحة الأولى */
+        }
+
         /* 2) Base body styles */
         body {
             font-family: 'rubic', sans-serif;
@@ -122,6 +128,35 @@
             width: 2%;
         }
 
+        .bullet-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .bullet-table td {
+            border: none;
+            padding: 0;
+            vertical-align: top;
+            font-size: 14px;
+        }
+
+        .bullet-cell {
+            width: 12px; /* عرض بسيط للرصاصة */
+            white-space: nowrap;
+        }
+
+        .bullet-text {
+            padding-left: 5px; /* مسافة بسيطة بعد الرصاصة */
+            text-align: justify; /* أو right للـ RTL */
+        }
+
+        /* لو عندك عربي */
+        .bullet-text-rtl {
+            direction: rtl;
+            text-align: justify; /* أو right لو حابب */
+            padding-right: 5px;
+        }
+
     </style>
 </head>
 <body>
@@ -164,6 +199,21 @@
     <div style="height: 50px; background-color: #404040; margin-left: -45px; margin-right: -45px">&nbsp;</div>
 </htmlpagefooter>
 
+<htmlpagefooter name="FirstFooter">
+    <div style="      position: center;
+      bottom: 0;       /* stick to the bottom of the page */
+      left:   0;       /* ignore the left margin entirely */
+      right:  0;       /* ignore the right margin entirely */
+      height: 50px;">
+        <img
+            src="{{ public_path('images/tail_img.png') }}"
+            alt="Company Footer"
+            style="width:95%; max-width:200mm; height:auto;"
+        />
+    </div>
+    <div style="height: 50px; background-color: #404040; margin-left: -45px; margin-right: -45px">&nbsp;</div>
+</htmlpagefooter>
+
 <!-- 9) Your main content -->
 <main>
     <h1 class="" style="text-align:center;">
@@ -171,7 +221,7 @@
     </h1>
     <br/>
     @if($unit->building->image_path)
-        <div style="text-align:center;">
+        <div style="text-align:center; margin-bottom: 30px;">
             <img
                 src="file:///{{ str_replace('\\','/', storage_path('app/private/' . $unit->building->image_path)) }}"
                 alt="Building image"
@@ -192,7 +242,7 @@
     @foreach($customerInfos as $customerInfo)
         <h5 style="text-align: center">{{ $customerInfo->name }}</h5>
     @endforeach
-    <h6 style="text-align: center;">____________________________________________</h6>
+<hr/>
     <h5 style="text-align: center">Unit Number: {{ $unit->unit_no }}</h5>
 
     <div class="page-break"></div>
@@ -472,10 +522,10 @@
         </tr>
         <tr>
             <th class="left-th">
-                7. Escrow Account
+                7.1. Escrow Account
             </th>
             <td style="text-align: center;" colspan="2"></td>
-            <th class="rtl-text right-th">7. حساب الضمان:</th>
+            <th class="rtl-text right-th">7.1. حساب الضمان:</th>
         </tr>
         <tr>
             <td class="left-th">
@@ -527,6 +577,78 @@
                 IBAN No:
             </td>
             <td style="text-align: center;" colspan="2">AE180260000205931383803</td>
+            <th class="rtl-text right-th">
+                رقم IBAN:
+            </th>
+        </tr>
+        <tr>
+            <th class="left-th">
+                7.2. Corporate Account
+            </th>
+            <td style="text-align: center;" colspan="2"></td>
+            <th class="rtl-text right-th">7.2. حساب الشركات:</th>
+        </tr>
+        <tr>
+            <td class="left-th">
+                Bank Name:
+            </td>
+            <td style="text-align: center;" colspan="2">Emirates NBD Bank PJSC</td>
+            <th class="rtl-text right-th">
+                اسم البنك:
+            </th>
+        </tr>
+        <tr>
+            <td class="left-th">
+                Bank Branch Name and Address:
+            </td>
+            <td style="text-align: center;" colspan="2">Main Brach</td>
+            <th class="rtl-text right-th">
+                اسم وعنوان فرع البنك:
+            </th>
+        </tr>
+        <tr>
+            <td class="left-th">
+                Account Name:
+            </td>
+            <td style="text-align: center;" colspan="2">UNIQUE SARAY PROPERTIES LLC.</td>
+            <th class="rtl-text right-th">
+                اسم الحساب:
+            </th>
+        </tr>
+        <tr>
+            <td class="left-th">
+                Account Number:
+            </td>
+            <td style="text-align: center;" colspan="2">1015931383801</td>
+            <th class="rtl-text right-th">
+                رقم الحساب:
+            </th>
+        </tr>
+        <tr>
+            <td class="left-th">
+                Currency:
+            </td>
+            <td style="text-align: center;" colspan="2">
+                AED (<img src="{{ public_path('images/aed_symbol.svg') }}" width="12" alt="AED"/>)
+            </td>
+            <th class="rtl-text right-th">
+                العملة:
+            </th>
+        </tr>
+        <tr>
+            <td class="left-th">
+                Swift Code:
+            </td>
+            <td style="text-align: center;" colspan="2">EBILAEAD</td>
+            <th class="rtl-text right-th">
+                رمز SWIFT:
+            </th>
+        </tr>
+        <tr>
+            <td class="left-th">
+                IBAN No:
+            </td>
+            <td style="text-align: center;" colspan="2">AE940260001015931383801</td>
             <th class="rtl-text right-th">
                 رقم IBAN:
             </th>
@@ -1261,8 +1383,7 @@
                 them.
             </td>
             <td>&nbsp;</td>
-            <td class="rtl-text meaning spaced-text">يقصد بها كل من البائع والمشتري مجتمعين، ويقصد بلفظة &quot; الطرف
-                &quot; أي منهما.
+            <td class="rtl-text meaning spaced-text">يقصد بها كل من البائع والمشتري مجتمعين، ويقصد بلفظة &quot;الطرف&quot; أي منهما.
             </td>
             <th class="rtl-text right-th">الطرفان ( أو &quot;الطرفين&quot; (حسب السياق))</th>
         </tr>
@@ -3662,122 +3783,454 @@
     <br/>
     <br/>
 
-    <h1 class="left-th" style="text-align: center;">(FLOOR PLAN DRAFT)</h1>
+
+    @if($unit->floor_plan)
+        <div style="text-align:center; margin-bottom:20px;">
+            <img
+                src="file:///{{ str_replace('\\','/', storage_path('app/private/' . $unit->floor_plan)) }}"
+                alt="Floor Plan"
+                style="width:90%; height:auto;"
+            >
+        </div>
+    @endif
 
     <div class="page-break"></div>
 
+    <h4 class="left-th" style="text-align: center;">Finishing & Furnishing Specification</h4>
 
     <table class="contract-table">
         <tr>
-            <td colspan="3">
-                <h4 style="text-align: center;">Finishing & Furnishing Specification</h4>
-            </td>
-        </tr>
-        <tr>
             <td class="en">
-                1. Flooring <br/>
-                - Living Room, Dining, Corridors: High-quality porcelain tiles, scratch-resistant and
-                moisture-resistant. <br/>
-                - Bedrooms: Porcelain tiles or engineered parquet as per design. <br/>
-                - Bathrooms: Premium anti-slip porcelain tiles. <br/>
-                - Kitchen: Heat and humidity-resistant porcelain tiles. <br/>
-                <br/>
-                2. Wall Finishes <br/>
-                - Living Room, Bedrooms, Corridors: Premium emulsion paint. <br/>
-                - Kitchen: Reconstituted stone panels or tiles. <br/>
-                - Bathrooms: Full-height porcelain tiling. <br/>
-                - Service Room: Paint or tiles as per layout. <br/>
-                <br/>
-                3. Ceilings <br/>
-                - Gypsum false ceiling with premium paint, spotlights, and cove lighting. <br/>
-                <br/>
-                4. Countertops <br/>
-                - Kitchen: High-quality quartz stone. <br/>
-                - Bathrooms: Durable engineered stone. <br/>
-                <br/>
-                5. Joinery <br/>
-                - Bedroom Wardrobes: Moisture-resistant melamine with soft-close hinges. <br/>
-                - Kitchen Cabinets: High-quality cabinetry with superior metal accessories. <br/>
-                <br/>
-                6. Appliances <br/>
-                (Applicable for furnished units) <br/>
-                - Oven – Hood – Dishwasher. <br/>
-                - Refrigerator – Washing Machine – Microwave. <br/>
-                - All appliances comply with European standards or equivalent. <br/>
-                <br/>
-                7. Sanitary & Fittings <br/>
-                - High-quality mixers. <br/>
-                - Premium ceramic sanitary fixtures. <br/>
-                - Durable bathroom accessories. <br/>
-                <br/>
-                8. Doors & Ironmongery
-                - High-quality wooden or composite internal doors. <br/>
-                - Premium hinges and handles. <br/>
-                <br/>
-                9. Fully Furnished Package <br/>
-                (When applicable) <br/>
-                - Living Room: Sofa – Coffee Table – TV Unit – Curtains – Accessories. <br/>
-                - Master Bedroom: Bed – Mattress – Side Tables – Dressing Table – Curtains – Wall Art. <br/>
-                - Other Bedrooms: Full setup. <br/>
-                - Dining: Table + Chairs. <br/>
-                - Balcony: Outdoor seating. <br/>
-                - Decorative Lighting: Pendants + LED Lines. <br/>
-                <br/>
-                Important Note: <br/>
-                The developer may replace any material with an equivalent or higher-quality product without affecting
-                the overall specifications. <br/>
+                <ol class="spec-list">
+
+                    <li class="spec-item"><b>Flooring</b>
+                        <table class="bullet-table">
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text">Living Room, Dining, Corridors: High-quality porcelain
+                                    tiles, scratch-resistant and moisture-resistant.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text">Bedrooms: Porcelain tiles or engineered parquet as per design.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text">Bathrooms: Premium anti-slip porcelain tiles.</td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text">Kitchen: Heat and humidity-resistant porcelain tiles.</td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-text">&nbsp;</td>
+                            </tr>
+                        </table>
+                    </li>
+
+                    <li><b>Wall Finishes</b>
+                        <table class="bullet-table">
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text">Living Room, Bedrooms, Corridors: Premium emulsion paint.</td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text">Kitchen: Reconstituted stone panels or tiles.</td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text">Bathrooms: Full-height porcelain tiling.</td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text">Service Room: Paint or tiles as per layout.</td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-text">&nbsp;</td>
+                            </tr>
+                        </table>
+                    </li>
+
+                    <li><b>Ceilings</b>
+                        <table class="bullet-table">
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text">Gypsum false ceiling with premium paint, spotlights, and cove
+                                    lighting.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-text">&nbsp;</td>
+                            </tr>
+                        </table>
+                    </li>
+
+                    <li><b>Countertops</b>
+                        <table class="bullet-table">
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text">Kitchen: High-quality quartz stone.</td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text">Bathrooms: Durable engineered stone.</td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-text">&nbsp;</td>
+                            </tr>
+                        </table>
+                    </li>
+
+                    <li><b>Joinery</b>
+                        <table class="bullet-table">
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text">Bedroom Wardrobes: Moisture-resistant melamine with soft-close
+                                    hinges.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text">Kitchen Cabinets: High-quality cabinetry with superior metal
+                                    accessories.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-text">&nbsp;</td>
+                            </tr>
+                        </table>
+                    </li>
+
+                </ol>
             </td>
             <td class="separator"></td>
             <td class="ar">
-                أولا: تشطيبات الأرضيات <br/>
-                - غرف المعيشة، السفرة، والممرات: بلاط بورسلان عالي الجودة، مقاوم للخدش والرطوبة. <br/>
-                - غرف النوم: بلاط بورسلان أو باركيه هندسي حسب التصميم المعتمد. <br/>
-                - الحمامات: بلاط بورسلان مضاد للانزلاق بجودة فاخرة. <br/>
-                - المطبخ: بلاط بورسلان مقاوم للحرارة والرطوبة. <br/>
-                <br/>
-                ثانيا: تشطيبات الجدران <br/>
-                - الريسبشن، غرف النوم، الممرات: دهان فاخر متعدد الطبقات. <br/>
-                - المطبخ: ألواح حجر صناعي أو بلاط حسب التصميم المعتمد. <br/>
-                - الحمامات: بلاط بورسلان كامل الارتفاع. <br/>
-                - غرف الخدمات: دهان أو بلاط حسب المخطط. <br/>
-                <br/>
-                ثالثا: الأسقف <br/>
-                - سقف جبسي مستعار بطلاء فاخر مع سبوت لايت وإضاءة مخفية. <br/>
-                <br/>
-                رابعا: أسطح الكاونتر <br/>
-                - المطبخ: سطح حجر صناعي كوارتز. <br/>
-                - الحمامات: أسطح حجر صناعي متينة. <br/>
-                <br/>
-                خامسا: الخزائن <br/>
-                - خزائن غرف النوم: ميلامين مقاوم للرطوبة مع مفصلات إغلاق ناعم. <br/>
-                - خزائن المطبخ: وحدات عالية الجودة بإكسسوارات ممتازة. <br/>
-                <br/>
-                سادسا: الأجهزة الكهربائية <br/>
-                (في حال كانت الوحدة مفروشة بالكامل) <br/>
-                - فرن – غطاء شفاط – غسالة صحون. <br/>
-                - ثلاجة – غسالة ملابس – مايكروويف. <br/>
-                - جميع الأجهزة بمعايير أوروبية أو ما يعادلها. <br/>
-                <br/>
-                سابعا: تجهيزات السباكة <br/>
-                - خلاطات عالية الجودة. <br/>
-                - مراحيض وأحواض سيراميكية ممتازة. <br/>
-                - إكسسوارات حمام متينة.<br/>
-                <br/>
-                ثامنا: الأبواب والحديديات <br/>
-                - أبواب خشبية أو مركبة بجودة عالية. <br/>
-                - مقابض ومفصلات عالية الجودة<br/>
-                <br/>
-                تاسعا: الفرش الكامل <br/>
-                (عند توفره بالمشروع) <br/>
-                - غرفة المعيشة: كنبة – طاولة وسط – طاولة تلفزيون – ستائر – إكسسوارات. <br/>
-                - غرفة النوم الرئيسية: سرير – فرشة فندقية – كومودينات – طاولة تزيين – ستائر – لوحات. <br/>
-                - غرف النوم الأخرى: تجهيز كامل. <br/>
-                - السفرة: طاولة + كراسي. <br/>
-                - الشرفة: جلسة خارجية. <br/>
-                - الإضاءة الديكورية: Pendants + LED Lines. <br/>
-                <br/>
-                ملاحظة مهمة: <br/>
-                يحق للمطور استبدال أي مادة بمنتج مكافئ أو أعلى جودة دون الإخلال بالمواصفات <br/>
+                <ol class="spec-list">
+
+                    <li><b>تشطيبات الأرضيات</b>
+                        <table class="bullet-table">
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text-rtl">غرف المعيشة، السفرة، والممرات: بلاط بورسلان عالي الجودة،
+                                    مقاوم للخدش والرطوبة.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text-rtl">غرف النوم: بلاط بورسلان أو باركيه هندسي حسب التصميم
+                                    المعتمد.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text-rtl">الحمامات: بلاط بورسلان مضاد للانزلاق بجودة فاخرة.</td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text-rtl">المطبخ: بلاط بورسلان مقاوم للحرارة والرطوبة.</td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-text">&nbsp;</td>
+                            </tr>
+                        </table>
+                    </li>
+
+                    <li><b>تشطيبات الجدران</b>
+                        <table class="bullet-table">
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text-rtl">الريسبشن، غرف النوم، الممرات: دهان فاخر متعدد الطبقات.</td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text-rtl">المطبخ: ألواح حجر صناعي أو بلاط حسب التصميم المعتمد.</td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text-rtl">الحمامات: بلاط بورسلان كامل الارتفاع.</td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text-rtl">غرف الخدمات: دهان أو بلاط حسب المخطط.</td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-text">&nbsp;</td>
+                            </tr>
+                        </table>
+                    </li>
+
+                    <li><b>الأسقف</b>
+                        <table class="bullet-table">
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text-rtl">سقف جبسي مستعار بطلاء فاخر مع سبوت لايت وإضاءة مخفية.</td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-text">&nbsp;</td>
+                            </tr>
+                        </table>
+                    </li>
+
+                    <li><b>أسطح الكاونتر</b>
+                        <table class="bullet-table">
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text-rtl">المطبخ: سطح حجر صناعي كوارتز.</td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text-rtl">الحمامات: أسطح حجر صناعي متينة.</td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-text">&nbsp;</td>
+                            </tr>
+                        </table>
+                    </li>
+
+                    <li><b>الخزائن</b>
+                        <table class="bullet-table">
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text-rtl">خزائن غرف النوم: ميلامين مقاوم للرطوبة مع مفصلات إغلاق
+                                    ناعم.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text-rtl">خزائن المطبخ: وحدات عالية الجودة بإكسسوارات ممتازة.</td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-text">&nbsp;</td>
+                            </tr>
+                        </table>
+                    </li>
+                </ol>
+            </td>
+        </tr>
+    </table>
+
+    <table class="contract-table">
+        <tr>
+            <td class="en">
+                <ol start="6" class="spec-list">
+                    <li><b>Appliances</b>
+                        <table class="bullet-table">
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text">(Applicable for furnished units)</td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text">Oven – Hood.</td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text">Refrigerator – Washing Machine – Microwave.</td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text">All appliances comply with European standards or equivalent.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-text">&nbsp;</td>
+                            </tr>
+                        </table>
+                    </li>
+
+                    <li><b>Sanitary & Fittings</b>
+                        <table class="bullet-table">
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text">High-quality mixers.</td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text">Premium ceramic sanitary fixtures.</td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text">Durable bathroom accessories.</td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-text">&nbsp;</td>
+                            </tr>
+                        </table>
+                    </li>
+
+                    <li><b>Doors & Ironmongery</b>
+                        <table class="bullet-table">
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text">High-quality wooden or composite internal doors.</td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text">Premium hinges and handles.</td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-text">&nbsp;</td>
+                            </tr>
+                        </table>
+                    </li>
+
+                    <li><b>Fully Furnished Package</b>
+                        <table class="bullet-table">
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text">(When applicable)</td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text">Living Room: Sofa – Coffee Table – TV Unit – Curtains –
+                                    Accessories.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text">Master Bedroom: Bed – Mattress – Side Tables – Dressing Table –
+                                    Curtains – Wall Art.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text">Other Bedrooms: Full setup.</td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text">Dining: Table + Chairs.</td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text">Balcony: Outdoor seating.</td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text">Decorative Lighting: Pendants + LED Lines.</td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-text">&nbsp;</td>
+                            </tr>
+                        </table>
+                    </li>
+                </ol>
+                <h5>Important Note:</h5>
+                <p style="text-align: justify;">
+                    The developer may replace any material with an equivalent or higher-quality product without
+                    affecting
+                    the overall specifications.
+                </p>
+            </td>
+            <td class="separator"></td>
+            <td class="ar">
+                <ol start="6" class="spec-list">
+                    <li><b>الأجهزة الكهربائية</b>
+                        <table class="bullet-table">
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text-rtl">(في حال كانت الوحدة مفروشة بالكامل)</td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text-rtl">فرن – غطاء شفاط.</td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text-rtl">ثلاجة – غسالة ملابس – مايكروويف.</td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text-rtl">جميع الأجهزة بمعايير أوروبية أو ما يعادلها.</td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-text">&nbsp;</td>
+                            </tr>
+                        </table>
+                    </li>
+
+                    <li><b>تجهيزات السباكة</b>
+                        <table class="bullet-table">
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text-rtl">خلاطات عالية الجودة.</td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text-rtl">مراحيض وأحواض سيراميكية ممتازة.</td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text-rtl">إكسسوارات حمام متينة.</td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-text">&nbsp;</td>
+                            </tr>
+                        </table>
+                    </li>
+
+                    <li><b>الأبواب والحديديات</b>
+                        <table class="bullet-table">
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text-rtl">أبواب خشبية أو مركبة بجودة عالية.</td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text-rtl">مقابض ومفصلات عالية الجودة.</td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-text">&nbsp;</td>
+                            </tr>
+                        </table>
+                    </li>
+
+                    <li><b>الفرش الكامل</b>
+                        <table class="bullet-table">
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text-rtl">(عند توفره بالمشروع)</td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text-rtl">غرفة المعيشة: كنبة – طاولة وسط – طاولة تلفزيون – ستائر –
+                                    إكسسوارات.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text-rtl">غرفة النوم الرئيسية: سرير – فرشة فندقية – كومودينات – طاولة
+                                    تزيين – ستائر – لوحات.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text-rtl">غرف النوم الأخرى: تجهيز كامل.</td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text-rtl">السفرة: طاولة + كراسي.</td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text-rtl">الشرفة: جلسة خارجية.</td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-cell">•</td>
+                                <td class="bullet-text-rtl">الإضاءة الديكورية: Pendants + LED Lines.</td>
+                            </tr>
+                            <tr>
+                                <td class="bullet-text">&nbsp;</td>
+                            </tr>
+                        </table>
+                    </li>
+                </ol>
+                <h5>ملاحظة مهمة:</h5>
+                <p class="right-th rtl-text">
+                    يحق للمطور استبدال أي مادة بمنتج مكافئ أو أعلى جودة دون الإخلال بالمواصفات.
+                </p>
             </td>
         </tr>
     </table>
@@ -3791,8 +4244,8 @@
         DECLARATION OF ADHERENCE TO THE ASSOCIATION CONSTITUTION AND JOINTLY OWNED PROPERTY DECLARATION (RULES OF THE
         ASSOCIATION)
     </p>
-    <p class="right-th rtl-text" style="text-align: center;">
-        إعلان الالتزام بالنظام الأساسي الجمعية وإعلان الملكية المشتركة (قواعد الجمعية)
+    <p class="right-th rtl-text" style="text-align: center; font-weight: bold;">
+        إعلان الالتزام بالنظام الأساسي للجمعية وإعلان الملكية المشتركة (قواعد الجمعية)
     </p>
     <br/>
     <table class="contract-table">
