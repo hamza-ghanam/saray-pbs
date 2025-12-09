@@ -45,17 +45,42 @@ use Mindee\Error\MindeeException;
  *         "phone_number",
  *         "address"
  *     },
- *     @OA\Property(property="name",            type="string", example="John Smith"),
+ *
+ *     @OA\Property(
+ *         property="name",
+ *         type="object",
+ *         required={"en", "ar"},
+ *         @OA\Property(property="en", type="string", example="John Smith"),
+ *         @OA\Property(property="ar", type="string", example="جون سميث")
+ *     ),
+ *
  *     @OA\Property(property="passport_number", type="string", example="A1234567"),
  *     @OA\Property(property="birth_date",      type="string", format="date", example="1990-01-01"),
  *     @OA\Property(property="gender",          type="string", example="Male"),
- *     @OA\Property(property="nationality",     type="string", example="British"),
- *     @OA\Property(property="email",           type="string", format="email", example="john@example.com"),
- *     @OA\Property(property="phone_number",    type="string", example="+971501234567"),
- *     @OA\Property(property="address",         type="string", example="123 Palm Jumeirah, Dubai"),
- *     @OA\Property(property="issuance_date",      type="string", format="date", nullable=true, example="2025-01-01"),
- *     @OA\Property(property="expiry_date",     type="string", format="date", nullable=true, example="2025-12-31"),
- *     @OA\Property(property="upload_token",    type="string", nullable=true, example="3d1ad42a-49bb-4171-83af-f67dd83e97c3")
+ *
+ *     @OA\Property(
+ *         property="nationality",
+ *         type="object",
+ *         required={"en", "ar"},
+ *         @OA\Property(property="en", type="string", example="British"),
+ *         @OA\Property(property="ar", type="string", example="بريطاني")
+ *     ),
+ *
+ *     @OA\Property(property="email",        type="string", format="email", example="john@example.com"),
+ *     @OA\Property(property="phone_number", type="string", example="+971501234567"),
+ *
+ *     @OA\Property(
+ *         property="address",
+ *         type="object",
+ *         required={"en", "ar"},
+ *         @OA\Property(property="en", type="string", example="123 Palm Jumeirah, Dubai"),
+ *         @OA\Property(property="ar", type="string", example="123 نخلة جميرا، دبي")
+ *     ),
+ *
+ *     @OA\Property(property="issuance_date", type="string", format="date", nullable=true, example="2025-01-01"),
+ *     @OA\Property(property="expiry_date",   type="string", format="date", nullable=true, example="2025-12-31"),
+ *
+ *     @OA\Property(property="upload_token", type="string", nullable=true, example="3d1ad42a-49bb-4171-83af-f67dd83e97c3")
  * ),
  *
  * @OA\Schema(
@@ -619,16 +644,25 @@ class BookingController extends Controller
             'agency_com_agent' => 'nullable|string|max:255',
 
             'customers' => 'required|array|min:1',
-            'customers.*.name' => 'required|string|max:255',
+            'customers.*.name' => 'required|array',
+            'customers.*.name.en' => 'required|string|max:255',
+            'customers.*.name.ar' => 'required|string|max:255',
+
+            'customers.*.address' => 'required|array',
+            'customers.*.address.en' => 'required|string|max:255',
+            'customers.*.address.ar' => 'required|string|max:255',
+
+            'customers.*.nationality' => 'required|array',
+            'customers.*.nationality.en' => 'required|string|max:255',
+            'customers.*.nationality.ar' => 'required|string|max:255',
+
             'customers.*.passport_number' => 'required|string|max:50',
             'customers.*.birth_date' => 'required|date',
             'customers.*.gender' => 'required|string|max:10',
-            'customers.*.nationality' => 'required|string|max:255',
             'customers.*.issuance_date' => 'nullable|date',
             'customers.*.expiry_date' => 'nullable|date',
             'customers.*.email' => 'required|email|max:255',
             'customers.*.phone_number' => 'required|string|max:20',
-            'customers.*.address' => 'required|string|max:255',
             'customers.*.upload_token' => 'nullable|string',
         ], $messages);
 
@@ -699,13 +733,38 @@ class BookingController extends Controller
                         ->first();
 
                     if (!$upload) {
-                        throw new \Exception("Invalid or expired token for customer '{$customer['name']}'");
+                        // نحاول نجيب اسم العميل بالإنجليزي من الـ object
+                        $customerName = '';
+
+                        if (isset($customer['name'])) {
+                            if (is_array($customer['name'])) {
+                                $customerName = $customer['name']['en'] ?? $customer['name']['ar'] ?? '';
+                            } else {
+                                $customerName = $customer['name'];
+                            }
+                        }
+
+                        throw new \Exception("Invalid or expired token for customer '{$customerName}'");
                     }
 
                     $passportPath = $upload->path;
                 }
 
-                $booking->customerInfos()->create(array_merge($customer, [
+                // نختار فقط الحقول الخاصة بـ CustomerInfo
+                $customerData = Arr::only($customer, [
+                    'name',          // array: ['en' => ..., 'ar' => ...] => يروح للـ mutator
+                    'nationality',   // array
+                    'address',       // array
+                    'passport_number',
+                    'birth_date',
+                    'gender',
+                    'issuance_date',
+                    'expiry_date',
+                    'email',
+                    'phone_number',
+                ]);
+
+                $booking->customerInfos()->create(array_merge($customerData, [
                     'document_path' => $passportPath,
                 ]));
 
@@ -1576,29 +1635,47 @@ class BookingController extends Controller
      *                 "customers"={
      *                     {
      *                         "id"=1,
-     *                         "name"="Buyer One",
+     *                         "name"={
+     *                             "en"="Buyer One",
+     *                             "ar"="المشتري الأول"
+     *                         },
      *                         "passport_number"="X1234567",
      *                         "birth_date"="1990-01-01",
      *                         "gender"="Male",
-     *                         "nationality"="Syrian",
+     *                         "nationality"={
+     *                             "en"="Syrian",
+     *                             "ar"="سوري"
+     *                         },
      *                         "issuance_date"="2020-01-01",
      *                         "expiry_date"="2030-01-01",
      *                         "email"="buyer.one@example.com",
      *                         "phone_number"="+971501234567",
-     *                         "address"="Al Reem Island, Abu Dhabi, UAE"
+     *                         "address"={
+     *                             "en"="Al Reem Island, Abu Dhabi, UAE",
+     *                             "ar"="جزيرة الريم، أبوظبي، الإمارات"
+     *                         }
      *                     },
      *                     {
      *                         "id"=2,
-     *                         "name"="Buyer Two",
+     *                         "name"={
+     *                             "en"="Buyer Two",
+     *                             "ar"="المشتري الثاني"
+     *                         },
      *                         "passport_number"="Y9876543",
      *                         "birth_date"="1992-05-10",
      *                         "gender"="Female",
-     *                         "nationality"="Jordanian",
+     *                         "nationality"={
+     *                             "en"="Jordanian",
+     *                             "ar"="أردنية"
+     *                         },
      *                         "issuance_date"="2019-06-15",
      *                         "expiry_date"="2029-06-15",
      *                         "email"="buyer.two@example.com",
      *                         "phone_number"="+971509998888",
-     *                         "address"="Muroor Road, Abu Dhabi, UAE"
+     *                         "address"={
+     *                             "en"="Muroor Road, Abu Dhabi, UAE",
+     *                             "ar"="شارع المرور، أبوظبي، الإمارات"
+     *                         }
      *                     }
      *                 }
      *             }
@@ -1645,16 +1722,30 @@ class BookingController extends Controller
         $validator = Validator::make($request->all(), [
             'customers' => 'required|array|min:1',
             'customers.*.id' => 'required|integer|distinct|exists:customer_infos,id',
-            'customers.*.name' => 'sometimes|required|string|max:255',
+
+            // name: bilingual object
+            'customers.*.name' => 'sometimes|required|array',
+            'customers.*.name.en' => 'sometimes|required|string|max:255',
+            'customers.*.name.ar' => 'sometimes|required|string|max:255',
+
             'customers.*.passport_number' => 'sometimes|required|string|max:50',
             'customers.*.birth_date' => 'sometimes|required|date',
             'customers.*.gender' => 'sometimes|required|string|max:10',
-            'customers.*.nationality' => 'sometimes|required|string|max:255',
+
+            // nationality: bilingual object
+            'customers.*.nationality' => 'sometimes|required|array',
+            'customers.*.nationality.en' => 'sometimes|required|string|max:255',
+            'customers.*.nationality.ar' => 'sometimes|required|string|max:255',
+
             'customers.*.issuance_date' => 'sometimes|required|date|before_or_equal:today',
             'customers.*.expiry_date' => 'sometimes|required|date|after:customers.*.issuance_date',
             'customers.*.email' => 'sometimes|required|string|max:255',
             'customers.*.phone_number' => 'sometimes|required|string|max:20',
-            'customers.*.address' => 'sometimes|required|string|max:255',
+
+            // address: bilingual object
+            'customers.*.address' => 'sometimes|required|array',
+            'customers.*.address.en' => 'sometimes|required|string|max:255',
+            'customers.*.address.ar' => 'sometimes|required|string|max:255',
         ]);
 
         if ($validator->fails()) {

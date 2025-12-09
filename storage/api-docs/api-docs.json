@@ -1122,7 +1122,7 @@
                 ]
             }
         },
-        "/api/bookings/{id}/customers": {
+        "/bookings/{id}/customers": {
             "patch": {
                 "tags": [
                     "Bookings"
@@ -1165,29 +1165,47 @@
                                 "customers": [
                                     {
                                         "id": 1,
-                                        "name": "Buyer One",
+                                        "name": {
+                                            "en": "Buyer One",
+                                            "ar": "المشتري الأول"
+                                        },
                                         "passport_number": "X1234567",
                                         "birth_date": "1990-01-01",
                                         "gender": "Male",
-                                        "nationality": "Syrian",
+                                        "nationality": {
+                                            "en": "Syrian",
+                                            "ar": "سوري"
+                                        },
                                         "issuance_date": "2020-01-01",
                                         "expiry_date": "2030-01-01",
                                         "email": "buyer.one@example.com",
                                         "phone_number": "+971501234567",
-                                        "address": "Al Reem Island, Abu Dhabi, UAE"
+                                        "address": {
+                                            "en": "Al Reem Island, Abu Dhabi, UAE",
+                                            "ar": "جزيرة الريم، أبوظبي، الإمارات"
+                                        }
                                     },
                                     {
                                         "id": 2,
-                                        "name": "Buyer Two",
+                                        "name": {
+                                            "en": "Buyer Two",
+                                            "ar": "المشتري الثاني"
+                                        },
                                         "passport_number": "Y9876543",
                                         "birth_date": "1992-05-10",
                                         "gender": "Female",
-                                        "nationality": "Jordanian",
+                                        "nationality": {
+                                            "en": "Jordanian",
+                                            "ar": "أردنية"
+                                        },
                                         "issuance_date": "2019-06-15",
                                         "expiry_date": "2029-06-15",
                                         "email": "buyer.two@example.com",
                                         "phone_number": "+971509998888",
-                                        "address": "Muroor Road, Abu Dhabi, UAE"
+                                        "address": {
+                                            "en": "Muroor Road, Abu Dhabi, UAE",
+                                            "ar": "شارع المرور، أبوظبي، الإمارات"
+                                        }
                                     }
                                 ]
                             }
@@ -1220,7 +1238,7 @@
                 },
                 "security": [
                     {
-                        "bearerAuth": []
+                        "sanctum": []
                     }
                 ]
             }
@@ -7261,8 +7279,21 @@
                 ],
                 "properties": {
                     "name": {
-                        "type": "string",
-                        "example": "John Smith"
+                        "required": [
+                            "en",
+                            "ar"
+                        ],
+                        "properties": {
+                            "en": {
+                                "type": "string",
+                                "example": "John Smith"
+                            },
+                            "ar": {
+                                "type": "string",
+                                "example": "جون سميث"
+                            }
+                        },
+                        "type": "object"
                     },
                     "passport_number": {
                         "type": "string",
@@ -7278,8 +7309,21 @@
                         "example": "Male"
                     },
                     "nationality": {
-                        "type": "string",
-                        "example": "British"
+                        "required": [
+                            "en",
+                            "ar"
+                        ],
+                        "properties": {
+                            "en": {
+                                "type": "string",
+                                "example": "British"
+                            },
+                            "ar": {
+                                "type": "string",
+                                "example": "بريطاني"
+                            }
+                        },
+                        "type": "object"
                     },
                     "email": {
                         "type": "string",
@@ -7291,8 +7335,21 @@
                         "example": "+971501234567"
                     },
                     "address": {
-                        "type": "string",
-                        "example": "123 Palm Jumeirah, Dubai"
+                        "required": [
+                            "en",
+                            "ar"
+                        ],
+                        "properties": {
+                            "en": {
+                                "type": "string",
+                                "example": "123 Palm Jumeirah, Dubai"
+                            },
+                            "ar": {
+                                "type": "string",
+                                "example": "123 نخلة جميرا، دبي"
+                            }
+                        },
+                        "type": "object"
                     },
                     "issuance_date": {
                         "type": "string",
@@ -7400,7 +7457,7 @@
                         "nullable": true
                     },
                     "discount": {
-                        "description": "The applicable discount of the booking price, required ONLY IF the payment_plan_id is passed.",
+                        "description": "The applicable discount of the booking price, can be passed ONLY IF the payment_plan_id is passed.",
                         "type": "number",
                         "example": 10,
                         "nullable": true
