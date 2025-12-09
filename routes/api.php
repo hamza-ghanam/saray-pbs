@@ -21,6 +21,8 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\CustomerInfoController;
 use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\ResetPasswordController;
+use App\Http\Controllers\TranslateController;
+
 use Illuminate\Support\Facades\Storage;
 
 //Index
@@ -184,6 +186,14 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/device-token', [NotificationController::class, 'storeDeviceToken']);
     Route::post('/notify', [NotificationController::class, 'sendPushNotification']);
+});
+
+// Translate to Arabic
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/translate/arabic', [TranslateController::class, 'translateToArabic'])
+        ->name('translate.arabic');
+    Route::post('/translate/arabic/many', [TranslateController::class, 'translateManyToArabic'])
+        ->name('translate.arabic.many');
 });
 
 

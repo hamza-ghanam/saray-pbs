@@ -4502,6 +4502,119 @@
                 ]
             }
         },
+        "/api/translate/arabic": {
+            "post": {
+                "tags": [
+                    "Translation"
+                ],
+                "summary": "Translate a single English text into Arabic",
+                "description": "Takes a single English string and returns the Arabic translation.",
+                "operationId": "translateToArabic",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "text"
+                                ],
+                                "properties": {
+                                    "text": {
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "John Smith"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful translation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "translated": {
+                                            "type": "string",
+                                            "example": "جون سميث"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            }
+        },
+        "/api/translate/arabic/many": {
+            "post": {
+                "tags": [
+                    "Translation"
+                ],
+                "summary": "Translate multiple English texts into Arabic",
+                "description": "Accepts an array of English strings and returns their Arabic translations.",
+                "operationId": "translateManyToArabic",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "texts"
+                                ],
+                                "properties": {
+                                    "texts": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "maxLength": 255
+                                        },
+                                        "example": {
+                                            "name": "Hamza",
+                                            "nationality": "Syrian",
+                                            "address": "elsewhere"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful translation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "translations": {
+                                            "type": "object",
+                                            "example": {
+                                                "name": "حمزة",
+                                                "nationality": "سوري",
+                                                "address": "في مكان آخر"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            }
+        },
         "/units": {
             "get": {
                 "tags": [
@@ -8061,6 +8174,10 @@
         {
             "name": "Bookings/SPA",
             "description": "Bookings/SPA"
+        },
+        {
+            "name": "Translation",
+            "description": "Translation"
         },
         {
             "name": "UnitUpdates",
