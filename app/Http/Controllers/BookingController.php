@@ -8,6 +8,7 @@ use App\Models\CustomerInfo;
 use App\Models\PaymentPlan;
 use App\Models\Unit;
 use App\Models\User;
+use App\Models\UserDoc;
 use App\Services\PaymentPlanService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
@@ -666,34 +667,36 @@ class BookingController extends Controller
             'customers.*.upload_token' => 'nullable|string',
         ], $messages);
 
+        // 1. Retrieve unit & check status
+        $unit = Unit::findOrFail($validated['unit_id']);
+        $myHold = $unit->holdings()
+            ->where('created_by', $user->id)
+            ->where('status', 'Hold')
+            ->first();
+
+        if (!in_array($unit->status, [Unit::STATUS_AVAILABLE, Unit::STATUS_CANCELLED]) &&
+            !($myHold && $unit->status === Unit::STATUS_HOLD)) {
+            return response()->json([
+                'error' => "Unit status must be 'Available' or 'Cancelled' to book (unless you hold it)."
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        // 2. Payment plan
+        $paymentPlanId = Arr::get($validated, 'payment_plan_id');
+
+        $paymentPlan = $paymentPlanId
+            ? PaymentPlan::find($paymentPlanId)
+            : PaymentPlan::where('is_default', true)->first();
+
+        if (!$paymentPlan) {
+            return response()->json([
+                'error' => "Selected payment plan does not exist for this unit."
+            ], Response::HTTP_NOT_FOUND);
+        }
+
         DB::beginTransaction();
 
         try {
-            // 1. Retrieve unit & check status
-            $unit = Unit::findOrFail($validated['unit_id']);
-            $myHold = $unit->holdings()
-                ->where('created_by', $user->id)
-                ->where('status', 'Hold')
-                ->first();
-
-            if (!in_array($unit->status, [Unit::STATUS_AVAILABLE, Unit::STATUS_CANCELLED]) &&
-                !($myHold && $unit->status === Unit::STATUS_HOLD)) {
-                return response()->json([
-                    'error' => "Unit status must be 'Available' or 'Cancelled' to book (unless you hold it)."
-                ], Response::HTTP_UNPROCESSABLE_ENTITY);
-            }
-
-            // 2. Payment plan
-            $paymentPlanId = Arr::get($validated, 'payment_plan_id');
-
-            $paymentPlan = $paymentPlanId
-                ? PaymentPlan::find($paymentPlanId)
-                : PaymentPlan::where('is_default', true)->first();
-
-            if (!$paymentPlan) {
-                throw new \Exception('Selected payment plan does not exist for this unit.');
-            }
-
             // 3. Receipt upload
             $receiptPath = $request->hasFile('receipt')
                 ? $request->file('receipt')->store('receipts', 'local')
@@ -705,6 +708,42 @@ class BookingController extends Controller
             $bookingPrice = $discountPct > 0
                 ? round($basePrice * (1 - $discountPct / 100), 2)
                 : $basePrice;
+
+            $validatedCustomers = $validated['customers'];
+            $passportPaths = [];
+
+            foreach ($validatedCustomers as $index => $customer) {
+                $token = Arr::get($customer, 'upload_token');
+
+                if ($token) {
+                    $upload = DB::table('uploads')
+                        ->where('token', $customer['upload_token'])
+                        ->where('user_id', $user->id)
+                        ->first();
+
+                    if (!$upload) {
+                        // نحاول نجيب اسم العميل بالإنجليزي من الـ object
+                        $customerName = '';
+
+                        if (isset($customer['name'])) {
+                            if (is_array($customer['name'])) {
+                                $customerName = $customer['name']['en'] ?? $customer['name']['ar'] ?? '';
+                            } else {
+                                $customerName = $customer['name'];
+                            }
+                        }
+
+                        throw new \RuntimeException("Invalid or expired token for customer '{$customerName}'");
+                    }
+
+                    $passportPaths[$index] = $upload->path;
+
+                    DB::table('uploads')
+                        ->where('token', $customer['upload_token'])
+                        ->where('user_id', $user->id)
+                        ->delete();
+                }
+            }
 
             // 5. Create Booking (customer_info_id removed)
             $booking = Booking::create([
@@ -723,33 +762,7 @@ class BookingController extends Controller
             ]);
 
             // 6. Create CustomerInfo entries
-            foreach ($validated['customers'] as $customer) {
-                $passportPath = null;
-
-                if (!empty($customer['upload_token'])) {
-                    $upload = DB::table('uploads')
-                        ->where('token', $customer['upload_token'])
-                        ->where('user_id', $user->id)
-                        ->first();
-
-                    if (!$upload) {
-                        // نحاول نجيب اسم العميل بالإنجليزي من الـ object
-                        $customerName = '';
-
-                        if (isset($customer['name'])) {
-                            if (is_array($customer['name'])) {
-                                $customerName = $customer['name']['en'] ?? $customer['name']['ar'] ?? '';
-                            } else {
-                                $customerName = $customer['name'];
-                            }
-                        }
-
-                        throw new \Exception("Invalid or expired token for customer '{$customerName}'");
-                    }
-
-                    $passportPath = $upload->path;
-                }
-
+            foreach ($validatedCustomers as $index => $customer) {
                 // نختار فقط الحقول الخاصة بـ CustomerInfo
                 $customerData = Arr::only($customer, [
                     'name',          // array: ['en' => ..., 'ar' => ...] => يروح للـ mutator
@@ -764,15 +777,14 @@ class BookingController extends Controller
                     'phone_number',
                 ]);
 
-                $booking->customerInfos()->create(array_merge($customerData, [
-                    'document_path' => $passportPath,
-                ]));
+                $bookingCustomer = $booking->customerInfos()->create($customerData);
 
-                if (!empty($customer['upload_token'])) {
-                    DB::table('uploads')
-                        ->where('token', $customer['upload_token'])
-                        ->where('user_id', $user->id)
-                        ->delete();
+                if (isset($passportPaths[$index])) {
+                    $bookingCustomer->docs()->create([
+                        'user_id' => $bookingCustomer->id,
+                        'doc_type' => $passportPaths[$index],
+                        'file_path' => $customer->passportPath,
+                    ]);
                 }
             }
 
@@ -789,8 +801,6 @@ class BookingController extends Controller
                 $myHold->update(['status' => 'Processed']);
             }
 
-            DB::commit();
-
             if ($booking->saleSource) {
                 $booking->saleSource->type = 'Broker Agency';
             } else {
@@ -803,11 +813,18 @@ class BookingController extends Controller
                 ];
             }
 
+            DB::commit();
+
             $booking->load('customerInfos', 'installments', 'agent');
 
             return response()->json($booking, Response::HTTP_CREATED);
         } catch (\Exception $ex) {
             DB::rollBack();
+
+            Log::error("Failed to book unit {$validated['unit_id']} for user {$user->id}: {$ex->getMessage()}", [
+                'trace' => $ex->getTraceAsString(),
+            ]);
+
             return response()->json(
                 ['error' => $ex->getMessage()],
                 Response::HTTP_INTERNAL_SERVER_ERROR
@@ -816,13 +833,22 @@ class BookingController extends Controller
     }
 
     /**
-     * Upload or replace either a customer’s ID document **or** a payment receipt.
+     * Upload one or more documents for a booking.
+     *
+     * Supported uploads:
+     * - Customer passport
+     * - Customer Emirates ID
+     * - Booking payment receipt
+     *
+     * The customer_id is required ONLY when uploading customer-related documents
+     * (passport or emirates_id). It is NOT required for receipts.
      *
      * @OA\Post(
      *     path="/bookings/{id}/upload-document",
-     *     summary="Upload (or replace) an ID document for a specific customer or a payment receipt for the booking",
+     *     summary="Upload (or replace) passport, Emirates ID, and/or payment receipt",
      *     tags={"Bookings"},
      *     security={{"sanctum":{}}},
+     *
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -830,45 +856,76 @@ class BookingController extends Controller
      *         description="ID of the booking",
      *         @OA\Schema(type="integer", example=42)
      *     ),
+     *
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\MediaType(
      *             mediaType="multipart/form-data",
      *             @OA\Schema(
-     *                 description="Provide **either** `id_document` with `customer_id` **or** a `receipt`",
-     *                 oneOf={
-     *                     @OA\Schema(required={"id_document", "customer_id"}),
-     *                     @OA\Schema(required={"receipt"})
-     *                 },
+     *                 description="Upload one or more of: passport, emirates_id, receipt",
+     *                 type="object",
+     *
      *                 @OA\Property(
-     *                     property="id_document",
+     *                     property="passport",
      *                     type="string",
      *                     format="binary",
-     *                     description="Customer ID document (pdf, jpg, jpeg, png)"
+     *                     nullable=true,
+     *                     description="Passport file (pdf, jpg, jpeg, png)"
      *                 ),
+     *
      *                 @OA\Property(
-     *                     property="customer_id",
-     *                     type="integer",
-     *                     description="Required when uploading ID document; must belong to this booking",
-     *                     example=101
+     *                     property="emirates_id",
+     *                     type="string",
+     *                     format="binary",
+     *                     nullable=true,
+     *                     description="Emirates ID file (pdf, jpg, jpeg, png)"
      *                 ),
+     *
      *                 @OA\Property(
      *                     property="receipt",
      *                     type="string",
      *                     format="binary",
+     *                     nullable=true,
      *                     description="Payment receipt (pdf, jpg, jpeg, png)"
+     *                 ),
+     *
+     *                 @OA\Property(
+     *                     property="customer_id",
+     *                     type="integer",
+     *                     nullable=true,
+     *                     description="Required ONLY if uploading passport or emirates_id"
+     *                 ),
+     *
+     *                 @OA\Property(
+     *                     property="note",
+     *                     type="string",
+     *                     nullable=true,
+     *                     description="Optional notes or comments"
      *                 )
      *             )
      *         )
      *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Document uploaded successfully",
      *         @OA\JsonContent(ref="#/components/schemas/Booking")
      *     ),
-     *     @OA\Response(response=403, description="Forbidden"),
-     *     @OA\Response(response=404, description="Booking not found"),
-     *     @OA\Response(response=422, description="Validation error or missing file")
+     *
+     *     @OA\Response(
+     *         response=403,
+     *         description="Forbidden - user does not have permissions"
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=404,
+     *         description="Booking or customer not found"
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error or missing required data"
+     *     )
      * )
      */
     public function uploadDocument(Request $request, $id)
@@ -881,18 +938,23 @@ class BookingController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'id_document' => 'sometimes|file|mimes:pdf,jpg,jpeg,png|max:2048',
-            'receipt' => 'sometimes|file|mimes:pdf,jpg,jpeg,png|max:2048',
-            'customer_id' => 'required_if:id_document,!=,null|integer|exists:customer_infos,id',
+            'passport' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'emirates_id' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'receipt' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'customer_id' => 'required|integer|exists:customer_infos,id',
         ]);
 
         if ($validator->fails()) {
             return response()->json($validator->errors(), Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        if (!$request->hasFile('id_document') && !$request->hasFile('receipt')) {
+        if (
+            !$request->hasFile('passport') &&
+            !$request->hasFile('emirates_id') &&
+            !$request->hasFile('receipt')
+        ) {
             return response()->json([
-                'error' => 'You must upload either id_document or receipt, or both of them.'
+                'error' => 'You must upload at least one of: passport, emirates_id, or receipt.'
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
@@ -906,40 +968,73 @@ class BookingController extends Controller
             return response()->json(['message' => 'Forbidden'], Response::HTTP_FORBIDDEN);
         }
 
+        $customer = $booking->customerInfos()
+            ->where('id', $request->customer_id)
+            ->first();
+
+        if (!$customer) {
+            return response()->json(
+                ['message' => 'Customer not found in this booking'],
+                Response::HTTP_NOT_FOUND
+            );
+        }
+
         DB::beginTransaction();
         try {
             // 1. Handle customer document
-            if ($request->hasFile('id_document')) {
-                $customer = $booking->customerInfos()
-                    ->where('id', $request->customer_id)
-                    ->first();
-
-                if (!$customer) {
-                    return response()->json(['message' => 'Customer not found in this booking'], Response::HTTP_NOT_FOUND);
-                }
-
-                $path = $request->file('id_document')->store('passports', 'local');
-                $customer->update(['document_path' => $path]);
+            if ($request->hasFile('passport')) {
+                $passportPath = $request->file('id_document')->store('passports', 'local');
+                $customer->docs()->updateOrCreate(
+                    ['doc_type' => 'passport'],
+                    [
+                        'path' => $passportPath,
+                        'uploaded_by' => $user->id ?? null,
+                    ]
+                );
             }
 
-            // 2. Handle payment receipt
+            // 2. Emirates ID upload
+            if ($request->hasFile('emirates_id')) {
+                $emiratesIdPath = $request->file('emirates_id')->store('emirates_ids', 'local');
+
+                $customer->docs()->updateOrCreate(
+                    ['doc_type' => 'emirates_id'],
+                    [
+                        'path' => $emiratesIdPath,
+                        'uploaded_by' => $user->id ?? null,
+                    ]
+                );
+            }
+
+            // 3. Handle payment receipt
             if ($request->hasFile('receipt')) {
-                $path = $request->file('receipt')->store('receipts', 'local');
-                $booking->update(['receipt_path' => $path]);
+                $receiptPath = $request->file('receipt')->store('receipts', 'local');
+
+                $customer->docs()->updateOrCreate(
+                    ['doc_type' => 'receipt'],
+                    [
+                        'path' => $receiptPath,
+                        'uploaded_by' => $user->id ?? null,
+                    ]
+                );
+
+                $booking->update(['receipt_path' => $receiptPath]);
             }
 
             DB::commit();
 
             $booking->load('customerInfos');
 
-            foreach ($booking->customerInfos as $customer) {
-                $customer->document_url = $customer->document_path
-                    ? route('bookings.download_document', [
+            foreach ($booking->customerInfos as $cust) {
+                $cust->document_urls = [];
+
+                foreach ($cust->docs as $doc) {
+                    $cust->document_urls[$doc->doc_type] = route('bookings.download_document', [
                         'booking' => $booking->id,
-                        'type' => 'passport',
-                        'customer_id' => $customer->id
-                    ])
-                    : null;
+                        'type' => $doc->doc_type,
+                        'customer_id' => $cust->id,
+                    ]);
+                }
             }
 
             $booking->receipt_url = $booking->receipt_path
@@ -953,6 +1048,11 @@ class BookingController extends Controller
 
         } catch (\Exception $ex) {
             DB::rollBack();
+
+            Log::error("Failed to upload document(s) for booking {$id} by user {$user->id}: {$ex->getMessage()}", [
+                'trace' => $ex->getTraceAsString(),
+            ]);
+
             return response()->json(
                 ['error' => $ex->getMessage()],
                 Response::HTTP_INTERNAL_SERVER_ERROR
@@ -1291,9 +1391,7 @@ class BookingController extends Controller
 
             // Optional: Delete all customer document files
             foreach ($booking->customerInfos as $customer) {
-                if ($customer->document_path) {
-                    Storage::disk('local')->delete($customer->document_path);
-                }
+                $customer->docs()->delete();
             }
 
             // Delete related CustomerInfo records
@@ -1339,14 +1437,14 @@ class BookingController extends Controller
      *         required=true,
      *         @OA\Schema(
      *             type="string",
-     *             enum={"passport","receipt","rf","signed_rf","spa","signed_spa","dld"},
+     *             enum={"passport","emirates_id","receipt","rf","signed_rf","spa","signed_spa","dld"},
      *             example="receipt"
      *         )
      *     ),
      *     @OA\Parameter(
      *         name="customer_id",
      *         in="query",
-     *         description="Required only when type is passport — specifies which customer's ID document to download",
+     *         description="Required only when type is passport or Emirates ID — specifies which customer's ID document to download",
      *         required=false,
      *         @OA\Schema(type="integer", example=101)
      *     ),
@@ -1367,7 +1465,7 @@ class BookingController extends Controller
         $validated = Validator::make(
             ['type' => $type],
             ['type' => ['required', Rule::in([
-                'passport', 'receipt', 'rf', 'signed_rf', 'spa', 'signed_spa', 'dld'
+                'passport', 'emirates_id', 'receipt', 'rf', 'signed_rf', 'spa', 'signed_spa', 'dld'
             ])]]
         )->validate();
 
@@ -1402,14 +1500,50 @@ class BookingController extends Controller
                     ]);
                 }
 
-                $customer = $booking->customerInfos()->find($customerId);
+                $customer = $booking->customerInfos()
+                    ->with('docs')
+                    ->find($customerId);
 
-                if (!$customer || !$customer->document_path) {
+                if (!$customer) {
                     throw new \Exception('Customer passport document not found.');
                 }
 
-                return $customer->document_path;
+                $doc = $customer->docs->firstWhere('doc_type', 'passport');
+
+                if (!$doc || !$doc->path) {
+                    throw new \Exception('Customer passport document not found.');
+                }
+
+                return $doc->path;
             },
+
+            'emirates_id' => function () use ($request, $booking) {
+                $customerId = $request->query('customer_id');
+
+                if (!$customerId) {
+                    throw ValidationException::withMessages([
+                        'customer_id' => 'The customer_id query parameter is required when downloading an Emirates ID.'
+                    ]);
+                }
+
+                $customer = $booking->customerInfos()
+                    ->with('docs')
+                    ->find($customerId);
+
+                if (!$customer) {
+                    throw new \Exception('Customer not found in this booking.');
+                }
+
+                $doc = $customer->docs
+                    ->firstWhere('doc_type', 'emirates_id');
+
+                if (!$doc || !$doc->path) {
+                    throw new \Exception('Customer Emirates ID document not found.');
+                }
+
+                return $doc->path;
+            },
+
             'receipt' => fn() => $booking->receipt_path,
             'rf' => fn() => optional($booking->reservationForm)->file_path,
             'signed_rf' => fn() => optional($booking->signedReservationForm)->signed_file_path,

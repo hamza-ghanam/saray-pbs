@@ -753,8 +753,8 @@
                 "tags": [
                     "Bookings"
                 ],
-                "summary": "Upload (or replace) an ID document for a specific customer or a payment receipt for the booking",
-                "description": "Upload or replace either a customer’s ID document **or** a payment receipt.",
+                "summary": "Upload (or replace) passport, Emirates ID, and/or payment receipt",
+                "description": "Upload one or more documents for a booking.\n\nSupported uploads:\n- Customer passport\n- Customer Emirates ID\n- Booking payment receipt\n\nThe customer_id is required ONLY when uploading customer-related documents\n(passport or emirates_id). It is NOT required for receipts.",
                 "operationId": "48ea949a14be0a3b79a9093ddadb5767",
                 "parameters": [
                     {
@@ -773,38 +773,38 @@
                     "content": {
                         "multipart/form-data": {
                             "schema": {
-                                "description": "Provide **either** `id_document` with `customer_id` **or** a `receipt`",
+                                "description": "Upload one or more of: passport, emirates_id, receipt",
                                 "properties": {
-                                    "id_document": {
-                                        "description": "Customer ID document (pdf, jpg, jpeg, png)",
+                                    "passport": {
+                                        "description": "Passport file (pdf, jpg, jpeg, png)",
                                         "type": "string",
-                                        "format": "binary"
+                                        "format": "binary",
+                                        "nullable": true
                                     },
-                                    "customer_id": {
-                                        "description": "Required when uploading ID document; must belong to this booking",
-                                        "type": "integer",
-                                        "example": 101
+                                    "emirates_id": {
+                                        "description": "Emirates ID file (pdf, jpg, jpeg, png)",
+                                        "type": "string",
+                                        "format": "binary",
+                                        "nullable": true
                                     },
                                     "receipt": {
                                         "description": "Payment receipt (pdf, jpg, jpeg, png)",
                                         "type": "string",
-                                        "format": "binary"
+                                        "format": "binary",
+                                        "nullable": true
+                                    },
+                                    "customer_id": {
+                                        "description": "Required ONLY if uploading passport or emirates_id",
+                                        "type": "integer",
+                                        "nullable": true
+                                    },
+                                    "note": {
+                                        "description": "Optional notes or comments",
+                                        "type": "string",
+                                        "nullable": true
                                     }
                                 },
-                                "type": "object",
-                                "oneOf": [
-                                    {
-                                        "required": [
-                                            "id_document",
-                                            "customer_id"
-                                        ]
-                                    },
-                                    {
-                                        "required": [
-                                            "receipt"
-                                        ]
-                                    }
-                                ]
+                                "type": "object"
                             }
                         }
                     }
@@ -821,13 +821,13 @@
                         }
                     },
                     "403": {
-                        "description": "Forbidden"
+                        "description": "Forbidden - user does not have permissions"
                     },
                     "404": {
-                        "description": "Booking not found"
+                        "description": "Booking or customer not found"
                     },
                     "422": {
-                        "description": "Validation error or missing file"
+                        "description": "Validation error or missing required data"
                     }
                 },
                 "security": [
@@ -983,6 +983,7 @@
                             "type": "string",
                             "enum": [
                                 "passport",
+                                "emirates_id",
                                 "receipt",
                                 "rf",
                                 "signed_rf",
@@ -996,7 +997,7 @@
                     {
                         "name": "customer_id",
                         "in": "query",
-                        "description": "Required only when type is passport — specifies which customer's ID document to download",
+                        "description": "Required only when type is passport or Emirates ID — specifies which customer's ID document to download",
                         "required": false,
                         "schema": {
                             "type": "integer",
