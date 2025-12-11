@@ -44,7 +44,8 @@ use Mindee\Error\MindeeException;
  *         "nationality",
  *         "email",
  *         "phone_number",
- *         "address"
+ *         "address",
+ *         "emirates_id_number",
  *     },
  *
  *     @OA\Property(
@@ -81,7 +82,14 @@ use Mindee\Error\MindeeException;
  *     @OA\Property(property="issuance_date", type="string", format="date", nullable=true, example="2025-01-01"),
  *     @OA\Property(property="expiry_date",   type="string", format="date", nullable=true, example="2025-12-31"),
  *
- *     @OA\Property(property="upload_token", type="string", nullable=true, example="3d1ad42a-49bb-4171-83af-f67dd83e97c3")
+ *     @OA\Property(property="upload_token", type="string", nullable=true, example="3d1ad42a-49bb-4171-83af-f67dd83e97c3"),
+ *     @OA\Property(
+ *          property="emirates_id_number",
+ *          type="string",
+ *          nullable=true, 
+ *          description="Optional Emirates ID number. Must contain exactly 15 digits. Accepted formats: 784123456789012 or 784-1234-5678901-2.",
+ *          example="784-1234-5678901-2"
+ *     ),
  * ),
  *
  * @OA\Schema(

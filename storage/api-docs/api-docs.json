@@ -7391,7 +7391,8 @@
                     "nationality",
                     "email",
                     "phone_number",
-                    "address"
+                    "address",
+                    "emirates_id_number"
                 ],
                 "properties": {
                     "name": {
@@ -7482,6 +7483,12 @@
                     "upload_token": {
                         "type": "string",
                         "example": "3d1ad42a-49bb-4171-83af-f67dd83e97c3",
+                        "nullable": true
+                    },
+                    "emirates_id_number": {
+                        "description": "Optional Emirates ID number. Must contain exactly 15 digits. Accepted formats: 784123456789012 or 784-1234-5678901-2.",
+                        "type": "string",
+                        "example": "784-1234-5678901-2",
                         "nullable": true
                     }
                 },
