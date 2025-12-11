@@ -4,11 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Approval;
 use App\Models\Booking;
-use App\Models\CustomerInfo;
 use App\Models\PaymentPlan;
 use App\Models\Unit;
 use App\Models\User;
-use App\Models\UserDoc;
 use App\Services\PaymentPlanService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
@@ -21,15 +19,10 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 use Rakibdevs\MrzParser\MrzParser;
-use Mindee\Client;
-use Mindee\Product\Passport\PassportV1;
 use Illuminate\Support\Str;
-use App\Services\FCMService;
-
 use Mindee\ClientV2;
 use Mindee\Input\InferenceParameters;
 use Mindee\Input\PathInput;
-use Mindee\Error\MindeeException;
 
 /**
  * @OA\Schema(
@@ -96,7 +89,7 @@ use Mindee\Error\MindeeException;
  *         nullable=true,
  *         description="Optional Emirates ID file for this customer. Accepted file types: pdf, jpg, jpeg, png."
  *     ),
- * 
+ *
  * ),
  *
  * @OA\Schema(
@@ -817,9 +810,9 @@ class BookingController extends Controller
 
                     if (strlen($digits) === 15) {
                         $formatted = substr($digits, 0, 3) . '-' .
-                                    substr($digits, 3, 4) . '-' .
-                                    substr($digits, 7, 7) . '-' .
-                                    substr($digits, 14, 1);
+                            substr($digits, 3, 4) . '-' .
+                            substr($digits, 7, 7) . '-' .
+                            substr($digits, 14, 1);
 
                         $customer['emirates_id_number'] = $formatted;
                     }
@@ -844,7 +837,7 @@ class BookingController extends Controller
 
                 if (isset($passportPaths[$index])) {
                     $bookingCustomer->docs()->create([
-                        'user_id' => $bookingCustomer->id,
+                        'customer_info_id' => $bookingCustomer->id,
                         'doc_type' => 'passport',
                         'file_path' => $passportPaths[$index],
                     ]);
@@ -857,8 +850,8 @@ class BookingController extends Controller
                     $eidPath = $eidFile->store('emirates_ids', 'local');
 
                     $bookingCustomer->docs()->create([
-                        'user_id'   => $bookingCustomer->id,
-                        'doc_type'  => 'emirates_id',
+                        'customer_info_id' => $bookingCustomer->id,
+                        'doc_type' => 'emirates_id',
                         'file_path' => $eidPath,
                     ]);
                 }
@@ -1059,12 +1052,14 @@ class BookingController extends Controller
         try {
             // 1. Handle customer document
             if ($request->hasFile('passport')) {
-                $passportPath = $request->file('id_document')->store('passports', 'local');
+                $passportPath = $request->file('passport')->store('passports', 'local');
+
                 $customer->docs()->updateOrCreate(
-                    ['doc_type' => 'passport'],
                     [
-                        'path' => $passportPath,
-                        'uploaded_by' => $user->id ?? null,
+                        'doc_type' => 'passport',
+                    ],
+                    [
+                        'file_path' => $passportPath,
                     ]
                 );
             }
@@ -1074,10 +1069,11 @@ class BookingController extends Controller
                 $emiratesIdPath = $request->file('emirates_id')->store('emirates_ids', 'local');
 
                 $customer->docs()->updateOrCreate(
-                    ['doc_type' => 'emirates_id'],
                     [
-                        'path' => $emiratesIdPath,
-                        'uploaded_by' => $user->id ?? null,
+                        'doc_type' => 'emirates_id',
+                    ],
+                    [
+                        'file_path' => $emiratesIdPath,
                     ]
                 );
             }
@@ -1087,10 +1083,11 @@ class BookingController extends Controller
                 $receiptPath = $request->file('receipt')->store('receipts', 'local');
 
                 $customer->docs()->updateOrCreate(
-                    ['doc_type' => 'receipt'],
                     [
-                        'path' => $receiptPath,
-                        'uploaded_by' => $user->id ?? null,
+                        'doc_type' => 'receipt',
+                    ],
+                    [
+                        'file_path' => $receiptPath,
                     ]
                 );
 
@@ -1102,15 +1099,17 @@ class BookingController extends Controller
             $booking->load('customerInfos');
 
             foreach ($booking->customerInfos as $cust) {
-                $cust->document_urls = [];
+                $urls = [];
 
                 foreach ($cust->docs as $doc) {
-                    $cust->document_urls[$doc->doc_type] = route('bookings.download_document', [
+                    $urls[$doc->doc_type] = route('bookings.download_document', [
                         'booking' => $booking->id,
                         'type' => $doc->doc_type,
                         'customer_id' => $cust->id,
                     ]);
                 }
+
+                $cust->document_urls = $urls;
             }
 
             $booking->receipt_url = $booking->receipt_path
@@ -1586,11 +1585,11 @@ class BookingController extends Controller
 
                 $doc = $customer->docs->firstWhere('doc_type', 'passport');
 
-                if (!$doc || !$doc->path) {
+                if (!$doc || !$doc->file_path) {
                     throw new \Exception('Customer passport document not found.');
                 }
 
-                return $doc->path;
+                return $doc->file_path;
             },
 
             'emirates_id' => function () use ($request, $booking) {
@@ -1613,11 +1612,11 @@ class BookingController extends Controller
                 $doc = $customer->docs
                     ->firstWhere('doc_type', 'emirates_id');
 
-                if (!$doc || !$doc->path) {
+                if (!$doc || !$doc->file_path) {
                     throw new \Exception('Customer Emirates ID document not found.');
                 }
 
-                return $doc->path;
+                return $doc->file_path;
             },
 
             'receipt' => fn() => $booking->receipt_path,

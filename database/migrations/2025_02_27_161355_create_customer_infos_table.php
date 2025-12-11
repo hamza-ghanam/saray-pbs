@@ -27,7 +27,7 @@ return new class extends Migration
             $table->date('expiry_date');
             $table->string('email');
             $table->string('phone_number');
-            $table->string('emirates_id_number')->nullable();
+                $table->string('emirates_id_number', 20)->nullable();
             $table->foreignId('booking_id')->nullable()->constrained()->onDelete('cascade');
             $table->timestamps();
             $table->softDeletes();

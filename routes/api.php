@@ -91,7 +91,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/bookings/{id}', [BookingController::class, 'destroy']);
     Route::patch('/bookings/{id}/cancel', [BookingController::class, 'cancel']);
     Route::get('/bookings/{booking}/download-document/{type}', [BookingController::class, 'downloadDocument'])
-        ->where('type', 'passport|receipt|rf|signed_rf|spa|signed_spa|dld')
+        ->where('type', 'passport|emirates_id|receipt|rf|signed_rf|spa|signed_spa|dld')
         ->name('bookings.download_document');
     Route::get('/bookings/{id}', [BookingController::class, 'show']);
     Route::post('/bookings/{id}/approve', [BookingController::class, 'approveBooking']);
@@ -223,3 +223,30 @@ Route::get('/update-customers-ar', function () {
     return "Arabic fields updated successfully!";
 });
 
+Route::get('/import-old-passports', function () {
+    $path = storage_path('app/customer_infos(3).csv');
+
+    if (!file_exists($path)) {
+        return "File not found!";
+    }
+
+    $rows = array_map('str_getcsv', file($path));
+    $header = array_shift($rows); // remove header row
+
+    foreach ($rows as $row) {
+        // Convert CSV row to associative array
+        $data = array_combine($header, $row);
+
+        \App\Models\CustomerDoc::updateOrCreate(
+            [
+                'customer_info_id' => $data['id'],
+                'doc_type'         => 'passport',
+            ],
+            [
+                'file_path' => $data['document_path'],
+            ]
+        );
+    }
+
+    return "Old passports imported successfully!";
+});

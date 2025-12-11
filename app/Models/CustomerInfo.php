@@ -107,4 +107,9 @@ class CustomerInfo extends Model
     {
         return $this->belongsTo(Booking::class);
     }
+
+    public function docs()
+    {
+        return $this->hasMany(CustomerDoc::class, 'customer_info_id');
+    }
 }
