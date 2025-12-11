@@ -7391,8 +7391,7 @@
                     "nationality",
                     "email",
                     "phone_number",
-                    "address",
-                    "emirates_id_number"
+                    "address"
                 ],
                 "properties": {
                     "name": {
@@ -7489,6 +7488,12 @@
                         "description": "Optional Emirates ID number. Must contain exactly 15 digits. Accepted formats: 784123456789012 or 784-1234-5678901-2.",
                         "type": "string",
                         "example": "784-1234-5678901-2",
+                        "nullable": true
+                    },
+                    "emirates_id": {
+                        "description": "Optional Emirates ID file for this customer. Accepted file types: pdf, jpg, jpeg, png.",
+                        "type": "string",
+                        "format": "binary",
                         "nullable": true
                     }
                 },

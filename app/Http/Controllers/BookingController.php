@@ -45,7 +45,6 @@ use Mindee\Error\MindeeException;
  *         "email",
  *         "phone_number",
  *         "address",
- *         "emirates_id_number",
  *     },
  *
  *     @OA\Property(
@@ -86,10 +85,18 @@ use Mindee\Error\MindeeException;
  *     @OA\Property(
  *          property="emirates_id_number",
  *          type="string",
- *          nullable=true, 
+ *          nullable=true,
  *          description="Optional Emirates ID number. Must contain exactly 15 digits. Accepted formats: 784123456789012 or 784-1234-5678901-2.",
  *          example="784-1234-5678901-2"
  *     ),
+ *     @OA\Property(
+ *         property="emirates_id",
+ *         type="string",
+ *         format="binary",
+ *         nullable=true,
+ *         description="Optional Emirates ID file for this customer. Accepted file types: pdf, jpg, jpeg, png."
+ *     ),
+ * 
  * ),
  *
  * @OA\Schema(
