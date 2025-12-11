@@ -687,6 +687,7 @@
                                         "nullable": true
                                     },
                                     "receipt": {
+                                        "description": "Optional booking payment receipt (pdf, jpg, jpeg, png)",
                                         "type": "string",
                                         "format": "binary"
                                     },
@@ -716,6 +717,7 @@
                                         "example": "Customer requests early handover."
                                     },
                                     "customers": {
+                                        "description": "List of customers. Each customer may optionally include an Emirates ID file and/or Emirates ID number.",
                                         "type": "array",
                                         "items": {
                                             "$ref": "#/components/schemas/CustomerInfo"

@@ -567,15 +567,34 @@ class BookingController extends Controller
      *                 required={"unit_id", "customers"},
      *                 @OA\Property(property="unit_id", type="integer", example=12),
      *                 @OA\Property(property="payment_plan_id", type="integer", nullable=true, example=5),
-     *                 @OA\Property(property="receipt", type="string", format="binary"),
+     *                 @OA\Property(
+     *                     property="receipt",
+     *                     type="string",
+     *                     format="binary",
+     *                     description="Optional booking payment receipt (pdf, jpg, jpeg, png)"
+     *                 ),
      *                 @OA\Property(property="discount", type="number", format="float", example=5),
-     *                 @OA\Property(property="agent_id", type="integer", nullable=true, example=3, description="User ID of the agent (must not be Broker or Contractor)"),
+     *                 @OA\Property(
+     *                     property="agent_id",
+     *                     type="integer",
+     *                     nullable=true,
+     *                     example=3,
+     *                     description="User ID of the agent (must not be Broker or Contractor)"
+     *                 ),
      *                 @OA\Property(property="agency_com_agent", type="string", example="John Smith."),
-     *                 @OA\Property(property="sale_source_id", type="integer", nullable=true, example=7, description="User ID of the source of sale"),
+     *                 @OA\Property(
+     *                     property="sale_source_id",
+     *                     type="integer",
+     *                     nullable=true,
+     *                     example=7,
+     *                     description="User ID of the source of sale"
+     *                 ),
      *                 @OA\Property(property="notes", type="string", example="Customer requests early handover."),
+     *
      *                 @OA\Property(
      *                     property="customers",
      *                     type="array",
+     *                     description="List of customers. Each customer may optionally include an Emirates ID file and/or Emirates ID number.",
      *                     @OA\Items(ref="#/components/schemas/CustomerInfo")
      *                 )
      *             )
@@ -607,6 +626,7 @@ class BookingController extends Controller
             'agent_id.required_unless' => 'Agent field is required unless you are logged in as a sales user.',
             'agent_id.exists' => 'The selected agent does not exist in our records.',
             'agent_id.integer' => 'Agent must be a valid ID number.',
+            'customers.*.emirates_id_number.regex' => 'The Emirates ID number format must be: 123-4567-8901234-4',
         ];
 
         $validated = $request->validate([
@@ -664,7 +684,21 @@ class BookingController extends Controller
             'customers.*.expiry_date' => 'nullable|date',
             'customers.*.email' => 'required|email|max:255',
             'customers.*.phone_number' => 'required|string|max:20',
+
+            'customers.*.emirates_id_number' => [
+                'nullable',
+                'string',
+                function ($attribute, $value, $fail) {
+                    $digits = preg_replace('/\D/', '', $value);
+
+                    if (strlen($digits) !== 15) {
+                        $fail('The Emirates ID must contain 15 digits.');
+                    }
+                }
+            ],
+
             'customers.*.upload_token' => 'nullable|string',
+            'customers.*.emirates_id' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
         ], $messages);
 
         // 1. Retrieve unit & check status
@@ -763,6 +797,19 @@ class BookingController extends Controller
 
             // 6. Create CustomerInfo entries
             foreach ($validatedCustomers as $index => $customer) {
+                if (!empty($customer['emirates_id_number'])) {
+                    $digits = preg_replace('/\D/', '', $customer['emirates_id_number']);
+
+                    if (strlen($digits) === 15) {
+                        $formatted = substr($digits, 0, 3) . '-' .
+                                    substr($digits, 3, 4) . '-' .
+                                    substr($digits, 7, 7) . '-' .
+                                    substr($digits, 14, 1);
+
+                        $customer['emirates_id_number'] = $formatted;
+                    }
+                }
+
                 // نختار فقط الحقول الخاصة بـ CustomerInfo
                 $customerData = Arr::only($customer, [
                     'name',          // array: ['en' => ..., 'ar' => ...] => يروح للـ mutator
@@ -775,6 +822,7 @@ class BookingController extends Controller
                     'expiry_date',
                     'email',
                     'phone_number',
+                    'emirates_id_number',
                 ]);
 
                 $bookingCustomer = $booking->customerInfos()->create($customerData);
@@ -782,8 +830,21 @@ class BookingController extends Controller
                 if (isset($passportPaths[$index])) {
                     $bookingCustomer->docs()->create([
                         'user_id' => $bookingCustomer->id,
-                        'doc_type' => $passportPaths[$index],
-                        'file_path' => $customer->passportPath,
+                        'doc_type' => 'passport',
+                        'file_path' => $passportPaths[$index],
+                    ]);
+                }
+
+                $eidFile = $request->file("customers.$index.emirates_id");
+
+                // Emirates ID file upload.
+                if ($eidFile) {
+                    $eidPath = $eidFile->store('emirates_ids', 'local');
+
+                    $bookingCustomer->docs()->create([
+                        'user_id'   => $bookingCustomer->id,
+                        'doc_type'  => 'emirates_id',
+                        'file_path' => $eidPath,
                     ]);
                 }
             }

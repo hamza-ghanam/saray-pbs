@@ -26,7 +26,8 @@ class CustomerInfo extends Model
         'email',
         'phone_number',
         'document_path',
-        'booking_id'         // if exists
+        'booking_id',         // if exists
+        'emirates_id_number',
     ];
 
     protected $appends = [
