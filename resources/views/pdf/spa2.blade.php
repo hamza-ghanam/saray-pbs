@@ -88,9 +88,8 @@
 
         .left-th {
             text-align: left;
-            padding-left: 5px;
+            padding-left: 3px;
             white-space: pre-line;
-            font-weight: bold;
         }
 
         .right-th {
@@ -116,8 +115,8 @@
 
         .meaning {
             text-align: justify !important;
-            width: 37%;
-            padding: 10px;
+            width: 32%;
+            padding: 8px;
         }
 
         .term-col {
@@ -244,9 +243,9 @@
     </h4>
     <br/>
     @foreach($customerInfos as $customerInfo)
-        <h5 style="text-align: center">{{ $customerInfo->name }}</h5>
+        <h5 style="text-align: center">{{ $customerInfo->name_en }}</h5>
     @endforeach
-<hr/>
+    <hr/>
     <h5 style="text-align: center">Unit Number: {{ $unit->unit_no }}</h5>
 
     <div class="page-break"></div>
@@ -320,80 +319,73 @@
             <td class="centred-text" colspan="2">&nbsp;</td>
             <th class="rtl-text right-th" style="text-decoration: underline;">بالنسبة للأفراد:</th>
         </tr>
-        
         @foreach ($customerInfos as $index => $customerInfo)
+
             <!-- Name -->
-            <tr>
-                <th class="left-th" rowspan="2">3.{{ $index }}. Name:</th>
-                <td class="centred-text" colspan="2"> {{ $customerInfo->name_en }} </td>
-                <th class="rtl-text right-th">3.{{ $index }}. الاسم:</th>
-            </tr>
-            <tr>
-                <td class="rtl-text centred-text"> {{ $customerInfo->name_ar }} </td>
-            </tr>
+            <x-contract-bilingual-row
+                label-en="Name"
+                label-ar="الاسم"
+                :value-en="$customerInfo->name_en"
+                :value-ar="$customerInfo->name_ar"
+                :index="'3.' . ($index + 1) . '.'"
+            />
 
             <!-- Nationality -->
-            <tr>
-                <th class="left-th" rowspan="2">Nationality:</th>
-                <td style="centred-text" colspan="2"> {{ $customerInfo->nationality_en }} </td>
-                <th class="rtl-text right-th">{{ $index }}الجنسية:</th>
-            </tr>
-            <tr>
-                <td class="rtl-text centred-text"> {{ $customerInfo->nationality_ar }} </td>
-            </tr>
-            
+            <x-contract-bilingual-row
+                label-en="Nationality"
+                label-ar="الجنسية"
+                :value-en="$customerInfo->nationality_en"
+                :value-ar="$customerInfo->nationality_ar"
+            />
+
             <!-- Passport NO. -->
             <tr>
                 <th class="left-th">Passport NO.:</th>
-                <td class="cetred-text" colspan="2"> {{ $customerInfo->passport }} </td>
+                <td class="centred-text" colspan="2"> {{ $customerInfo->passport }} </td>
                 <th class="rtl-text right-th">رقم جواز السفر:</th>
             </tr>
 
             <!-- Emirates ID NO. -->
             <tr>
                 <th class="left-th">Emirates ID NO.:</th>
-                <td class="cetred-text" colspan="2"> {{ $customerInfo->emirates_id_number }} </td>
+                <td class="centred-text" colspan="2"> {{ $customerInfo->emirates_id_number }} </td>
                 <th class="rtl-text right-th">رقم الهوية الإماراتية:</th>
             </tr>
 
             <!-- Address -->
-            <tr>
-                <th class="left-th" rowspan="2">Address:</th>
-                <td style="centred-text" colspan="2"> {{ $customerInfo->address_en }} </td>
-                <th class="rtl-text right-th">{{ $index }}العنوان:</th>
-            </tr>
-            <tr>
-                <td class="rtl-text centred-text"> {{ $customerInfo->address_ar }} </td>
-            </tr>
+            <x-contract-bilingual-row
+                label-en="Address"
+                label-ar="العنوان"
+                :value-en="$customerInfo->address_en"
+                :value-ar="$customerInfo->address_ar"
+            />
 
             <!-- Physical Address -->
-            <tr>
-                <th class="left-th" rowspan="2">Physical Address:</th>
-                <td style="centred-text" colspan="2"> {{ $customerInfo->address_en }} </td>
-                <th class="rtl-text right-th">{{ $index }}العنوان الفعلي:</th>
-            </tr>
-            <tr>
-                <td class="rtl-text centred-text"> {{ $customerInfo->address_ar }} </td>
-            </tr>
+            <x-contract-bilingual-row
+                label-en="Physical Address"
+                label-ar="العنوان الفعلي"
+                :value-en="$customerInfo->address_en"
+                :value-ar="$customerInfo->address_ar"
+            />
 
             <!-- Phone NO. -->
             <tr>
                 <th class="left-th">Phone NO.:</th>
-                <td class="cetred-text" colspan="2"> {{ $customerInfo->phone_number }} </td>
+                <td class="centred-text" colspan="2"> {{ $customerInfo->phone_number }} </td>
                 <th class="rtl-text right-th">رقم الهاتف:</th>
             </tr>
 
             <!-- Fax NO. -->
             <tr>
                 <th class="left-th">Fax NO.:</th>
-                <td class="cetred-text" colspan="2"> {{ $customerInfo->fax }} </td>
+                <td class="centred-text" colspan="2"> {{ $customerInfo->fax }} </td>
                 <th class="rtl-text right-th">رقم الفاكس:</th>
             </tr>
 
             <!-- Email address. -->
             <tr>
                 <th class="left-th">Email address.:</th>
-                <td class="cetred-text" colspan="2"> {{ $customerInfo->email }} </td>
+                <td class="centred-text" colspan="2"> {{ $customerInfo->email }} </td>
                 <th class="rtl-text right-th">البريد الإلكتروني:</th>
             </tr>
         @endforeach
@@ -502,7 +494,7 @@
             <th class="left-th" style="width: 27%;">6. Payment Schedule</th>
             <td class="centred-text" colspan="2">
                 Set out in Schedule A<br/>
-                    منصوص عليه في الجدول أ
+                منصوص عليه في الجدول أ
             </td>
             <th class="rtl-text right-th" style="width: 27%;">6. جدول سداد الدفعات</th>
         </tr>
@@ -829,8 +821,8 @@
 
     <table class="contract-table">
         <tr>
-            <th class="left-th" style="width: 12%;">
-                Administration Fee
+            <th class="left-th" style="width: 17%;">
+                Administration Fees
             </th>
             <td class="meaning">
                 means the administration fee charged by the Seller pursuant to Clause 14.2(b) provided that such fee
@@ -841,7 +833,7 @@
                 يقصد بها الرسوم الإدارية التي يفرضها البائع طبقا للبند 13-2(ب)، بشرط ألا تتجاوز تلك الرسوم الحد الأقصى
                 المنصوص عليه في القانون المعمول به.
             </td>
-            <th class="rtl-text right-th" style="width: 12%;">
+            <th class="rtl-text right-th" style="width: 17%;">
                 الرسوم الإدارية
             </th>
         </tr>
@@ -1370,7 +1362,8 @@
                 them.
             </td>
             <td>&nbsp;</td>
-            <td class="rtl-text meaning spaced-text">يقصد بها كل من البائع والمشتري مجتمعين، ويقصد بلفظة &quot;الطرف&quot; أي منهما.
+            <td class="rtl-text meaning spaced-text">يقصد بها كل من البائع والمشتري مجتمعين، ويقصد بلفظة &quot;الطرف&quot;
+                أي منهما.
             </td>
             <th class="rtl-text right-th">الطرفان ( أو &quot;الطرفين&quot; (حسب السياق))</th>
         </tr>
@@ -1642,7 +1635,9 @@
             <th class="rtl-text right-th">قواعد الملكية المشتركة</th>
         </tr>
         <tr>
-            <th class="left-th">Strata Scheme Documentation</th>
+            <th class="left-th">
+                Strata Scheme Documentatio-n
+            </th>
             <td class="meaning">means the Jointly Owned Property Declaration, the Master Community Declaration
                 and Master Plan.
             </td>
@@ -3669,10 +3664,13 @@
             $signers = collect($customerInfos ?? [])->values();
         @endphp
         @foreach($signers as $customer)
-            @php $name = data_get($customer, 'name'); @endphp
+            @php
+                $nameEn = data_get($customer, 'name_en');
+                $nameAr = data_get($customer, 'name_ar');
+            @endphp
             <tr>
                 <td class="left-th" style="line-height: 2.5; width: 49%; padding: 7px; text-align: justify;">
-                    <h4>Name: {{ $name }}  </h4>
+                    <h4>Name: {{ $nameEn }}  </h4>
                     <h4>Signed: <img src="{{ public_path('images/black_line.svg') }}" width="250" height="2" alt="___"/>
                     </h4>
                     <h4>Date: &nbsp;&nbsp;<img src="{{ public_path('images/black_line.svg') }}" width="260" height="2"
@@ -3685,7 +3683,7 @@
                 </td>
                 <td class="separator" style="width: 2%;"></td>
                 <td class="rtl-text right-th" style="line-height: 2.5; width: 49%; padding: 7px; text-align: justify;">
-                    <h4>الاسم: {{ $name }}  </h4>
+                    <h4>الاسم: {{ $nameAr }}  </h4>
                     <h4>التوقيع: <img src="{{ public_path('images/black_line.svg') }}" width="250" height="2"
                                       alt="___"/>
                     </h4>
@@ -3704,7 +3702,7 @@
 
     <div class="page-break"></div>
 
-    <h3 class="left-th centred-text">Schedule A - Payment Schedule</h3>
+    <h3 class="centred-text">Schedule A - Payment Schedule</h3>
     <h3 class="rtl-text centred-text">الملحق (أ) - جدول سداد الدفعات</h3>
 
     <table class="contract-table">
@@ -3760,7 +3758,7 @@
 
     <br/>
 
-    <h3 class="left-th centred-text">Schedule B - UNIT PLAN</h3>
+    <h3 class="centred-text">Schedule B - UNIT PLAN</h3>
     <h3 class="rtl-text centred-text">الملحق (ب) - خطة الوحدة</h3>
 
 
@@ -3783,7 +3781,7 @@
 
     <div class="page-break"></div>
 
-    <h4 class="left-th centred-text">Finishing & Furnishing Specification</h4>
+    <h4 class="centred-text">Finishing & Furnishing Specification</h4>
     <h4 class="rtl-text centred-text">مواصفات التشطيب والتأثيث</h4>
 
     <table class="contract-table">
@@ -4225,10 +4223,10 @@
 
     <div class="page-break"></div>
 
-    <h3 class="left-th centred-text">Schedule C</h3>
+    <h3 class="centred-text">Schedule C</h3>
     <h3 class="rtl-text centred-text">الملحق هـ</h3>
 
-    <h4 class="left-th centred-text">
+    <h4 class="centred-text">
         DECLARATION OF ADHERENCE TO THE ASSOCIATION CONSTITUTION AND JOINTLY OWNED PROPERTY DECLARATION (RULES OF THE
         ASSOCIATION)
     </h4>
@@ -4237,7 +4235,7 @@
     </h4>
 
     <br/>
-    
+
     <table class="contract-table">
         <tr>
             <td class="en">
@@ -4311,10 +4309,13 @@
             $signers = collect($customerInfos ?? [])->values();
         @endphp
         @foreach($signers as $customer)
-            @php $name = data_get($customer, 'name'); @endphp
+            @php
+                $nameEn = data_get($customer, 'name_en');
+                $nameAr = data_get($customer, 'name_ar');
+            @endphp
             <tr>
                 <td class="en" style="line-height: 2.5;">
-                    <h4>Name: {{ $name }}  </h4>
+                    <h4>Name: {{ $nameEn }}  </h4>
                     <h4>Signed: <img src="{{ public_path('images/black_line.svg') }}" width="250" height="2" alt="___"/>
                     </h4>
                     <h4>Date: &nbsp;&nbsp;<img src="{{ public_path('images/black_line.svg') }}" width="260" height="2"
@@ -4327,7 +4328,7 @@
                 </td>
                 <td class="separator" style="width: 2%;"></td>
                 <td class="ar" style="line-height: 2.5;">
-                    <h4>الاسم: {{ $name }}  </h4>
+                    <h4>الاسم: {{ $nameAr }}  </h4>
                     <h4>التوقيع: <img src="{{ public_path('images/black_line.svg') }}" width="250" height="2"
                                       alt="___"/>
                     </h4>

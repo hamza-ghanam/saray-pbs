@@ -223,15 +223,15 @@
         </tr>
         <tr>
             <th class="left-th" style="width: 25%;">Purchaser Name</th>
-            <td class="" style="width: 25%; text-align: center">{{ $customerInfos[0]->name }}</td>
-            <td class="" style="width: 25%; text-align: center">{{ ($customerInfos[1] ?? null)?->name ?? '-' }}</td>
+            <td class="" style="width: 25%; text-align: center">{{ $customerInfos[0]->name_en }}</td>
+            <td class="" style="width: 25%; text-align: center">{{ ($customerInfos[1] ?? null)?->name_en ?? '-' }}</td>
             <th class="right-th" style="width: 25%;">اسم المشتري</th>
         </tr>
         <tr>
             <th class="left-th" style="width: 25%;">Nationality</th>
-            <td class="" style="width: 25%; text-align: center">{{ $customerInfos[0]->nationality }}</td>
+            <td class="" style="width: 25%; text-align: center">{{ $customerInfos[0]->nationality_en }}</td>
             <td class=""
-                style="width: 25%; text-align: center">{{ ($customerInfos[1] ?? null)?->nationality  ?? '-' }}</td>
+                style="width: 25%; text-align: center">{{ ($customerInfos[1] ?? null)?->nationality_en  ?? '-' }}</td>
             <th class="right-th" style="width: 25%;">الجنسية</th>
         </tr>
         <tr>
@@ -243,9 +243,9 @@
         </tr>
         <tr>
             <th class="left-th" style="width: 25%;">Emirates ID No.</th>
-            <td class="" style="width: 25%; text-align: center">{{ $customerInfos[0]->emid ?? '-' }}</td>
-            <td class="" style="width: 25%; text-align: center">{{ ($customerInfos[1] ?? null)?->emid  ?? '-' }}</td>
-            <th class="right-th" style="width: 25%;">رقم بطاقة الهوية الإماراتية</th>
+            <td class="" style="width: 25%; text-align: center">{{ $customerInfos[0]->emirates_id ?? '-' }}</td>
+            <td class="" style="width: 25%; text-align: center">{{ ($customerInfos[1] ?? null)?->emirates_id  ?? '-' }}</td>
+            <th class="right-th" style="width: 25%;">رقم الهوية الإماراتية</th>
         </tr>
         <tr>
             <th class="left-th" style="width: 25%;">P.O. Box/Postal Code</th>
@@ -255,9 +255,9 @@
         </tr>
         <tr>
             <th class="left-th" style="width: 25%;">Country</th>
-            <td class="" style="width: 25%; text-align: center">{{ $customerInfos[0]->nationality }}</td>
+            <td class="" style="width: 25%; text-align: center">{{ $customerInfos[0]->nationality_en }}</td>
             <td class=""
-                style="width: 25%; text-align: center">{{ ($customerInfos[1] ?? null)?->nationality ?? '-' }}</td>
+                style="width: 25%; text-align: center">{{ ($customerInfos[1] ?? null)?->nationality_en ?? '-' }}</td>
             <th class="right-th" style="width: 25%;">الدولة</th>
         </tr>
         <tr>
@@ -268,8 +268,8 @@
         </tr>
         <tr>
             <th class="left-th" style="width: 25%;">Address</th>
-            <td class="" style="width: 25%; text-align: center">{{ $customerInfos[0]->address }}</td>
-            <td class="" style="width: 25%; text-align: center">{{ ($customerInfos[1] ?? null)?->address ?? '-' }}</td>
+            <td class="" style="width: 25%; text-align: center">{{ $customerInfos[0]->address_en }}</td>
+            <td class="" style="width: 25%; text-align: center">{{ ($customerInfos[1] ?? null)?->address_en ?? '-' }}</td>
             <th class="right-th" style="width: 25%;">العنوان</th>
         </tr>
         <tr>
@@ -342,14 +342,14 @@
                 </tr>
                 <tr>
                     <th class="left-th" style="width:25%">Purchaser Name</th>
-                    <td style="width:25%; text-align:center">{{ $c1->name ?? '-' }}</td>
-                    <td style="width:25%; text-align:center">{{ $c2->name ?? '-' }}</td>
+                    <td style="width:25%; text-align:center">{{ $c1->name_en ?? '-' }}</td>
+                    <td style="width:25%; text-align:center">{{ $c2->name_en ?? '-' }}</td>
                     <th class="right-th" style="width:25%">اسم المشتري</th>
                 </tr>
                 <tr>
                     <th class="left-th">Nationality</th>
-                    <td style="text-align:center">{{ $c1?->nationality ?? '-' }}</td>
-                    <td style="text-align:center">{{ $c2?->nationality ?? '-' }}</td>
+                    <td style="text-align:center">{{ $c1?->nationality_en ?? '-' }}</td>
+                    <td style="text-align:center">{{ $c2?->nationality_en ?? '-' }}</td>
                     <th class="right-th">الجنسية</th>
                 </tr>
                 <tr>
@@ -360,9 +360,9 @@
                 </tr>
                 <tr>
                     <th class="left-th" style="width: 25%;">Emirates ID No.</th>
-                    <td class="" style="width: 25%; text-align: center">{{ $c1->emid ?? '-' }}</td>
-                    <td class="" style="width: 25%; text-align: center">{{ $c2->emid ?? '-' }}</td>
-                    <th class="right-th" style="width: 25%;">رقم بطاقة الهوية الإماراتية</th>
+                    <td class="" style="width: 25%; text-align: center">{{ $c1->emirates_id ?? '-' }}</td>
+                    <td class="" style="width: 25%; text-align: center">{{ $c2->emirates_id ?? '-' }}</td>
+                    <th class="right-th" style="width: 25%;">رقم الهوية الإماراتية</th>
                 </tr>
                 <tr>
                     <th class="left-th" style="width: 25%;">P.O. Box/Postal Code</th>
@@ -372,9 +372,9 @@
                 </tr>
                 <tr>
                     <th class="left-th" style="width: 25%;">Country</th>
-                    <td class="" style="width: 25%; text-align: center">{{ $c1->nationality ?? '-' }}</td>
+                    <td class="" style="width: 25%; text-align: center">{{ $c1->nationality_en ?? '-' }}</td>
                     <td class=""
-                        style="width: 25%; text-align: center">{{ $c2->nationality ?? '-' }}</td>
+                        style="width: 25%; text-align: center">{{ $c2->nationality_en ?? '-' }}</td>
                     <th class="right-th" style="width: 25%;">الدولة</th>
                 </tr>
                 <tr>
@@ -385,8 +385,8 @@
                 </tr>
                 <tr>
                     <th class="left-th" style="width: 25%;">Address</th>
-                    <td class="" style="width: 25%; text-align: center">{{ $c1->address ?? '-' }}</td>
-                    <td class="" style="width: 25%; text-align: center">{{ $c2->address ?? '-' }}</td>
+                    <td class="" style="width: 25%; text-align: center">{{ $c1->address_en ?? '-' }}</td>
+                    <td class="" style="width: 25%; text-align: center">{{ $c2->address_en ?? '-' }}</td>
                     <th class="right-th" style="width: 25%;">العنوان</th>
                 </tr>
                 <tr>
@@ -1196,7 +1196,7 @@
         @foreach($customerInfos as $customerInfo)
             <tr>
                 <td class="left-th" style="line-height: 2.5; width: 49%; padding: 7px; text-align: justify;">
-                    <h4>Name: {{ $customerInfo->name }} </h4>
+                    <h4>Name: {{ $customerInfo->name_en }} </h4>
                     <h4>Signed: <img src="{{ public_path('images/black_line.svg') }}" width="250" height="2" alt="___"/>
                     </h4>
                     <h4>Date: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="{{ public_path('images/black_line.svg') }}"
@@ -1204,7 +1204,7 @@
                 </td>
                 <td style="text-align: center;"></td>
                 <td class="rtl-text right-th" style="line-height: 2.5; width: 49%; padding: 7px; text-align: justify;">
-                    <h4>الاسم: {{ $customerInfo->name }}  </h4>
+                    <h4>الاسم: {{ $customerInfo->name_en }}  </h4>
                     <h4>التوقيع: <img src="{{ public_path('images/black_line.svg') }}" width="250" height="2" alt="___"/>
                     </h4>
                     <h4>التاريخ: &nbsp;&nbsp;<img src="{{ public_path('images/black_line.svg') }}" width="250" height="2"
