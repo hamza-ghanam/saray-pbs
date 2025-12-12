@@ -759,7 +759,7 @@ class BookingController extends Controller
 
                 if ($token) {
                     $upload = DB::table('uploads')
-                        ->where('token', $customer['upload_token'])
+                        ->where('token', $token)
                         ->where('user_id', $user->id)
                         ->first();
 

@@ -44,6 +44,10 @@
             direction: rtl;
         }
 
+        .centred-text {
+            text-align: center;
+        }
+
         table.contract-table, table.contract-table td, table.contract-table th {
             border: 1px solid #ddd; /* light gray, slim border */
             padding: 5px;
@@ -307,163 +311,147 @@
     </table>
     <table class="contract-table">
         <tr>
-            <th class="left-th" style="width: 27%;">3. Purchaser</th>
-            <td style="text-align: center;" colspan="2">&nbsp;</td>
-            <th class="rtl-text right-th" style="width: 27%;">3. المشتري</th>
-        </tr>
-        <tr>
-            <th class="left-th">Name(s):</th>
-            <td style="text-align: center;" colspan="2">
-                {{ $customerInfos[0]->name }}
-                @if($customerInfos->count() > 1)
-                    @foreach($customerInfos->slice(1) as $customerInfo)
-                        <br/>{{ $customerInfo->name }}
-                    @endforeach
-                @endif
-            </td>
-            <th class="rtl-text right-th">الاسم (الأسماء):</th>
+            <th class="left-th" style="width: 27%;">3. Purchasers</th>
+            <td class="centred-text" colspan="2">&nbsp;</td>
+            <th class="rtl-text right-th" style="width: 27%;">3. المشترون</th>
         </tr>
         <tr>
             <th class="left-th" style="text-decoration: underline;">For individuals:</th>
-            <td style="text-align: center;" colspan="2">&nbsp;</td>
+            <td class="centred-text" colspan="2">&nbsp;</td>
             <th class="rtl-text right-th" style="text-decoration: underline;">بالنسبة للأفراد:</th>
         </tr>
-        <tr>
-            <th class="left-th">Nationality:</th>
-            <td style="text-align: center;" colspan="2">
-                {{ $customerInfos[0]->nationality }}
-                @if($customerInfos->count() > 1)
-                    @foreach($customerInfos->slice(1) as $customerInfo)
-                        <br/>{{ $customerInfo->nationality }}
-                    @endforeach
-                @endif
-            </td>
-            <th class="rtl-text right-th">الجنسية:</th>
-        </tr>
-        <tr>
-            <th class="left-th">Passport NO.:</th>
-            <td style="text-align: center;" colspan="2">
-                {{ $customerInfos[0]->passport }}
-                @if($customerInfos->count() > 1)
-                    @foreach($customerInfos->slice(1) as $customerInfo)
-                        <br/>{{ $customerInfo->passport }}
-                    @endforeach
-                @endif
-            </td>
-            <th class="rtl-text right-th">رقم جواز السفر:</th>
-        </tr>
-        <tr>
-            <th class="left-th">Address:</th>
-            <td style="text-align: center;" colspan="2">
-                {{ $customerInfos[0]->address }}
-                @if($customerInfos->count() > 1)
-                    @foreach($customerInfos->slice(1) as $customerInfo)
-                        <br/>{{ $customerInfo->address }}
-                    @endforeach
-                @endif
-            </td>
-            <th class="rtl-text right-th">العنوان:</th>
-        </tr>
-        <tr>
-            <th class="left-th">Physical Address:</th>
-            <td style="text-align: center;" colspan="2">
-                {{ $customerInfos[0]->address }}
-                @if($customerInfos->count() > 1)
-                    @foreach($customerInfos->slice(1) as $customerInfo)
-                        <br/>{{ $customerInfo->address }}
-                    @endforeach
-                @endif
-            </td>
-            <th class="rtl-text right-th">العنوان الفعلي:</th>
-        </tr>
-        <tr>
-            <th class="left-th">Phone NO.:</th>
-            <td style="text-align: center;" colspan="2">
-                {{ $customerInfos[0]->phone_number }}
-                @if($customerInfos->count() > 1)
-                    @foreach($customerInfos->slice(1) as $customerInfo)
-                        <br/>{{ $customerInfo->phone_number }}
-                    @endforeach
-                @endif
-            </td>
-            <th class="rtl-text right-th">رقم الهاتف:</th>
-        </tr>
-        <tr>
-            <th class="left-th">Fax NO.:</th>
-            <td style="text-align: center;" colspan="2">
-                @if($customerInfos->count() > 1)
-                    @foreach($customerInfos->slice(1) as $customerInfo)
-                        <br/>
-                    @endforeach
-                @endif
-            </td>
-            <th class="rtl-text right-th">رقم الفاكس:</th>
-        </tr>
-        <tr>
-            <th class="left-th">Email address:</th>
-            <td style="text-align: center;" colspan="2">
-                {{ $customerInfos[0]->email }}
-                @if($customerInfos->count() > 1)
-                    @foreach($customerInfos->slice(1) as $customerInfo)
-                        <br/>{{ $customerInfo->email }}
-                    @endforeach
-                @endif
-            </td>
-            <th class="rtl-text right-th">البريد الإلكتروني:</th>
-        </tr>
+        
+        @foreach ($customerInfos as $index => $customerInfo)
+            <!-- Name -->
+            <tr>
+                <th class="left-th" rowspan="2">3.{{ $index }}. Name:</th>
+                <td class="centred-text" colspan="2"> {{ $customerInfo->name_en }} </td>
+                <th class="rtl-text right-th">3.{{ $index }}. الاسم:</th>
+            </tr>
+            <tr>
+                <td class="rtl-text centred-text"> {{ $customerInfo->name_ar }} </td>
+            </tr>
+
+            <!-- Nationality -->
+            <tr>
+                <th class="left-th" rowspan="2">Nationality:</th>
+                <td style="centred-text" colspan="2"> {{ $customerInfo->nationality_en }} </td>
+                <th class="rtl-text right-th">{{ $index }}الجنسية:</th>
+            </tr>
+            <tr>
+                <td class="rtl-text centred-text"> {{ $customerInfo->nationality_ar }} </td>
+            </tr>
+            
+            <!-- Passport NO. -->
+            <tr>
+                <th class="left-th">Passport NO.:</th>
+                <td class="cetred-text" colspan="2"> {{ $customerInfo->passport }} </td>
+                <th class="rtl-text right-th">رقم جواز السفر:</th>
+            </tr>
+
+            <!-- Emirates ID NO. -->
+            <tr>
+                <th class="left-th">Emirates ID NO.:</th>
+                <td class="cetred-text" colspan="2"> {{ $customerInfo->emirates_id_number }} </td>
+                <th class="rtl-text right-th">رقم الهوية الإماراتية:</th>
+            </tr>
+
+            <!-- Address -->
+            <tr>
+                <th class="left-th" rowspan="2">Address:</th>
+                <td style="centred-text" colspan="2"> {{ $customerInfo->address_en }} </td>
+                <th class="rtl-text right-th">{{ $index }}العنوان:</th>
+            </tr>
+            <tr>
+                <td class="rtl-text centred-text"> {{ $customerInfo->address_ar }} </td>
+            </tr>
+
+            <!-- Physical Address -->
+            <tr>
+                <th class="left-th" rowspan="2">Physical Address:</th>
+                <td style="centred-text" colspan="2"> {{ $customerInfo->address_en }} </td>
+                <th class="rtl-text right-th">{{ $index }}العنوان الفعلي:</th>
+            </tr>
+            <tr>
+                <td class="rtl-text centred-text"> {{ $customerInfo->address_ar }} </td>
+            </tr>
+
+            <!-- Phone NO. -->
+            <tr>
+                <th class="left-th">Phone NO.:</th>
+                <td class="cetred-text" colspan="2"> {{ $customerInfo->phone_number }} </td>
+                <th class="rtl-text right-th">رقم الهاتف:</th>
+            </tr>
+
+            <!-- Fax NO. -->
+            <tr>
+                <th class="left-th">Fax NO.:</th>
+                <td class="cetred-text" colspan="2"> {{ $customerInfo->fax }} </td>
+                <th class="rtl-text right-th">رقم الفاكس:</th>
+            </tr>
+
+            <!-- Email address. -->
+            <tr>
+                <th class="left-th">Email address.:</th>
+                <td class="cetred-text" colspan="2"> {{ $customerInfo->email }} </td>
+                <th class="rtl-text right-th">البريد الإلكتروني:</th>
+            </tr>
+        @endforeach
+
+        <!-- Corporations -->
         <tr>
             <th class="left-th" style="text-decoration: underline;">For corporations:</th>
-            <td style="text-align: center;" colspan="2">&nbsp;</td>
+            <td class="centred-text" colspan="2">&nbsp;</td>
             <th class="rtl-text right-th" style="text-decoration: underline;">بالنسبة للشركات:</th>
         </tr>
         <tr>
             <th class="left-th">Nationality:</th>
-            <td style="text-align: center;" colspan="2">&nbsp;</td>
+            <td class="centred-text" colspan="2">&nbsp;</td>
             <th class="rtl-text right-th">الجنسية:</th>
         </tr>
         <tr>
             <th class="left-th">License/Registration NO.:</th>
-            <td style="text-align: center;" colspan="2">&nbsp;</td>
+            <td class="centred-text" colspan="2">&nbsp;</td>
             <th class="rtl-text right-th">رقم الترخيص/رقم التسجيل:</th>
         </tr>
         <tr>
             <th class="left-th">Address:</th>
-            <td style="text-align: center;" colspan="2">&nbsp;</td>
+            <td class="centred-text" colspan="2">&nbsp;</td>
             <th class="rtl-text right-th">العنوان:</th>
         </tr>
         <tr>
             <th class="left-th">Physical Address:</th>
-            <td style="text-align: center;" colspan="2">&nbsp;</td>
+            <td class="centred-text" colspan="2">&nbsp;</td>
             <th class="rtl-text right-th">العنوان الفعلي:</th>
         </tr>
         <tr>
             <th class="left-th">P.O. Box:</th>
-            <td style="text-align: center;" colspan="2">&nbsp;</td>
+            <td class="centred-text" colspan="2">&nbsp;</td>
             <th class="rtl-text right-th">ص.ب.:</th>
         </tr>
         <tr>
             <th class="left-th">Phone NO.:</th>
-            <td style="text-align: center;" colspan="2">&nbsp;</td>
+            <td class="centred-text" colspan="2">&nbsp;</td>
             <th class="rtl-text right-th">رقم الهاتف:</th>
         </tr>
         <tr>
             <th class="left-th">Fax NO.:</th>
-            <td style="text-align: center;" colspan="2">&nbsp;</td>
+            <td class="centred-text" colspan="2">&nbsp;</td>
             <th class="rtl-text right-th">رقم الفاكس:</th>
         </tr>
         <tr>
             <th class="left-th">Email address:</th>
-            <td style="text-align: center;" colspan="2">&nbsp;</td>
+            <td class="centred-text" colspan="2">&nbsp;</td>
             <th class="rtl-text right-th">البريد الإلكتروني:</th>
         </tr>
         <tr>
             <th class="left-th">4. Property Details</th>
-            <td style="text-align: center;" colspan="2">&nbsp;</td>
+            <td class="centred-text" colspan="2">&nbsp;</td>
             <th class="rtl-text right-th">4. بيانات العقار:</th>
         </tr>
         <tr>
             <th class="left-th">Relevant Unit No</th>
-            <td style="text-align: center;" colspan="2">{{ $unit->unit_no }}</td>
+            <td class="centred-text" colspan="2">{{ $unit->unit_no }}</td>
             <th class="rtl-text right-th">رقم الوحدة المعنية</th>
         </tr>
         <tr>
@@ -473,7 +461,7 @@
                     (including any balconies & terraces).
                 </small>
             </th>
-            <td style="text-align: center;" colspan="2">{{ $unit->total_square }} square
+            <td class="centred-text" colspan="2">{{ $unit->total_square }} square
                 feet/{{ $unit->getTotalSquareMAttribute() }}square metres
             </td>
             <th class="rtl-text right-th">
@@ -486,7 +474,7 @@
                 Number of car parking spaces:
                 <small>to be allocated in accordance with Clause 4.6)</small>
             </th>
-            <td style="text-align: center;" colspan="2">{{ $unit->parking }}</td>
+            <td class="centred-text" colspan="2">{{ $unit->parking }}</td>
             <th class="rtl-text right-th">
                 عدد مواقف السيارات:
                 <small>(تخصص بموجب أحكام البند 4.6)</small>
@@ -494,7 +482,7 @@
         </tr>
         <tr>
             <th class="left-th">Project:</th>
-            <td style="text-align: center;" colspan="2">{{ $unit->building->name }} Residential Building, Project
+            <td class="centred-text" colspan="2">{{ $unit->building->name }} Residential Building, Project
                 No: {{ $unit->building->project_no }}<br/>
                 سراي برايم ريزدنس - بناية سكنية، مشروع رقم: {{ $unit->building->project_no }}
             </td>
@@ -504,7 +492,7 @@
             <th class="left-th">5. Purchase Price Incl. of VAT
                 (<img src="{{ public_path('images/aed_symbol.svg') }}" width="12" alt="AED"/>)
             </th>
-            <td style="text-align: center;" colspan="2">{{ $booking->price }}</td>
+            <td class="centred-text" colspan="2">{{ $booking->price }}</td>
             <th class="rtl-text right-th">5. سعر الشراء شـامل الضريبة (<img
                     src="{{ public_path('images/aed_symbol.svg') }}"
                     width="12" alt="AED"/>)
@@ -512,11 +500,9 @@
         </tr>
         <tr>
             <th class="left-th" style="width: 27%;">6. Payment Schedule</th>
-            <td style="text-align: center;" colspan="2">
-                Set out in Schedule (A)<br/>
-                <span style="direction: rtl; text-align: right !important;">
-                    منصوص عليه في الجدول (أ)
-                </span>
+            <td class="centred-text" colspan="2">
+                Set out in Schedule A<br/>
+                    منصوص عليه في الجدول أ
             </td>
             <th class="rtl-text right-th" style="width: 27%;">6. جدول سداد الدفعات</th>
         </tr>
@@ -524,14 +510,14 @@
             <th class="left-th">
                 7.1. Escrow Account
             </th>
-            <td style="text-align: center;" colspan="2"></td>
+            <td class="centred-text" colspan="2"></td>
             <th class="rtl-text right-th">7.1. حساب الضمان:</th>
         </tr>
         <tr>
             <td class="left-th">
                 Bank Name:
             </td>
-            <td style="text-align: center;" colspan="2">Emirates NBD Bank PJSC</td>
+            <td class="centred-text" colspan="2">Emirates NBD Bank PJSC</td>
             <th class="rtl-text right-th">
                 اسم البنك:
             </th>
@@ -540,7 +526,7 @@
             <td class="left-th">
                 Bank Branch Name and Address:
             </td>
-            <td style="text-align: center;" colspan="2">Main Brach</td>
+            <td class="centred-text" colspan="2">Main Brach</td>
             <th class="rtl-text right-th">
                 اسم وعنوان فرع البنك:
             </th>
@@ -549,7 +535,7 @@
             <td class="left-th">
                 Account Name:
             </td>
-            <td style="text-align: center;" colspan="2">SARAY PRIME RESIDENCE</td>
+            <td class="centred-text" colspan="2">SARAY PRIME RESIDENCE</td>
             <th class="rtl-text right-th">
                 اسم الحساب:
             </th>
@@ -558,7 +544,7 @@
             <td class="left-th">
                 Account Number:
             </td>
-            <td style="text-align: center;" colspan="2">0205931383803</td>
+            <td class="centred-text" colspan="2">0205931383803</td>
             <th class="rtl-text right-th">
                 رقم الحساب:
             </th>
@@ -567,7 +553,7 @@
             <td class="left-th">
                 Swift Code:
             </td>
-            <td style="text-align: center;" colspan="2">EBILAEADXXX</td>
+            <td class="centred-text" colspan="2">EBILAEADXXX</td>
             <th class="rtl-text right-th">
                 رمز SWIFT:
             </th>
@@ -576,7 +562,7 @@
             <td class="left-th">
                 IBAN No:
             </td>
-            <td style="text-align: center;" colspan="2">AE180260000205931383803</td>
+            <td class="centred-text" colspan="2">AE180260000205931383803</td>
             <th class="rtl-text right-th">
                 رقم IBAN:
             </th>
@@ -585,14 +571,14 @@
             <th class="left-th">
                 7.2. Corporate Account
             </th>
-            <td style="text-align: center;" colspan="2"></td>
+            <td class="centred-text" colspan="2"></td>
             <th class="rtl-text right-th">7.2. حساب الشركات:</th>
         </tr>
         <tr>
             <td class="left-th">
                 Bank Name:
             </td>
-            <td style="text-align: center;" colspan="2">Emirates NBD Bank PJSC</td>
+            <td class="centred-text" colspan="2">Emirates NBD Bank PJSC</td>
             <th class="rtl-text right-th">
                 اسم البنك:
             </th>
@@ -601,7 +587,7 @@
             <td class="left-th">
                 Bank Branch Name and Address:
             </td>
-            <td style="text-align: center;" colspan="2">Main Brach</td>
+            <td class="centred-text" colspan="2">Main Brach</td>
             <th class="rtl-text right-th">
                 اسم وعنوان فرع البنك:
             </th>
@@ -610,7 +596,7 @@
             <td class="left-th">
                 Account Name:
             </td>
-            <td style="text-align: center;" colspan="2">UNIQUE SARAY PROPERTIES LLC.</td>
+            <td class="centred-text" colspan="2">UNIQUE SARAY PROPERTIES LLC.</td>
             <th class="rtl-text right-th">
                 اسم الحساب:
             </th>
@@ -619,7 +605,7 @@
             <td class="left-th">
                 Account Number:
             </td>
-            <td style="text-align: center;" colspan="2">1015931383801</td>
+            <td class="centred-text" colspan="2">1015931383801</td>
             <th class="rtl-text right-th">
                 رقم الحساب:
             </th>
@@ -628,7 +614,7 @@
             <td class="left-th">
                 Currency:
             </td>
-            <td style="text-align: center;" colspan="2">
+            <td class="centred-text" colspan="2">
                 AED (<img src="{{ public_path('images/aed_symbol.svg') }}" width="12" alt="AED"/>)
             </td>
             <th class="rtl-text right-th">
@@ -639,7 +625,7 @@
             <td class="left-th">
                 Swift Code:
             </td>
-            <td style="text-align: center;" colspan="2">EBILAEAD</td>
+            <td class="centred-text" colspan="2">EBILAEAD</td>
             <th class="rtl-text right-th">
                 رمز SWIFT:
             </th>
@@ -648,7 +634,7 @@
             <td class="left-th">
                 IBAN No:
             </td>
-            <td style="text-align: center;" colspan="2">AE940260001015931383801</td>
+            <td class="centred-text" colspan="2">AE940260001015931383801</td>
             <th class="rtl-text right-th">
                 رقم IBAN:
             </th>
@@ -658,8 +644,9 @@
                 8. Anticipated Completion Date
                 <small>(subject to extension or earlier completion in accordance with Clause 4.1)</small>
             </th>
-            <td style="text-align: center;"
-                colspan="2">{{ \Carbon\Carbon::parse($unit->building->ecd)->format('d-M-Y') }}</td>
+            <td class="centred-text" colspan="2">
+                {{ \Carbon\Carbon::parse($unit->building->ecd)->format('d-M-Y') }}
+            </td>
             <th class="rtl-text right-th">8. التاريخ المتوقع للإنجاز
                 <small> (عرضة للتمديد أو الإنجاز المبكر بموجب أحكام البند 4-1)</small>
             </th>
@@ -3666,7 +3653,7 @@
                 <h4>Witness: <img src="{{ public_path('images/black_line.svg') }}" width="245" height="2" alt="___"/>
                 </h4>
             </td>
-            <td style="text-align: center;"></td>
+            <td class="centred-text"></td>
             <td class="rtl-text right-th" style="line-height: 2.5; width: 49%; padding: 7px; text-align: justify;">
                 <strong>الاسم: يونيك سراي للعقارت ش.ذ.م.م</strong> من قبل الممثل المفوض
                 <h4>التوقيع: <img src="{{ public_path('images/black_line.svg') }}" width="250" height="2" alt="___"/>
@@ -3717,8 +3704,8 @@
 
     <div class="page-break"></div>
 
-    <h3 class="left-th" style="text-align: center;">Schedule A - Payment Schedule</h3>
-    <h3 class="right-th rtl-text" style="text-align: center;">الملحق (أ) - جدول سداد الدفعات</h3>
+    <h3 class="left-th centred-text">Schedule A - Payment Schedule</h3>
+    <h3 class="rtl-text centred-text">الملحق (أ) - جدول سداد الدفعات</h3>
 
     <table class="contract-table">
         <colgroup>
@@ -3773,8 +3760,8 @@
 
     <br/>
 
-    <h3 class="left-th" style="text-align: center;">Schedule B - UNIT PLAN</h3>
-    <h3 class="right-th rtl-text" style="text-align: center;">الملحق (ب) - خطة الوحدة</h3>
+    <h3 class="left-th centred-text">Schedule B - UNIT PLAN</h3>
+    <h3 class="rtl-text centred-text">الملحق (ب) - خطة الوحدة</h3>
 
 
     <br/>
@@ -3796,7 +3783,8 @@
 
     <div class="page-break"></div>
 
-    <h4 class="left-th" style="text-align: center;">Finishing & Furnishing Specification</h4>
+    <h4 class="left-th centred-text">Finishing & Furnishing Specification</h4>
+    <h4 class="rtl-text centred-text">مواصفات التشطيب والتأثيث</h4>
 
     <table class="contract-table">
         <tr>
@@ -4237,17 +4225,19 @@
 
     <div class="page-break"></div>
 
-    <h3 class="left-th" style="text-align: center;">Schedule C</h3>
-    <h3 class="right-th rtl-text" style="text-align: center;">الملحق هـ</h3>
+    <h3 class="left-th centred-text">Schedule C</h3>
+    <h3 class="rtl-text centred-text">الملحق هـ</h3>
 
-    <p class="left-th" style="text-align: center;">
+    <h4 class="left-th centred-text">
         DECLARATION OF ADHERENCE TO THE ASSOCIATION CONSTITUTION AND JOINTLY OWNED PROPERTY DECLARATION (RULES OF THE
         ASSOCIATION)
-    </p>
-    <p class="right-th rtl-text" style="text-align: center; font-weight: bold;">
+    </h4>
+    <h4 class="rtl-text centred-text">
         إعلان الالتزام بالنظام الأساسي للجمعية وإعلان الملكية المشتركة (قواعد الجمعية)
-    </p>
+    </h4>
+
     <br/>
+    
     <table class="contract-table">
         <tr>
             <td class="en">
@@ -4305,7 +4295,7 @@
                 <h4>Witness: <img src="{{ public_path('images/black_line.svg') }}" width="245" height="2" alt="___"/>
                 </h4>
             </td>
-            <td style="text-align: center;"></td>
+            <td class="centred-text"></td>
             <td class="ar" style="line-height: 2.5;">
                 <strong>الاسم: يونيك سراي للعقارت ش.ذ.م.م</strong> من قبل الممثل المفوض
                 <h4>التوقيع: <img src="{{ public_path('images/black_line.svg') }}" width="250" height="2" alt="___"/>
