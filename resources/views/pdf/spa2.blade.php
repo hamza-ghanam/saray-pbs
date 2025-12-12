@@ -237,7 +237,7 @@
     </h2>
     <br/>
     <h4 class="" style="text-align:center;">
-        Wadi Al safa 5<br/>
+        Wadi Al Safa 5<br/>
         Dubai Land – Dubai<br/>
         Plot No. (6488586)
     </h4>
