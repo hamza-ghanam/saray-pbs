@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Mappers\BilingualFieldsMapper;
 use App\Models\Approval;
 use App\Models\Booking;
 use App\Models\PaymentPlan;
 use App\Models\Unit;
 use App\Models\User;
 use App\Services\PaymentPlanService;
+use App\Services\TranslationService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -32,6 +34,8 @@ use Mindee\Input\PathInput;
  *     required={
  *         "name",
  *         "passport_number",
+ *         "issuance_date",
+ *         "expiry_date",
  *         "birth_date",
  *         "gender",
  *         "nationality",
@@ -552,9 +556,23 @@ class BookingController extends Controller
             'updated_at' => now(),
         ]);
 
+        $translator = new TranslationService();
+
+        $translatedFields = $translator->translateMultiple([
+            'first_name_ar'        => $data['first_name'],
+            'last_name_ar'        => $data['last_name'],
+            'nationality_ar' => $data['nationality'],
+        ]);
+
+        $fieldsToMerge = ['first_name', 'last_name', 'nationality'];
+        $payload = BilingualFieldsMapper::map(
+            array_merge($data, $translatedFields),
+            $fieldsToMerge
+        );
+
         // Return the parsed passport data along with the file token
         return response()->json([
-            'passport' => $data,
+            'passport' => $payload,
             'upload_token' => $token,
         ], Response::HTTP_OK);
     }
@@ -688,8 +706,8 @@ class BookingController extends Controller
             'customers.*.passport_number' => 'required|string|max:50',
             'customers.*.birth_date' => 'required|date',
             'customers.*.gender' => 'required|string|max:10',
-            'customers.*.issuance_date' => 'nullable|date',
-            'customers.*.expiry_date' => 'nullable|date',
+            'customers.*.issuance_date' => 'required|date',
+            'customers.*.expiry_date' => 'required|date',
             'customers.*.email' => 'required|email|max:255',
             'customers.*.phone_number' => 'required|string|max:20',
 
@@ -1010,7 +1028,7 @@ class BookingController extends Controller
             'passport' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
             'emirates_id' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
             'receipt' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
-            'customer_id' => 'required|integer|exists:customer_infos,id',
+            'customer_id'  => 'nullable|integer|exists:customer_infos,id|required_with:passport,emirates_id',
         ]);
 
         if ($validator->fails()) {
@@ -1037,15 +1055,18 @@ class BookingController extends Controller
             return response()->json(['message' => 'Forbidden'], Response::HTTP_FORBIDDEN);
         }
 
-        $customer = $booking->customerInfos()
-            ->where('id', $request->customer_id)
-            ->first();
+        $customer = null;
+        if (($request->hasFile('emirates_id') || $request->hasFile('passport')) && $request->has('customer_id')) {
+            $customer = $booking->customerInfos()
+                ->where('id', $request->customer_id)
+                ->first();
 
-        if (!$customer) {
-            return response()->json(
-                ['message' => 'Customer not found in this booking'],
-                Response::HTTP_NOT_FOUND
-            );
+            if (!$customer) {
+                return response()->json(
+                    ['message' => 'Customer not found in this booking'],
+                    Response::HTTP_NOT_FOUND
+                );
+            }
         }
 
         DB::beginTransaction();
@@ -1081,16 +1102,6 @@ class BookingController extends Controller
             // 3. Handle payment receipt
             if ($request->hasFile('receipt')) {
                 $receiptPath = $request->file('receipt')->store('receipts', 'local');
-
-                $customer->docs()->updateOrCreate(
-                    [
-                        'doc_type' => 'receipt',
-                    ],
-                    [
-                        'file_path' => $receiptPath,
-                    ]
-                );
-
                 $booking->update(['receipt_path' => $receiptPath]);
             }
 

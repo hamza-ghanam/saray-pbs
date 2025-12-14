@@ -341,7 +341,7 @@
             <!-- Passport NO. -->
             <tr>
                 <th class="left-th">Passport NO.:</th>
-                <td class="centred-text" colspan="2"> {{ $customerInfo->passport }} </td>
+                <td class="centred-text" colspan="2"> {{ $customerInfo->passport_number }} </td>
                 <th class="rtl-text right-th">رقم جواز السفر:</th>
             </tr>
 

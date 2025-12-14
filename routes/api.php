@@ -190,10 +190,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // Translate to Arabic
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/translate/arabic', [TranslateController::class, 'translateToArabic'])
-        ->name('translate.arabic');
-    Route::post('/translate/arabic/many', [TranslateController::class, 'translateManyToArabic'])
-        ->name('translate.arabic.many');
+    Route::post('/translate/ar', [TranslateController::class, 'translateToArabic'])
+        ->name('translate.ar');
+    Route::post('/translate/ar/multiple', [TranslateController::class, 'translateMultipleToArabic'])
+        ->name('translate.ar.multiple');
 });
 
 
@@ -214,9 +214,9 @@ Route::get('/update-customers-ar', function () {
 
         // Update customer by ID
         \App\Models\CustomerInfo::where('id', $data['id'])->update([
-            'name_ar'        => $data['name_ar'] ?? '',
+            'name_ar' => $data['name_ar'] ?? '',
             'nationality_ar' => $data['nationality_ar'] ?? '',
-            'address_ar'     => $data['address_ar'] ?? '',
+            'address_ar' => $data['address_ar'] ?? '',
         ]);
     }
 
@@ -240,7 +240,7 @@ Route::get('/import-old-passports', function () {
         \App\Models\CustomerDoc::updateOrCreate(
             [
                 'customer_info_id' => $data['id'],
-                'doc_type'         => 'passport',
+                'doc_type' => 'passport',
             ],
             [
                 'file_path' => $data['document_path'],

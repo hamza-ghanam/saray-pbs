@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\TranslationService;
 use Illuminate\Http\Request;
-use Stichoza\GoogleTranslate\GoogleTranslate;
 
 class TranslateController extends Controller
 {
     /**
      * @OA\Post(
-     *     path="/api/translate/arabic",
+     *     path="/api/translate/ar",
      *     summary="Translate a single English text into Arabic",
      *     description="Takes a single English string and returns the Arabic translation.",
      *     operationId="translateToArabic",
@@ -37,29 +37,22 @@ class TranslateController extends Controller
      *     )
      * )
      */
-    public function translateToArabic(Request $request)
+    public function translateToArabic(Request $request, TranslationService $service)
     {
         $request->validate([
             'text' => 'required|string|max:255',
         ]);
 
-        $text = $request->input('text');
-
-        $tr = new GoogleTranslate('ar');
-        $tr->setSource('en');
-
-        $translated = $tr->translate($text);
-
         return response()->json([
-            'translated' => $translated,
+            'translated' => $service->translate($request->input('text')),
         ]);
     }
 
     /**
      * @OA\Post(
-     *     path="/api/translate/arabic/many",
+     *     path="/api/translate/ar/multiple",
      *     summary="Translate multiple English texts into Arabic",
-     *     description="Accepts an array of English strings and returns their Arabic translations.",
+     *     description="Accepts an object of key => English text and returns an object with the same keys translated to Arabic.",
      *     operationId="translateManyToArabic",
      *     tags={"Translation"},
      *
@@ -69,13 +62,16 @@ class TranslateController extends Controller
      *             required={"texts"},
      *             @OA\Property(
      *                 property="texts",
-     *                 type="array",
-     *                 @OA\Items(type="string", maxLength=255),
+     *                 type="object",
+     *                 @OA\AdditionalProperties(
+     *                      type="string",
+     *                      maxLength=255
+     *                 ),
      *                 example={
      *                     "name": "Hamza",
      *                     "nationality": "Syrian",
      *                     "address": "elsewhere"
-     *                }
+     *                 }
      *             )
      *         )
      *     ),
@@ -87,6 +83,9 @@ class TranslateController extends Controller
      *             @OA\Property(
      *                 property="translations",
      *                 type="object",
+     *                 @OA\AdditionalProperties(
+     *                      type="string",
+     *                 ),
      *                 example={
      *                     "name": "حمزة",
      *                     "nationality": "سوري",
@@ -102,27 +101,15 @@ class TranslateController extends Controller
      *     )
      * )
      */
-    public function translateManyToArabic(Request $request)
+    public function translateMultipleToArabic(Request $request, TranslationService $service)
     {
         $data = $request->validate([
             'texts'   => 'required|array|min:1',
             'texts.*' => 'required|string|max:255',
         ]);
 
-        $target = $request->input('target', 'ar');
-        $source = $request->input('source', 'en');
-
-        $tr = new GoogleTranslate($target);
-        $tr->setSource($source);
-
-        $translations = [];
-
-        foreach ($data['texts'] as $key => $text) {
-            $translations[$key] = $tr->translate($text);
-        }
-
         return response()->json([
-            'translations' => $translations,
+            'translations' => $service->translateMultiple($data['texts']),
         ]);
     }
 }

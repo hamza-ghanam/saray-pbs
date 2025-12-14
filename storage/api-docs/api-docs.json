@@ -4505,7 +4505,7 @@
                 ]
             }
         },
-        "/api/translate/arabic": {
+        "/api/translate/ar": {
             "post": {
                 "tags": [
                     "Translation"
@@ -4556,13 +4556,13 @@
                 }
             }
         },
-        "/api/translate/arabic/many": {
+        "/api/translate/ar/multiple": {
             "post": {
                 "tags": [
                     "Translation"
                 ],
                 "summary": "Translate multiple English texts into Arabic",
-                "description": "Accepts an array of English strings and returns their Arabic translations.",
+                "description": "Accepts an object of key => English text and returns an object with the same keys translated to Arabic.",
                 "operationId": "translateManyToArabic",
                 "requestBody": {
                     "required": true,
@@ -4574,15 +4574,15 @@
                                 ],
                                 "properties": {
                                     "texts": {
-                                        "type": "array",
-                                        "items": {
-                                            "type": "string",
-                                            "maxLength": 255
-                                        },
+                                        "type": "object",
                                         "example": {
                                             "name": "Hamza",
                                             "nationality": "Syrian",
                                             "address": "elsewhere"
+                                        },
+                                        "additionalProperties": {
+                                            "type": "string",
+                                            "maxLength": 255
                                         }
                                     }
                                 },
@@ -4604,6 +4604,9 @@
                                                 "name": "حمزة",
                                                 "nationality": "سوري",
                                                 "address": "في مكان آخر"
+                                            },
+                                            "additionalProperties": {
+                                                "type": "string"
                                             }
                                         }
                                     },
@@ -7386,6 +7389,8 @@
                 "required": [
                     "name",
                     "passport_number",
+                    "issuance_date",
+                    "expiry_date",
                     "birth_date",
                     "gender",
                     "nationality",
