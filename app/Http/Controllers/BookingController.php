@@ -265,6 +265,14 @@ use Mindee\Input\PathInput;
  *         example="Al Reem Island, Abu Dhabi, UAE"
  *     )
  * )
+ *
+ * @OA\Schema(
+ *     schema="BilingualString",
+ *     type="object",
+ *     required={"en","ar"},
+ *     @OA\Property(property="en", type="string", example="AFRODITI"),
+ *     @OA\Property(property="ar", type="string", example="أفروديتي")
+ * )
  */
 class BookingController extends Controller
 {
@@ -446,20 +454,38 @@ class BookingController extends Controller
      *     @OA\Response(
      *         response=200,
      *         description="Customer passport data extracted successfully",
-     *         @OA\JsonContent(
-     *             type="object",
-     *             @OA\Property(property="passport", type="object", description="Parsed passport data",
-     *                 @OA\Property(property="type",             type="string", example="Passport"),
-     *                 @OA\Property(property="card_no",          type="string", example="015194164"),
-     *                 @OA\Property(property="issuer",           type="string", example="Syrian Arab Republic"),
-     *                 @OA\Property(property="date_of_expiry",    type="string", example="2024-07-05"),
-     *                 @OA\Property(property="first_name",       type="string", example="JOHN"),
-     *                 @OA\Property(property="last_name",        type="string", example="SMITH"),
-     *                 @OA\Property(property="date_of_birth",    type="string", example="1988-10-09"),
-     *                 @OA\Property(property="gender",           type="string", example="Male"),
-     *                 @OA\Property(property="personal_number",  type="string", example="01092683756"),
-     *                 @OA\Property(property="nationality",      type="string", example="Syrian Arab Republic")
-     *             ),
+     *			@OA\JsonContent(
+     *                type="object",
+     *				@OA\Property(
+     *                    property="passport",
+     *                    type="object",
+     *                    description="Parsed passport data",
+     *
+     *					@OA\Property(property="type", type="string", example="Passport"),
+     *					@OA\Property(property="card_no", type="string", example="015194164"),
+     *					@OA\Property(property="issuer", type="string", example="Syrian Arab Republic"),
+     *					@OA\Property(property="date_of_expiry", type="string", example="2024-07-05"),
+     *
+     *					@OA\Property(
+     *                        property="first_name",
+     *                        ref="#/components/schemas/BilingualString"
+     *                    ),
+     *
+     *					@OA\Property(
+     *                        property="last_name",
+     *                        ref="#/components/schemas/BilingualString"
+     *                    ),
+     *
+     *					@OA\Property(property="date_of_birth", type="string", example="1988-10-09"),
+     *					@OA\Property(property="gender", type="string", example="Male"),
+     *					@OA\Property(property="personal_number", type="string", example="01092683756"),
+     *
+     *					@OA\Property(
+     *                        property="nationality",
+     *                        ref="#/components/schemas/BilingualString"
+     *                    )
+     *                )
+     *            ),
      *             @OA\Property(
      *                 property="upload_token",
      *                 type="string",
@@ -468,7 +494,7 @@ class BookingController extends Controller
      *             )
      *         )
      *     ),
-     *     @OA\Response(
+     * @OA\Response(
      *         response=422,
      *         description="Validation error",
      *         @OA\JsonContent(
@@ -479,14 +505,14 @@ class BookingController extends Controller
      *             )
      *         )
      *     ),
-     *     @OA\Response(
+     * @OA\Response(
      *         response=403,
      *         description="Forbidden",
      *         @OA\JsonContent(
      *             @OA\Property(property="message", type="string", example="Unauthorized")
      *         )
      *     ),
-     *     @OA\Response(
+     * @OA\Response(
      *         response=500,
      *         description="Internal Server Error",
      *         @OA\JsonContent(
@@ -559,8 +585,8 @@ class BookingController extends Controller
         $translator = new TranslationService();
 
         $translatedFields = $translator->translateMultiple([
-            'first_name_ar'        => $data['first_name'],
-            'last_name_ar'        => $data['last_name'],
+            'first_name_ar' => $data['first_name'],
+            'last_name_ar' => $data['last_name'],
             'nationality_ar' => $data['nationality'],
         ]);
 
@@ -1028,7 +1054,7 @@ class BookingController extends Controller
             'passport' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
             'emirates_id' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
             'receipt' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
-            'customer_id'  => 'nullable|integer|exists:customer_infos,id|required_with:passport,emirates_id',
+            'customer_id' => 'nullable|integer|exists:customer_infos,id|required_with:passport,emirates_id',
         ]);
 
         if ($validator->fails()) {

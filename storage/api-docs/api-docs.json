@@ -563,12 +563,10 @@
                                                     "example": "2024-07-05"
                                                 },
                                                 "first_name": {
-                                                    "type": "string",
-                                                    "example": "JOHN"
+                                                    "$ref": "#/components/schemas/BilingualString"
                                                 },
                                                 "last_name": {
-                                                    "type": "string",
-                                                    "example": "SMITH"
+                                                    "$ref": "#/components/schemas/BilingualString"
                                                 },
                                                 "date_of_birth": {
                                                     "type": "string",
@@ -583,67 +581,10 @@
                                                     "example": "01092683756"
                                                 },
                                                 "nationality": {
-                                                    "type": "string",
-                                                    "example": "Syrian Arab Republic"
+                                                    "$ref": "#/components/schemas/BilingualString"
                                                 }
                                             },
                                             "type": "object"
-                                        },
-                                        "upload_token": {
-                                            "description": "Token to reference the stored upload for later use",
-                                            "type": "string",
-                                            "example": "3d1ad42a-49bb-4171-83af-f67dd83e97c3"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Validation error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "document": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "string",
-                                                "example": "The document field is required."
-                                            }
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Unauthorized"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "error": {
-                                            "type": "string",
-                                            "example": "OCR extraction failed"
                                         }
                                     },
                                     "type": "object"
@@ -7700,6 +7641,23 @@
                 },
                 "type": "object"
             },
+            "BilingualString": {
+                "required": [
+                    "en",
+                    "ar"
+                ],
+                "properties": {
+                    "en": {
+                        "type": "string",
+                        "example": "AFRODITI"
+                    },
+                    "ar": {
+                        "type": "string",
+                        "example": "أفروديتي"
+                    }
+                },
+                "type": "object"
+            },
             "Building": {
                 "title": "Building",
                 "required": [
@@ -8126,6 +8084,59 @@
                     }
                 },
                 "type": "object"
+            }
+        },
+        "responses": {
+            "422": {
+                "description": "Validation error",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "properties": {
+                                "document": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string",
+                                        "example": "The document field is required."
+                                    }
+                                }
+                            },
+                            "type": "object"
+                        }
+                    }
+                }
+            },
+            "403": {
+                "description": "Forbidden",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "properties": {
+                                "message": {
+                                    "type": "string",
+                                    "example": "Unauthorized"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    }
+                }
+            },
+            "500": {
+                "description": "Internal Server Error",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "properties": {
+                                "error": {
+                                    "type": "string",
+                                    "example": "OCR extraction failed"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    }
+                }
             }
         },
         "securitySchemes": {
