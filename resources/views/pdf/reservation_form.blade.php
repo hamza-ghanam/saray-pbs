@@ -83,6 +83,10 @@
         .justified[lang="en"] {
             /* To be added in Production */
         }
+
+        .centred-text {
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -207,243 +211,123 @@
 
     <table class="header-table">
         <tr>
-            <th class="left-th">PURCHASER INFORMATION</th>
-            <th class="rtl-text right-th">معلومات المشتري</th>
+            <th class="left-th">PURCHASERS INFORMATION</th>
+            <th class="rtl-text right-th">معلومات المشترين</th>
         </tr>
     </table>
 
     <table class="info-table">
-        <tr>
-            <th class="left-th" style="width: 25%;">&nbsp;</th>
-            <th class="left-th" style="width: 25%; text-align: center;">Purchaser</th>
-            <th class="left-th" style="width: 25%; text-align: center;">
-                {{ ($customerInfos[1] ?? null) ? "Joint Purchaser (1)" : 'Joint Purchaser' }}
-            </th>
-            <th class="left-th" style="width: 25%;">&nbsp;</th>
-        </tr>
-        <tr>
-            <th class="left-th" style="width: 25%;">Purchaser Name</th>
-            <td class="" style="width: 25%; text-align: center">{{ $customerInfos[0]->name_en }}</td>
-            <td class="" style="width: 25%; text-align: center">{{ ($customerInfos[1] ?? null)?->name_en ?? '-' }}</td>
-            <th class="right-th" style="width: 25%;">اسم المشتري</th>
-        </tr>
-        <tr>
-            <th class="left-th" style="width: 25%;">Nationality</th>
-            <td class="" style="width: 25%; text-align: center">{{ $customerInfos[0]->nationality_en }}</td>
-            <td class=""
-                style="width: 25%; text-align: center">{{ ($customerInfos[1] ?? null)?->nationality_en  ?? '-' }}</td>
-            <th class="right-th" style="width: 25%;">الجنسية</th>
-        </tr>
-        <tr>
-            <th class="left-th" style="width: 25%;">Passport No.</th>
-            <td class="" style="width: 25%; text-align: center">{{ $customerInfos[0]->passport_number }}</td>
-            <td class=""
-                style="width: 25%; text-align: center">{{ ($customerInfos[1] ?? null)?->passport_number  ?? '-' }}</td>
-            <th class="right-th" style="width: 25%;">رقم جواز السفر</th>
-        </tr>
-        <tr>
-            <th class="left-th" style="width: 25%;">Emirates ID No.</th>
-            <td class="" style="width: 25%; text-align: center">{{ $customerInfos[0]->emirates_id ?? '-' }}</td>
-            <td class="" style="width: 25%; text-align: center">{{ ($customerInfos[1] ?? null)?->emirates_id  ?? '-' }}</td>
-            <th class="right-th" style="width: 25%;">رقم الهوية الإماراتية</th>
-        </tr>
-        <tr>
-            <th class="left-th" style="width: 25%;">P.O. Box/Postal Code</th>
-            <td class="" style="width: 25%; text-align: center">{{ $customerInfos[0]->po_box ?? '-' }}</td>
-            <td class="" style="width: 25%; text-align: center">{{ ($customerInfos[1] ?? null)?->po_box  ?? '-' }}</td>
-            <th class="right-th" style="width: 25%;">صندوق بريد/الرمز البريدي</th>
-        </tr>
-        <tr>
-            <th class="left-th" style="width: 25%;">Country</th>
-            <td class="" style="width: 25%; text-align: center">{{ $customerInfos[0]->nationality_en }}</td>
-            <td class=""
-                style="width: 25%; text-align: center">{{ ($customerInfos[1] ?? null)?->nationality_en ?? '-' }}</td>
-            <th class="right-th" style="width: 25%;">الدولة</th>
-        </tr>
-        <tr>
-            <th class="left-th" style="width: 25%;">City</th>
-            <td class="" style="width: 25%; text-align: center">{{ $customerInfos[0]->city ?? '-' }}</td>
-            <td class="" style="width: 25%; text-align: center">{{ ($customerInfos[1] ?? null)?->city  ?? '-' }}</td>
-            <th class="right-th" style="width: 25%;">المدينة</th>
-        </tr>
-        <tr>
-            <th class="left-th" style="width: 25%;">Address</th>
-            <td class="" style="width: 25%; text-align: center">{{ $customerInfos[0]->address_en }}</td>
-            <td class="" style="width: 25%; text-align: center">{{ ($customerInfos[1] ?? null)?->address_en ?? '-' }}</td>
-            <th class="right-th" style="width: 25%;">العنوان</th>
-        </tr>
-        <tr>
-            <th class="left-th" style="width: 25%;">Mobile No.</th>
-            <td class="" style="width: 25%; text-align: center">{{ $customerInfos[0]->phone_number }}</td>
-            <td class=""
-                style="width: 25%; text-align: center">{{ ($customerInfos[1] ?? null)?->phone_number ?? '-' }}</td>
-            <th class="right-th" style="width: 25%;">الهاتف المتحرك</th>
-        </tr>
-        <tr>
-            <th class="left-th" style="width: 25%;">Telephone No.</th>
-            <td class="" style="width: 25%; text-align: center">{{ $customerInfos[0]->phone_number }}</td>
-            <td class=""
-                style="width: 25%; text-align: center">{{ ($customerInfos[1] ?? null)?->phone_number ?? '-' }}</td>
-            <th class="right-th" style="width: 25%;">الهاتف</th>
-        </tr>
-        <tr>
-            <th class="left-th" style="width: 25%;">Email</th>
-            <td class="" style="width: 25%; text-align: center">{{ $customerInfos[0]->email }}</td>
-            <td class="" style="width: 25%; text-align: center">{{ ($customerInfos[1] ?? null)?->email ?? '-' }}</td>
-            <th class="right-th" style="width: 25%;">البريد الإلكتروني</th>
-        </tr>
-        <tr>
-            <th class="left-th justified" style="width: 25%; font-weight: bold; padding-right: 5px;" lang="en">Note: If
-                the Purchaser is an entity, complete details above for company representative and insert details below
-            </th>
-            <td class="" style="width: 25%; text-align: center">{{ $customerInfos[0]->legal_entity ?? '-' }}</td>
-            <td class="" style="width: 25%; text-align: center">{{ ($customerInfos[1] ?? null)?->legal_entity  ?? '-' }}</td>
-            <th class="right-th" style="width: 25%; font-weight: bold;  text-align: justify; direction: rtl;">ملاحظة:
-                إذا كان المشتري جهة اعتبارية، يرجى تعبئة التفاصيل أعلاه لممثل الشركة وإدخال التفاصيل أدناه.
-            </th>
-        </tr>
-        <tr>
-            <th class="left-th" style="width: 25%;">Entity Name</th>
-            <td class="" style="width: 25%; text-align: center">{{ $customerInfos[0]->entity_name ?? '-' }}</td>
-            <td class="" style="width: 25%; text-align: center">{{ ($customerInfos[1] ?? null)?->entity_name  ?? '-' }}</td>
-            <th class="right-th" style="width: 25%;">اسم الجهة</th>
-        </tr>
-        <tr>
-            <th class="left-th" style="width: 25%;">Registration No</th>
-            <td class="" style="width: 25%; text-align: center">{{ $customerInfos[0]->entity_reg_no ?? '-' }}</td>
-            <td class="" style="width: 25%; text-align: center">{{ ($customerInfos[1] ?? null)?->entity_reg_no  ?? '-' }}</td>
-            <th class="right-th" style="width: 25%;">رقم التسجيل</th>
-        </tr>
-        <tr>
-            <th class="left-th" style="width: 25%;">Registration Authority</th>
-            <td class="" style="width: 25%; text-align: center">{{ $customerInfos[0]->entity_reg_auth ?? '-' }}</td>
-            <td class="" style="width: 25%; text-align: center">{{ ($customerInfos[1] ?? null)?->entity_reg_auth  ?? '-' }}</td>
-            <th class="right-th" style="width: 25%;">جهة التسجيل</th>
-        </tr>
-    </table>
+        @foreach ($customerInfos as $index => $customerInfo)
+            <!-- Name -->
+            <x-contract-bilingual-row
+                label-en="Name"
+                label-ar="الاسم"
+                :value-en="$customerInfo->name_en"
+                :value-ar="$customerInfo->name_ar"
+                :index="($index + 1) . '.'"
+            />
 
-    <br/>
+            <!-- Nationality -->
+            <x-contract-bilingual-row
+                label-en="Nationality"
+                label-ar="الجنسية"
+                :value-en="$customerInfo->nationality_en"
+                :value-ar="$customerInfo->nationality_ar"
+            />
 
-    @if($customerInfos->count() > 2)
-        <table class="info-table">
-            @foreach ($customerInfos->skip(2)->values()->chunk(2) as $key => $pair)
-                @php
-                    // Works for Collections
-                    $c1 = $pair->get(0);
-                    $c2 = $pair->get(1); // may be null if odd count
-                    $base = 2 + $key * 2
-                @endphp
+            <!-- Passport NO. -->
+            <tr>
+                <th class="left-th">Passport NO.:</th>
+                <td class="centred-text" colspan="2"> {{ $customerInfo->passport_number }} </td>
+                <th class="rtl-text right-th">رقم جواز السفر:</th>
+            </tr>
 
+            <!-- Emirates ID NO. -->
+            <tr>
+                <th class="left-th">Emirates ID NO.:</th>
+                <td class="centred-text" colspan="2"> {{ $customerInfo->emirates_id_number }} </td>
+                <th class="rtl-text right-th">رقم الهوية الإماراتية:</th>
+            </tr>
+
+            <!-- Address -->
+            <x-contract-bilingual-row
+                label-en="Address"
+                label-ar="العنوان"
+                :value-en="$customerInfo->address_en"
+                :value-ar="$customerInfo->address_ar"
+            />
+
+            <!-- Physical Address -->
+            <x-contract-bilingual-row
+                label-en="Physical Address"
+                label-ar="العنوان الفعلي"
+                :value-en="$customerInfo->address_en"
+                :value-ar="$customerInfo->address_ar"
+            />
+
+            <!-- Phone NO. -->
+            <tr>
+                <th class="left-th">Phone NO.:</th>
+                <td class="centred-text" colspan="2"> {{ $customerInfo->phone_number }} </td>
+                <th class="rtl-text right-th">رقم الهاتف:</th>
+            </tr>
+
+            <!-- Fax NO. -->
+            <tr>
+                <th class="left-th">Fax NO.:</th>
+                <td class="centred-text" colspan="2"> {{ $customerInfo->fax }} </td>
+                <th class="rtl-text right-th">رقم الفاكس:</th>
+            </tr>
+
+            <!-- Email address. -->
+            <tr>
+                <th class="left-th">Email address.:</th>
+                <td class="centred-text" colspan="2"> {{ $customerInfo->email }} </td>
+                <th class="rtl-text right-th">البريد الإلكتروني:</th>
+            </tr>
+
+            @if (optional($customerInfos->first())->legal_entity !== null)
                 <tr>
-                    <th class="left-th" style="width:25%">&nbsp;</th>
-                    <th style="width:25%; text-align:center">Joint Purchaser ({{ $base }})</th>
-                    <th style="width:25%; text-align:center">{{ $c2 ? "Joint Purchaser ($base"+1 .")" : '-' }}</th>
-                    <th class="right-th" style="width:25%">&nbsp;</th>
-                </tr>
-                <tr>
-                    <th class="left-th" style="width:25%">Purchaser Name</th>
-                    <td style="width:25%; text-align:center">{{ $c1->name_en ?? '-' }}</td>
-                    <td style="width:25%; text-align:center">{{ $c2->name_en ?? '-' }}</td>
-                    <th class="right-th" style="width:25%">اسم المشتري</th>
-                </tr>
-                <tr>
-                    <th class="left-th">Nationality</th>
-                    <td style="text-align:center">{{ $c1?->nationality_en ?? '-' }}</td>
-                    <td style="text-align:center">{{ $c2?->nationality_en ?? '-' }}</td>
-                    <th class="right-th">الجنسية</th>
-                </tr>
-                <tr>
-                    <th class="left-th">Passport No.</th>
-                    <td style="text-align:center">{{ $c1->passport_number ?? '-' }}</td>
-                    <td style="text-align:center">{{ $c2->passport_number ?? '-' }}</td>
-                    <th class="right-th">رقم جواز السفر</th>
-                </tr>
-                <tr>
-                    <th class="left-th" style="width: 25%;">Emirates ID No.</th>
-                    <td class="" style="width: 25%; text-align: center">{{ $c1->emirates_id ?? '-' }}</td>
-                    <td class="" style="width: 25%; text-align: center">{{ $c2->emirates_id ?? '-' }}</td>
-                    <th class="right-th" style="width: 25%;">رقم الهوية الإماراتية</th>
-                </tr>
-                <tr>
-                    <th class="left-th" style="width: 25%;">P.O. Box/Postal Code</th>
-                    <td class="" style="width: 25%; text-align: center">{{ $c1->po_box ?? '-' }}</td>
-                    <td class="" style="width: 25%; text-align: center">{{ $c2->po_box ?? '-' }}</td>
-                    <th class="right-th" style="width: 25%;">صندوق بريد/الرمز البريدي</th>
-                </tr>
-                <tr>
-                    <th class="left-th" style="width: 25%;">Country</th>
-                    <td class="" style="width: 25%; text-align: center">{{ $c1->nationality_en ?? '-' }}</td>
-                    <td class=""
-                        style="width: 25%; text-align: center">{{ $c2->nationality_en ?? '-' }}</td>
-                    <th class="right-th" style="width: 25%;">الدولة</th>
-                </tr>
-                <tr>
-                    <th class="left-th" style="width: 25%;">City</th>
-                    <td class="" style="width: 25%; text-align: center">{{ $c1->city ?? '-' }}</td>
-                    <td class="" style="width: 25%; text-align: center">{{ $c2->city ?? '-' }}</td>
-                    <th class="right-th" style="width: 25%;">المدينة</th>
-                </tr>
-                <tr>
-                    <th class="left-th" style="width: 25%;">Address</th>
-                    <td class="" style="width: 25%; text-align: center">{{ $c1->address_en ?? '-' }}</td>
-                    <td class="" style="width: 25%; text-align: center">{{ $c2->address_en ?? '-' }}</td>
-                    <th class="right-th" style="width: 25%;">العنوان</th>
-                </tr>
-                <tr>
-                    <th class="left-th" style="width: 25%;">Mobile No.</th>
-                    <td class="" style="width: 25%; text-align: center">{{ $c1->phone_number ?? '-' }}</td>
-                    <td class=""
-                        style="width: 25%; text-align: center">{{ $c2->phone_number ?? '-' }}</td>
-                    <th class="right-th" style="width: 25%;">الهاتف المتحرك</th>
-                </tr>
-                <tr>
-                    <th class="left-th" style="width: 25%;">Telephone No.</th>
-                    <td class="" style="width: 25%; text-align: center">{{ $c1->phone_number ?? '-' }}</td>
-                    <td class=""
-                        style="width: 25%; text-align: center">{{ $c2->phone_number ?? '-' }}</td>
-                    <th class="right-th" style="width: 25%;">الهاتف</th>
-                </tr>
-                <tr>
-                    <th class="left-th" style="width: 25%;">Email</th>
-                    <td class="" style="width: 25%; text-align: center">{{ $c1->email ?? '-' }}</td>
-                    <td class="" style="width: 25%; text-align: center">{{ $c2->email ?? '-' }}</td>
-                    <th class="right-th" style="width: 25%;">البريد الإلكتروني</th>
-                </tr>
-                <tr>
-                    <th class="left-th justified" style="width: 25%; font-weight: bold; padding-right: 5px;" lang="en">
+                    <th colspan="2" class="left-th" style="font-size: 12px;">
                         Note: If
-                        the Purchaser is an entity, complete details above for company representative and insert details
-                        below
+                        the Purchaser is an entity, complete details above for company representative and insert details below.
                     </th>
-                    <td class="" style="width: 25%; text-align: center">{{ $c1->legal_entity ?? '-' }}</td>
-                    <td class="" style="width: 25%; text-align: center">{{ $c2->legal_entity ?? '-' }}</td>
-                    <th class="right-th" style="width: 25%; font-weight: bold;  text-align: justify; direction: rtl;">
+                    <th colspan="2" class="rtl-text right-th" dir="ltr" style="font-size: 13px;">
                         ملاحظة:
                         إذا كان المشتري جهة اعتبارية، يرجى تعبئة التفاصيل أعلاه لممثل الشركة وإدخال التفاصيل أدناه.
                     </th>
                 </tr>
-                <tr>
-                    <th class="left-th" style="width: 25%;">Entity Name</th>
-                    <td class="" style="width: 25%; text-align: center">{{ $c1->entity_name ?? '-' }}</td>
-                    <td class="" style="width: 25%; text-align: center">{{ $c2->entity_name ?? '-' }}</td>
-                    <th class="right-th" style="width: 25%;">اسم الجهة</th>
-                </tr>
-                <tr>
-                    <th class="left-th" style="width: 25%;">Registration No</th>
-                    <td class="" style="width: 25%; text-align: center">{{ $c1->entity_reg_no ?? '-' }}</td>
-                    <td class="" style="width: 25%; text-align: center">{{ $c2->entity_reg_no ?? '-' }}</td>
-                    <th class="right-th" style="width: 25%;">رقم التسجيل</th>
-                </tr>
-                <tr>
-                    <th class="left-th" style="width: 25%;">Registration Authority</th>
-                    <td class="" style="width: 25%; text-align: center">{{ $c1->entity_reg_auth ?? '-' }}</td>
-                    <td class="" style="width: 25%; text-align: center">{{ $c2->entity_reg_auth ?? '-' }}</td>
-                    <th class="right-th" style="width: 25%;">جهة التسجيل</th>
-                </tr>
-            @endforeach
-        </table>
-    @endif
 
+                <x-contract-bilingual-row
+                    label-en="Entity Name"
+                    label-ar="اسم الجهة"
+                    :value-en="$customerInfo->entity_name"
+                    :value-ar="$customerInfo->entity_name"
+                />
+
+                <x-contract-bilingual-row
+                    label-en="Registration No."
+                    label-ar="رقم التسجيل"
+                    :value-en="$customerInfo->entity_reg_no"
+                    :value-ar="$customerInfo->entity_reg_no"
+                />
+
+                <x-contract-bilingual-row
+                    label-en="Registration Authority"
+                    label-ar="جهة التسجيل"
+                    :value-en="$customerInfo->entity_reg_auth"
+                    :value-ar="$customerInfo->entity_reg_auth"
+                />
+
+            @endif
+        @endforeach
+
+
+
+
+    </table>
+
+    <br/>
     <table class="header-table">
         <tr>
             <th class="left-th">AGENCY INFORMATION (if any)</th>
@@ -1204,7 +1088,7 @@
                 </td>
                 <td style="text-align: center;"></td>
                 <td class="rtl-text right-th" style="line-height: 2.5; width: 49%; padding: 7px; text-align: justify;">
-                    <h4>الاسم: {{ $customerInfo->name_en }}  </h4>
+                    <h4>الاسم: {{ $customerInfo->name_ar }}  </h4>
                     <h4>التوقيع: <img src="{{ public_path('images/black_line.svg') }}" width="250" height="2" alt="___"/>
                     </h4>
                     <h4>التاريخ: &nbsp;&nbsp;<img src="{{ public_path('images/black_line.svg') }}" width="250" height="2"
