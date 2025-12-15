@@ -37,9 +37,9 @@ class CustomerInfo extends Model
     ];
 
     protected $casts = [
-        'birth_date' => 'date',
-        'issuance_date' => 'date',
-        'expiry_date' => 'date',
+        'birth_date'    => 'date:Y-m-d',
+        'issuance_date' => 'date:Y-m-d',
+        'expiry_date'   => 'date:Y-m-d',
     ];
 
     protected $hidden = [
