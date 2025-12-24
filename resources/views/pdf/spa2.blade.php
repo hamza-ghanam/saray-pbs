@@ -20,9 +20,9 @@
         }
 
         @page :first {
-            margin: 150px 45px 150px 45px;  /* نفس الهوامش لو حابب */
-            header: html_MyHeader;          /* خلي الهيدر موجود عادي */
-            footer: html_FirstFooter;                 /* بدون تذييل في الصفحة الأولى */
+            margin: 150px 45px 150px 45px; 
+            header: html_MyHeader;
+            footer: html_FirstFooter;
         }
 
         /* 2) Base body styles */
@@ -144,19 +144,18 @@
         }
 
         .bullet-cell {
-            width: 12px; /* عرض بسيط للرصاصة */
+            width: 12px; 
             white-space: nowrap;
         }
 
         .bullet-text {
-            padding-left: 5px; /* مسافة بسيطة بعد الرصاصة */
-            text-align: justify; /* أو right للـ RTL */
+            padding-left: 5px; 
+            text-align: justify; 
         }
 
-        /* لو عندك عربي */
         .bullet-text-rtl {
             direction: rtl;
-            text-align: justify; /* أو right لو حابب */
+            text-align: justify;
             padding-right: 5px;
         }
 
@@ -251,7 +250,7 @@
     <div class="page-break"></div>
 
 
-    <table class="contract-table">
+    <table class="contract-table">valueEn
         <tr>
             <th class="en">
                 Saray Primmum Residence Tower – Residential Building <br/>
@@ -274,6 +273,11 @@
     </table>
 
     <table class="contract-table">
+        <x-contract-clause-row
+                valueEn="Name",
+                valueAr="الاسم"
+        />
+
         <tr>
             <td class="en">
                 <b>1. Effective Date:</b>

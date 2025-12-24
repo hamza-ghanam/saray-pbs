@@ -9,7 +9,6 @@
 <tr>
     <th class="left-th" rowspan="2">{{ $index }} {{ $labelEn }}:</th>
 
-    {{-- مهم: colspan=2 حتى ما يترك عمود فاضي --}}
     <td class="centred-text" colspan="2">
         <span dir="ltr">{{ $valueEn }}</span>
     </td>
