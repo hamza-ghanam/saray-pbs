@@ -4682,17 +4682,17 @@
                                                     "internal_square": {
                                                         "type": "number",
                                                         "format": "float",
-                                                        "example": 102.04
+                                                        "example": 102.0400000000000062527760746888816356658935546875
                                                     },
                                                     "external_square": {
                                                         "type": "number",
                                                         "format": "float",
-                                                        "example": 38.15
+                                                        "example": 38.14999999999999857891452847979962825775146484375
                                                     },
                                                     "total_square": {
                                                         "type": "number",
                                                         "format": "float",
-                                                        "example": 140.19
+                                                        "example": 140.18999999999999772626324556767940521240234375
                                                     },
                                                     "furnished": {
                                                         "type": "boolean",
@@ -4705,7 +4705,7 @@
                                                     "price": {
                                                         "type": "number",
                                                         "format": "float",
-                                                        "example": 1621554.74
+                                                        "example": 1621554.73999999999068677425384521484375
                                                     },
                                                     "status": {
                                                         "type": "string",
@@ -7792,17 +7792,17 @@
                     "internal_square_m": {
                         "type": "number",
                         "format": "float",
-                        "example": 1295.83
+                        "example": 1295.829999999999927240423858165740966796875
                     },
                     "external_square_m": {
                         "type": "number",
                         "format": "float",
-                        "example": 169.57
+                        "example": 169.56999999999999317878973670303821563720703125
                     },
                     "total_square_m": {
                         "type": "number",
                         "format": "float",
-                        "example": 1465.4
+                        "example": 1465.40000000000009094947017729282379150390625
                     },
                     "furnished": {
                         "type": "boolean",

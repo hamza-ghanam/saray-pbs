@@ -254,7 +254,7 @@
     <table class="contract-table">
         <tr>
             <th class="en">
-                Saray Primmum Residence Tower – Residential Building <br/>
+                Saray Prime Residence Tower – Residential Building <br/>
                 Residential Unit Sale and Purchase Agreement <br>
                 Dubai Wadi Al Safa 5 – Dubai Land - Dubai
             </th>
