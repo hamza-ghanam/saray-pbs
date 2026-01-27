@@ -37,4 +37,24 @@ class ReservationForm extends Model
             'ref_id'
         );
     }
+
+    public function getOriginalPdfPath(): ?string
+    {
+        return $this->file_path;
+    }
+
+    public function getSignedPdfPath(): ?string
+    {
+        return $this->signed_file_path;
+    }
+
+    public function getDownloadFileName(string $variant = 'latest'): string
+    {
+        $base = 'RF_' . $this->booking_id;
+        return match ($variant) {
+            'original' => $base . '_ORIGINAL.pdf',
+            'signed'   => $base . '_SIGNED.pdf',
+            default    => $base . '.pdf',
+        };
+    }
 }

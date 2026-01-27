@@ -8,6 +8,8 @@ use App\Models\Booking;
 use App\Models\ReservationForm;
 use App\Models\Unit;
 use App\Services\PaymentPlanService;
+use App\Services\DocumentSignatureService;
+use App\Enums\DocumentType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -171,10 +173,15 @@ class ReservationFormController extends Controller
 
             DB::commit();
 
+
+
             // Send it by email!
+            /*
             foreach ($booking->customerInfos as $customer) {
                 Mail::to($customer->email)->queue(new ReservationFormMail($booking, $fileName));
             }
+            */
+
 
             // 8. Stream the newly created PDF
             return response($pdfContent, Response::HTTP_CREATED, [
@@ -186,6 +193,89 @@ class ReservationFormController extends Controller
             Log::error("RF Booking ID: {$booking->id} Generation Error: " . $ex->getMessage());
             return response()->json(['error' => $ex->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
+    }
+
+
+    public function sendForSignature(Request $request, int $bookingId)
+    {
+        $user = $request->user();
+
+        if (!$user->can('generate reservation form')) {
+            abort(Response::HTTP_FORBIDDEN, 'Unauthorized');
+        }
+
+        // 1) Load booking + customerInfos
+        $booking = Booking::with(['customerInfos'])->find($bookingId);
+        if (!$booking) {
+            return response()->json(['error' => 'Booking not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        // Optional: Sales فقط على حجوزاته (بنفس منطقك السابق)
+        if ($user->hasRole('Sales') && (int) $booking->created_by !== (int) $user->id) {
+            return response()->json(['error' => 'Forbidden'], Response::HTTP_FORBIDDEN);
+        }
+
+        Log::info("User {$user->id} sent a Reservation Form for booking {$booking->id} for signature.");
+
+        // 2) Must be RF Pending
+        if ($booking->status !== Booking::STATUS_RF_PENDING) {
+            return response()->json([
+                'error' => 'Cannot send for signature unless booking status is "RF Pending".'
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        // 3) Ensure ReservationForm exists and has a generated PDF
+        $rf = ReservationForm::where('booking_id', $booking->id)->first();
+        if (!$rf) {
+            return response()->json([
+                'error' => 'Reservation Form not found for this booking. Generate RF first.'
+            ], Response::HTTP_NOT_FOUND);
+        }
+
+        if (empty($rf->file_path)) {
+            return response()->json([
+                'error' => 'Reservation Form PDF is missing. Generate RF again.'
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        // 4) Recipients from customerInfos
+        $recipients = $booking->customerInfos
+            ->where('requires_signature', true)
+            ->map(function ($c) {
+                return [
+                    'email' => $c->email,
+                    'name_en'  => $c->name_en ?? null,
+                ];
+            })
+            ->filter(fn ($r) => !empty($r['email']))
+            ->unique('email')
+            ->values()
+            ->toArray();
+
+        if (empty($recipients)) {
+            return response()->json([
+                'error' => 'No customer emails found for this booking.'
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        // 5) Call service (one token per recipient)
+        /** @var DocumentSignatureService $signatureService */
+        $signatureService = app(DocumentSignatureService::class);
+
+        $result = $signatureService->send(
+            signable: $booking,
+            documentable: $rf,         
+            type: DocumentType::RF,
+            recipients: $recipients,
+            expiresAt: null            
+        );
+
+        return response()->json([
+            'message' => 'RF signing link(s) sent successfully.',
+            'sent'    => $result['sent'],
+            'created' => $result['created'],
+            'recipients' => $result['recipients'],
+        ], Response::HTTP_OK);
     }
 
     /**

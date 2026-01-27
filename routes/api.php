@@ -22,8 +22,7 @@ use App\Http\Controllers\CustomerInfoController;
 use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\ResetPasswordController;
 use App\Http\Controllers\TranslateController;
-
-use Illuminate\Support\Facades\Storage;
+use App\Http\Controllers\SignedDocumentsController;
 
 //Index
 Route::get('/', function () {
@@ -107,6 +106,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/bookings/{id}/rf', [ReservationFormController::class, 'generate']);
     Route::post('/bookings/{id}/rf/upload-signed', [ReservationFormController::class, 'uploadSigned']);
     Route::post('/bookings/{id}/rf/approve', [ReservationFormController::class, 'approve']);
+
+    Route::post('/bookings/{id}/rf/send-for-signature', [ReservationFormController::class, 'sendForSignature']);
 });
 
 // Sales and Purchase Agreement (SPAs)
@@ -195,3 +196,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/translate/ar/multiple', [TranslateController::class, 'translateMultipleToArabic'])
         ->name('translate.ar.multiple');
 });
+
+Route::get('/sign/doc/{token}/download', [SignedDocumentsController::class, 'download']);
