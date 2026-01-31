@@ -14,7 +14,7 @@ return [
     */
 
     'name' => env('APP_NAME', 'Laravel'),
-    'front_end_url' => env('FEND_URL', 'https://saray.gocodi.ae/login'),
+    'frontend_url' => env('FEND_URL', 'https://www.uniquesaray.ae'),
 
     /*
     |--------------------------------------------------------------------------

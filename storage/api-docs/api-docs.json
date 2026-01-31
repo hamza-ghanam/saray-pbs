@@ -3625,6 +3625,354 @@
                 ]
             }
         },
+        "/bookings/{bookingId}/rf/send-for-signature": {
+            "post": {
+                "tags": [
+                    "Bookings/RF"
+                ],
+                "summary": "Send RF for signature (one link per signer)",
+                "description": "Send Reservation Form (RF) signing links to booking customers.\n\n- Requires authenticated user with \"generate reservation form\" permission.\n- If user has role \"Sales\", they can only send for signature for bookings they created.\n- Booking must be in status \"RF Pending\".\n- ReservationForm must exist and must have a generated PDF (file_path).\n- Sends one unique signing link per recipient (customerInfos where requires_signature=true).\n- If an active pending link exists for the same recipient & document, it will be marked as expired and a new link is generated.",
+                "operationId": "764e290499647cbdfadc4cd751238f21",
+                "parameters": [
+                    {
+                        "name": "bookingId",
+                        "in": "path",
+                        "description": "Booking ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 137
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "RF signing links sent successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "RF signing link(s) sent successfully."
+                                        },
+                                        "sent": {
+                                            "type": "integer",
+                                            "example": 2
+                                        },
+                                        "created": {
+                                            "type": "integer",
+                                            "example": 2
+                                        },
+                                        "recipients": {
+                                            "type": "array",
+                                            "items": {
+                                                "required": [
+                                                    "email",
+                                                    "url",
+                                                    "signing_link_id"
+                                                ],
+                                                "properties": {
+                                                    "email": {
+                                                        "type": "string",
+                                                        "format": "email",
+                                                        "example": "customer1@example.com"
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "John Doe",
+                                                        "nullable": true
+                                                    },
+                                                    "url": {
+                                                        "type": "string",
+                                                        "example": "https://frontend.example.com/sign/PLAIN_TOKEN"
+                                                    },
+                                                    "signing_link_id": {
+                                                        "type": "integer",
+                                                        "example": 999
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden – user lacks permission or Sales user trying to access another user's booking",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        {
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "example": "Unauthorized"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Forbidden"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Booking not found or ReservationForm not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Booking not found"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Reservation Form not found for this booking. Generate RF first."
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable – booking not in RF Pending, missing PDF, or no signer emails",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Cannot send for signature unless booking status is 'RF Pending'."
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Reservation Form PDF is missing. Generate RF again."
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "No customer emails found for this booking."
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/sign/rf/{token}/submit": {
+            "post": {
+                "tags": [
+                    "Signing/RF"
+                ],
+                "summary": "Submit RF signature (base64 PNG)",
+                "description": "Submit a signature for a Reservation Form (RF) using a one-time token.\n\n- Public endpoint (no auth) protected by one-time token.\n- Accepts a PNG signature as base64 (either raw base64 or data URL).\n- Marks the signing link as used (status -> expired) and stores signature image path.\n- If all required signers completed, the system finalises the RF (generates final signed PDF).",
+                "operationId": "790255e252412415f162c4c44d49b3f9",
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "path",
+                        "description": "One-time signing token (plain token received by email)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "9f3a2b7c8d...plain_token_here..."
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "signature"
+                                ],
+                                "properties": {
+                                    "signature": {
+                                        "description": "Signature as PNG base64. Can be raw base64 or prefixed with 'data:image/png;base64,'.",
+                                        "type": "string",
+                                        "example": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMB/6XfW8kAAAAASUVORK5CYII="
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Signature submitted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Signature submitted successfully."
+                                        },
+                                        "finalized": {
+                                            "description": "True if this submission completed all required signatures and the RF was finalised.",
+                                            "type": "boolean",
+                                            "example": false
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Invalid token / link not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Invalid link."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "410": {
+                        "description": "Link expired or already used",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "This link is no longer valid."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error, invalid signature encoding, too large, or wrong document type",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        {
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "example": "The signature field is required."
+                                                },
+                                                "errors": {
+                                                    "type": "object",
+                                                    "example": {
+                                                        "signature": [
+                                                            "The signature field is required."
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Invalid signature encoding."
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Signature image is too large."
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Invalid document type for this endpoint."
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Failed to submit signature."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/bookings/{bookingId}/rf/upload-signed": {
             "post": {
                 "tags": [
@@ -3708,30 +4056,30 @@
                     "Bookings/RF"
                 ],
                 "summary": "Approve a signed Reservation Form",
-                "description": "Approve a signed Reservation Form.\n\nSets the Reservation Form status to \"Approved\", updates the related Booking status to \"SPA Pending\",\nand records an Approval entry.",
+                "description": "Approve a signed Reservation Form.\n\n- Requires authenticated user with \"approve reservation form\" permission.\n- Will NOT approve if required customer signatures are incomplete.\n- Will NOT approve if signed PDF is missing.\n- On success:\n- ReservationForm.status -> \"Approved\"\n- Booking.status -> \"SPA Pending\"\n- Creates an Approval record\n- Emails the final signed RF PDF to all booking customers that have an email.",
                 "operationId": "e177cd036e0c775cebf445a2d6c923b5",
                 "parameters": [
                     {
-                        "name": "id",
+                        "name": "bookingId",
                         "in": "path",
-                        "description": "ID of the booking whose ReservationForm will be approved",
+                        "description": "Booking ID whose Reservation Form will be approved",
                         "required": true,
                         "schema": {
                             "type": "integer",
-                            "example": 10
+                            "example": 137
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Reservation Form approved successfully",
+                        "description": "Reservation Form approved successfully and emailed",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "Reservation form has been approved"
+                                            "example": "Reservation form has been approved and sent to customer(s)."
                                         }
                                     },
                                     "type": "object"
@@ -3740,13 +4088,74 @@
                         }
                     },
                     "403": {
-                        "description": "Forbidden – user lacks 'approve reservation form' permission"
+                        "description": "Forbidden – user lacks 'approve reservation form' permission",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Forbidden"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "404": {
-                        "description": "Reservation Form not found for the given booking"
+                        "description": "Booking or Reservation Form not found for the given booking",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "No query results for model [App\\\\Models\\\\Booking] 137"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "422": {
-                        "description": "Cannot approve unless the form is Signed or other validation error"
+                        "description": "Unprocessable – missing signatures, not signed status, or missing signed PDF",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Cannot approve Reservation Form: required signatures are incomplete."
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Cannot approve a Reservation Form unless it is Signed."
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Cannot approve: signed PDF is missing."
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -4247,6 +4656,356 @@
                 ]
             }
         },
+        "/signatures": {
+            "get": {
+                "tags": [
+                    "Signatures"
+                ],
+                "summary": "List signatures (latest attempt per recipient)",
+                "description": "List latest signature attempts per recipient for a given signable + documentable (using aliases).\n\nThis endpoint is generic and can be used for RF, SPA, etc. (no morphMap required).\nIt returns the latest SigningLink per recipient email (latest attempt).\n\nAliases:\n- signable_type: Booking\n- documentable_type: RF | SPA",
+                "operationId": "1457c63cf921073bda2349cce03d417d",
+                "parameters": [
+                    {
+                        "name": "signable_type",
+                        "in": "query",
+                        "description": "Signable type alias (e.g. Booking)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "Booking"
+                            ],
+                            "example": "Booking"
+                        }
+                    },
+                    {
+                        "name": "signable_id",
+                        "in": "query",
+                        "description": "Signable ID (e.g. booking id)",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 137
+                        }
+                    },
+                    {
+                        "name": "documentable_type",
+                        "in": "query",
+                        "description": "Documentable type alias (RF or SPA)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "RF",
+                                "SPA"
+                            ],
+                            "example": "RF"
+                        }
+                    },
+                    {
+                        "name": "documentable_id",
+                        "in": "query",
+                        "description": "Documentable ID (e.g. ReservationForm id or SPA id)",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 55
+                        }
+                    },
+                    {
+                        "name": "document_type",
+                        "in": "query",
+                        "description": "Document type (RF or SPA). If omitted, it can be inferred from documentable_type.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "RF",
+                                "SPA"
+                            ],
+                            "example": "RF"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List returned successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "count": {
+                                            "type": "integer",
+                                            "example": 2
+                                        },
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "signing_link_id": {
+                                                        "type": "integer",
+                                                        "example": 999
+                                                    },
+                                                    "email": {
+                                                        "type": "string",
+                                                        "format": "email",
+                                                        "example": "customer1@example.com"
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "John Doe",
+                                                        "nullable": true
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "expired"
+                                                    },
+                                                    "signed_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2026-01-28 18:20:10",
+                                                        "nullable": true
+                                                    },
+                                                    "has_signature": {
+                                                        "type": "boolean",
+                                                        "example": true
+                                                    },
+                                                    "signature_path": {
+                                                        "type": "string",
+                                                        "example": "signatures/rf/999_20260128_182010.png",
+                                                        "nullable": true
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2026-01-28 18:19:45"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden – user lacks permission",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Forbidden"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error (missing/invalid query parameters)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        {
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "example": "The signable_type field is required."
+                                                },
+                                                "errors": {
+                                                    "type": "object",
+                                                    "example": {
+                                                        "signable_type": [
+                                                            "The signable_type field is required."
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "example": "The documentable_type field must be one of RF or SPA."
+                                                },
+                                                "errors": {
+                                                    "type": "object",
+                                                    "example": {
+                                                        "documentable_type": [
+                                                            "The documentable_type field must be one of RF or SPA."
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/signatures/{signingLinkId}/reject": {
+            "post": {
+                "tags": [
+                    "Signatures"
+                ],
+                "summary": "Reject a signature and resend new signing link",
+                "description": "Reject a submitted signature and resend a new signing link to the same recipient.\n\n- Cancels the selected signature attempt (SigningLink).\n- Deletes signature image file (if exists).\n- Resets the related document finalisation fields (signed_at, signed_file_path, status -> 'Pending') if supported.\n- Generates and emails a new signing link to the same recipient (new token).",
+                "operationId": "224b8dbc5b2890ab4288c2b68c132c34",
+                "parameters": [
+                    {
+                        "name": "signingLinkId",
+                        "in": "path",
+                        "description": "SigningLink ID to reject",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 999
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "reason": {
+                                        "type": "string",
+                                        "example": "Customer uploaded the wrong image",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Rejected and resent successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Signature rejected and new signing link sent."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden – user lacks permission",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Forbidden"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "SigningLink not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "No query results for model [App\\\\Models\\\\SigningLink] 999"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable – no submitted signature on this link or validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "This signing link has no submitted signature."
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "example": "The reason may not be greater than 255 characters."
+                                                },
+                                                "errors": {
+                                                    "type": "object",
+                                                    "example": {
+                                                        "reason": [
+                                                            "The reason may not be greater than 255 characters."
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Failed to reject signature."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/bookings/{bookingId}/spa": {
             "get": {
                 "tags": [
@@ -4682,17 +5441,17 @@
                                                     "internal_square": {
                                                         "type": "number",
                                                         "format": "float",
-                                                        "example": 102.0400000000000062527760746888816356658935546875
+                                                        "example": 102.04
                                                     },
                                                     "external_square": {
                                                         "type": "number",
                                                         "format": "float",
-                                                        "example": 38.14999999999999857891452847979962825775146484375
+                                                        "example": 38.15
                                                     },
                                                     "total_square": {
                                                         "type": "number",
                                                         "format": "float",
-                                                        "example": 140.18999999999999772626324556767940521240234375
+                                                        "example": 140.19
                                                     },
                                                     "furnished": {
                                                         "type": "boolean",
@@ -4705,7 +5464,7 @@
                                                     "price": {
                                                         "type": "number",
                                                         "format": "float",
-                                                        "example": 1621554.73999999999068677425384521484375
+                                                        "example": 1621554.74
                                                     },
                                                     "status": {
                                                         "type": "string",
@@ -7792,17 +8551,17 @@
                     "internal_square_m": {
                         "type": "number",
                         "format": "float",
-                        "example": 1295.829999999999927240423858165740966796875
+                        "example": 1295.83
                     },
                     "external_square_m": {
                         "type": "number",
                         "format": "float",
-                        "example": 169.56999999999999317878973670303821563720703125
+                        "example": 169.57
                     },
                     "total_square_m": {
                         "type": "number",
                         "format": "float",
-                        "example": 1465.40000000000009094947017729282379150390625
+                        "example": 1465.4
                     },
                     "furnished": {
                         "type": "boolean",
@@ -8195,12 +8954,20 @@
             "description": "Bookings/RF"
         },
         {
+            "name": "Signing/RF",
+            "description": "Signing/RF"
+        },
+        {
             "name": "Roles & Permissions",
             "description": "Roles & Permissions"
         },
         {
             "name": "SalesOffers",
             "description": "SalesOffers"
+        },
+        {
+            "name": "Signatures",
+            "description": "Signatures"
         },
         {
             "name": "Bookings/SPA",

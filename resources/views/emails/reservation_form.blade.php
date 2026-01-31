@@ -64,12 +64,10 @@
     </div>
 
     <div class="content">
-        <p>Dear {{ $booking->customerInfos->first()->name ?? 'Customer' }},</p>
+        <p>Dear {{ 'Customer' }},</p>
 
-        <p>Thank you for choosing to reserve a property with us. Please find attached your official <span class="highlight">Reservation Form (RF)</span>
-            of unit no. {{ $booking->unit->unit_no }} for your review and signature.</p>
-
-        <p>Once signed, please reply to this email with the attached signed copy.</p>
+        <p>Thank you for choosing to reserve a property with us. Please find attached your official, final <span class="highlight">Reservation Form (RF)</span>
+            of unit no. {{ $booking->unit->unit_no }}.</p>
 
         <p>If you have any questions or require further assistance, please don’t hesitate to contact our sales team.</p>
 

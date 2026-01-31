@@ -16,7 +16,8 @@ class SignatureLinkMail extends Mailable
         public Model $signable,
         public DocumentType $documentType,
         public string $signingUrl,
-        public string $downloadUrl,
+        public string $filePath,
+        public string $fileName,
         public ?string $recipientName = null,
         public ?string $documentTitle = null,
     ) {}
@@ -32,6 +33,10 @@ class SignatureLinkMail extends Mailable
 
         return $this->subject($subject)
             ->view('emails.signature_link')
+            ->attach(storage_path("app/private/{$this->filePath}"), [
+                'as'   => $this->fileName,
+                'mime' => 'application/pdf',
+            ])
             ->with([
                 'signable'       => $this->signable,
                 'documentType'   => $this->documentType,

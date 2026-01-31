@@ -197,4 +197,12 @@ Route::middleware('auth:sanctum')->group(function () {
         ->name('translate.ar.multiple');
 });
 
+// Signatures
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/signatures', [SignedDocumentsController::class, 'index']);
+    Route::get('/signatures/{signingLinkId}/image', [SignedDocumentsController::class, 'showImage'])->name('signatures.image');
+    Route::post('/signatures/{signingLinkId}/reject', [SignedDocumentsController::class, 'reject']);
+});
+
 Route::get('/sign/doc/{token}/download', [SignedDocumentsController::class, 'download']);
+Route::post('/bookings/rf/{token}/sign', [ReservationFormController::class, 'submitSignature']);

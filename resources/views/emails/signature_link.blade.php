@@ -97,7 +97,7 @@
         </p>
 
         <p class="note">
-            This is a one-time link and will expire as soon as you signed the document and submit the request.</span>.
+            This is a one-time link and will expire as soon as you signed the document and submit the request.
         </p>
 
         <p style="text-align:center; margin: 22px 0;">
@@ -106,20 +106,8 @@
             </a>
         </p>
 
-        <p style="text-align:center; margin: 12px 0;">
-            <a class="btn" href="{{ $downloadUrl }}">
-                Download PDF
-            </a>
-        </p>
+        <p>If the button above doesn't work, copy and paste the following link into your browser:</p>
 
-        <p>If the buttons above don't work, copy and paste the following links into your browser:</p>
-
-        Review &amp; Sign:
-        <blockquote cite="{{ $signingUrl }}">
-            {{ $signingUrl }}
-        </blockquote>
-
-        Download PDF:
         <blockquote cite="{{ $signingUrl }}">
             {{ $signingUrl }}
         </blockquote>

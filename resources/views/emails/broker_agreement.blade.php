@@ -78,8 +78,8 @@
 
         <p>Once signed, please use the following link to upload the signed copy:</p>
 
-        <blockquote cite="{{ config('services.frontend_url') }}/register/upload-signed-agreement">
-            {{ config('services.frontend_url') }}/register/upload-signed-agreement
+        <blockquote cite="{{ config('app.frontend_url') }}/register/upload-signed-agreement">
+            {{ config('app.frontend_url') }}/register/upload-signed-agreement
         </blockquote>
 
         <p>If you have any questions or require further assistance, please don’t hesitate to contact our sales team.</p>

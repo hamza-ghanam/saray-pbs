@@ -7,6 +7,7 @@ use App\Models\Approval;
 use App\Models\Building;
 use App\Models\Unit;
 use App\Models\User;
+use App\Services\ImageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -974,35 +975,9 @@ class UnitController extends Controller
         }
 
         $path = $unit->floor_plan; // e.g. "floor_plans/xyz.png"
-        if (!Storage::disk('local')->exists($path)) {
-            abort(Response::HTTP_NOT_FOUND);
-        }
 
-        $fullPath = Storage::disk('local')->path($path);
-        $lastModified = gmdate('D, d M Y H:i:s', filemtime($fullPath)) . ' GMT';
-        $eTag = '"' . md5_file($fullPath) . '"';
-
-        // If the client already has the latest, short-circuit with 304
-        if ($request->headers->get('if-none-match') === $eTag ||
-            $request->headers->get('if-modified-since') === $lastModified
-        ) {
-            return response('', 304)
-                ->header('Cache-Control', 'no-cache, must-revalidate, max-age=0, proxy-revalidate')
-                ->header('Pragma', 'no-cache')
-                ->header('Expires', '0')
-                ->header('ETag', $eTag)
-                ->header('Last-Modified', $lastModified);
-        }
-
-        // Otherwise, send the file with no-cache + validators
-        return response()->file($fullPath, [
-            'Content-Disposition' => 'inline; filename="' . basename($path) . '"',
-            'Cache-Control' => 'no-cache, must-revalidate, max-age=0, proxy-revalidate',
-            'Pragma' => 'no-cache',
-            'Expires' => '0',
-            'Last-Modified' => $lastModified,
-            'ETag' => $eTag,
-        ]);
+        return app(ImageService::class)
+            ->streamImage($request, $path, true);
     }
 
     /**

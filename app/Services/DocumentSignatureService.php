@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Contracts\Documents\SignableDocument;
 use App\Enums\DocumentType;
 use App\Mail\SignatureLinkMail;
 use App\Models\SigningLink;
@@ -10,6 +11,9 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
+use InvalidArgumentException;
+use RuntimeException;
 
 class DocumentSignatureService
 {
@@ -35,6 +39,16 @@ class DocumentSignatureService
         iterable $recipients,
         ?Carbon $expiresAt = null
     ): array {
+        if (! $documentable instanceof SignableDocument) {
+            throw new InvalidArgumentException('Document does not support signing (missing HasPdfDocument).');
+        }
+
+        $originalPath = $documentable->getOriginalPdfPath();
+
+        if (empty($originalPath) || !Storage::disk('local')->exists($originalPath)) {
+            throw new RuntimeException('Original PDF file not found for signing.');
+        }
+
         // Normalize recipients -> unique by email
         $normalized = collect($recipients)
             ->filter(fn ($r) => !empty($r['email']))
@@ -88,9 +102,10 @@ class DocumentSignatureService
                 $token = $link->plain_token;
                 $signUrl = rtrim(config('app.frontend_url'), '/') . '/sign/' . $token;
 
-                $downloadUrl = rtrim(config('app.url'), '/') . '/api/sign/doc/' . $token . '/download?variant=latest';
+                // $downloadUrl = rtrim(config('app.url'), '/') . '/api/sign/doc/' . $token . '/download?variant=latest';
 
                 $humanTitle = $type->value === 'RF' ? 'Reservation Form' : ($type->value . ' Document');
+                $fileName = $humanTitle . '_' . $recipient['name'] . '_UNSIGNED.pdf';
 
                 DB::commit();
 
@@ -100,7 +115,8 @@ class DocumentSignatureService
                         signable: $signable,
                         documentType: $type,
                         signingUrl: $signUrl,
-                        downloadUrl: $downloadUrl,
+                        filePath: $originalPath,
+                        fileName: $fileName,
                         recipientName: $recipient['name'],
                         documentTitle: $humanTitle,
                     )

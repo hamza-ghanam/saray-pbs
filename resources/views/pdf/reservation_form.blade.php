@@ -6,7 +6,7 @@
     <style>
         /* 1) Define your page size, margins, and hook up header/footer */
         @page {
-            margin: 150px 45px 150px 45px;
+            margin: 150px 45px 180px 45px;
         }
 
         @page {
@@ -90,6 +90,17 @@
     </style>
 </head>
 <body>
+@php
+    $signaturesMap = collect($signaturesByEmail ?? [])
+        ->mapWithKeys(function ($sig, $email) {
+            return [
+                strtolower(trim($email)) => [
+                    'path'      => is_array($sig) ? ($sig['path'] ?? null) : $sig,
+                    'signed_at' => is_array($sig) ? ($sig['signed_at'] ?? null) : null,
+                ],
+            ];
+        });
+@endphp
 
 <!-- 7) Your named header block (no html_ in the name) -->
 <htmlpageheader name="MyHeader">
@@ -105,12 +116,55 @@
 
 <!-- 8) Your named footer block (no html_ in the name) -->
 <htmlpagefooter name="MyFooter">
-    <div style="height: 30px; text-align: center;">
+    <div style="height: 70px; text-align: center;">
         <table style="border-collapse:collapse; border:none; width: 100%">
             <tr>
-                <td style="width: 48%; text-align: left; font-weight: bold;">Buyer Initial</td>
-                <td>{PAGENO}</td>
-                <td style="width: 48%; text-align: right; font-weight: bold;">Seller Initial</td>
+                <td style="width: 48%; text-align: left; font-weight: bold;">
+                    @foreach($customerInfos as $customerInfo)
+                        @php
+                            $sig = $signaturesMap->get(strtolower(trim($customerInfo->email ?? '')));
+                            $sigPath = $sig['path'] ?? null;
+                            $sigDate = $sig['signed_at'] ?? null;
+                        @endphp
+
+                        @if($sig)
+                            <img
+                                src="file:///{{ str_replace('\\','/', $sigPath) }}"
+                                alt="Signature {{ $customerInfo->name_en }}"
+                                height="80"
+                                style="margin-right: 5px;"
+                            >
+                        @else
+                            <img
+                                src="file:///{{ str_replace('\\','/', storage_path('app/private/signatures/stamp_placeholder.png')) }}"
+                                alt="Signature placeholder"
+                                height="80"
+                                style="margin-right: 5px;"
+                            >
+                        @endif
+                    @endforeach
+                    <br/>
+                    Buyer Initial
+                </td>
+                <td>
+                    <img
+                        src="file:///{{ str_replace('\\','/', storage_path('app/private/signatures/stamp_placeholder.png')) }}"
+                        alt="Seller Initial" height="80" style="margin-right: 5px;"
+                    > <br/>
+                    {PAGENO}
+                </td>
+                <td style="width: 48%; text-align: right; font-weight: bold;">
+                    <img
+                        src="file:///{{ str_replace('\\','/', storage_path('app/private/signatures/company_stamp.png')) }}"
+                        alt="Seller Initial" height="80" style="margin-right: 5px;"
+                    >
+                    <img
+                        src="file:///{{ str_replace('\\','/', storage_path('app/private/signatures/company_signature.png')) }}"
+                        alt="Seller Initial" height="80"
+                    >
+                    <br/>
+                    Seller Initial
+                </td>
             </tr>
         </table>
     </div>
@@ -1064,35 +1118,76 @@
         <tr>
             <td class="left-th" style="line-height: 2.5; width: 49%; padding: 7px; text-align: justify;">
                 <h4>Name: Unique Saray Properties L.L.C </h4>
-                <h4>Signed: <img src="{{ public_path('images/black_line.svg') }}" width="250" height="2" alt="___"/>
+                <h4>Signed: <img src="file:///{{ str_replace('\\','/', storage_path('app/private/signatures/company_signature.png')) }}"
+                                 height="30" alt="{{ config('app.name') }} Signature"/>
                 </h4>
-                <h4>Date: &nbsp;&nbsp;&nbsp;{{ \Carbon\Carbon::now()->format('d-M-Y') }}&nbsp;&nbsp;</h4>
+                <h4>Date: &nbsp;&nbsp;&nbsp; {{ optional($companySignedAt)->format('d-M-Y') }}&nbsp;&nbsp;</h4>
             </td>
             <td style="text-align: center;"></td>
             <td class="rtl-text right-th" style="line-height: 2.5; width: 49%; padding: 7px; text-align: justify;">
                 <h4>الاسم: يونيك سراي للعقارت ش.ذ.م.م</h4>
-                <h4>التوقيع: <img src="{{ public_path('images/black_line.svg') }}" width="250" height="2" alt="___"/>
+                <h4>التوقيع:
+                    <img src="file:///{{ str_replace('\\','/', storage_path('app/private/signatures/company_signature.png')) }}"
+                         height="30" alt="{{ config('app.name') }} Signature"/>
                 </h4>
                 <h4 style="unicode-bidi: embed;">التاريخ:&nbsp;&nbsp;
-                    &nbsp;{{ \Carbon\Carbon::now()->locale('ar')->isoFormat('D-MMM-YYYY') }}&nbsp;</h4>
+                    &nbsp;{{ optional($companySignedAt)->locale('ar')->isoFormat('D-MMM-YYYY') }}&nbsp;
+                </h4>
             </td>
         </tr>
         @foreach($customerInfos as $customerInfo)
+            @php
+                $sig = $signaturesMap->get(strtolower(trim($customerInfo->email ?? '')));
+                $sigPath = $sig['path'] ?? null;
+                $sigDate = $sig['signed_at'] ?? null;
+            @endphp
+
             <tr>
                 <td class="left-th" style="line-height: 2.5; width: 49%; padding: 7px; text-align: justify;">
                     <h4>Name: {{ $customerInfo->name_en }} </h4>
-                    <h4>Signed: <img src="{{ public_path('images/black_line.svg') }}" width="250" height="2" alt="___"/>
+                    <h4>
+                        Signed:
+                        @if(!empty($sigPath) && file_exists($sigPath))
+                            <img
+                                src="file:///{{ str_replace('\\','/', $sigPath) }}"
+                                alt="Signature"
+                                height="40"
+                                style="vertical-align: middle; margin-left: 8px;"
+                            >
+                        @else
+                            <img src="{{ public_path('images/black_line.svg') }}" width="250" height="2" alt="___"/>
+                        @endif
                     </h4>
-                    <h4>Date: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="{{ public_path('images/black_line.svg') }}"
-                                                                 width="250" height="2" alt="___"/></h4>
+                    <h4>Date:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        @if(!empty($sigDate))
+                            {{ $sigDate->format('d-M-Y') }}
+                        @else
+                            <img src="{{ public_path('images/black_line.svg') }}" width="250" height="2" alt="___"/>
+                        @endif
+                    </h4>
                 </td>
                 <td style="text-align: center;"></td>
                 <td class="rtl-text right-th" style="line-height: 2.5; width: 49%; padding: 7px; text-align: justify;">
                     <h4>الاسم: {{ $customerInfo->name_ar }}  </h4>
-                    <h4>التوقيع: <img src="{{ public_path('images/black_line.svg') }}" width="250" height="2" alt="___"/>
+                    <h4>التوقيع:
+                        @if(!empty($sigPath) && file_exists($sigPath))
+                            <img
+                                src="file:///{{ str_replace('\\','/', $sigPath) }}"
+                                alt="Signature"
+                                height="40"
+                                style="vertical-align: middle; margin-left: 8px;"
+                            >
+                        @else
+                            <img src="{{ public_path('images/black_line.svg') }}" width="250" height="2" alt="___"/>
+                        @endif
                     </h4>
-                    <h4>التاريخ: &nbsp;&nbsp;<img src="{{ public_path('images/black_line.svg') }}" width="250" height="2"
-                                                  alt="___"/></h4>
+                    <h4>التاريخ:&nbsp;&nbsp;
+                        @if(!empty($sigDate))
+                            {{ $sigDate->locale('ar')->isoFormat('D-MMM-YYYY')  }}
+                        @else
+                            <img src="{{ public_path('images/black_line.svg') }}" width="250" height="2" alt="___"/>
+                        @endif
+                    </h4>
                 </td>
             </tr>
         @endforeach

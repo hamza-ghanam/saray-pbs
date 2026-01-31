@@ -51,8 +51,8 @@ return new class extends Migration
 
             // Prevent multiple pending links for same recipient on same document
             $table->unique(
-                ['documentable_type', 'documentable_id', 'recipient_email', 'status'],
-                'uniq_doc_recipient_status'
+                ['documentable_type', 'documentable_id', 'recipient_email', 'document_type', 'pending_guard'],
+                'uniq_pending_link_per_recipient_doc'
             );
         });
     }

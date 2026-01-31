@@ -11,10 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('customer_infos', function (Blueprint $table) {
-            $table->boolean('requires_signature')
-                ->default(true)
-                ->after('address_ar');
+        Schema::table('reservation_forms', function (Blueprint $table) {
+            $table->timestamp('company_signed_at')
+                ->nullable()
+                ->after('status');
         });
     }
 
@@ -23,7 +23,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('customer_infos', function (Blueprint $table) {
+        Schema::table('reservation_forms', function (Blueprint $table) {
             //
         });
     }

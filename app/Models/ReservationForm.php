@@ -2,10 +2,11 @@
 
 namespace App\Models;
 
+use App\Contracts\Documents\SignableDocument;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class ReservationForm extends Model
+class ReservationForm extends Model implements SignableDocument
 {
     use SoftDeletes;
 
@@ -15,12 +16,14 @@ class ReservationForm extends Model
         'status',
         'signed_at',
         'signed_file_path',
+        'company_signed_at'
     ];
 
     protected $hidden = ['file_path', 'signed_file_path'];
 
     protected $casts = [
         'unit_id' => 'integer',
+        'company_signed_at' => 'datetime',
     ];
 
     public function booking()
@@ -38,7 +41,7 @@ class ReservationForm extends Model
         );
     }
 
-    public function getOriginalPdfPath(): ?string
+    public function getOriginalPdfPath(): string
     {
         return $this->file_path;
     }
