@@ -115,6 +115,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/bookings/{id}/spa', [SpaController::class, 'generate']);
     Route::post('/bookings/{id}/spa/upload-signed', [SpaController::class, 'uploadSigned']);
     Route::post('/bookings/{id}/spa/approve', [SpaController::class, 'approve']);
+
+    Route::post('/bookings/{id}/spa/send-for-signature', [SpaController::class, 'sendForSignature']);
 });
 
 // DLD Documents
@@ -206,3 +208,5 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::get('/sign/doc/{token}/download', [SignedDocumentsController::class, 'download']);
 Route::post('/bookings/rf/{token}/sign', [ReservationFormController::class, 'submitSignature']);
+
+Route::post('/bookings/spa/{token}/sign', [SpaController::class, 'submitSignature']);

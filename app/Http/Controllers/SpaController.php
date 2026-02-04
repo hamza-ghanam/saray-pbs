@@ -2,25 +2,36 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\ReservationFormMail;
+use App\Actions\FinalizeConfig;
+use App\Actions\FinalizeSignedDocumentService;
+use App\Actions\SendForSignatureAction;
+use App\Actions\SignatureSendConfig;
+use App\Actions\SignatureSubmitConfig;
+use App\Actions\SubmitSignatureAction;
+use App\Enums\DocumentType;
+use App\Mail\RFSPAMail;
 use App\Mail\SalesPurchaseAgreementMail;
 use App\Models\Approval;
 use App\Models\Booking;
+use App\Models\ReservationForm;
+use App\Models\SigningLink;
 use App\Models\SPA;
 
 // Your SPA model
 use App\Models\Unit;
+use App\Services\DocumentSignatureService;
 use App\Services\PaymentPlanService;
+use App\Services\PdfService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
-use Barryvdh\DomPDF\Facade\Pdf as PDF;
 
 // dompdf
 use Mccarlosen\LaravelMpdf\Facades\LaravelMpdf as MYPDF;
+use Mpdf\MpdfException;
 use Symfony\Component\HttpFoundation\Response;
 
 class SpaController extends Controller
@@ -70,7 +81,7 @@ class SpaController extends Controller
      *     )
      * )
      */
-    public function generate(Request $request, $bookingId)
+    public function generate(Request $request, $bookingId, PdfService $pdfService)
     {
         $user = $request->user();
 
@@ -87,6 +98,8 @@ class SpaController extends Controller
 
         Log::info("User {$user->id} generated an SPA for booking {$booking->id}");
 
+        $companySignedAt = now()->copy();
+
         // 2. Check the booking and unit status logic
         //    only generate SPA if:
         //      - the unit has status "Booked"
@@ -101,8 +114,6 @@ class SpaController extends Controller
 
         DB::beginTransaction();
         try {
-
-            $fileName = 'SPA_' . $booking->id . '.pdf';
 
             // 3. Ensure only one SPA per booking
             /*
@@ -137,6 +148,7 @@ class SpaController extends Controller
                 'paymentPlan' => $booking->paymentPlan,
                 'installments' => $booking->installments,
                 'unit' => $booking->unit,
+                'companySignedAt' => $companySignedAt,
             ];
 
             /*
@@ -150,31 +162,17 @@ class SpaController extends Controller
             */
 
             // New SPA template || 12/9/2025
-            $pdf = MYPDF::loadView('pdf.spa2', $spaData, [], [
-                'instanceConfigurator' => function ($mpdf) {
-                    $mpdf->showImageErrors = true; // Show errors related to images
-                    $mpdf->debug = false; // Enable general debugging
-                    $mpdf->autoScriptToLang = true;
-                    $mpdf->autoLangToFont = true;
-                    $mpdf->allow_charset_conversion = false; // This is often crucial for Arabic/RTL
-                    $mpdf->useKerning = false;
-                    $mpdf->useLigatures = false;
-                    $mpdf->jpeg_quality = 78;
-                }
-            ]);
-
-
-            $pdfContent = $pdf->output();
-
             // 5. Store the PDF file on disk
+            $fileName = 'SPA_' . $booking->id . '.pdf';
             $filePath = 'spa_forms/' . $fileName;
-            Storage::disk('local')->put($filePath, $pdfContent);
+            $pdfContent = $pdfService->store('pdf.spa2', $spaData, $filePath);
 
             $existingSPA = SPA::where('booking_id', $booking->id)->first();
             if ($existingSPA) {
                 $existingSPA->update([
                     'file_path' => $filePath,
                     'status' => 'Pending',
+                    'company_signed_at' => $companySignedAt,
                 ]);
             } else {
                 // 6. Create a new SPA record with status = "Pending"
@@ -182,14 +180,17 @@ class SpaController extends Controller
                     'booking_id' => $booking->id,
                     'file_path' => $filePath,
                     'status' => 'Pending',
+                    'company_signed_at' => $companySignedAt,
                 ]);
             }
 
             DB::commit();
 
+            /*
             foreach ($booking->customerInfos as $customer) {
                 Mail::to($customer->email)->queue(new SalesPurchaseAgreementMail($booking, $fileName));
             }
+            */
 
             return response($pdfContent, Response::HTTP_CREATED, [
                 'Content-Type' => 'application/pdf',
@@ -200,6 +201,37 @@ class SpaController extends Controller
             Log::error("SPA Booking ID: {$booking->id} Generation Error: " . $ex->getMessage());
             return response()->json(['error' => $ex->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    public function sendForSignature(Request $request, int $bookingId, SendForSignatureAction $action)
+    {
+        return $action->handle($request, $bookingId, new SignatureSendConfig(
+            permission: 'generate spa',
+            requiredBookingStatus: Booking::STATUS_SPA_PENDING,
+            documentModelClass: SPA::class,
+            documentTypeValue: DocumentType::SPA->value,
+            missingDocMessage: 'SPA not found for this booking. Generate SPA first.',
+            missingPdfMessage: 'SPA PDF is missing. Generate SPA again.',
+            successMessage: 'SPA signing link(s) sent successfully.'
+        ));
+    }
+
+    public function submitSignature(Request $request, string $token, SubmitSignatureAction $action, FinalizeSignedDocumentService $finalizer){
+        $cfg = new SignatureSubmitConfig(
+            type: DocumentType::SPA,
+            expectedDocumentClass: \App\Models\SPA::class,
+            signatureDir: 'signatures/spa',
+            invalidDocMessage: 'Invalid document type for this endpoint.',
+        );
+
+        $config = new FinalizeConfig(
+            type: DocumentType::SPA,
+            view: 'pdf.spa2',
+            signedDir: 'spa_forms/signed',
+            filePrefix: 'SP_SIGNED_FINAL_',
+        );
+
+        return $action->handle($request, $token, $cfg, finalize: fn($spa) => $finalizer->finalizeIfComplete($spa, $spa->booking_id, $config));
     }
 
     /**
@@ -350,7 +382,7 @@ class SpaController extends Controller
      *     )
      * )
      */
-    public function approve(Request $request, $id)
+    public function approve(Request $request, $id, FinalizeSignedDocumentService $finalizer)
     {
         $user = $request->user();
         Log::info("User {$user->id} is attempting to approve SPA ID: {$id}");
@@ -363,6 +395,27 @@ class SpaController extends Controller
         $spa = Booking::findOrFail($id)
             ->spa()
             ->firstOrFail();
+
+        // ✅ block if signatures incomplete OR not finalized
+        $config = new FinalizeConfig(
+            type: DocumentType::SPA,
+            view: 'pdf.spa2',
+            signedDir: 'spa_forms/signed',
+            filePrefix: 'SPA_SIGNED_FINAL_',
+        );
+
+        $finalized = $finalizer->finalizeIfComplete(
+            documentable: $spa,
+            bookingId: $spa->booking_id,
+            cfg: $config
+        );
+
+        if (!$finalized) {
+            return response()->json([
+                'error' => 'Cannot approve Reservation Form: required signatures are incomplete.'
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
 
         // 2. Must be "Signed" to approve
         if ($spa->status !== 'Signed') {
@@ -398,8 +451,15 @@ class SpaController extends Controller
             'status' => 'Approved',
         ]);
 
+        $fileName = 'SPA_' . $spa->booking->id . '_' . $spa->booking->unit->unit_no . '_SIGNED.pdf';
+        $docType = 'Sales and Purchase Agreement (SPA)';
+        $subject = 'Your ' . $docType;
+        $view = 'emails.rf_spa_final';
+
         foreach ($spa->booking->customerInfos as $customer) {
-            Mail::to($customer->email)->queue(new SalesPurchaseAgreementMail($spa->booking, ''));
+            Mail::to($customer->email)->queue(
+                new RFSPAMail($spa->booking, $customer, $fileName, $spa->signed_file_path, $docType, $subject, $view)
+            );
         }
 
         return response()->json(['message' => 'SPA has been approved! Waiting for DLD document.'], Response::HTTP_OK);

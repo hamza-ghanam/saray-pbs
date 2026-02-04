@@ -60,21 +60,29 @@
             alt="{{ config('app.name') }} Logo"
             style="max-width: 200px; height: auto; display: inline-block; margin-bottom: 15px;"
         >
-        <h1>Sales Purchase Agreement</h1>
+        <h1>{{ $docType === 'Reservation Form (RF)' ? 'Reservation Confirmation' : 'Sales Purchase Agreement' }}</h1>
     </div>
 
     <div class="content">
-        <p>Dear {{ $booking->customerInfos->first()->name ?? 'Customer' }},</p>
+        <p>Dear {{ $customer->name_en ?? 'Customer' }},</p>
 
-        <p>Thank you for choosing to reserve a property with us. Please find attached your official <span class="highlight">Sales Purchase Agreement (SPA)</span>
-            of unit no. {{ $booking->unit->unit_no }} for your review and signature.</p>
+        @if($docType === 'Reservation Form (RF)')
+            <p>Thank you for choosing to reserve a property with us.
+                of unit no. {{ $booking->unit->unit_no }}.</p>
+        @else
+            <p>🎉 Congratulations! Your SPA is now approved from our management.</p>
 
-        <p>Once signed, please reply to this email with the attached signed copy.</p>
+            <p>Please reply to this email attaching the DLD document in order to proceed with the purchase process.</p>
+        @endif
+
+        <p>Kindly find attached your official, final <span class="highlight">{{ $docType }}</span></p>
 
         <p>If you have any questions or require further assistance, please don’t hesitate to contact our sales team.</p>
 
-        <p>Best regards,<br>
-            <strong>Sales Team</strong></p>
+        <p>
+            Best regards,<br>
+            <strong>Sales Team</strong>
+        </p>
     </div>
 
     <div class="footer">

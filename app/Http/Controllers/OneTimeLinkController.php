@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 
 use App\Mail\BrokerAgreementMail;
 use App\Mail\OneTimeLinkMail;
-use App\Mail\SalesPurchaseAgreementMail;
 use App\Models\OneTimeLink;
 use App\Models\User;
 use App\Services\BrevoMailer;

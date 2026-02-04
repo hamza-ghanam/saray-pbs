@@ -6,15 +6,11 @@ use App\Models\PaymentPlan;
 use App\Models\SalesOffer;
 use App\Models\Unit;
 use App\Services\PaymentPlanService;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
 use Mccarlosen\LaravelMpdf\Facades\LaravelMpdf as MYPDF;
 use Symfony\Component\HttpFoundation\Response;
-use Barryvdh\DomPDF\Facade\Pdf as PDF;
-use Illuminate\Support\Collection;
 
 class SalesOfferController extends Controller
 {

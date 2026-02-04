@@ -2,15 +2,21 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\ReservationFormMail;
+use App\Actions\FinalizeConfig;
+use App\Actions\FinalizeSignedDocumentService;
+use App\Actions\SendForSignatureAction;
+use App\Actions\SignatureSendConfig;
+use App\Actions\SignatureSubmitConfig;
+use App\Actions\SubmitSignatureAction;
+use App\Mail\RFSPAMail;
 use App\Models\Approval;
 use App\Models\Booking;
 use App\Models\ReservationForm;
 use App\Models\SigningLink;
 use App\Models\Unit;
 use App\Services\PaymentPlanService;
-use App\Services\DocumentSignatureService;
 use App\Enums\DocumentType;
+use App\Services\PdfService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -59,7 +65,7 @@ class ReservationFormController extends Controller
      *     @OA\Response(response=422, description="Validation or business-rule error (e.g. unit/booking status invalid)")
      * )
      */
-    public function generate(Request $request, $bookingId)
+    public function generate(Request $request, $bookingId, PdfService $pdfService)
     {
         $user = $request->user();
 
@@ -158,22 +164,9 @@ class ReservationFormController extends Controller
             */
 
             // mPDF - 12/7/2025
-            $pdf = MYPDF::loadView('pdf.reservation_form', $reservationData, [], [
-                'instanceConfigurator' => function ($mpdf) {
-                    $mpdf->showImageErrors = true; // Show errors related to images
-                    $mpdf->debug = true; // Enable general debugging
-                    $mpdf->autoScriptToLang = true;
-                    $mpdf->autoLangToFont = true;
-                    $mpdf->allow_charset_conversion = false; // This is often crucial for Arabic/RTL
-                }
-            ]);
-
-            // Get the raw PDF content
-            $pdfContent = $pdf->output();
-
             // 6. Store the PDF file on disk
             $filePath = 'reservation_forms/' . $fileName; // relative to "public" disk
-            Storage::disk('local')->put($filePath, $pdfContent);
+            $pdfContent = $pdfService->store('pdf.reservation_form', $reservationData, $filePath);
 
             if ($existingRF) {
                 $existingRF->update([
@@ -318,85 +311,17 @@ class ReservationFormController extends Controller
      *     )
      * )
      */
-    public function sendForSignature(Request $request, int $bookingId)
+    public function sendForSignature(Request $request, int $bookingId, SendForSignatureAction $action)
     {
-        $user = $request->user();
-
-        if (!$user->can('generate reservation form')) {
-            abort(Response::HTTP_FORBIDDEN, 'Unauthorized');
-        }
-
-        // 1) Load booking + customerInfos
-        $booking = Booking::with(['customerInfos'])->find($bookingId);
-        if (!$booking) {
-            return response()->json(['error' => 'Booking not found'], Response::HTTP_NOT_FOUND);
-        }
-
-        // Optional: Sales فقط على حجوزاته (بنفس منطقك السابق)
-        if ($user->hasRole('Sales') && (int) $booking->created_by !== (int) $user->id) {
-            return response()->json(['error' => 'Forbidden'], Response::HTTP_FORBIDDEN);
-        }
-
-        Log::info("User {$user->id} sent a Reservation Form for booking {$booking->id} for signature.");
-
-        // 2) Must be RF Pending
-        if ($booking->status !== Booking::STATUS_RF_PENDING) {
-            return response()->json([
-                'error' => 'Cannot send for signature unless booking status is "RF Pending".'
-            ], Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
-
-        // 3) Ensure ReservationForm exists and has a generated PDF
-        $rf = ReservationForm::where('booking_id', $booking->id)->first();
-        if (!$rf) {
-            return response()->json([
-                'error' => 'Reservation Form not found for this booking. Generate RF first.'
-            ], Response::HTTP_NOT_FOUND);
-        }
-
-        if (empty($rf->file_path)) {
-            return response()->json([
-                'error' => 'Reservation Form PDF is missing. Generate RF again.'
-            ], Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
-
-        // 4) Recipients from customerInfos
-        $recipients = $booking->customerInfos
-            ->where('requires_signature', true)
-            ->map(function ($c) {
-                return [
-                    'email' => $c->email,
-                    'name'  => $c->name_en ?? null,
-                ];
-            })
-            ->filter(fn ($r) => !empty($r['email']))
-            ->unique('email')
-            ->values()
-            ->toArray();
-
-        if (empty($recipients)) {
-            return response()->json([
-                'error' => 'No customer emails found for this booking.'
-            ], Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
-
-        // 5) Call service (one token per recipient)
-        /** @var DocumentSignatureService $signatureService */
-        $signatureService = app(DocumentSignatureService::class);
-
-        $result = $signatureService->send(
-            signable: $booking,
-            documentable: $rf,
-            type: DocumentType::RF,
-            recipients: $recipients,
-        );
-
-        return response()->json([
-            'message' => 'RF signing link(s) sent successfully.',
-            'sent'    => $result['sent'],
-            'created' => $result['created'],
-            'recipients' => $result['recipients'],
-        ], Response::HTTP_OK);
+        return $action->handle($request, $bookingId, new SignatureSendConfig(
+            permission: 'generate reservation form',
+            requiredBookingStatus: Booking::STATUS_RF_PENDING,
+            documentModelClass: ReservationForm::class,
+            documentTypeValue: DocumentType::RF->value,
+            missingDocMessage: 'Reservation Form not found for this booking. Generate RF first.',
+            missingPdfMessage: 'Reservation Form PDF is missing. Generate RF again.',
+            successMessage: 'RF signing link(s) sent successfully.'
+        ));
     }
 
     /**
@@ -506,87 +431,23 @@ class ReservationFormController extends Controller
      *     )
      * )
      */
-    public function submitSignature(Request $request, string $token)
+    public function submitSignature(Request $request, string $token, SubmitSignatureAction $action, FinalizeSignedDocumentService $finalizer)
     {
-        $request->validate([
-            'signature' => ['required', 'string'], // data:image/png;base64,... OR raw base64
-        ]);
+        $cfg = new SignatureSubmitConfig(
+            type: DocumentType::RF,
+            expectedDocumentClass: \App\Models\ReservationForm::class,
+            signatureDir: 'signatures/rf',
+            invalidDocMessage: 'Invalid document type for this endpoint.',
+        );
 
-        $tokenHash = hash('sha256', $token);
+        $config = new FinalizeConfig(
+            type: DocumentType::RF,
+            view: 'pdf.reservation_form',
+            signedDir: 'reservation_forms/signed',
+            filePrefix: 'RF_SIGNED_FINAL_',
+        );
 
-        DB::beginTransaction();
-        try {
-            $link = SigningLink::query()
-                ->where('token_hash', $tokenHash)
-                ->lockForUpdate()
-                ->first();
-
-            if (!$link) {
-                DB::rollBack();
-                return response()->json(['error' => 'Invalid link.'], Response::HTTP_NOT_FOUND);
-            }
-
-            if ($link->status !== SigningLink::STATUS_PENDING || $link->signed_at !== null) {
-                DB::rollBack();
-                return response()->json(['error' => 'This link is no longer valid.'], 410);
-            }
-
-            if ($link->expires_at !== null && $link->expires_at->isPast()) {
-                $link->forceFill(['status' => SigningLink::STATUS_EXPIRED])->save();
-                DB::commit();
-                return response()->json(['error' => 'This link has expired.'], 410);
-            }
-
-            $rf = $link->documentable;
-            if (!$rf instanceof ReservationForm) {
-                DB::rollBack();
-                return response()->json(['error' => 'Invalid document type for this endpoint.'], Response::HTTP_UNPROCESSABLE_ENTITY);
-            }
-
-            // Decode base64
-            $sig = trim((string) $request->input('signature'));
-            $sig = preg_replace('/^data:image\/png;base64,/', '', $sig);
-            $sig = str_replace(' ', '+', $sig);
-
-            $binary = base64_decode($sig, true);
-            if ($binary === false) {
-                DB::rollBack();
-                return response()->json(['error' => 'Invalid signature encoding.'], Response::HTTP_UNPROCESSABLE_ENTITY);
-            }
-
-            if (strlen($binary) > 1_500_000) {
-                DB::rollBack();
-                return response()->json(['error' => 'Signature image is too large.'], Response::HTTP_UNPROCESSABLE_ENTITY);
-            }
-
-            // Save signature image
-            $signaturePath = 'signatures/rf/' . $link->id . '_' . now()->format('Ymd_His') . '.png';
-            Storage::disk('local')->put($signaturePath, $binary);
-
-            // Consume link (after submit => expired)
-            $link->forceFill([
-                'signature_image_path' => $signaturePath,
-                'signed_at'            => now(),
-                'status'               => SigningLink::STATUS_EXPIRED,
-                'client_ip'            => $request->ip(),
-                'user_agent'           => (string) $request->userAgent(),
-            ])->save();
-
-            // Finalise RF if complete
-            $finalized = $this->finalizeRfIfComplete($rf);
-
-            DB::commit();
-
-            return response()->json([
-                'message'   => 'Signature submitted successfully.',
-                'finalized' => $finalized,
-            ], Response::HTTP_OK);
-
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            Log::error('RF submit error: ' . $e->getMessage());
-            return response()->json(['error' => 'Failed to submit signature.'], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
+        return $action->handle($request, $token, $cfg, finalize: fn($rf) => $finalizer->finalizeIfComplete($rf, $rf->booking_id, $config));
     }
 
     /**
@@ -785,7 +646,7 @@ class ReservationFormController extends Controller
      *     )
      * )
      */
-    public function approve(Request $request, $bookingId)
+    public function approve(Request $request, $bookingId, FinalizeSignedDocumentService $finalizer)
     {
         $user = $request->user();
 
@@ -797,7 +658,20 @@ class ReservationFormController extends Controller
         $rf = $booking->reservationForm()->firstOrFail();
 
         // ✅ block if signatures incomplete OR not finalized
-        if (!$this->finalizeRfIfComplete($rf)) {
+        $config = new FinalizeConfig(
+            type: DocumentType::RF,
+            view: 'pdf.reservation_form',
+            signedDir: 'reservation_forms/signed',
+            filePrefix: 'RF_SIGNED_FINAL_',
+        );
+
+        $finalized = $finalizer->finalizeIfComplete(
+            documentable: $rf,
+            bookingId: $rf->booking_id,
+            cfg: $config
+        );
+
+        if (!$finalized) {
             return response()->json([
                 'error' => 'Cannot approve Reservation Form: required signatures are incomplete.'
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
@@ -833,115 +707,18 @@ class ReservationFormController extends Controller
 
         // Send final signed PDF as attachment (like before)
         $fileName = 'RF_' . $booking->id . '_' . $booking->unit->unit_no . '_SIGNED.pdf';
+        $docType = 'Reservation Form (RF)';
+        $subject = 'Your Reservation Form (RF)';
+        $view = 'emails.rf_spa_final';
 
         foreach ($booking->customerInfos as $customer) {
             if (empty($customer->email)) continue;
 
             Mail::to($customer->email)->queue(
-                new ReservationFormMail($booking, $customer, $fileName, $rf->signed_file_path)
+                new RFSPAMail($booking, $customer, $fileName, $rf->signed_file_path, $docType, $subject, $view)
             );
         }
 
         return response()->json(['message' => 'Reservation form has been approved and sent to customer(s).'], Response::HTTP_OK);
-    }
-
-    private function finalizeRfIfComplete(ReservationForm $rf): bool
-    {
-        // already finalized
-        if (!empty($rf->signed_at) && !empty($rf->signed_file_path)) {
-            return true;
-        }
-
-        $booking = Booking::with(['customerInfos', 'installments.paymentPlan', 'unit', 'paymentPlan'])
-            ->find($rf->booking_id);
-
-        if (!$booking) {
-            return false;
-        }
-
-        $requiredEmails = $booking->customerInfos
-            ->where('requires_signature', true)
-            ->pluck('email')
-            ->filter()
-            ->map(fn ($e) => strtolower(trim($e)))
-            ->unique()
-            ->values();
-
-        if ($requiredEmails->isEmpty()) {
-            return false;
-        }
-
-        // ✅ strict: distinct emails signed
-        $signedDistinct = SigningLink::query()
-            ->whereMorphedTo('documentable', $rf)
-            ->where('document_type', DocumentType::RF->value)
-            ->whereIn('recipient_email', $requiredEmails->all())
-            ->whereNotNull('signed_at')
-            ->whereNotNull('signature_image_path')
-            ->distinct('recipient_email')
-            ->count('recipient_email');
-
-        if ($signedDistinct !== $requiredEmails->count()) {
-            return false;
-        }
-
-        // Map signatures by email -> absolute path
-        $signaturesByEmail = SigningLink::query()
-            ->whereMorphedTo('documentable', $rf)
-            ->where('document_type', DocumentType::RF->value)
-            ->whereIn('recipient_email', $requiredEmails->all())
-            ->whereNotNull('signed_at')
-            ->whereNotNull('signature_image_path')
-            ->orderByDesc('signed_at')
-            ->get()
-            ->unique(fn ($l) => strtolower(trim($l->recipient_email))) // 🔥 آخر توقيع لكل إيميل
-            ->mapWithKeys(function ($l) {
-                return [
-                    strtolower(trim($l->recipient_email)) => [
-                        'path'      => Storage::disk('local')->path($l->signature_image_path),
-                        'signed_at' => $l->signed_at,
-                    ],
-                ];
-            })
-            ->toArray();
-
-        // your calc (if needed)
-        if ($booking->paymentPlan) {
-            $booking->paymentPlan->dld_fee = round($booking->price * ($booking->paymentPlan->dld_fee_percentage / 100), 2);
-        }
-
-        $data = [
-            'booking'           => $booking,
-            'customerInfos'     => $booking->customerInfos,
-            'paymentPlan'       => $booking->paymentPlan,
-            'installments'      => $booking->installments,
-            'unit'              => $booking->unit,
-            'signaturesByEmail' => $signaturesByEmail,
-            'finalSignedAt'     => now(),
-            'companySignedAt'   => $rf->company_signed_at,
-        ];
-
-        $pdf = MYPDF::loadView('pdf.reservation_form', $data, [], [
-            'instanceConfigurator' => function ($mpdf) {
-                $mpdf->autoScriptToLang = true;
-                $mpdf->autoLangToFont = true;
-                $mpdf->allow_charset_conversion = false;
-            }
-        ]);
-
-        $content = $pdf->output();
-
-        $fileName = 'RF_SIGNED_FINAL_' . $rf->booking_id . '_' . now()->format('Ymd_His') . '.pdf';
-        $path = 'reservation_forms/signed/' . $fileName;
-
-        Storage::disk('local')->put($path, $content);
-
-        $rf->forceFill([
-            'signed_at'        => now(),
-            'signed_file_path' => $path,
-            'status'           => 'Signed',
-        ])->save();
-
-        return true;
     }
 }
