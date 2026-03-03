@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -13,23 +14,33 @@ class OneTimeLinkMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
-    public $otl;
-    public $user;
+    public int $tries = 3;
+    public array $backoff = [30,120];
 
-    public $tries = 3;
-    public $backoff = [30,120];
-
-    public function __construct($otl = null, $user = null)
-    {
-        $this->otl = $otl;
-        $this->user = $user;
-    }
+    public function __construct(
+        public ?User $user = null,
+        public ?string $otlUrl = null,
+        public ?string $documentPath = null,
+    )
+    {}
 
     public function build()
     {
-        if ($this->otl)
-            return $this->subject('Your Registration Link')->view('emails.otl');
-        else
-            return $this->subject('Account Registration Approved')->view('emails.user_approved');
+        if ($this->otlUrl) {
+            return $this->subject(config('app.name') . ' | Registration Link')
+                ->view('emails.otl');
+        }
+
+        $mail = $this->subject(config('app.name') . ' | Account Registration Approved')
+            ->view('emails.user_approved');
+
+        // If a document path is provided, attach it
+        if (!empty($this->documentPath)) {
+            $mail->attach(storage_path("app/private/{$this->documentPath}"), [
+                'mime' => 'application/pdf',
+            ]);
+        }
+
+        return $mail;
     }
 }

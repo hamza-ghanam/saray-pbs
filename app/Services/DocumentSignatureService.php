@@ -37,7 +37,8 @@ class DocumentSignatureService
         Model $documentable,
         DocumentType $type,
         iterable $recipients,
-        ?Carbon $expiresAt = null
+        ?Carbon $expiresAt = null,
+        ?string $customMessage = null
     ): array {
         if (! $documentable instanceof SignableDocument) {
             throw new InvalidArgumentException('Document does not support signing (missing HasPdfDocument).');
@@ -104,7 +105,13 @@ class DocumentSignatureService
 
                 // $downloadUrl = rtrim(config('app.url'), '/') . '/api/sign/doc/' . $token . '/download?variant=latest';
 
-                $humanTitle = $type->value === 'RF' ? 'Reservation Form' : ($type->value . ' Document');
+                $humanTitle = match ($type->value) {
+                    'RF'                => 'Reservation Form',
+                    'SPA'               => 'Sales Purchase Agreement',
+                    'BROKER_AGREEMENT'  => 'Broker Agreement',
+                    default             => $type->value . ' Document',
+                };
+
                 $fileName = $humanTitle . '_' . $recipient['name'] . '_UNSIGNED.pdf';
 
                 DB::commit();
@@ -119,6 +126,8 @@ class DocumentSignatureService
                         fileName: $fileName,
                         recipientName: $recipient['name'],
                         documentTitle: $humanTitle,
+                        customMessage: $customMessage,
+                        isWithdraw: true
                     )
                 );
 

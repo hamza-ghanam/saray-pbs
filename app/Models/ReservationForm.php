@@ -23,7 +23,9 @@ class ReservationForm extends Model implements SignableDocument
 
     protected $casts = [
         'unit_id' => 'integer',
+        'booking_id' => 'integer',
         'company_signed_at' => 'datetime',
+        'signed_at' => 'datetime',
     ];
 
     public function booking()

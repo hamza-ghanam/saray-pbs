@@ -8,6 +8,8 @@ use App\Models\Booking;
 use App\Models\Building;
 use App\Models\ReservationForm;
 use App\Models\SPA;
+use App\Models\User;
+use App\Models\UserDoc;
 use App\Services\DocumentSignatureService;
 use App\Services\ImageService;
 use Illuminate\Http\Request;
@@ -135,11 +137,11 @@ class SignedDocumentsController extends Controller
         }
 
         $data = $request->validate([
-            'signable_type'      => 'required|string|in:Booking',
+            'signable_type'      => 'required|string|in:Booking,User',
             'signable_id'        => 'required|integer',
-            'documentable_type'  => 'required|string|in:RF,SPA',
+            'documentable_type'  => 'required|string|in:RF,SPA,UserDoc',
             'documentable_id'    => 'required|integer',
-            'document_type'      => 'nullable|string|in:RF,SPA',
+            'document_type'      => 'nullable|string|in:RF,SPA,BROKER_AGREEMENT',
         ]);
 
         $signableClass = $this->resolveSignableAlias($data['signable_type']);
@@ -312,7 +314,7 @@ class SignedDocumentsController extends Controller
             $link->forceFill([
                 'signature_image_path' => null,
                 'signed_at'            => null,
-                'status'               => SigningLink::STATUS_CANCELLED,
+                'status'               => SigningLink::STATUS_WITHDRAWN,
             ])->save();
 
             // إذا الوثيقة تم finalise مسبقاً → نرجعها Not Signed
@@ -377,7 +379,7 @@ class SignedDocumentsController extends Controller
 
         // Recommended: allow download even after submit (expired),
         // but block if cancelled.
-        if ($link->status === SigningLink::STATUS_CANCELLED) {
+        if ($link->status === SigningLink::STATUS_WITHDRAWN) {
             return response()->json(['error' => 'Link is not valid.'], 410);
         }
 
@@ -428,6 +430,7 @@ class SignedDocumentsController extends Controller
     {
         return match ($alias) {
             'Booking' => Booking::class,
+            'User'    => User::class,
             default => throw new HttpException(
                 ResponseAlias::HTTP_UNPROCESSABLE_ENTITY,
                 'Unsupported signable_type alias.'
@@ -441,8 +444,9 @@ class SignedDocumentsController extends Controller
     private function resolveDocumentableAlias(string $alias): string
     {
         return match ($alias) {
-            'RF'  => ReservationForm::class,
-            'SPA' => SPA::class,
+            'RF'      => ReservationForm::class,
+            'SPA'     => SPA::class,
+            'UserDoc' => UserDoc::class,
             default => throw new HttpException(
                 ResponseAlias::HTTP_UNPROCESSABLE_ENTITY,
                 'Unsupported documentable_type alias.'

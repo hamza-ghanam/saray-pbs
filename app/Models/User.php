@@ -25,6 +25,8 @@ class User extends Authenticatable
         'email',
         'password',
         'status',
+        'doc_type',
+        'file_path',
     ];
 
     /**
@@ -94,5 +96,15 @@ class User extends Authenticatable
     public function bookingsAsSaleSource()
     {
         return $this->hasMany(Booking::class, 'sale_source_id');
+    }
+
+    public function signature()
+    {
+        return $this->hasOne(UserSignature::class);
+    }
+
+    public function withdrawnSigningLinks()
+    {
+        return $this->hasMany(SigningLink::class, 'withdrawn_by');
     }
 }

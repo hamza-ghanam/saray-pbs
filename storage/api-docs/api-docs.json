@@ -1187,39 +1187,366 @@
                 ]
             }
         },
-        "/brokers/upload-signed-agreement": {
+        "/brokers/{brokerUserId}/agreements/generate": {
             "post": {
                 "tags": [
                     "Brokers"
                 ],
-                "summary": "Upload or replace signed agreement for a pending Broker",
-                "description": "Upload or replace a signed agreement for a pending Broker.\n\nThis endpoint allows a user with role=\"Broker\" and status=\"Pending\"\nto authenticate via email/password (minimal check) and upload or replace\ntheir signed agreement (doc_type=\"signed_agreement\"). Only one agreement\nrecord exists per user; uploading again replaces the existing one.",
-                "operationId": "1e49b1d943c9c5996801dae8cbd779ba",
+                "summary": "Generate Broker Agreement PDF (store as UserDoc)",
+                "description": "Staff-only endpoint. Generates the Broker Agreement PDF and stores it privately as a UserDoc (doc_type=broker_agreement). Does not send a signing link. Use the send-for-signature endpoint after generation.",
+                "operationId": "generateBrokerAgreement",
+                "parameters": [
+                    {
+                        "name": "brokerUserId",
+                        "in": "path",
+                        "description": "Broker user ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 300
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Broker agreement PDF generated and returned as a download.",
+                        "content": {
+                            "application/pdf": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden (missing permission generate one-time link)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Broker not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Business rule error (wrong role/status/profile/documents)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "oneOf": [
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "User is not a Broker"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Broker must be Pending to generate agreement"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Broker profile missing"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Missing required documents"
+                                                },
+                                                "missing": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    },
+                                                    "example": [
+                                                        "trade_license",
+                                                        "bank_account"
+                                                    ]
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/brokers/{brokerUserId}/agreements/send-for-signature": {
+            "post": {
+                "tags": [
+                    "Brokers"
+                ],
+                "summary": "Send one-time signing link for existing Broker Agreement",
+                "description": "Staff-only endpoint. Sends a one-time signing link for an already generated Broker Agreement (doc_type=broker_agreement). The agreement must be generated beforehand using the generateBrokerAgreement endpoint.",
+                "operationId": "sendBrokerAgreementForSignature",
+                "parameters": [
+                    {
+                        "name": "brokerUserId",
+                        "in": "path",
+                        "description": "Broker user ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 123
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Signing link sent successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Signing link sent successfully."
+                                        },
+                                        "broker": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 123
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "format": "email",
+                                                    "example": "broker@example.com"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "agreement_doc_id": {
+                                            "type": "integer",
+                                            "example": 456
+                                        },
+                                        "signing": {
+                                            "description": "Signing link payload (implementation-dependent)",
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden (missing permission generate one-time link)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Broker not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Business rule error (agreement not generated, missing docs, wrong status)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "oneOf": [
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Broker agreement not generated yet. Generate it first."
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Missing required documents"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Broker must be Pending to send agreement for signature"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/brokers/agreements/{token}/submit-signature": {
+            "post": {
+                "tags": [
+                    "Brokers"
+                ],
+                "summary": "Submit broker agreement signature (token-based) + update broker profile stamp/representative/designation",
+                "description": "Broker submits a base64 signature image using a one-time token. Requires minimal authentication (email/password). Also saves representative and designation as strings and persists the stamp image by decoding base64, storing it privately, and writing the stored path to broker profile (stamp_path). Final PDF is generated later on admin approval.",
+                "operationId": "submitBrokerAgreementSignature",
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "path",
+                        "description": "One-time signing token (plain token, server matches by token_hash). Must be unused and not expired.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "c4b9c8b7b2e34c7fb2a1f4a3d3d2f1a0"
+                        }
+                    }
+                ],
                 "requestBody": {
+                    "description": "Minimal broker authentication + signature payload + broker profile signing metadata",
                     "required": true,
                     "content": {
-                        "multipart/form-data": {
+                        "application/json": {
                             "schema": {
                                 "required": [
                                     "email",
                                     "password",
-                                    "signed_agreement"
+                                    "signature",
+                                    "representative",
+                                    "designation",
+                                    "stamp"
                                 ],
                                 "properties": {
                                     "email": {
+                                        "description": "Broker email. Must match token recipient_email.",
                                         "type": "string",
                                         "format": "email",
                                         "example": "broker@example.com"
                                     },
                                     "password": {
+                                        "description": "Broker password for minimal authentication.",
                                         "type": "string",
                                         "format": "password",
-                                        "example": "strongpassword123"
+                                        "example": "StrongPassword123!"
                                     },
-                                    "signed_agreement": {
-                                        "description": "The signed agreement file (pdf only)",
+                                    "signature": {
+                                        "description": "Signature image as base64 string. Accepts data-URI (data:image/png;base64,...) or raw base64 (implementation-dependent).",
                                         "type": "string",
-                                        "format": "binary"
+                                        "example": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."
+                                    },
+                                    "representative": {
+                                        "description": "Broker representative full name to be stored in broker profile.",
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "John Doe"
+                                    },
+                                    "designation": {
+                                        "description": "Representative designation/title to be stored in broker profile.",
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "Sales Director"
+                                    },
+                                    "stamp": {
+                                        "description": "Company stamp image as base64. Server decodes and stores privately, and saves resulting path into broker_profile.stamp_path. Only PNG/JPEG allowed. Recommended ≤ 2MB after decoding.",
+                                        "type": "string",
+                                        "example": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."
+                                    },
+                                    "signed_at": {
+                                        "description": "Optional. If your SubmitSignatureAction supports client-sent timestamps; otherwise ignored.",
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "2026-02-22T11:03:00+04:00",
+                                        "nullable": true
                                     }
                                 },
                                 "type": "object"
@@ -1229,22 +1556,119 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Signed agreement uploaded or replaced successfully",
+                        "description": "Signature submitted successfully (not finalized).",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SubmitSignatureOk"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid credentials.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden (not pending broker / token not owned by email / token invalid/used/expired)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Token not found / invalid",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error (field errors).",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrors"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/brokers/{brokerUserId}/agreements/withdraw": {
+            "post": {
+                "tags": [
+                    "Brokers"
+                ],
+                "summary": "Withdraw broker agreement signature and resend a new signing link",
+                "description": "Withdraws the latest submitted broker agreement signature (if broker is not approved yet) and sends a new signing link for re-submission.",
+                "operationId": "withdrawBrokerAgreement",
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "description": "Broker user ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 123
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Withdrawal reason/message that will be recorded and sent to the broker.",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "reason"
+                                ],
+                                "properties": {
+                                    "reason": {
+                                        "type": "string",
+                                        "maxLength": 1000,
+                                        "example": "Your signature/stamp is not clear. Please re-submit the agreement with a clear stamp and signature."
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Withdrawn successfully and a new signing link has been sent.",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "id": {
-                                            "type": "integer",
-                                            "example": 15
-                                        },
                                         "message": {
                                             "type": "string",
-                                            "example": "Signed agreement replaced successfully"
-                                        },
-                                        "doc_path": {
-                                            "type": "string",
-                                            "example": "https://yourapp.com/storage/agreements/signed/agreement_15.pdf"
+                                            "example": "Broker agreement withdrawn and a new signing link has been sent."
                                         }
                                     },
                                     "type": "object"
@@ -1252,19 +1676,99 @@
                             }
                         }
                     },
-                    "401": {
-                        "description": "Invalid credentials"
-                    },
                     "403": {
-                        "description": "User is not a pending Broker"
+                        "description": "Forbidden - user lacks permission approve registration.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Forbidden"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Broker not found (or user is not a Broker).",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Broker not found."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "422": {
-                        "description": "Validation error"
+                        "description": "Unprocessable Entity - broker already approved, no submitted signature exists, or invalid agreement document.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "oneOf": [
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Cannot withdraw: broker is already approved."
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Broker has no submitted signature to withdraw."
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Invalid broker agreement document."
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
                     },
                     "500": {
-                        "description": "Server error"
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Unexpected error occurred."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
             }
         },
         "/api/buildings": {
@@ -2748,17 +3252,23 @@
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "user_type"
+                                    "user_type",
+                                    "email"
                                 ],
                                 "properties": {
                                     "user_type": {
                                         "description": "Either 'Broker' or 'Contractor'",
                                         "type": "string",
+                                        "enum": [
+                                            "Broker",
+                                            "Contractor"
+                                        ],
                                         "example": "Broker"
                                     },
                                     "email": {
-                                        "description": "User email to share the OTL via it.",
+                                        "description": "Email address that will receive the one-time registration link.",
                                         "type": "string",
+                                        "format": "email",
                                         "example": "myemail@hotmail.com"
                                     }
                                 },
@@ -2769,13 +3279,76 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "One-time link successfully generated and shared by email."
+                        "description": "One-time link successfully generated and shared by email.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "One-time link successfully generated and shared by email."
+                                        },
+                                        "email": {
+                                            "type": "string",
+                                            "format": "email",
+                                            "example": "myemail@hotmail.com"
+                                        },
+                                        "user_type": {
+                                            "type": "string",
+                                            "enum": [
+                                                "Broker",
+                                                "Contractor"
+                                            ],
+                                            "example": "Broker"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "403": {
-                        "description": "Forbidden (user lacks permission)"
+                        "description": "Forbidden (user lacks permission)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Forbidden"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "422": {
-                        "description": "Validation error"
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "example": {
+                                                "email": [
+                                                    "The email field is required."
+                                                ],
+                                                "user_type": [
+                                                    "The selected user_type is invalid."
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -2979,7 +3552,8 @@
         "/users/{id}/approve": {
             "post": {
                 "tags": [
-                    "User Management"
+                    "User Management",
+                    "Brokers"
                 ],
                 "summary": "Approve user registration",
                 "description": "Approve a user's registration (from Pending to Active).",
@@ -7254,8 +7828,8 @@
                 "tags": [
                     "User Management"
                 ],
-                "summary": "Get user details, with docs download URLs",
-                "description": "Get user details, including role, permissions, and doc download links.",
+                "summary": "Get user details",
+                "description": "Get user details, including role, permissions, docs metadata, broker profile (if Broker),\nand the latest BROKER_AGREEMENT signing link (if any).\n\nNotes:\n- `latest_signing_link.signable_type` and `documentable_type` are returned as class basenames (e.g., `User`, `UserDoc`).\n- `broker_profile.stamp_url` is a protected endpoint that returns the broker stamp image.",
                 "operationId": "5f84a2bb6f570414aef011f7e9783c3b",
                 "parameters": [
                     {
@@ -7297,6 +7871,7 @@
                                             "example": "Broker"
                                         },
                                         "permissions": {
+                                            "description": "Role permissions",
                                             "type": "array",
                                             "items": {
                                                 "type": "string",
@@ -7304,22 +7879,124 @@
                                             }
                                         },
                                         "docs": {
-                                            "description": "User documents, each with doc_type and download_url",
+                                            "description": "User documents metadata",
                                             "type": "array",
                                             "items": {
                                                 "properties": {
+                                                    "doc_id": {
+                                                        "type": "integer",
+                                                        "example": 1458
+                                                    },
                                                     "doc_type": {
                                                         "type": "string",
-                                                        "example": "rera_cert"
+                                                        "example": "signed_agreement"
                                                     },
-                                                    "download_url": {
+                                                    "created_at": {
                                                         "type": "string",
-                                                        "format": "uri",
-                                                        "example": "http://your-domain.test/storage/docs/rera_cert_42.pdf"
+                                                        "format": "date-time",
+                                                        "example": "2026-02-28T09:00:00Z"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2026-02-28T09:00:00Z"
                                                     }
                                                 },
                                                 "type": "object"
                                             }
+                                        },
+                                        "broker_profile": {
+                                            "description": "Broker profile details if the user role is Broker",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 12
+                                                },
+                                                "rera_number": {
+                                                    "type": "string",
+                                                    "example": "123456",
+                                                    "nullable": true
+                                                },
+                                                "company_name": {
+                                                    "type": "string",
+                                                    "example": "ABC Real Estate LLC",
+                                                    "nullable": true
+                                                },
+                                                "phone": {
+                                                    "type": "string",
+                                                    "example": "+971501234567",
+                                                    "nullable": true
+                                                },
+                                                "stamp_url": {
+                                                    "type": "string",
+                                                    "format": "uri",
+                                                    "example": "http://your-domain.test/api/brokers/42/stamp"
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2026-02-28T09:00:00Z"
+                                                },
+                                                "updated_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2026-02-28T09:00:00Z"
+                                                }
+                                            },
+                                            "type": "object",
+                                            "nullable": true
+                                        },
+                                        "latest_signing_link": {
+                                            "description": "Latest BROKER_AGREEMENT signing link details (if any), so frontend can call /api/signatures.",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 987
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "signed"
+                                                },
+                                                "recipient_email": {
+                                                    "type": "string",
+                                                    "format": "email",
+                                                    "example": "broker@example.com"
+                                                },
+                                                "expires_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2026-03-01T10:30:00Z",
+                                                    "nullable": true
+                                                },
+                                                "signed_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2026-02-28T09:15:00Z",
+                                                    "nullable": true
+                                                },
+                                                "signable_type": {
+                                                    "type": "string",
+                                                    "example": "User"
+                                                },
+                                                "signable_id": {
+                                                    "type": "integer",
+                                                    "example": 300
+                                                },
+                                                "documentable_type": {
+                                                    "type": "string",
+                                                    "example": "UserDoc"
+                                                },
+                                                "documentable_id": {
+                                                    "type": "integer",
+                                                    "example": 1458
+                                                },
+                                                "document_type": {
+                                                    "type": "string",
+                                                    "example": "BROKER_AGREEMENT"
+                                                }
+                                            },
+                                            "type": "object",
+                                            "nullable": true
                                         }
                                     },
                                     "type": "object"
@@ -8413,6 +9090,60 @@
                     "ar": {
                         "type": "string",
                         "example": "أفروديتي"
+                    }
+                },
+                "type": "object"
+            },
+            "ValidationErrors": {
+                "description": "Laravel validation errors map: field => array of messages",
+                "type": "object",
+                "example": {
+                    "email": [
+                        "The email field is required."
+                    ],
+                    "stamp": [
+                        "Stamp must be a PNG or JPEG image."
+                    ]
+                },
+                "additionalProperties": {
+                    "schema": "BrokerController",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "BrokerController": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                }
+            },
+            "ErrorResponse": {
+                "description": "Simple error payload",
+                "properties": {
+                    "error": {
+                        "type": "string",
+                        "example": "Invalid credentials"
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Invalid or expired token",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "SubmitSignatureOk": {
+                "description": "Generic success payload for signature submission",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "example": "Signature submitted successfully."
+                    },
+                    "data": {
+                        "type": "object",
+                        "additionalProperties": true
                     }
                 },
                 "type": "object"

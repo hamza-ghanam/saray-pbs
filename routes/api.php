@@ -143,6 +143,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/otls/generate', [OneTimeLinkController::class, 'generateLink']);
     Route::post('/users/{id}/approve', [OneTimeLinkController::class, 'approve']);
     Route::post('/brokers/{user}/agreements', [OneTimeLinkController::class, 'downloadAgreement']);
+    Route::post('/brokers/{user}/agreements/generate', [BrokerController::class, 'generateAgreement']);
+    Route::post('/brokers/{user}/agreements/send-for-signature', [BrokerController::class, 'sendAgreementForSignature']);
+    Route::post('/brokers/{user}/agreements/withdraw', [BrokerController::class, 'withdrawBrokerAgreement']);
+    Route::get('/brokers/{user}/stamp', [BrokerController::class, 'showStamp'])->name('stamp.image');
 });
 Route::post('/otls/register', [OneTimeLinkController::class, 'selfRegisterUser']);
 
@@ -173,7 +177,7 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 // Brokers
-Route::post('/brokers/upload-signed-agreement', [BrokerController::class, 'uploadSignedAgreement']);
+Route::post('/brokers/agreements/{token}/sign', [BrokerController::class, 'submitAgreementSignature']);
 
 // Unit Updates
 Route::middleware('auth:sanctum')->group(function () {

@@ -348,6 +348,7 @@ class ReservationFormController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
+     *             type="object",
      *             required={"signature"},
      *             @OA\Property(
      *                 property="signature",
@@ -447,7 +448,15 @@ class ReservationFormController extends Controller
             filePrefix: 'RF_SIGNED_FINAL_',
         );
 
-        return $action->handle($request, $token, $cfg, finalize: fn($rf) => $finalizer->finalizeIfComplete($rf, $rf->booking_id, $config));
+        return $action->handle(
+            $request,
+            $token,
+            $cfg,
+            finalize: function ($rf) use ($finalizer, $config) {
+                $signedPath = $finalizer->finalizeBookingIfComplete($rf, $rf->booking_id, $config);
+                return !empty($signedPath);
+            }
+        );
     }
 
     /**
@@ -665,16 +674,22 @@ class ReservationFormController extends Controller
             filePrefix: 'RF_SIGNED_FINAL_',
         );
 
-        $finalized = $finalizer->finalizeIfComplete(
+        $signedPath = $finalizer->finalizeBookingIfComplete(
             documentable: $rf,
             bookingId: $rf->booking_id,
             cfg: $config
         );
 
-        if (!$finalized) {
+        if (empty($signedPath)) {
             return response()->json([
                 'error' => 'Cannot approve Reservation Form: required signatures are incomplete.'
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $rf->refresh();
+
+        if (empty($rf->signed_file_path)) {
+            $rf->forceFill(['signed_file_path' => $signedPath])->save();
         }
 
         if ($rf->status !== 'Signed') {

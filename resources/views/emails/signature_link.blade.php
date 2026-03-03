@@ -91,6 +91,18 @@
             Dear {{ $recipientName ?? 'Customer' }},
         </p>
 
+        @if($isWithdraw)
+            <p>
+                Your previously submitted agreement requires re-submission.
+            </p>
+
+            @if($customMessage)
+                <p>
+                    <strong>Reason:</strong> {{ $customMessage }}
+                </p>
+            @endif
+        @endif
+
         <p>
             Please review and sign the following document:
             <span class="highlight">{{ $documentTitle ?? 'Document' }}</span>.

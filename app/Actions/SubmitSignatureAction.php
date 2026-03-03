@@ -82,7 +82,7 @@ final class SubmitSignatureAction
             $link->forceFill([
                 'signature_image_path' => $signaturePath,
                 'signed_at'            => now(),
-                'status'               => SigningLink::STATUS_EXPIRED,
+                'status'               => SigningLink::STATUS_SIGNED,
                 'client_ip'            => $request->ip(),
                 'user_agent'           => (string) $request->userAgent(),
             ])->save();
@@ -103,7 +103,7 @@ final class SubmitSignatureAction
         } catch (\Throwable $e) {
             DB::rollBack();
             Log::error('submit signature error: ' . $e->getMessage());
-            return response()->json(['error' => 'Failed to submit signature.'], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return response()->json(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 }

@@ -6,6 +6,8 @@ use App\Enums\DocumentType;
 
 final class FinalizeConfig
 {
+    public ?\Closure $persist = null;
+
     public function __construct(
         public readonly DocumentType $type,
         public readonly string $view,

@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\UserDoc;
+use App\Models\SigningLink;
+use App\Enums\DocumentType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -153,11 +155,16 @@ class UserManagementController extends Controller
 
 
     /**
-     * Get user details, including role, permissions, and doc download links.
+     * Get user details, including role, permissions, docs metadata, broker profile (if Broker),
+     * and the latest BROKER_AGREEMENT signing link (if any).
+     *
+     * Notes:
+     * - `latest_signing_link.signable_type` and `documentable_type` are returned as class basenames (e.g., `User`, `UserDoc`).
+     * - `broker_profile.stamp_url` is a protected endpoint that returns the broker stamp image.
      *
      * @OA\Get(
      *     path="/users/{id}",
-     *     summary="Get user details, with docs download URLs",
+     *     summary="Get user details",
      *     tags={"User Management"},
      *     security={{"sanctum":{}}},
      *     @OA\Parameter(
@@ -180,16 +187,49 @@ class UserManagementController extends Controller
      *             @OA\Property(
      *                 property="permissions",
      *                 type="array",
+     *                 description="Role permissions",
      *                 @OA\Items(type="string", example="add broker")
      *             ),
      *             @OA\Property(
      *                 property="docs",
      *                 type="array",
-     *                 description="User documents, each with doc_type and download_url",
+     *                 description="User documents metadata",
      *                 @OA\Items(
-     *                     @OA\Property(property="doc_type", type="string", example="rera_cert"),
-     *                     @OA\Property(property="download_url", type="string", format="uri", example="http://your-domain.test/storage/docs/rera_cert_42.pdf")
+     *                     type="object",
+     *                     @OA\Property(property="doc_id", type="integer", example=1458),
+     *                     @OA\Property(property="doc_type", type="string", example="signed_agreement"),
+     *                     @OA\Property(property="created_at", type="string", format="date-time", example="2026-02-28T09:00:00Z"),
+     *                     @OA\Property(property="updated_at", type="string", format="date-time", example="2026-02-28T09:00:00Z")
      *                 )
+     *             ),
+     *             @OA\Property(
+     *                 property="broker_profile",
+     *                 type="object",
+     *                 nullable=true,
+     *                 description="Broker profile details if the user role is Broker",
+     *                 @OA\Property(property="id", type="integer", example=12),
+     *                 @OA\Property(property="rera_number", type="string", nullable=true, example="123456"),
+     *                 @OA\Property(property="company_name", type="string", nullable=true, example="ABC Real Estate LLC"),
+     *                 @OA\Property(property="phone", type="string", nullable=true, example="+971501234567"),
+     *                 @OA\Property(property="stamp_url", type="string", format="uri", example="http://your-domain.test/api/brokers/42/stamp"),
+     *                 @OA\Property(property="created_at", type="string", format="date-time", example="2026-02-28T09:00:00Z"),
+     *                 @OA\Property(property="updated_at", type="string", format="date-time", example="2026-02-28T09:00:00Z")
+     *             ),
+     *             @OA\Property(
+     *                 property="latest_signing_link",
+     *                 type="object",
+     *                 nullable=true,
+     *                 description="Latest BROKER_AGREEMENT signing link details (if any), so frontend can call /api/signatures.",
+     *                 @OA\Property(property="id", type="integer", example=987),
+     *                 @OA\Property(property="status", type="string", example="signed"),
+     *                 @OA\Property(property="recipient_email", type="string", format="email", example="broker@example.com"),
+     *                 @OA\Property(property="expires_at", type="string", format="date-time", nullable=true, example="2026-03-01T10:30:00Z"),
+     *                 @OA\Property(property="signed_at", type="string", format="date-time", nullable=true, example="2026-02-28T09:15:00Z"),
+     *                 @OA\Property(property="signable_type", type="string", example="User"),
+     *                 @OA\Property(property="signable_id", type="integer", example=300),
+     *                 @OA\Property(property="documentable_type", type="string", example="UserDoc"),
+     *                 @OA\Property(property="documentable_id", type="integer", example=1458),
+     *                 @OA\Property(property="document_type", type="string", example="BROKER_AGREEMENT")
      *             )
      *         )
      *     ),
@@ -207,7 +247,7 @@ class UserManagementController extends Controller
         }
 
         // Retrieve the user
-        $user = User::find($id);
+        $user = User::with('brokerProfile')->find($id);
         if (!$user) {
             return response()->json(['error' => 'User not found'], Response::HTTP_NOT_FOUND);
         }
@@ -239,6 +279,45 @@ class UserManagementController extends Controller
             ];
         });
 
+        // Broker profile payload
+        $brokerProfilePayload = null;
+
+        if ($roleName === 'Broker' && $user->brokerProfile) {
+            $brokerProfile = $user->brokerProfile;
+
+            $brokerProfilePayload = [
+                'id' => $brokerProfile->id,
+                'rera_number' => $brokerProfile->rera_number ?? null,
+                'company_name' => $brokerProfile->company_name ?? null,
+                'phone' => $brokerProfile->phone ?? null,
+                'stamp_url' => url("/api/brokers/{$user->id}/stamp"),
+                'created_at' => $brokerProfile->created_at,
+                'updated_at' => $brokerProfile->updated_at,
+            ];
+        }
+
+        // Latest Broker Agreement signing link (so frontend can call /api/signatures with it)
+        $latestBrokerAgreementLink = SigningLink::query()
+            ->where('signable_type', User::class)
+            ->where('signable_id', $user->id)
+            ->where('documentable_type', UserDoc::class)
+            ->where('document_type', DocumentType::BROKER_AGREEMENT->value)
+            ->orderByDesc('created_at')
+            ->first();
+
+        $latestSigningLinkPayload = $latestBrokerAgreementLink ? [
+            'id' => $latestBrokerAgreementLink->id,
+            'status' => $latestBrokerAgreementLink->status,
+            'recipient_email' => $latestBrokerAgreementLink->recipient_email,
+            'expires_at' => $latestBrokerAgreementLink->expires_at,
+            'signed_at' => $latestBrokerAgreementLink->signed_at,
+            'signable_type' => class_basename($latestBrokerAgreementLink->signable_type),
+            'signable_id' => $latestBrokerAgreementLink->signable_id,
+            'documentable_type' => class_basename($latestBrokerAgreementLink->documentable_type),
+            'documentable_id' => $latestBrokerAgreementLink->documentable_id,
+            'document_type' => $latestBrokerAgreementLink->document_type,
+        ] : null;
+
         $result = [
             'id' => $user->id,
             'name' => $user->name,
@@ -247,6 +326,8 @@ class UserManagementController extends Controller
             'role' => $roleName,
             'permissions' => $permissions,
             'docs' => $docs,
+            'broker_profile' => $brokerProfilePayload,
+            'latest_signing_link' => $latestSigningLinkPayload,
         ];
 
         return response()->json($result, Response::HTTP_OK);

@@ -2,8 +2,10 @@
 
 namespace App\Services;
 
+use App\Actions\LegalListNumbering;
 use Illuminate\Support\Facades\Storage;
 use Mccarlosen\LaravelMpdf\Facades\LaravelMpdf as MYPDF;
+use Throwable;
 
 readonly class PdfService
 {
@@ -13,10 +15,17 @@ readonly class PdfService
 
     /**
      * Render view into raw PDF bytes.
+     * @throws Throwable
      */
     public function render(string $view, array $data = [], array $mpdfOverrides = []): string
     {
-        $pdf = MYPDF::loadView($view, $data, [], [
+        $html = view($view, $data)->render();
+
+        // 2) Apply deterministic legal numbering on <ol class="legal">
+        $html = LegalListNumbering::apply($html, 'legal');
+
+        // 3) Load HTML into mPDF (not loadView)
+        $pdf = MYPDF::loadHTML($html, [
             'instanceConfigurator' => function ($mpdf) use ($mpdfOverrides) {
                 $this->configureMpdf($mpdf, $mpdfOverrides);
             }

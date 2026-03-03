@@ -16,10 +16,15 @@ class BrokerProfile extends Model
         'address',
         'po_box',
         'telephone',
+        'representative',
+        'stamp_path',
+        'designation',
+        'agreed_at',
     ];
 
     protected $casts = [
         'user_id' => 'integer',
+        'agreed_at' => 'datetime',
     ];
 
     public function user()

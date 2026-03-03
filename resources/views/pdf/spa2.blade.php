@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8"/>
-    <title>SPA</title>
     <style>
         /* 1) Define your page size, margins, and hook up header/footer */
         @page {

@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8"/>
-    <title>Reservation Form</title>
     <style>
         /* 1) Define your page size, margins, and hook up header/footer */
         @page {
@@ -487,6 +486,7 @@
                 </ol>
             </td>
         </tr>
+    </table>
     </table>
     <div class="page-break"></div>
     <table class="info-table">

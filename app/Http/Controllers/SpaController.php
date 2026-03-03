@@ -231,7 +231,15 @@ class SpaController extends Controller
             filePrefix: 'SP_SIGNED_FINAL_',
         );
 
-        return $action->handle($request, $token, $cfg, finalize: fn($spa) => $finalizer->finalizeIfComplete($spa, $spa->booking_id, $config));
+        return $action->handle(
+            $request,
+            $token,
+            $cfg,
+            finalize: function ($spa) use ($finalizer, $config) {
+                $signedPath = $finalizer->finalizeBookingIfComplete($spa, $spa->booking_id, $config);
+                return !empty($signedPath);
+            }
+        );
     }
 
     /**
@@ -404,16 +412,23 @@ class SpaController extends Controller
             filePrefix: 'SPA_SIGNED_FINAL_',
         );
 
-        $finalized = $finalizer->finalizeIfComplete(
+        $signedPath = $finalizer->finalizeBookingIfComplete(
             documentable: $spa,
             bookingId: $spa->booking_id,
             cfg: $config
         );
 
-        if (!$finalized) {
+        if (empty($signedPath)) {
             return response()->json([
-                'error' => 'Cannot approve Reservation Form: required signatures are incomplete.'
+                'error' => 'Cannot approve SPA: required signatures are incomplete.'
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        // Ensure we have the latest signed_file_path persisted by the finalizer
+        $spa->refresh();
+
+        if (empty($spa->signed_file_path)) {
+            $spa->forceFill(['signed_file_path' => $signedPath])->save();
         }
 
 

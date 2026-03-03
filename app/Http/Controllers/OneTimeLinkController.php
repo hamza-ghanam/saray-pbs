@@ -3,11 +3,22 @@
 namespace App\Http\Controllers;
 
 
+use App\Actions\FinalizeConfig;
+use App\Actions\FinalizeSignedDocumentService;
+use App\Actions\SignatureSubmitConfig;
+use App\Actions\SubmitSignatureAction;
+use App\Contracts\Documents\SignableDocument;
+use App\Enums\DocumentType;
 use App\Mail\BrokerAgreementMail;
 use App\Mail\OneTimeLinkMail;
 use App\Models\OneTimeLink;
+use App\Models\SigningLink;
 use App\Models\User;
+use App\Models\UserDoc;
 use App\Services\BrevoMailer;
+use App\Services\DocumentSignatureService;
+use App\Services\PdfService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -15,6 +26,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
+use Random\RandomException;
 use Symfony\Component\HttpFoundation\Response;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Illuminate\Support\Facades\Mail;
@@ -100,18 +112,63 @@ class OneTimeLinkController extends Controller
      *     summary="Generate a one-time link for Broker or Contractor",
      *     tags={"OneTime Links"},
      *     security={{"sanctum":{}}},
+     *
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"user_type"},
-     *             @OA\Property(property="user_type", type="string", example="Broker", description="Either 'Broker' or 'Contractor'"),
-     *             @OA\Property(property="email", type="string", example="myemail@hotmail.com", description="User email to share the OTL via it.")
+     *             required={"user_type","email"},
+     *             @OA\Property(
+     *                 property="user_type",
+     *                 type="string",
+     *                 example="Broker",
+     *                 description="Either 'Broker' or 'Contractor'",
+     *                 enum={"Broker","Contractor"}
+     *             ),
+     *             @OA\Property(
+     *                 property="email",
+     *                 type="string",
+     *                 format="email",
+     *                 example="myemail@hotmail.com",
+     *                 description="Email address that will receive the one-time registration link."
+     *             )
      *         )
      *     ),
-     *     @OA\Response(response=201, description="One-time link successfully generated and shared by email."),
-     *     @OA\Response(response=403, description="Forbidden (user lacks permission)"),
-     *     @OA\Response(response=422, description="Validation error")
+     *
+     *     @OA\Response(
+     *         response=201,
+     *         description="One-time link successfully generated and shared by email.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="One-time link successfully generated and shared by email."),
+     *             @OA\Property(property="email", type="string", format="email", example="myemail@hotmail.com"),
+     *             @OA\Property(property="user_type", type="string", example="Broker", enum={"Broker","Contractor"})
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=403,
+     *         description="Forbidden (user lacks permission)",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="error", type="string", example="Forbidden")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="The given data was invalid."),
+     *             @OA\Property(
+     *                 property="errors",
+     *                 type="object",
+     *                 example={"email":{"The email field is required."},"user_type":{"The selected user_type is invalid."}}
+     *             )
+     *         )
+     *     )
      * )
+     * @throws RandomException
      */
     public function generateLink(Request $request)
     {
@@ -136,18 +193,24 @@ class OneTimeLinkController extends Controller
 
         // Generate a random token
         do {
-            $token = Str::random(32);
-            $exists = OneTimeLink::where('token', $token)->exists();
+            $plainToken = bin2hex(random_bytes(32));
+            $hash = hash('sha256', $plainToken);
+            $exists = OneTimeLink::where('token', $hash)->exists();
         } while ($exists);
 
         $otl = OneTimeLink::create([
-            'token' => $token,
-            'user_type' => $data['user_type'], // "Broker" or "Contractor"
-            'expired_at' => null, // link is valid until used
+            'user_type'  => $data['user_type'], // "Broker" or "Contractor"
+            'expired_at' => null,                // valid until used
         ]);
 
+        $otlUrl = rtrim(config('app.frontend_url'), '/')
+            . '/one-time-links/register/'
+            . $data['user_type']
+            . '/'
+            . $otl->plain_token;
+
         //Email
-        Mail::to($request->email)->queue(new OneTimeLinkMail($otl));
+        Mail::to($request->email)->queue(new OneTimeLinkMail(otlUrl: $otlUrl));
 
         /*
         $mailer = new BrevoMailer();
@@ -161,7 +224,8 @@ class OneTimeLinkController extends Controller
 
         return response()->json([
             'message' => 'One-time link successfully generated and shared by email.',
-            'booking' => $otl
+            'email'     => $request->email,
+            'user_type' => $otl->user_type,
         ], Response::HTTP_CREATED);
     }
 
@@ -240,7 +304,11 @@ class OneTimeLinkController extends Controller
      *     @OA\Response(response=500, description="Server error")
      * )
      */
-    public function selfRegisterUser(Request $request): \Illuminate\Http\JsonResponse
+    public function selfRegisterUser(
+        Request $request,
+        PdfService $pdfService,
+        DocumentSignatureService $signatureService
+    ):JsonResponse
     {
         // 1. Basic validation (we'll add doc rules after we get user_type from OTL)
         $baseData = $request->validate([
@@ -250,14 +318,17 @@ class OneTimeLinkController extends Controller
             'password' => 'required|string|min:6|confirmed',
         ]);
 
+        $plainToken = trim($baseData['token']);
+
         // 2. Retrieve OneTimeLink by token
-        $otl = OneTimeLink::where('token', $baseData['token'])->first();
+
+        $otl = OneTimeLink::query()
+            ->whereNull('expired_at')
+            ->get()
+            ->first(fn ($otl) => $otl->matchesPlainToken($plainToken));
 
         if (!$otl) {
-            return response()->json(['error' => 'Invalid token'], Response::HTTP_BAD_REQUEST);
-        }
-        if (!is_null($otl->expired_at)) {
-            return response()->json(['error' => 'This link has already been used'], Response::HTTP_BAD_REQUEST);
+            return response()->json(['error' => 'Invalid or expired token'], Response::HTTP_BAD_REQUEST);
         }
 
         // 3. Check user_type => "Broker" or "Contractor"
@@ -290,94 +361,59 @@ class OneTimeLinkController extends Controller
 
         $validated = array_merge($baseData, $request->validate($rules));
 
-        DB::beginTransaction();
         try {
-            // 4. Create the user
-            $user = User::create([
-                'name' => $validated['name'],
-                'email' => $validated['email'],
-                'password' => Hash::make($validated['password']),
-                'status' => 'Pending', // waiting for admin approval
-            ]);
-
-            // 5. Assign role
-            $user->assignRole($userType);
-
-            // 6. Upload docs and store them in user_docs (one doc per record)
-            if ($userType === 'Broker') {
-                foreach (['rera_cert', 'trade_license', 'bank_account', 'tax_registration'] as $docType) {
-                    $path = $request->file($docType)->store('docs', 'local');
-                    $user->docs()->create(['doc_type' => $docType, 'file_path' => $path]);
-                }
-
-                $user->brokerProfile()->create($validated['broker_profile']);
-            } else { // Contractor
-                foreach (['contract', 'trade_license', 'scope_of_work'] as $docType) {
-                    $path = $request->file($docType)->store('docs', 'local');
-                    $user->docs()->create(['doc_type' => $docType, 'file_path' => $path]);
-                }
-            }
-
-            // 7. Mark the OTL as used
-            $otl->update(['expired_at' => now(), 'user_id' => $user->id]);
-
-            $respData = [
-                'user' => $user,
-            ];
-
-            if ($userType === 'Broker') {
-                // 8. Generate the agreement PDF
-                //    (assuming you have a Blade view "pdf.agreement" that needs user data)
-                $pdf = PDF::loadView('pdf.broker_agreement', [
-                    'user' => $user,
-                    'userType' => $userType
-                ]);
-                $pdfContent = $pdf->output();
-                $pdfName = "agreement_{$user->id}.pdf";
-                $user->docs()->create([
-                    'doc_type' => 'agreement',
-                    'file_path' => "agreements/{$pdfName}", // storing the relative path
+            $created = DB::transaction(function () use ($request, $validated, $otl, $userType, $pdfService) {
+                // 4. Create the user
+                $user = User::create([
+                    'name' => $validated['name'],
+                    'email' => $validated['email'],
+                    'password' => Hash::make($validated['password']),
+                    'status' => 'Pending', // waiting for admin approval
                 ]);
 
-                // 2. Store the PDF content in "local" disk
-                Storage::disk('local')->put("agreements/{$pdfName}", $pdfContent);
+                // 5. Assign role
+                $user->assignRole($userType);
 
-                DB::commit();
+                // 6. Upload docs and store them in user_docs (one doc per record)
+                if ($userType === 'Broker') {
+                    foreach (['rera_cert', 'trade_license', 'bank_account', 'tax_registration'] as $docType) {
+                        $path = $request->file($docType)->store('docs', 'local');
+                        $user->docs()->create(['doc_type' => $docType, 'file_path' => $path]);
+                    }
 
-                $docsCollection = $user->docs()->get(); // now this is a Collection
-                $docs = $docsCollection->map(function ($doc) {
-                    return [
-                        'doc_id' => $doc->id,
-                        'doc_type' => $doc->doc_type,
-                        'created_at' => $doc->created_at,
-                        'updated_at' => $doc->updated_at,
-                    ];
-                });
+                    $user->brokerProfile()->create($validated['broker_profile']);
+                } else { // Contractor
+                    foreach (['contract', 'trade_license', 'scope_of_work'] as $docType) {
+                        $path = $request->file($docType)->store('docs', 'local');
+                        $user->docs()->create(['doc_type' => $docType, 'file_path' => $path]);
+                    }
+                }
 
-                $respData += [
-                    'message' => 'Broker agreement emailed to the broker successfully.',
-                    'docs' => $docs
-                ];
+                // 7. Mark the OTL as used
+                $otl->update([
+                    'expired_at' => now(),
+                    'user_id' => $user->id
+                ]);
 
-                // Email
-                Mail::to($validated['email'])->queue(new BrokerAgreementMail($user, $pdfName));
-            } else {
-                DB::commit();
+                return $user->fresh();
+            });
 
-                $respData += [
-                    'message' => "Contractor registered successfully, awaiting approval",
-                    'docs' => $user->docs,
-                ];
-            }
-
-            // 3. Return success + doc ID
-            return response()->json($respData, Response::HTTP_CREATED);
-
-        } catch (\Exception $ex) {
-            DB::rollback();
+            return response()->json([
+                'message'   => $userType === 'Broker'
+                    ? 'Broker registered successfully. Your details are under review. We will email the agreement for e-signature once verified.'
+                    : 'Contractor registered successfully, awaiting approval.',
+                'email'     => $created->email,
+                'user_type' => $userType,
+                'status'    => $created->status,
+            ], Response::HTTP_CREATED);
+        } catch (\Throwable $ex) {
+            Log::error('selfRegisterUser failed: ' . $ex->getMessage());
             return response()->json(['error' => $ex->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
+
+
+
 
     /**
      * Approve a user's registration (from Pending to Active).
@@ -385,7 +421,7 @@ class OneTimeLinkController extends Controller
      * @OA\Post(
      *     path="/users/{id}/approve",
      *     summary="Approve user registration",
-     *     tags={"User Management"},
+     *     tags={"User Management","Brokers"},
      *     security={{"sanctum":{}}},
      *     @OA\Parameter(
      *         name="id",
@@ -416,12 +452,16 @@ class OneTimeLinkController extends Controller
      *     @OA\Response(response=422, description="User is not in pending status")
      * )
      */
-    public function approve(Request $request, $userId)
+    public function approve(Request $request, $userId, FinalizeSignedDocumentService $finalizer)
     {
-        $admin_user = $request->user();
+        $admin_user = $request->user()->loadMissing('signature');
         if (!$admin_user->can('approve registration')) {
             return response()->json(['error' => 'Forbidden'], Response::HTTP_FORBIDDEN);
         }
+
+        $signaturePath = $admin_user->signature?->is_active
+            ? $admin_user->signature->absolutePath()
+            : null;
 
         $user = User::find($userId);
         if (!$user) {
@@ -432,15 +472,102 @@ class OneTimeLinkController extends Controller
             return response()->json(['error' => 'User is not in pending status'], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
+        $role = $user->getRoleNames()->first();
+
+        $docPath = null;
+        if ($role === 'Broker') {
+            // Find latest signed link for broker agreement for this broker email
+            $link = SigningLink::query()
+                ->where('document_type', DocumentType::BROKER_AGREEMENT->value)
+                ->whereRaw('LOWER(TRIM(recipient_email)) = ?', [strtolower(trim($user->email))])
+                ->whereNotNull('signed_at')
+                ->whereNotNull('signature_image_path')
+                ->orderByDesc('signed_at')
+                ->first();
+
+            if (!$link) {
+                return response()->json([
+                    'error' => 'Broker must sign the agreement before approval.'
+                ], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+
+            $agreement = $link->documentable; // morph relation
+            if (!$agreement instanceof UserDoc) {
+                return response()->json([
+                    'error' => 'Invalid broker agreement document.'
+                ], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+
+            // Ensure this agreement belongs to this broker
+            if ((int) $agreement->user_id !== (int) $user->id) {
+                return response()->json([
+                    'error' => 'Agreement does not belong to this broker.'
+                ], Response::HTTP_FORBIDDEN);
+            }
+
+            $finalizeConfig = $this->brokerAgreementFinalizeConfig();
+
+            $finalisedPath = $finalizer->finalizeBrokerAgreementIfComplete($agreement, $finalizeConfig, $admin_user, $signaturePath, $link);
+
+            if (!$finalisedPath) {
+                return response()->json([
+                    'error' => 'Broker agreement is not fully signed or could not be finalised.'
+                ], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+
+           $docPath = $finalisedPath;
+
+            $user->brokerProfile()->update([
+               'approved_at' => now(),
+            ]);
+        }
+
+        // ✅ Activate user
         $user->status = 'Active';
         $user->save();
 
-        Mail::to($user->email)->queue(new OneTimeLinkMail(null, $user));
+        Mail::to($user->email)->queue(new OneTimeLinkMail(user: $user, documentPath: $docPath));
 
         return response()->json([
             'message' => 'User approved successfully',
-            'user' => $user
+            'user'    => $user
         ], Response::HTTP_OK);
+    }
+    /**
+     * Returns FinalizeConfig for broker agreement with proper persist strategy.
+     */
+    private function brokerAgreementFinalizeConfig(): FinalizeConfig
+    {
+        $cfg = new FinalizeConfig(
+            type: DocumentType::BROKER_AGREEMENT,
+            view: 'pdf.broker_agreement',
+            signedDir: 'agreements/brokers/signed',
+            filePrefix: 'BROKER_AGREEMENT_SIGNED_FINAL_',
+        );
+
+        // Persist strategy: create NEW UserDoc (doc_type = signed_agreement)
+        $cfg->persist = function (UserDoc $agreementDoc, string $path, $finalSignedAt, FinalizeConfig $cfg) {
+            $brokerId = $agreementDoc->user_id;
+
+            // Replace previous signed agreement (matches old behaviour)
+            $existing = UserDoc::query()
+                ->where('user_id', $brokerId)
+                ->where('doc_type', 'signed_agreement')
+                ->first();
+
+            if ($existing) {
+                Storage::disk('local')->delete($existing->file_path);
+                $existing->delete();
+            }
+
+            UserDoc::create([
+                'user_id'   => $brokerId,
+                'doc_type'  => 'signed_agreement',
+                'file_path' => $path,
+            ]);
+        };
+
+        return $cfg;
     }
 
     // To be deleted..

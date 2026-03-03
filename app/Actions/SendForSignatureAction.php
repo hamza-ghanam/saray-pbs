@@ -10,7 +10,9 @@ use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 final readonly class SendForSignatureAction
 {
-    public function __construct(private DocumentSignatureService $signatureService) {}
+    public function __construct(private DocumentSignatureService $signatureService)
+    {
+    }
 
     public function handle(Request $request, int $bookingId, SignatureSendConfig $cfg): \Illuminate\Http\JsonResponse
     {
@@ -47,14 +49,16 @@ final readonly class SendForSignatureAction
 
         $recipients = $booking->customerInfos
             ->where('requires_signature', true)
-            ->map(fn ($c) => ['email' => $c->email, 'name' => $c->name_en ?? null])
-            ->filter(fn ($r) => !empty($r['email']))
+            ->map(fn($c) => ['email' => $c->email, 'name' => $c->name_en ?? null])
+            ->filter(fn($r) => !empty($r['email']))
             ->unique('email')
             ->values()
             ->toArray();
 
         if (empty($recipients)) {
-            return response()->json(['error' => 'No customer emails found for this booking.'], ResponseAlias::HTTP_UNPROCESSABLE_ENTITY);
+            return response()->json([
+                'error' => 'No customer emails found for this booking.'
+            ], ResponseAlias::HTTP_UNPROCESSABLE_ENTITY);
         }
 
         $result = $this->signatureService->send(
@@ -65,9 +69,9 @@ final readonly class SendForSignatureAction
         );
 
         return response()->json([
-            'message'    => $cfg->successMessage,
-            'sent'       => $result['sent'],
-            'created'    => $result['created'],
+            'message' => $cfg->successMessage,
+            'sent' => $result['sent'],
+            'created' => $result['created'],
             'recipients' => $result['recipients'],
         ], ResponseAlias::HTTP_OK);
     }

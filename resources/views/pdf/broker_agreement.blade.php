@@ -3,92 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <style>
+        /* 1) Define your page size, margins, and hook up header/footer */
         @page {
-            margin: 150px 45px 100px 45px;
-            size: A4 portrait;
+            margin: 150px 45px 180px 45px;
         }
 
+        @page {
+            /* MUST match the htmlpageheader name="MyHeader" below */
+            header: html_MyHeader;
+        }
+
+        @page {
+            /* MUST match the htmlpageheader name="MyHeader" below */
+            footer: html_MyFooter;
+        }
+
+        /* 2) Base body styles */
         body {
-            font-family: DejaVu Sans, sans-serif;
+            font-family: 'rubic', sans-serif;
             font-size: 14px;
+            direction: ltr;
+            margin: 0;
+            padding: 0;
         }
 
-        header {
-            position: fixed;
-            /* shift it up by exactly its own height so its bottom edge lands at the top of the page */
-            top: -1in;
-            left: -45px;
-            width: calc(100% + 45px);
-            /* make it 0.8in tall */
-            height: 0.8in;
-            line-height: 35px;
+        /* 3) Optional: page-break helper */
+        .page-break {
+            page-break-before: always;
         }
 
-        footer {
-            position: fixed;
-            bottom: -65px;
-            left: -45px; /* pull into the left margin */
-            right: -45px; /* pull into the right margin */
-            height: 50px;
-            text-align: center;
-            line-height: 35px;
+        /* everything uses injected spans, so disable native markers everywhere in legal */
+        ol.legal, ol.legal ol {
+            list-style: none;
+            margin: 0;
+            padding-left: 0;
         }
 
-        .footer-bar {
-            background-color: #404040;
+        ol.legal ol {
+            padding-left: 25px;
+            margin-top: 6px;
+        }
+
+        ol.legal li {
+            list-style: none;
+            margin: 0 0 6px 0;
+            padding: 0;
+        }
+
+        .lnum {
+            font-weight: bold;
+            display: inline-block;
+            width: 60px; /* عدّلها حسب الشكل */
+        }
+
+        /* alpha/roman نفس الشكل (اختياري تمييز بسيط) */
+        .lnum-alpha, .lnum-roman {
+            font-weight: bold;
+        }
+
+        strong.clause-title {
+            font-size: 18px;
+        }
+
+        .lnum-title {
+            font-size: 18px;
+            font-weight: bold;
+            line-height: 1.2;
         }
 
         h1, h2, h3 {
             margin-bottom: 10px;
-        }
-
-        /* Numeric lists (1., 1.1., etc.) */
-        ol.numeric,
-        ol.numeric ol {
-            counter-reset: item;
-            list-style: none;
-            padding-left: 0;
-        }
-
-        ol.numeric li {
-            counter-increment: item;
-            margin-bottom: 0.5em;
-        }
-
-        ol.numeric li > h2 {
-            display: inline; /* turn H2 into inline so it doesn’t break */
-            margin: 0; /* remove the default top/bottom margins */
-            vertical-align: middle; /* align nicely with the number */
-        }
-
-        ol.numeric li::before {
-            content: counters(item, ".") ". ";
-            font-weight: bold;
-        }
-
-        ol.numeric ol {
-            margin-left: 1.5em;
-        }
-
-        /* Alpha lists (a., b., c.) */
-        ol.nested-alpha {
-            counter-reset: alpha;
-            list-style: none;
-            padding-left: 1.5em; /* indent to align under parent */
-        }
-
-        ol.nested-alpha li {
-            counter-increment: alpha;
-            margin-bottom: 0.3em;
-        }
-
-        ol.nested-alpha li::before {
-            content: counter(alpha, lower-alpha) ". ";
-            font-weight: bold;
-        }
-
-        li.main-title:before {
-            font-size: 1.4em;
         }
 
         table {
@@ -108,13 +92,6 @@
             margin-bottom: 15px;
         }
 
-        .page-break {
-            /* force a page break before (or after) this element */
-            page-break-before: always;
-            /* optional newer syntax */
-            break-before: page;
-        }
-
         table.signature-tbl {
             border-collapse: collapse;
             border: none;
@@ -123,28 +100,87 @@
         table.signature-tbl,
         table.signature-tbl th,
         table.signature-tbl td {
+            vertical-align: top;   /* top */
+            text-align: left;      /* left */
             border: none; /* remove all borders */
         }
 
         table.commission-tbl th,
         table.commission-tbl td {
-            text-align: center; /* horizontal centering */
-            vertical-align: middle; /* vertical centering */
             padding: 8px; /* optional padding */
         }
+
+        table.no-border {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table.no-border,
+        table.no-border th,
+        table.no-border td {
+            border: none !important;
+        }
     </style>
-    <title>Broker Agreement</title>
 </head>
 <body>
-<!-- TODO: Customize the final PDF file -->
-<header>
-    <img src="{{ public_path('images/Saray_Header.png') }}" alt="Company Header" style="width: 50%;">
-</header>
 
-<footer>
-    <img src="{{ public_path('images/tail_img.png') }}" alt="Company Footer" style="width: 95%;">
-    <div class="footer-bar">&nbsp;</div>
-</footer>
+@php
+    // Rendered in multiple contexts (send-for-signature, preview, finalize).
+    // Ensure optional variables are defined to avoid "Undefined variable" errors.
+    /** @var \App\Models\SigningLink|null $link */
+    $link = $link ?? null;
+
+    /** @var string|null $signaturePath */
+    $signaturePath = $signaturePath ?? null;
+
+    /** @var \App\Models\User|null $admin */
+    $admin = $admin ?? null;
+
+    /** @var \App\Models\User|null $approver */
+    $approver = $approver ?? null;
+
+    // Normalise private paths: store paths should be relative to storage/app/private
+    $brokerStampRel = optional($user->brokerProfile)->stamp_path;
+    $brokerStampRel = $brokerStampRel ? ltrim($brokerStampRel, '/\\') : null;
+    $brokerStampRel = $brokerStampRel ? preg_replace('#^private[\\/]+#i', '', $brokerStampRel) : null;
+@endphp
+
+<htmlpageheader name="MyHeader">
+    <div style="margin-left: -45px; height: 150px;">
+        <div style="height: 50px">&nbsp;</div>
+        <img
+            src="{{ public_path('images/Saray_Header.png') }}"
+            alt="Company Header"
+            style="width:50%; max-width:200mm;"
+        />
+    </div>
+</htmlpageheader>
+
+<htmlpagefooter name="MyFooter">
+    <div style="height: 20px; text-align: center;">
+        <table class="no-border">
+            <tr>
+                <td style="width: 48%; text-align: left; font-weight: bold;">
+                </td>
+                <td>{PAGENO}</td>
+                <td style="width: 48%; text-align: left; font-weight: bold;">
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div style="      position: center;
+      bottom: 0;       /* stick to the bottom of the page */
+      left:   0;       /* ignore the left margin entirely */
+      right:  0;       /* ignore the right margin entirely */
+      height: 50px;">
+        <img
+            src="{{ public_path('images/tail_img.png') }}"
+            alt="Company Footer"
+            style="width:95%; max-width:200mm; height:auto;"
+        />
+    </div>
+    <div style="height: 50px; background-color: #404040; margin-left: -45px; margin-right: -45px">&nbsp;</div>
+</htmlpagefooter>
 
 <main>
     <div>
@@ -179,7 +215,7 @@
 
     <div class="section">
         <h2>RECITALS</h2>
-        <ol class="nested-alpha">
+        <ol type="a">
             <li>The Seller is the developer of the mixed-use in the UAE (the <strong>"Development"</strong>). The Seller
                 intends to sell
                 Units to Prospective Purchasers;
@@ -195,17 +231,17 @@
 
     <div class="section">
         <h2 style="text-align: center">OPERATIVE PROVISIONS</h2>
-        <ol class="numeric">
-            <li class="main-title"> <!-- 1. -->
-                <h2>DEFINITIONS AND INTERPRETATION</h2>
-                <ol class="numeric">
+        <ol class="legal">
+            <li> <!-- 1. -->
+                <strong class="clause-title">DEFINITIONS AND INTERPRETATION</strong>
+                <ol>
                     <li> <!-- 1.1. -->
                         In this Agreement unless the context otherwise requires the following words and expressions have
                         the respective meanings as set out below: <br/>
                         <strong>"AED" or <img src="{{ public_path('images/aed_symbol.svg') }}" width="12"
                                               alt="AED"/></strong> means UAE Dirhams, the lawful currency of the
                         UAE;<br/>
-                        <strong>"Applicable Laws"</strong> means principally By-Law No. 3 of 2022regarding the
+                        <strong>"Applicable Laws"</strong> means principally By-Law No. 3 of 2022 regarding the
                         Regulation of Real Estate Brokers' Register in the Emirate of Dubai and any regulations and
                         codes of conduct issued by RERA, and any other laws, regulations or other guidance enacted or to
                         be enacted either in the Emirate of Dubai or by the Federal Government of the UAE including but
@@ -228,7 +264,7 @@
                         trade secrets, trademarks, trade names, design rights, rights in get-up, database rights, chip
                         topography rights, mask works, utility models, domain names and all similar rights and, in each
                         case:<br/>
-                        <ol class="nested-alpha">
+                        <ol type="a">
                             <li>whether registered or not;</li>
                             <li>including any applications to protect or register such rights;</li>
                             <li>including all renewals and extensions of such rights or
@@ -289,8 +325,8 @@
                     </li>
                 </ol>
             </li>
-            <li class="main-title"> <!-- 2. -->
-                <h2>APPOINTMENT AND TERM</h2>
+            <li class="legal"> <!-- 2. -->
+                <strong class="clause-title">APPOINTMENT AND TERM</strong>
                 <ol class="numeric">
                     <li> <!-- 2.1. -->
                         The Seller hereby appoints the Broker for the Term and grants to the Broker a non-exclusive
@@ -304,8 +340,8 @@
                     </li>
                 </ol>
             </li>
-            <li class="main-title"> <!-- 3. -->
-                <h2>SERVICES</h2>
+            <li class="legal"> <!-- 3. -->
+                <strong class="clause-title">SERVICES</strong>
                 <ol class="numeric">
                     <li> <!-- 3.1. -->
                         The Broker shall perform the Services pursuant to the terms of this Agreement with
@@ -334,8 +370,8 @@
                     </li>
                 </ol>
             </li>
-            <li class="main-title"> <!-- 4. -->
-                <h2>BROKER'S OBLIGATIONS</h2>
+            <li class="legal"> <!-- 4. -->
+                <strong class="clause-title">BROKER'S OBLIGATIONS</strong>
                 <ol class="numeric">
                     <li> <!-- 4.1. -->
                         The Broker hereby warrants, represents, and confirms that:
@@ -441,7 +477,7 @@
                     </li>
                     <li>
                         The Broker hereby declares, warrants and undertakes, during the Term, that:
-                        <ol class="nested-alpha">
+                        <ol type="a">
                             <li>
                                 none of the employees of the Seiler are a relative or partner of the Broker; and the
                                 Broker is not an employee of a competitor of the Seller. The Broker shall be bound to
@@ -465,7 +501,7 @@
                     </li>
                     <li>
                         During the Term the Broker shall not:
-                        <ol class="nested-alpha">
+                        <ol type="a">
                             <li>
                                 advertise Units in any form of advertising medium including (but not limited to)
                                 brochures, magazines, newspapers, signs, and on any digital media including the world
@@ -505,68 +541,67 @@
                     </li>
                 </ol>
             </li>
-            <li class="main-title"> <!-- 5. -->
-                <h2>COMMISSION</h2>
-                <ol class="numeric">
+            <li class="legal"> <!-- 5. -->
+                <strong class="clause-title">COMMISSION</strong>
+                <ol class="numeric"> <!-- 5.1. -->
                     <li>
                         The commission payable shall be as per Schedule 2, which outlines the applicable commission
                         percentages based on the type of project.<br/>
                         The Commission shall be payable in two (2) equal instalments subject to the terms and conditions
                         set out below:
-                        <ul>
+                    </li>
+
+                    <li>
+                        The first instalment shall be payable within thirty (30) calendar days of the following
+                        conditions being satisfied:
+                        <ol>
                             <li>
-                                The first instalment shall be payable within thirty (30) calendar days of the following
-                                conditions being satisfied:
-                                <ol type="I">
-                                    <li>
-                                        The Prospective Purchaser has signed the relevant Reservation Form and
-                                        submitted the original executed copy to the Seller, along with all documentation
-                                        required under the said Reservation Form, within no later than three (3) months
-                                        from the date of the Seller's project registration.;
+                                The Prospective Purchaser has signed the relevant Reservation Form and
+                                submitted the original executed copy to the Seller, along with all documentation
+                                required under the said Reservation Form, within no later than three (3) months
+                                from the date of the Seller's project registration.;
+                            </li>
+                            <li>
+                                The Seller has received, in clear funds:
+                                <ol type="a">
+                                    <li>A minimum of ten percent (10%) of the total Sale Price from the
+                                        Prospective Purchaser towards the Booking Amount; and
                                     </li>
-                                    <li>
-                                        The Seller has received, in clear funds:
-                                        <ol class="nested-alpha">
-                                            <li>A minimum of ten percent (10%) of the total Sale Price from the
-                                                Prospective Purchaser towards the Booking Amount; and
-                                            </li>
-                                            <li>Payment of the applicable registration fee to the Dubai Land Department
-                                                in the amount of four percent (4%) of the total Sale Price, along with
-                                                all related administrative costs, via cheque(s) or other acceptable
-                                                payment method in favour of the Dubai Land Department.
-                                            </li>
-                                            <li>all ancillary costs, expenses and fees (which shall be at their
-                                                prevailing rates from time to time) in connection with and incidental to
-                                                the aforesaid registration; and
-                                            </li>
-                                        </ol>
+                                    <li>Payment of the applicable registration fee to the Dubai Land Department
+                                        in the amount of four percent (4%) of the total Sale Price, along with
+                                        all related administrative costs, via cheque(s) or other acceptable
+                                        payment method in favour of the Dubai Land Department.
                                     </li>
-                                    <li>
-                                        The Broker not being in default of any of its obligations under this Agreement.
+                                    <li>all ancillary costs, expenses and fees (which shall be at their
+                                        prevailing rates from time to time) in connection with and incidental to
+                                        the aforesaid registration; and
                                     </li>
                                 </ol>
                             </li>
                             <li>
-                                The final instalment shall be payable within thirty (30) calendar days of the following
-                                conditions being satisfied:
-                                <ol class="nested-alpha">
-                                    <li>The Prospective Purchaser has signed a binding Sale and Purchase Agreement
-                                        (SPA) acceptable to the Seller, and the Seller has received the original
-                                        executed SPA and is satisfied with all accompanying documentation;
-                                    </li>
-                                    <li>The Seller has received a cumulative amount of at least twenty percent (20%)
-                                        of the total Sale Price in clear funds from the Purchaser in respect of the
-                                        relevant Unit;
-                                    </li>
-                                    <li>If applicable, the Seller has received post-dated cheque(s) from the
-                                        Purchaser in line with the Reservation Form requirements; and
-                                    </li>
-                                    <li>
-                                        The Broker not being in default of any of its obligations under this Agreement.
-                                    </li>
-                                </ol>
+                                The Broker not being in default of any of its obligations under this Agreement.
                             </li>
-                        </ul>
+                        </ol>
+                    </li>
+                    <li>
+                        The final instalment shall be payable within thirty (30) calendar days of the following
+                        conditions being satisfied:
+                        <ol type="a">
+                            <li>The Prospective Purchaser has signed a binding Sale and Purchase Agreement
+                                (SPA) acceptable to the Seller, and the Seller has received the original
+                                executed SPA and is satisfied with all accompanying documentation;
+                            </li>
+                            <li>The Seller has received a cumulative amount of at least twenty percent (20%)
+                                of the total Sale Price in clear funds from the Purchaser in respect of the
+                                relevant Unit;
+                            </li>
+                            <li>If applicable, the Seller has received post-dated cheque(s) from the
+                                Purchaser in line with the Reservation Form requirements; and
+                            </li>
+                            <li>
+                                The Broker not being in default of any of its obligations under this Agreement.
+                            </li>
+                        </ol>
                     </li>
                     <li>
                         In consideration of the Broker carrying out the Services pursuant to the terms of this
@@ -575,7 +610,7 @@
                     </li>
                     <li>
                         The Broker acknowledges, warrants and undertakes that:
-                        <ol class="nested-alpha">
+                        <ol type="a">
                             <li>any Commission payable under the terms of this Agreement shall be inclusive of all fees,
                                 and other deductions levied by any competent authority as per Applicable Laws and the
                                 Broker acknowledges being solely responsible and liable to pay all such fees, taxes
@@ -607,7 +642,7 @@
                     <li>
                         The Broker acknowledges and agrees that the Commission shall not be payable by the Seller
                         where:
-                        <ol class="nested-alpha">
+                        <ol type="a">
                             <li>Prospective Purchaser signs the relevant Reservation Form and provides all the required
                                 documentation as prescribed in the relevant Reservation Form more than three (3) months
                                 after the date of the Seller Registration;
@@ -637,7 +672,7 @@
                         Where a signed Reservation Form is cancelled by the Seller in accordance with Clause 5.4 (b)
                         after the payment of the first instalment of the Commission (the "Refundable Amount"), the
                         Seller shall be entitled (at its election) to:
-                        <ol class="nested-alpha">
+                        <ol type="a">
                             <li>set off the Refundable Amount against any other amounts that may be payable to the
                                 Broker pursuant to this Agreement; or;
                             </li>
@@ -651,8 +686,8 @@
                     </li>
                 </ol>
             </li>
-            <li class="main-title"> <!-- 6. -->
-                <h2>INDEMNITY</h2>
+            <li class="legal"> <!-- 6. -->
+                <strong class="clause-title">INDEMNITY</strong>
                 <ol class="numeric">
                     <li>The Broker hereby indemnifies and shall keep the Seller (including its affiliate or group
                         companies, their officers, directors and employees) indemnified from and against (without
@@ -660,7 +695,7 @@
                         demands and expenses whatsoever (including, but not limited to any liability for legal fees and
                         expenses), on a full indemnity basis, arising out of or in connection with the Broker's
                         (including its officers, employers and agents):
-                        <ol class="nested-alpha">
+                        <ol type="a">
                             <li>Negligence, tortious act or omission, misconduct, misrepresentation, dishonesty or
                                 fraud;
                             </li>
@@ -677,22 +712,22 @@
                     </li>
                 </ol>
             </li>
-            <li class="main-title"> <!-- 7. -->
-                <h2>SELLER'S OBLIGATIONS</h2>
+            <li class="legal"> <!-- 7. -->
+                <strong class="clause-title">SELLER'S OBLIGATIONS</strong>
                 <ol class="numeric">
                     <li>The Seller shall act in a commercially reasonable manner towards the Broker and shall not
                         interfere, hinder or prevent the Broker from carrying out its obligations and Services pursuant
                         to the terms of this Agreement.
                     </li>
                     <li>The Seller may at any time, by written notice, amend the:
-                        <ol class="nested-alpha">
+                        <ol type="a">
                             <li>Services;</li>
                             <li>Commission; or</li>
                             <li>Price or specification of any Unit.</li>
                         </ol>
                     </li>
                     <li>The Seller shall inform the Broker within a reasonable period of:
-                        <ol class="nested-alpha">
+                        <ol type="a">
                             <li>Its acceptance or refusal of an offer to purchase a Unit by a Prospective Purchaser;
                             </li>
                             <li>Cancellation of the Reservation Form and/or SPA of a Prospective Purchaser for a Unit;
@@ -718,8 +753,8 @@
                     </li>
                 </ol>
             </li>
-            <li class="main-title"> <!-- 8. -->
-                <h2>TERMINATION</h2>
+            <li class="legal"> <!-- 8. -->
+                <strong class="clause-title">TERMINATION</strong>
                 <ol class="numeric">
                     <li>
                         The Seller may terminate this Agreement with or without cause (and without the need for any
@@ -753,11 +788,11 @@
                     </li>
                 </ol>
             </li>
-            <li class="main-title"> <!-- 9. -->
-                <h2>INTELLECTUAL PROPERTY</h2>
+            <li class="legal"> <!-- 9. -->
+                <strong class="clause-title">INTELLECTUAL PROPERTY</strong>
                 <ol class="numeric">
                     <li>The Broker shall:
-                        <ol class="nested-alpha">
+                        <ol type="a">
                             <li>
                                 Use the Intellectual Property solely in accordance with the Seller's instructions;
                             </li>
@@ -790,8 +825,8 @@
                     </li>
                 </ol>
             </li>
-            <li class="main-title"> <!-- 10. -->
-                <h2>GENERAL</h2>
+            <li class="legal"> <!-- 10. -->
+                <strong class="clause-title">GENERAL</strong>
                 <ol class="numeric">
                     <li>
                         Agreement constitutes the whole agreement between the Parties in relation to the subject
@@ -850,7 +885,7 @@
                         Any notice given under this Agreement shall be in writing and shall be seed by delivering
                         it personally or sending it by courier, fax or email to the address of the Parties set out in
                         this Agreement. Any such notice shall be deemed to have been received:
-                        <ol class="nested-alpha">
+                        <ol type="a">
                             <li>
                                 if delivered personally, on the date of delivery;
                             </li>
@@ -985,49 +1020,93 @@
         <h2 style="text-align: center;">EXECUTION PAGE</h2>
         <table class="signature-tbl">
             <tr>
-                <td>
-                    Signed for and on behalf of Seller by its duly authorized representative in the presence of:
+                <td style="width: 50%">
+                    Signed for and on behalf of Seller by its duly authorized representative in the presence of: <br/><br/>
+                    @if($signaturePath)
+                        <img
+                            src="file:///{{ str_replace('\\','/', $signaturePath) }}"
+                            alt="Signature placeholder"
+                            height="60"
+                            style="margin-left: 15px;"
+                        >
+                    @else
+                        <span style="height: 60px;">
+                            ________________________________
+                        </span>
+                    @endif
+                    <br/>
+                    Signature “Unique Saray Development” <br/><br/>
+
+                    @if($admin)
+                        <i>{{ $admin->name }}</i>
+                    @elseif($approver)
+                        <i>{{ $approver->name }}</i>
+                    @else
+                        ________________________________
+                    @endif
+                    <br/>
+                    Print name of authorized representative <br/><br/>
+
+                    Stamp: <br/>
+                    <img
+                        src="file:///{{ str_replace('\\','/', storage_path('app/private/signatures/company_stamp.png')) }}"
+                        alt="Signature placeholder"
+                        height="80"
+                        style="margin-left: 15px; margin-top: 10px;"
+                    >
                 </td>
+
+                <!-- Broker -->
                 <td>
-                    Signed for and on behalf of Seller by its duly authorized representative in the presence of:
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    ________________________________<br/>
-                    Signature “Unique Saray Development”
-                </td>
-                <td>
-                    ________________________________<br/>
-                    Signature authorized representative.
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    ________________________________<br/>
-                    Print name of authorized representative
-                </td>
-                <td>
-                    ________________________________<br/>
-                    Designation.
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    &nbsp;<br/>
-                    &nbsp;
-                </td>
-                <td>
-                    ________________________________<br/>
-                    Print name of authorized representative.
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    Stamp:
-                </td>
-                <td>
-                    Stamp:
+                    Signed for and on behalf of Broker by its duly authorized representative in the presence of: <br/><br/>
+                    @if(!empty($link) && !empty($link->signature_image_path))
+                        <img
+                            src="file:///{{ str_replace('\\','/', storage_path('app/private/' . $link->signature_image_path)) }}"
+                            alt="Signature placeholder"
+                            height="60"
+                            style="margin-left: 15px;"
+                        >
+                    @else
+                        <span style="height: 60px;">
+                            ________________________________
+                        </span>
+                    @endif
+                    <br/>
+                    Signature authorized representative. <br/><br/>
+
+                    @if($user->brokerProfile->designation)
+                        {{ $user->brokerProfile->designation }}
+                    @else
+                        ________________________________
+                    @endif
+                    <br/>
+                    Designation. <br/><br/>
+
+                    @if($user->brokerProfile->representative)
+                        {{ $user->brokerProfile->representative }}
+                    @else
+                        ________________________________
+                    @endif
+                    <br/>
+                    Print name of authorized representative. <br/><br/>
+
+                    Stamp: <br/>
+                    @if(!empty($brokerStampRel))
+                        <img
+                            src="file:///{{ str_replace('\\','/', storage_path('app/private/' . $brokerStampRel)) }}"
+                            alt="Signature placeholder"
+                            height="60"
+                            style="margin-left: 15px; margin-top: 10px;"
+                        >
+                    @else
+                        <img
+                            src="file:///{{ str_replace('\\','/', storage_path('app/private/signatures/stamp_placeholder.png')) }}"
+                            alt="Signature placeholder"
+                            height="60"
+                            style="margin-left: 15px;"
+                        >
+                    @endif
+                    <br/>
                 </td>
             </tr>
         </table>

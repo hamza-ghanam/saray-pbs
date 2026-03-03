@@ -10,7 +10,7 @@ class Booking extends Model
     use SoftDeletes;
 
     public const STATUS_PRE_BOOKED = 'Pre-Booked';
-    public const STATUS_BOOKED = 'Hold';
+    public const STATUS_BOOKED = 'Booked';
     public const STATUS_RF_PENDING = 'RF Pending';
     public const STATUS_SPA_PENDING = 'SPA Pending';
     public const STATUS_CANCELLED = 'Cancelled';

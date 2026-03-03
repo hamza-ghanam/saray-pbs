@@ -20,6 +20,8 @@ class SignatureLinkMail extends Mailable
         public string $fileName,
         public ?string $recipientName = null,
         public ?string $documentTitle = null,
+        public ?string $customMessage = null,
+        public bool $isWithdraw = false,
     ) {}
 
     public function build()
@@ -27,7 +29,7 @@ class SignatureLinkMail extends Mailable
         $subject = match ($this->documentType->value) {
             'RF' => 'Reservation Form - Signature Required',
             'SPA' => 'Sale & Purchase Agreement - Signature Required',
-            'broker_agreement' => 'Broker Agreement - Signature Required',
+            'BROKER_AGREEMENT' => 'Broker Agreement - Signature Required',
             default => 'Document Signature Required',
         };
 

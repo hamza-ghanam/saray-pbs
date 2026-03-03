@@ -15,7 +15,7 @@ class SigningLink extends Model
     public const STATUS_PENDING   = 'pending';
     public const STATUS_SIGNED    = 'signed';
     public const STATUS_EXPIRED   = 'expired';
-    public const STATUS_CANCELLED = 'cancelled';
+    public const STATUS_WITHDRAWN = 'withdrawn';
 
     /**
      * Runtime-only token (NOT persisted).
@@ -45,11 +45,15 @@ class SigningLink extends Model
         'signed_at',
         'client_ip',
         'user_agent',
+        'withdrawn_at',
+        'withdrawn_by',
+        'withdraw_reason',
     ];
 
     protected $casts = [
         'expires_at'    => 'datetime',
         'signed_at'     => 'datetime',
+        'withdrawn_at' => 'datetime',
         'document_type' => DocumentType::class,
     ];
 
@@ -149,5 +153,10 @@ class SigningLink extends Model
             'client_ip'  => $ip,
             'user_agent' => $userAgent,
         ])->save();
+    }
+
+    public function withdrawnBy()
+    {
+        return $this->belongsTo(User::class, 'withdrawn_by');
     }
 }

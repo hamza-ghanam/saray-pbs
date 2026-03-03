@@ -129,7 +129,6 @@
             background-color: #f9f9f9; /* subtle stripe */
         }
     </style>
-    <title>Sales Offer</title>
 </head>
 <body>
 
