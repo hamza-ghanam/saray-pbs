@@ -214,3 +214,9 @@ Route::get('/sign/doc/{token}/download', [SignedDocumentsController::class, 'dow
 Route::post('/bookings/rf/{token}/sign', [ReservationFormController::class, 'submitSignature']);
 
 Route::post('/bookings/spa/{token}/sign', [SpaController::class, 'submitSignature']);
+
+// Dashboard
+use App\Http\Controllers\DashboardController;
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/dashboard/overview', [DashboardController::class, 'overview']);
+});

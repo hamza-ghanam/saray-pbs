@@ -159,6 +159,13 @@ class UnitController extends Controller
      *     tags={"Units"},
      *     security={{"sanctum":{}}},
      *     @OA\Parameter(
+     *         name="building_id",
+     *         in="query",
+     *         description="Filter units by building",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=5)
+     *     ),
+     *     @OA\Parameter(
      *         name="prop_type",
      *         in="query",
      *         description="Filter units by property type",
@@ -363,6 +370,10 @@ class UnitController extends Controller
 
         if ($request->filled('status')) {
             $query->where('status', $request->input('status'));
+        }
+
+        if ($request->filled('building_id')) {
+            $query->where('building_id', $request->input('building_id'));
         }
 
         // Dynamic pagination: retrieve 'limit', cast to integer, and cap at 100 items per page.

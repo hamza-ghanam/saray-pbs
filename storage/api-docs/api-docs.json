@@ -2584,6 +2584,74 @@
                 ]
             }
         },
+        "/api/dashboard/overview": {
+            "get": {
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Dashboard overview (role-aware)",
+                "operationId": "896d6191db2c9181addce22719986f79",
+                "parameters": [
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        },
+                        "example": "2026-03-01"
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        },
+                        "example": "2026-03-03"
+                    },
+                    {
+                        "name": "project_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 1
+                    },
+                    {
+                        "name": "debug",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "enum": [
+                                0,
+                                1
+                            ]
+                        },
+                        "example": 0
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/bookings/{booking}/dld": {
             "post": {
                 "tags": [
@@ -5904,6 +5972,16 @@
                 "description": "Display a paginated listing of the units.",
                 "operationId": "4fad383f5a5218655d5cc113dc8e9198",
                 "parameters": [
+                    {
+                        "name": "building_id",
+                        "in": "query",
+                        "description": "Filter units by building",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 5
+                        }
+                    },
                     {
                         "name": "prop_type",
                         "in": "query",
@@ -9659,6 +9737,10 @@
         {
             "name": "Customers",
             "description": "Customers"
+        },
+        {
+            "name": "Dashboard",
+            "description": "Dashboard"
         },
         {
             "name": "Holdings",

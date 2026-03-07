@@ -28,6 +28,7 @@ class Booking extends Model
         'agent_id',
         'sale_source_id',
         'agency_com_agent',
+        'notes',
     ];
 
     protected $hidden = ['receipt_path'];

@@ -134,12 +134,12 @@ class DldDocumentController extends Controller
 
             // 5. Update booking status
             $booking->update([
-                'status' => 'Booked',
+                'status' => Booking::STATUS_BOOKED,
             ]);
 
             // 6. Update associated unit
             $booking->unit->update([
-                'status'            => 'Sold',
+                'status'            => Unit::STATUS_SOLD,
                 'status_changed_at' => now(),
             ]);
         });

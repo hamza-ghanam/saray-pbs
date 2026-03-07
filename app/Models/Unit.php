@@ -52,6 +52,7 @@ class Unit extends Model
 
     protected $casts = [
         'building_id' => 'integer',
+        'status_changed_at' => 'datetime',
     ];
 
     protected const SQFT_TO_SQM = 1 / 10.7639;

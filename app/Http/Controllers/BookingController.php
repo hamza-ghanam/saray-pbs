@@ -906,7 +906,7 @@ class BookingController extends Controller
 
             // 8. Update unit status
             $unit->update([
-                'status' => 'Pre-Booked',
+                'status' => Unit::STATUS_PRE_BOOKED,
                 'status_changed_at' => now(),
             ]);
 
