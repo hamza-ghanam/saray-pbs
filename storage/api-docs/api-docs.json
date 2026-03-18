@@ -1187,6 +1187,334 @@
                 ]
             }
         },
+        "/broker-commissions/rates": {
+            "get": {
+                "tags": [
+                    "Broker Commissions"
+                ],
+                "summary": "List broker commission rates",
+                "operationId": "listBrokerCommissionRates",
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Broker commission rates fetched successfully"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Broker Commissions"
+                ],
+                "summary": "Create a broker commission rate",
+                "operationId": "createBrokerCommissionRate",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "percentage",
+                                    "effective_from"
+                                ],
+                                "properties": {
+                                    "percentage": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 6
+                                    },
+                                    "effective_from": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "2026-03-07 09:00:00"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Broker commission rate created successfully"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation error or business rule violation"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/broker-commissions/rates/current": {
+            "get": {
+                "tags": [
+                    "Broker Commissions"
+                ],
+                "summary": "Get current broker commission rate",
+                "operationId": "getCurrentBrokerCommissionRate",
+                "responses": {
+                    "200": {
+                        "description": "Current broker commission rate fetched successfully"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "No effective broker commission rate found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/broker-commissions": {
+            "get": {
+                "tags": [
+                    "Broker Commissions"
+                ],
+                "summary": "List broker commissions",
+                "operationId": "listBrokerCommissions",
+                "parameters": [
+                    {
+                        "name": "broker_user_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64",
+                            "example": 12
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "partially_paid"
+                        }
+                    },
+                    {
+                        "name": "booking_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64",
+                            "example": 150
+                        }
+                    },
+                    {
+                        "name": "building_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64",
+                            "example": 3
+                        }
+                    },
+                    {
+                        "name": "date_from",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2026-03-01"
+                        }
+                    },
+                    {
+                        "name": "date_to",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2026-03-31"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Broker commissions fetched successfully"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/broker-commissions/{brokerCommission}": {
+            "get": {
+                "tags": [
+                    "Broker Commissions"
+                ],
+                "summary": "Show broker commission details",
+                "operationId": "showBrokerCommission",
+                "parameters": [
+                    {
+                        "name": "brokerCommission",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Broker commission fetched successfully"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/broker-commissions/{brokerCommission}/payments": {
+            "post": {
+                "tags": [
+                    "Broker Commissions"
+                ],
+                "summary": "Record a broker commission payment",
+                "operationId": "recordBrokerCommissionPayment",
+                "parameters": [
+                    {
+                        "name": "brokerCommission",
+                        "in": "path",
+                        "description": "ID of the broker commission",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "amount",
+                                    "payment_date"
+                                ],
+                                "properties": {
+                                    "amount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 20000
+                                    },
+                                    "payment_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-03-07"
+                                    },
+                                    "payment_method": {
+                                        "type": "string",
+                                        "example": "bank_transfer",
+                                        "nullable": true
+                                    },
+                                    "reference_number": {
+                                        "type": "string",
+                                        "example": "TRX-123456",
+                                        "nullable": true
+                                    },
+                                    "receipt": {
+                                        "description": "Optional payment receipt file upload.",
+                                        "type": "string",
+                                        "format": "binary",
+                                        "nullable": true
+                                    },
+                                    "notes": {
+                                        "type": "string",
+                                        "example": "First instalment of broker commission.",
+                                        "nullable": true
+                                    },
+                                    "paid_by": {
+                                        "type": "integer",
+                                        "format": "int64",
+                                        "example": 1,
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Broker commission payment recorded successfully"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation error or business rule violation"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/brokers/{brokerUserId}/agreements/generate": {
             "post": {
                 "tags": [
@@ -1762,6 +2090,53 @@
                                 }
                             }
                         }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/brokers/{user}/bookings": {
+            "get": {
+                "tags": [
+                    "Brokers"
+                ],
+                "summary": "Get all broker bookings with lightweight commission summary",
+                "operationId": "getBrokerBookings",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "description": "Broker user ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64",
+                            "example": 42
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Broker bookings fetched successfully"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation error"
                     }
                 },
                 "security": [
@@ -8024,6 +8399,48 @@
                                             "type": "object",
                                             "nullable": true
                                         },
+                                        "broker_commissions_summary": {
+                                            "description": "Lightweight broker commissions summary if the user role is Broker",
+                                            "properties": {
+                                                "total_count": {
+                                                    "type": "integer",
+                                                    "example": 12
+                                                },
+                                                "total_commission_amount": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 420000
+                                                },
+                                                "total_paid_amount": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 150000
+                                                },
+                                                "total_remaining_amount": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 270000
+                                                },
+                                                "due_count": {
+                                                    "type": "integer",
+                                                    "example": 4
+                                                },
+                                                "partially_paid_count": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "paid_count": {
+                                                    "type": "integer",
+                                                    "example": 3
+                                                },
+                                                "cancelled_count": {
+                                                    "type": "integer",
+                                                    "example": 0
+                                                }
+                                            },
+                                            "type": "object",
+                                            "nullable": true
+                                        },
                                         "latest_signing_link": {
                                             "description": "Latest BROKER_AGREEMENT signing link details (if any), so frontend can call /api/signatures.",
                                             "properties": {
@@ -9725,6 +10142,10 @@
         {
             "name": "Bookings",
             "description": "Bookings"
+        },
+        {
+            "name": "Broker Commissions",
+            "description": "Broker Commissions"
         },
         {
             "name": "Brokers",

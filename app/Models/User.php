@@ -107,4 +107,44 @@ class User extends Authenticatable
     {
         return $this->hasMany(SigningLink::class, 'withdrawn_by');
     }
+
+    public function brokerCommissions()
+    {
+        return $this->hasMany(BrokerCommission::class, 'broker_user_id');
+    }
+
+    public function recordedBrokerCommissionPayments()
+    {
+        return $this->hasMany(BrokerCommissionPayment::class, 'paid_by');
+    }
+
+    public function createdBrokerCommissionRates()
+    {
+        return $this->hasMany(BrokerCommissionRate::class, 'created_by');
+    }
+
+    public function updatedBrokerCommissionRates()
+    {
+        return $this->hasMany(BrokerCommissionRate::class, 'updated_by');
+    }
+
+    public function createdBrokerCommissions()
+    {
+        return $this->hasMany(BrokerCommission::class, 'created_by');
+    }
+
+    public function updatedBrokerCommissions()
+    {
+        return $this->hasMany(BrokerCommission::class, 'updated_by');
+    }
+
+    public function createdBrokerCommissionPayments()
+    {
+        return $this->hasMany(BrokerCommissionPayment::class, 'created_by');
+    }
+
+    public function updatedBrokerCommissionPayments()
+    {
+        return $this->hasMany(BrokerCommissionPayment::class, 'updated_by');
+    }
 }

@@ -14,24 +14,23 @@ class DBoardSeeder extends Seeder
      */
     public function run(): void
     {
-        $view = Permission::findOrCreate('dashboard.view');
-        $debug = Permission::findOrCreate('dashboard.debug');
+        $perms = [
+            Permission::findOrCreate('view broker bookings'),
+            Permission::findOrCreate('view broker commissions')
+        ];
 
         $roles = [
             'CEO',
             'System Maintenance',
-            'COO',
-            'CSO',
-            'CRM Officer',
+            'CFO',
         ];
 
         foreach ($roles as $roleName) {
             $role = Role::findOrCreate($roleName);
-            $role->givePermissionTo($view);
-        }
 
-        // Debug is intentionally restricted.
-        Role::findOrCreate('CEO')->givePermissionTo($debug);
-        Role::findOrCreate('System Maintenance')->givePermissionTo($debug);
+            foreach ($perms as $perm) {
+                $role->givePermissionTo($perm);
+            }
+        }
     }
 }

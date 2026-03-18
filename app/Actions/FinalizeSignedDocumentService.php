@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\UserDoc;
 use App\Models\UserSignature;
 use App\Services\PdfService;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -198,7 +199,7 @@ readonly class FinalizeSignedDocumentService
         FinalizeConfig          $cfg,
         array                   $data,
         string                  $fileKey,
-        \Carbon\CarbonInterface $finalSignedAt
+        CarbonInterface $finalSignedAt
     ): ?string
     {
         $fileName = $cfg->filePrefix . $fileKey . '_' . $finalSignedAt->format('Ymd_His') . '.pdf';

@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\Validator;
 use Spatie\Permission\Models\Role;
 use Symfony\Component\HttpFoundation\Response;
 
+use App\Models\BrokerCommission;
+
 class UserManagementController extends Controller
 {
     /**
@@ -216,6 +218,20 @@ class UserManagementController extends Controller
      *                 @OA\Property(property="updated_at", type="string", format="date-time", example="2026-02-28T09:00:00Z")
      *             ),
      *             @OA\Property(
+     *                 property="broker_commissions_summary",
+     *                 type="object",
+     *                 nullable=true,
+     *                 description="Lightweight broker commissions summary if the user role is Broker",
+     *                 @OA\Property(property="total_count", type="integer", example=12),
+     *                 @OA\Property(property="total_commission_amount", type="number", format="float", example=420000),
+     *                 @OA\Property(property="total_paid_amount", type="number", format="float", example=150000),
+     *                 @OA\Property(property="total_remaining_amount", type="number", format="float", example=270000),
+     *                 @OA\Property(property="due_count", type="integer", example=4),
+     *                 @OA\Property(property="partially_paid_count", type="integer", example=5),
+     *                 @OA\Property(property="paid_count", type="integer", example=3),
+     *                 @OA\Property(property="cancelled_count", type="integer", example=0)
+     *             ),
+     *             @OA\Property(
      *                 property="latest_signing_link",
      *                 type="object",
      *                 nullable=true,
@@ -281,18 +297,44 @@ class UserManagementController extends Controller
 
         // Broker profile payload
         $brokerProfilePayload = null;
+        $brokerCommissionsSummaryPayload = null;
 
-        if ($roleName === 'Broker' && $user->brokerProfile) {
-            $brokerProfile = $user->brokerProfile;
+        if ($roleName === 'Broker') {
+            if ($user->brokerProfile) {
+                $brokerProfile = $user->brokerProfile;
 
-            $brokerProfilePayload = [
-                'id' => $brokerProfile->id,
-                'rera_number' => $brokerProfile->rera_number ?? null,
-                'company_name' => $brokerProfile->company_name ?? null,
-                'phone' => $brokerProfile->phone ?? null,
-                'stamp_url' => url("/api/brokers/{$user->id}/stamp"),
-                'created_at' => $brokerProfile->created_at,
-                'updated_at' => $brokerProfile->updated_at,
+                $brokerProfilePayload = [
+                    'id' => $brokerProfile->id,
+                    'rera_number' => $brokerProfile->rera_number ?? null,
+                    'company_name' => $brokerProfile->company_name ?? null,
+                    'phone' => $brokerProfile->phone ?? null,
+                    'stamp_url' => url("/api/brokers/{$user->id}/stamp"),
+                    'created_at' => $brokerProfile->created_at,
+                    'updated_at' => $brokerProfile->updated_at,
+                ];
+            }
+
+            $brokerCommissionsSummary = BrokerCommission::query()
+                ->where('broker_user_id', $user->id)
+                ->selectRaw('COUNT(*) as total_count')
+                ->selectRaw('COALESCE(SUM(commission_amount), 0) as total_commission_amount')
+                ->selectRaw('COALESCE(SUM(paid_amount), 0) as total_paid_amount')
+                ->selectRaw('COALESCE(SUM(remaining_amount), 0) as total_remaining_amount')
+                ->selectRaw("SUM(CASE WHEN status = 'due' THEN 1 ELSE 0 END) as due_count")
+                ->selectRaw("SUM(CASE WHEN status = 'partially_paid' THEN 1 ELSE 0 END) as partially_paid_count")
+                ->selectRaw("SUM(CASE WHEN status = 'paid' THEN 1 ELSE 0 END) as paid_count")
+                ->selectRaw("SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled_count")
+                ->first();
+
+            $brokerCommissionsSummaryPayload = [
+                'total_count' => (int) ($brokerCommissionsSummary->total_count ?? 0),
+                'total_commission_amount' => (float) ($brokerCommissionsSummary->total_commission_amount ?? 0),
+                'total_paid_amount' => (float) ($brokerCommissionsSummary->total_paid_amount ?? 0),
+                'total_remaining_amount' => (float) ($brokerCommissionsSummary->total_remaining_amount ?? 0),
+                'due_count' => (int) ($brokerCommissionsSummary->due_count ?? 0),
+                'partially_paid_count' => (int) ($brokerCommissionsSummary->partially_paid_count ?? 0),
+                'paid_count' => (int) ($brokerCommissionsSummary->paid_count ?? 0),
+                'cancelled_count' => (int) ($brokerCommissionsSummary->cancelled_count ?? 0),
             ];
         }
 
@@ -327,6 +369,7 @@ class UserManagementController extends Controller
             'permissions' => $permissions,
             'docs' => $docs,
             'broker_profile' => $brokerProfilePayload,
+            'broker_commissions_summary' => $brokerCommissionsSummaryPayload,
             'latest_signing_link' => $latestSigningLinkPayload,
         ];
 

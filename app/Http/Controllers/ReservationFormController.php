@@ -24,7 +24,6 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
-use Mccarlosen\LaravelMpdf\Facades\LaravelMpdf as MYPDF;
 use Symfony\Component\HttpFoundation\Response;
 
 class ReservationFormController extends Controller
@@ -436,7 +435,7 @@ class ReservationFormController extends Controller
     {
         $cfg = new SignatureSubmitConfig(
             type: DocumentType::RF,
-            expectedDocumentClass: \App\Models\ReservationForm::class,
+            expectedDocumentClass: ReservationForm::class,
             signatureDir: 'signatures/rf',
             invalidDocMessage: 'Invalid document type for this endpoint.',
         );

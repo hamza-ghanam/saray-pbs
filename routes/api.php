@@ -23,6 +23,7 @@ use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\ResetPasswordController;
 use App\Http\Controllers\TranslateController;
 use App\Http\Controllers\SignedDocumentsController;
+use App\Http\Controllers\BrokerCommissionController;
 
 //Index
 Route::get('/', function () {
@@ -147,8 +148,21 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/brokers/{user}/agreements/send-for-signature', [BrokerController::class, 'sendAgreementForSignature']);
     Route::post('/brokers/{user}/agreements/withdraw', [BrokerController::class, 'withdrawBrokerAgreement']);
     Route::get('/brokers/{user}/stamp', [BrokerController::class, 'showStamp'])->name('stamp.image');
+    Route::get('/brokers/{user}/bookings', [BrokerController::class, 'brokerBookings']);
 });
 Route::post('/otls/register', [OneTimeLinkController::class, 'selfRegisterUser']);
+
+// Broker Commissions
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/broker-commissions/rates', [BrokerCommissionController::class, 'listCommissionRates']);
+    Route::get('/broker-commissions/rates/current', [BrokerCommissionController::class, 'currentCommissionRate']);
+    Route::post('/broker-commissions/rates', [BrokerCommissionController::class, 'storeCommissionRate']);
+
+    Route::get('/broker-commissions', [BrokerCommissionController::class, 'listCommissions']);
+    Route::get('/broker-commissions/{brokerCommission}', [BrokerCommissionController::class, 'showCommission']);
+
+    Route::post('/broker-commissions/{brokerCommission}/payments', [BrokerCommissionController::class, 'recordCommissionPayment']);
+});
 
 // Roles & Permissions
 Route::middleware('auth:sanctum')->group(function () {

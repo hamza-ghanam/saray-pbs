@@ -29,6 +29,7 @@ class Booking extends Model
         'sale_source_id',
         'agency_com_agent',
         'notes',
+        'booked_at',
     ];
 
     protected $hidden = ['receipt_path'];
@@ -40,6 +41,7 @@ class Booking extends Model
         'unit_id' => 'integer',
         'price' => 'decimal:2',
         'discount' => 'decimal:2',
+        'booked_at' => 'datetime',
     ];
 
     public function user()
@@ -123,10 +125,16 @@ class Booking extends Model
         return $this->belongsTo(User::class, 'agent_id');
     }
 
-    public function saleSource()
+    public function broker()
     {
         return $this->belongsTo(User::class, 'sale_source_id');
     }
+
+    public function brokerCommission()
+    {
+        return $this->hasOne(BrokerCommission::class);
+    }
+
 
     public function canChangePaymentPlan()
     {

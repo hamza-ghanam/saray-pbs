@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Actions\FinalizeConfig;
-use App\Actions\FinalizeSignedDocumentService;
 use App\Actions\SignatureSubmitConfig;
 use App\Actions\SubmitSignatureAction;
 use App\Enums\DocumentType;
+use App\Models\Booking;
+use App\Models\BrokerCommission;
+use App\Models\BrokerCommissionRate;
 use App\Models\SigningLink;
 use App\Models\UserDoc;
 use App\Services\DocumentSignatureService;
@@ -967,6 +968,131 @@ class BrokerController extends Controller
             'adminUser' => $adminUser,
             'broker'    => $broker,
         ];
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/brokers/{user}/bookings",
+     *     summary="Get all broker bookings with lightweight commission summary",
+     *     operationId="getBrokerBookings",
+     *     tags={"Brokers"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(
+     *         name="user",
+     *         in="path",
+     *         description="Broker user ID",
+     *         required=true,
+     *         @OA\Schema(type="integer", format="int64", example=42)
+     *     ),
+     *     @OA\Parameter(
+     *         name="per_page",
+     *         in="query",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=15)
+     *     ),
+     *     @OA\Response(response=200, description="Broker bookings fetched successfully"),
+     *     @OA\Response(response=403, description="Forbidden"),
+     *     @OA\Response(response=422, description="Validation error")
+     * )
+     */
+    public function brokerBookings(Request $request, User $user)
+    {
+        $authUser = $request->user();
+
+        if (!$authUser || !$authUser->can('view broker bookings')) {
+            return response()->json([
+                'error' => 'Forbidden',
+            ], Response::HTTP_FORBIDDEN);
+        }
+
+        if (!$user->hasRole('Broker')) {
+            return response()->json([
+                'error' => 'User is not a Broker.',
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $validated = $validator->validated();
+        $perPage = (int) ($validated['per_page'] ?? 15);
+
+        $bookings = Booking::query()
+            ->where('sale_source_id', $user->id)
+            ->with([
+                'unit:id,unit_no,building_id',
+                'unit.building:id,name',
+                'brokerCommission:id,booking_id,broker_user_id,commission_rate_id,commission_percentage,base_amount,commission_amount,paid_amount,remaining_amount,status,eligible_at,calculated_at',
+            ])
+            ->orderByDesc('booked_at')
+            ->orderByDesc('id')
+            ->paginate($perPage);
+
+        $bookings->getCollection()->transform(function (Booking $booking) {
+            return [
+                'id' => $booking->id,
+                'unit_id' => $booking->unit_id,
+                'sale_source_id' => $booking->sale_source_id,
+                'price' => $booking->price,
+                'status' => $booking->status,
+                'booked_at' => $booking->booked_at,
+                'unit' => $booking->unit ? [
+                    'id' => $booking->unit->id,
+                    'unit_no' => $booking->unit->unit_no,
+                    'building' => $booking->unit->building ? [
+                        'id' => $booking->unit->building->id,
+                        'name' => $booking->unit->building->name,
+                    ] : null,
+                ] : null,
+                'commission_summary' => $booking->brokerCommission ? [
+                    'id' => $booking->brokerCommission->id,
+                    'commission_percentage' => (float) $booking->brokerCommission->commission_percentage,
+                    'base_amount' => (float) $booking->brokerCommission->base_amount,
+                    'commission_amount' => (float) $booking->brokerCommission->commission_amount,
+                    'paid_amount' => (float) $booking->brokerCommission->paid_amount,
+                    'remaining_amount' => (float) $booking->brokerCommission->remaining_amount,
+                    'status' => $booking->brokerCommission->status,
+                    'eligible_at' => $booking->brokerCommission->eligible_at,
+                    'calculated_at' => $booking->brokerCommission->calculated_at,
+                ] : null,
+            ];
+        });
+
+        $summary = BrokerCommission::query()
+            ->where('broker_user_id', $user->id)
+            ->selectRaw('COUNT(*) as total_count')
+            ->selectRaw('COALESCE(SUM(commission_amount), 0) as total_commission_amount')
+            ->selectRaw('COALESCE(SUM(paid_amount), 0) as total_paid_amount')
+            ->selectRaw('COALESCE(SUM(remaining_amount), 0) as total_remaining_amount')
+            ->selectRaw("SUM(CASE WHEN status = 'due' THEN 1 ELSE 0 END) as due_count")
+            ->selectRaw("SUM(CASE WHEN status = 'partially_paid' THEN 1 ELSE 0 END) as partially_paid_count")
+            ->selectRaw("SUM(CASE WHEN status = 'paid' THEN 1 ELSE 0 END) as paid_count")
+            ->selectRaw("SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled_count")
+            ->first();
+
+        return response()->json([
+            'broker' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+            ],
+            'summary' => [
+                'total_count' => (int) ($summary->total_count ?? 0),
+                'total_commission_amount' => (float) ($summary->total_commission_amount ?? 0),
+                'total_paid_amount' => (float) ($summary->total_paid_amount ?? 0),
+                'total_remaining_amount' => (float) ($summary->total_remaining_amount ?? 0),
+                'due_count' => (int) ($summary->due_count ?? 0),
+                'partially_paid_count' => (int) ($summary->partially_paid_count ?? 0),
+                'paid_count' => (int) ($summary->paid_count ?? 0),
+                'cancelled_count' => (int) ($summary->cancelled_count ?? 0),
+            ],
+            'bookings' => $bookings,
+        ], Response::HTTP_OK);
     }
 
     public function uploadSignedAgreement(Request $request)
