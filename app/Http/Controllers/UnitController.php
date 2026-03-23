@@ -135,14 +135,19 @@ use ZipArchive;
  *     schema="PaymentPlan",
  *     type="object",
  *     title="Payment Plan",
- *     required={"unit_id", "name", "dld_fee_percentage", "admin_fee", "booking_percentage", "handover_percentage"},
+ *     required={"name", "dld_fee_percentage", "admin_fee", "booking_percentage", "handover_percentage"},
  *     @OA\Property(property="id", type="integer", readOnly=true, example=1),
- *     @OA\Property(property="unit_id", type="integer", example=1),
  *     @OA\Property(property="name", type="string", example="60/40"),
+ *
  *     @OA\Property(property="dld_fee_percentage", type="number", format="float", example=65000.00),
  *     @OA\Property(property="admin_fee", type="number", format="float", example=4000.00),
+ *
  *     @OA\Property(property="booking_percentage", type="number", format="float", example=20),
  *     @OA\Property(property="handover_percentage", type="number", format="float", example=40),
+ *
+ *     @OA\Property(property="post_handover_enabled", type="boolean", example=true),
+ *     @OA\Property(property="post_handover_months", type="integer", nullable=true, example=24),
+ *
  *     @OA\Property(property="created_at", type="string", format="date-time", readOnly=true, example="2025-01-01T00:00:00Z"),
  *     @OA\Property(property="updated_at", type="string", format="date-time", readOnly=true, example="2025-01-02T00:00:00Z")
  * )
