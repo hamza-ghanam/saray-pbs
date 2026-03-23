@@ -183,6 +183,11 @@
                                             "type": "integer",
                                             "example": 12
                                         },
+                                        "eoi_amount": {
+                                            "type": "number",
+                                            "format": "float",
+                                            "example": 10000
+                                        },
                                         "status": {
                                             "type": "string",
                                             "example": "Pre-Booked"
@@ -9409,6 +9414,7 @@
                 "required": [
                     "id",
                     "unit_id",
+                    "eoi_amount",
                     "customer_info_id",
                     "status",
                     "created_by",
@@ -9499,6 +9505,12 @@
                         "type": "number",
                         "example": 10,
                         "nullable": true
+                    },
+                    "eoi_amount": {
+                        "description": "The Expression of Interest of the booking.",
+                        "type": "number",
+                        "example": 10000,
+                        "nullable": false
                     },
                     "notes": {
                         "description": "Booking-level internal notes",

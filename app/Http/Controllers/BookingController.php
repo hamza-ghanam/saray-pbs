@@ -112,7 +112,6 @@ use Mindee\Input\PathInput;
  *     },
  *     @OA\Property(property="id",                 type="integer", format="int64", example=42),
  *     @OA\Property(property="unit_id",            type="integer", example=12),
- *     @OA\Property(property="eoi_amount",         type="float", example=25000),
  *     @OA\Property(property="payment_plan_id",    type="integer", nullable=true, example=5),
  *     @OA\Property(property="customer_info_id",   type="integer", example=7),
  *     @OA\Property(property="status",             type="string",  example="Pre-Booked"),
