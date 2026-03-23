@@ -103,6 +103,7 @@ use Mindee\Input\PathInput;
  *     required={
  *         "id",
  *         "unit_id",
+ *         "eoi_amount",
  *         "customer_info_id",
  *         "status",
  *         "created_by",
@@ -111,6 +112,7 @@ use Mindee\Input\PathInput;
  *     },
  *     @OA\Property(property="id",                 type="integer", format="int64", example=42),
  *     @OA\Property(property="unit_id",            type="integer", example=12),
+ *     @OA\Property(property="eoi_amount",         type="float", example=25000),
  *     @OA\Property(property="payment_plan_id",    type="integer", nullable=true, example=5),
  *     @OA\Property(property="customer_info_id",   type="integer", example=7),
  *     @OA\Property(property="status",             type="string",  example="Pre-Booked"),
@@ -145,6 +147,14 @@ use Mindee\Input\PathInput;
  *         description="The applicable discount of the booking price, can be passed ONLY IF the payment_plan_id is passed.",
  *         example=10
  *     ),
+ *
+ *     @OA\Property(
+ *          property="eoi_amount",
+ *          type="number",
+ *          nullable=false,
+ *          description="The Expression of Interest of the booking.",
+ *          example=10000
+ *      ),
  *
  *     @OA\Property(
  *         property="notes",
@@ -315,6 +325,7 @@ class BookingController extends Controller
      *             type="object",
      *             @OA\Property(property="id",        type="integer", example=42),
      *             @OA\Property(property="unit_id",   type="integer", example=12),
+     *             @OA\Property(property="eoi_amount", type="float", example=10000),
      *             @OA\Property(property="status",    type="string",  example="Pre-Booked"),
      *             @OA\Property(property="agent",     type="object", nullable=true,
      *                 @OA\Property(property="id", type="integer", example=3),
@@ -1274,6 +1285,7 @@ class BookingController extends Controller
                     }
                 }
             ],
+            'eoi_amount' => 'sometimes|numeric|min:0',
             'sale_source_id' => 'sometimes|integer|exists:users,id',
             'agency_com_agent' => 'nullable|string|max:255',
 
