@@ -9992,7 +9992,6 @@
             "PaymentPlan": {
                 "title": "Payment Plan",
                 "required": [
-                    "unit_id",
                     "name",
                     "dld_fee_percentage",
                     "admin_fee",
@@ -10003,10 +10002,6 @@
                     "id": {
                         "type": "integer",
                         "readOnly": true,
-                        "example": 1
-                    },
-                    "unit_id": {
-                        "type": "integer",
                         "example": 1
                     },
                     "name": {
@@ -10032,6 +10027,15 @@
                         "type": "number",
                         "format": "float",
                         "example": 40
+                    },
+                    "post_handover_enabled": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "post_handover_months": {
+                        "type": "integer",
+                        "example": 24,
+                        "nullable": true
                     },
                     "created_at": {
                         "type": "string",
