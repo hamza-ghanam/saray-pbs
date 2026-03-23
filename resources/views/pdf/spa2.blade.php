@@ -3865,8 +3865,8 @@
                 <td class="left-th" style="width: 40%; text-align: justify; padding: 10px;">
                     {{ $installment->description }}
                     @if($loop->first)
-                        <br/><small>({{ (int) $installment->percentage }}%
-                            + {{ (int) $paymentPlan->dld_fee_percentage }}% DLD fee + Admin fee + EOI)</small>
+                        <br/><small>({{ rtrim(rtrim(number_format((float) $installment->percentage, 2, '.', ''), '0'), '.') }}%
+                            + {{ rtrim(rtrim(number_format((float) $installment->percentage, 2, '.', ''), '0'), '.') }}% DLD fee + Admin fee + EOI)</small>
                     @endif
                 </td>
                 <td class="left-th" style="width: 25%; text-align: center; padding: 10px;">
@@ -3876,7 +3876,7 @@
                     @if($loop->first)
                         -
                     @else
-                        {{ (int) $installment->percentage }}%
+                        {{ rtrim(rtrim(number_format((float) $installment->percentage, 2, '.', ''), '0'), '.') }}%
                     @endif
                 </td>
                 <td class="left-th" style="text-align: right; padding: 10px;">

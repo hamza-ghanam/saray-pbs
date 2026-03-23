@@ -209,9 +209,9 @@
                         <td>-</td>
                         <td>-</td>
                         <td>
-                            <img src="{{ public_path('images/aed_symbol.svg') }}" width="12" alt="AED" /> {{ number_format($plan->EOI, 2) }}
+                            <img src="{{ public_path('images/aed_symbol.svg') }}" width="12" alt="AED" /> {{ number_format($salesOffer->eoi_amount, 2) }}
                             <br/>
-                            <strong>$ </strong>{{ number_format($plan->EOI / $dollar_rate, 2) }}
+                            <strong>$ </strong>{{ number_format($salesOffer->eoi_amount / $dollar_rate, 2) }}
                         </td>
                     </tr>
                     @foreach($plan->installments as $installment)

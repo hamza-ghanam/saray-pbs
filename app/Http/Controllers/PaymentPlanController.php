@@ -117,12 +117,13 @@ class PaymentPlanController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"name", "dld_fee_percentage", "admin_fee", "EOI", "blocks", "handover_percentage"},
+     *             required={"name", "dld_fee_percentage", "admin_fee", "blocks", "handover_percentage", "post_handover_enabled"},
      *             @OA\Property(property="name", type="string", example="Custom Plan A"),
      *             @OA\Property(property="dld_fee_percentage", type="number", format="float", example=2),
      *             @OA\Property(property="admin_fee", type="number", format="float", example=500),
-     *             @OA\Property(property="EOI", type="number", format="float", example=10000),
      *             @OA\Property(property="handover_percentage", type="number", format="float", example=40),
+     *             @OA\Property(property="post_handover_enabled", type="boolean", example=true),
+     *             @OA\Property(property="post_handover_months", type="integer", example=24),
      *             @OA\Property(
      *                 property="blocks",
      *                 type="array",
@@ -167,8 +168,9 @@ class PaymentPlanController extends Controller
      *             @OA\Property(property="name", type="string", example="Custom Plan A"),
      *             @OA\Property(property="dld_fee_percentage", type="number", format="float", example=2),
      *             @OA\Property(property="admin_fee", type="number", format="float", example=500),
-     *             @OA\Property(property="EOI", type="number", format="float", example=10000),
      *             @OA\Property(property="handover_percentage", type="number", format="float", example=40),
+     *             @OA\Property(property="post_handover_enabled", type="boolean", example=true),
+     *             @OA\Property(property="post_handover_months", type="integer", example=24),
      *             @OA\Property(
      *                 property="blocks",
      *                 type="array",
@@ -223,7 +225,6 @@ class PaymentPlanController extends Controller
      */
     public function store(
         StorePaymentPlanRequest $request,
-        Unit $unit,
         PaymentPlanService $builder
     ) {
         // 1) Grab the validated data
@@ -234,9 +235,12 @@ class PaymentPlanController extends Controller
             'name'                  => $data['name'],
             'dld_fee_percentage'    => $data['dld_fee_percentage'],
             'admin_fee'             => $data['admin_fee'],
-            'EOI'                   => $data['EOI'],
-            'blocks'                => $data['blocks'],   // <— store the blocks definition
+            'blocks'                => $data['blocks'],   // store the blocks definition
             'handover_percentage'   => $data['handover_percentage'],
+            'post_handover_enabled' => $data['post_handover_enabled'],
+            'post_handover_months'  => $data['post_handover_enabled']
+                ? ($data['post_handover_months'] ?? 0)
+                : 0,
         ]);
 
         // 4) Return the saved plan (including the blocks field)

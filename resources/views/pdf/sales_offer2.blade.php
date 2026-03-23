@@ -283,7 +283,7 @@
                             <td>
                                 {{ $installment->description }}
                                 @if($loop->first)
-                                    <br/><small>({{ (int) $installment->percentage }}%
+                                    <br/><small>({{ (int) rtrim(rtrim(number_format((float) $installment->percentage, 2, '.', ''), '0'), '.') }}%
                                         + {{ (int) $plan->dld_fee_percentage }}% DLD fee + Admin fee + EOI)</small>
                                 @endif
                             </td>
@@ -291,7 +291,7 @@
                                 @if($loop->first)
                                     -
                                 @else
-                                    {{ $installment->percentage }}%
+                                    {{ rtrim(rtrim(number_format((float) $installment->percentage, 2, '.', ''), '0'), '.') }}%
                                 @endif
                             </td>
                             <td>{{ \Carbon\Carbon::parse($installment->date)->format('Y-m-d') }}</td>

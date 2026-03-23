@@ -11,8 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('units', function (Blueprint $table) {
-            $table->timestamp('status_changed_at')->nullable()->after('status');
+        Schema::table('sales_offers', function (Blueprint $table) {
+            $table->decimal('eoi_amount', 15, 2)
+                ->nullable()
+                ->after('discount');
         });
     }
 
@@ -21,8 +23,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('units', function (Blueprint $table) {
-            //
+        Schema::table('sales_offers', function (Blueprint $table) {
+            $table->dropColumn([
+                'eoi_amount',
+            ]);
         });
     }
 };

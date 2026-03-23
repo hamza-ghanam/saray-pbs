@@ -252,7 +252,7 @@
         </tr>
         <tr>
             <th class="left-th">Reservation Deposit (Non-refundable Deposit)</th>
-            <td style="text-align: center;">{{ $paymentPlan->EOI }}</td>
+            <td style="text-align: center;">{{ $booking->eoi_amount }}</td>
             <th class="rtl-text right-th">مبلغ دفعة الحجز (عربون غير مسترد)</th>
         </tr>
         <tr>
@@ -517,8 +517,8 @@
                 <td class="left-th" style="width: 40%; text-align: justify; padding: 10px;">
                     {{ $installment->description }}
                     @if($loop->first)
-                        <br/><small>({{ (int) $installment->percentage }}%
-                            + {{ (int) $paymentPlan->dld_fee_percentage }}% DLD fee + Admin fee + EOI)</small>
+                        <br/><small>({{ rtrim(rtrim(number_format((float) $installment->percentage, 2, '.', ''), '0'), '.') }}%
+                            + {{ rtrim(rtrim(number_format((float) $paymentPlan->dld_fee_percentage, 2, '.', ''), '0'), '.') }}% DLD fee + Admin fee + EOI)</small>
                     @endif
                 </td>
                 <td class="left-th" style="width: 25%; text-align: center; padding: 10px;">
@@ -528,7 +528,7 @@
                     @if($loop->first)
                         -
                     @else
-                        {{ (int) $installment->percentage }}%
+                        {{ rtrim(rtrim(number_format((float) $installment->percentage, 2, '.', ''), '0'), '.') }}%
                     @endif
                 </td>
                 <td class="left-th" style="text-align: right; padding: 10px;">
@@ -867,7 +867,8 @@
         </tr>
     </table>
 
-    <table class="info-table">
+    @if($unit->building->project_no == 4058)
+        <table class="info-table">
         <tr>
             <td class="left-th" style="width: 25%;  padding: 10px;">
                 Bank Name
@@ -935,7 +936,7 @@
             </td>
         </tr>
     </table>
-
+    @endif
     <br/>
     <table class="info-table">
         <tr>

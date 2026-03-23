@@ -116,6 +116,7 @@ use Mindee\Input\PathInput;
  *     @OA\Property(property="status",             type="string",  example="Pre-Booked"),
  *     @OA\Property(property="price",              type="number",  format="float", example=1535432.00),
  *     @OA\Property(property="discount",           type="number",  format="float", example=5),
+ *     @OA\Property(property="eoi_amount",         type="number", format="float", example=10000),
  *     @OA\Property(property="receipt_path",       type="string",             example="receipts/abc123.pdf"),
  *     @OA\Property(property="created_by",         type="integer",            example=3),
  *     @OA\Property(property="confirmed_by",       type="integer", nullable=true, example=null),
@@ -616,8 +617,9 @@ class BookingController extends Controller
      *         @OA\MediaType(
      *             mediaType="multipart/form-data",
      *             @OA\Schema(
-     *                 required={"unit_id", "customers"},
+     *                 required={"unit_id", "eoi_amount", "customers"},
      *                 @OA\Property(property="unit_id", type="integer", example=12),
+     *                 @OA\Property(property="eoi_amount", type="number", format="float", example=10000),
      *                 @OA\Property(property="payment_plan_id", type="integer", nullable=true, example=5),
      *                 @OA\Property(
      *                     property="receipt",
@@ -683,6 +685,7 @@ class BookingController extends Controller
 
         $validated = $request->validate([
             'unit_id' => 'required|integer|exists:units,id',
+            'eoi_amount' => 'required|numeric|min:1',
             'payment_plan_id' => 'nullable|integer|exists:payment_plans,id',
             'receipt' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
             'discount' => 'nullable|numeric|min:0|max:100',
@@ -845,6 +848,8 @@ class BookingController extends Controller
                 'agent_id' => $validated['agent_id'] ?? null,
                 'sale_source_id' => $validated['sale_source_id'] ?? null,
                 'agency_com_agent' => $validated['agency_com_agent'] ?? null,
+
+                'eoi_amount' => $validated['eoi_amount'] ?? null,
             ]);
 
             // 6. Create CustomerInfo entries

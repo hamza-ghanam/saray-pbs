@@ -20,16 +20,24 @@ class PaymentPlan extends Model
         'name',
         'dld_fee_percentage',
         'admin_fee',
-        'EOI',
         'booking_percentage',
         'handover_percentage',
         'is_default',
         'blocks',
+        'post_handover_enabled',
+        'post_handover_months',
+        'description',
+        'percentage',
+        'date',
+        'amount',
     ];
 
     protected $casts = [
         'blocks' => 'array',
         'unit_id' => 'integer',
+        'post_handover_enabled' => 'boolean',
+        'post_handover_months' => 'integer',
+        'is_default' => 'boolean',
     ];
 
     /**
