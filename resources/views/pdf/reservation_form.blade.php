@@ -807,80 +807,82 @@
     </table>
     <br/>
 
-    <table class="header-table">
-        <tr>
-            <th class="left-th">Escrow account Details</th>
-        </tr>
-    </table>
+    @if($unit->building->project_no == 4058)
+        <table class="header-table">
+            <tr>
+                <th class="left-th">Escrow account Details</th>
+            </tr>
+        </table>
 
-    <table class="info-table">
-        <tr>
-            <td class="left-th" style="width: 25%;  padding: 10px;">
-                Bank Name
-            </td>
-            <td class="left-th" style="width: 50%; text-align: center;  padding: 10px;">
-                Emirates NBD Bank PJSC
-            </td>
-            <td class="rtl-text right-th" style="width: 25%;  padding: 10px;">
-                اسم المصرف
-            </td>
-        </tr>
-        <tr>
-            <td class="left-th" style="width: 25%;  padding: 10px;">
-                Account Name
-            </td>
-            <td class="left-th" style="width: 50%; text-align: center;  padding: 10px;">
-                Saray Prime Residence Escrow Account
-            </td>
-            <td class="rtl-text right-th" style="width: 25%;  padding: 10px;">
-                اسم الحساب
-            </td>
-        </tr>
-        <tr>
-            <td class="left-th" style="width: 25%;  padding: 10px;">
-                Account No.
-            </td>
-            <td class="left-th" style="width: 50%; text-align: center;  padding: 10px;">
-                0205931383803
-            </td>
-            <td class="rtl-text right-th" style="width: 25%;  padding: 10px;">
-                رقم الحساب
-            </td>
-        </tr>
-        <tr>
-            <td class="left-th" style="width: 25%;  padding: 10px;">
-                IBAN
-            </td>
-            <td class="left-th" style="width: 50%; text-align: center;  padding: 10px;">
-                AE180260000205931383803
-            </td>
-            <td class="rtl-text right-th" style="width: 25%;  padding: 10px;">
-                آيبان
-            </td>
-        </tr>
-        <tr>
-            <td class="left-th" style="width: 25%;  padding: 10px;">
-                Currency
-            </td>
-            <td class="left-th" style="width: 50%; text-align: center; padding: 10px;">
-                AED (<img src="{{ public_path('images/aed_symbol.svg') }}" width="12" alt="AED"/>)
-            </td>
-            <td class="rtl-text right-th" style="width: 25%;  padding: 10px;">
-                العملة
-            </td>
-        </tr>
-        <tr>
-            <td class="left-th" style="width: 25%;  padding: 10px;">
-                BIC Code
-            </td>
-            <td class="left-th" style="width: 50%; text-align: center;  padding: 10px;">
-                EBILAEADXXX
-            </td>
-            <td class="rtl-text right-th" style="width: 25%;  padding: 10px;">
-                رمز BIC
-            </td>
-        </tr>
-    </table>
+        <table class="info-table">
+            <tr>
+                <td class="left-th" style="width: 25%;  padding: 10px;">
+                    Bank Name
+                </td>
+                <td class="left-th" style="width: 50%; text-align: center;  padding: 10px;">
+                    Emirates NBD Bank PJSC
+                </td>
+                <td class="rtl-text right-th" style="width: 25%;  padding: 10px;">
+                    اسم المصرف
+                </td>
+            </tr>
+            <tr>
+                <td class="left-th" style="width: 25%;  padding: 10px;">
+                    Account Name
+                </td>
+                <td class="left-th" style="width: 50%; text-align: center;  padding: 10px;">
+                    Saray Prime Residence Escrow Account
+                </td>
+                <td class="rtl-text right-th" style="width: 25%;  padding: 10px;">
+                    اسم الحساب
+                </td>
+            </tr>
+            <tr>
+                <td class="left-th" style="width: 25%;  padding: 10px;">
+                    Account No.
+                </td>
+                <td class="left-th" style="width: 50%; text-align: center;  padding: 10px;">
+                    0205931383803
+                </td>
+                <td class="rtl-text right-th" style="width: 25%;  padding: 10px;">
+                    رقم الحساب
+                </td>
+            </tr>
+            <tr>
+                <td class="left-th" style="width: 25%;  padding: 10px;">
+                    IBAN
+                </td>
+                <td class="left-th" style="width: 50%; text-align: center;  padding: 10px;">
+                    AE180260000205931383803
+                </td>
+                <td class="rtl-text right-th" style="width: 25%;  padding: 10px;">
+                    آيبان
+                </td>
+            </tr>
+            <tr>
+                <td class="left-th" style="width: 25%;  padding: 10px;">
+                    Currency
+                </td>
+                <td class="left-th" style="width: 50%; text-align: center; padding: 10px;">
+                    AED (<img src="{{ public_path('images/aed_symbol.svg') }}" width="12" alt="AED"/>)
+                </td>
+                <td class="rtl-text right-th" style="width: 25%;  padding: 10px;">
+                    العملة
+                </td>
+            </tr>
+            <tr>
+                <td class="left-th" style="width: 25%;  padding: 10px;">
+                    BIC Code
+                </td>
+                <td class="left-th" style="width: 50%; text-align: center;  padding: 10px;">
+                    EBILAEADXXX
+                </td>
+                <td class="rtl-text right-th" style="width: 25%;  padding: 10px;">
+                    رمز BIC
+                </td>
+            </tr>
+        </table>
+    @endif
 
     <br/>
     <table class="info-table">
