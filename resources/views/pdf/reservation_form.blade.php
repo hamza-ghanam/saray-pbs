@@ -861,13 +861,13 @@
     </table>
     <br/>
 
-    <table class="header-table">
-        <tr>
-            <th class="left-th">Escrow account Details</th>
-        </tr>
-    </table>
-
     @if($unit->building->project_no == 4058)
+        <table class="header-table">
+            <tr>
+                <th class="left-th">Escrow account Details</th>
+            </tr>
+        </table>
+
         <table class="info-table">
         <tr>
             <td class="left-th" style="width: 25%;  padding: 10px;">
@@ -937,6 +937,7 @@
         </tr>
     </table>
     @endif
+
     <br/>
     <table class="info-table">
         <tr>
