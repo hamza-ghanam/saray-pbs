@@ -44,6 +44,7 @@ Route::post('/reset-password', [ResetPasswordController::class, 'reset']);
 // Building Management
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/buildings', [BuildingController::class, 'index']);
+    Route::get('/buildings/listing', [BuildingController::class, 'listing']);
     Route::post('/buildings', [BuildingController::class, 'store']);
     Route::get('/buildings/{id}', [BuildingController::class, 'show']);
     Route::put('/buildings/{id}', [BuildingController::class, 'update']);

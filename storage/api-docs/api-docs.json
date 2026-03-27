@@ -2336,6 +2336,49 @@
                 ]
             }
         },
+        "/api/buildings/listing": {
+            "get": {
+                "tags": [
+                    "Building"
+                ],
+                "summary": "List building ids and names only",
+                "description": "List building IDs and names only.",
+                "operationId": "6dce623481d828f06ddb86deb4ff2a0d",
+                "responses": {
+                    "200": {
+                        "description": "List of building ids and names",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "name": {
+                                                "type": "string",
+                                                "example": "Building A"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden — insufficient permissions"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/buildings/{id}": {
             "get": {
                 "tags": [

@@ -103,6 +103,46 @@ class BuildingController extends Controller
     }
 
     /**
+     * List building IDs and names only.
+     *
+     * @OA\Get(
+     *     path="/api/buildings/listing",
+     *     summary="List building ids and names only",
+     *     tags={"Building"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="List of building ids and names",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="name", type="string", example="Building A")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=403, description="Forbidden — insufficient permissions")
+     * )
+     */
+    public function listing(Request $request)
+    {
+        $user = $request->user();
+        Log::info('User ' . $user->id . ' called BuildingController@listing');
+
+        if (!$user->can('view building')) {
+            abort(Response::HTTP_FORBIDDEN, 'Unauthorized');
+        }
+
+        $buildings = Building::query()
+            ->select(['id', 'name'])
+            ->orderBy('name')
+            ->get();
+
+        return response()->json($buildings, Response::HTTP_OK);
+    }
+
+    /**
      * Store a newly created building in storage, optionally with an image.
      *
      * @OA\Post(
