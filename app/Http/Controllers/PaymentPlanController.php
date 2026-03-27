@@ -82,9 +82,78 @@ class PaymentPlanController extends Controller
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(
-     *                 property="payment_plans",
+     *                 property="current_page",
+     *                 type="integer",
+     *                 example=1
+     *             ),
+     *             @OA\Property(
+     *                 property="data",
      *                 type="array",
      *                 @OA\Items(ref="#/components/schemas/PaymentPlan")
+     *             ),
+     *             @OA\Property(
+     *                 property="first_page_url",
+     *                 type="string",
+     *                 example="http://localhost/api/payment-plans?page=1"
+     *             ),
+     *             @OA\Property(
+     *                 property="from",
+     *                 type="integer",
+     *                 nullable=true,
+     *                 example=1
+     *             ),
+     *             @OA\Property(
+     *                 property="last_page",
+     *                 type="integer",
+     *                 example=3
+     *             ),
+     *             @OA\Property(
+     *                 property="last_page_url",
+     *                 type="string",
+     *                 example="http://localhost/api/payment-plans?page=3"
+     *             ),
+     *             @OA\Property(
+     *                 property="links",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="url", type="string", nullable=true, example="http://localhost/api/payment-plans?page=1"),
+     *                     @OA\Property(property="label", type="string", example="&laquo; Previous"),
+     *                     @OA\Property(property="active", type="boolean", example=false)
+     *                 )
+     *             ),
+     *             @OA\Property(
+     *                 property="next_page_url",
+     *                 type="string",
+     *                 nullable=true,
+     *                 example="http://localhost/api/payment-plans?page=2"
+     *             ),
+     *             @OA\Property(
+     *                 property="path",
+     *                 type="string",
+     *                 example="http://localhost/api/payment-plans"
+     *             ),
+     *             @OA\Property(
+     *                 property="per_page",
+     *                 type="integer",
+     *                 example=15
+     *             ),
+     *             @OA\Property(
+     *                 property="prev_page_url",
+     *                 type="string",
+     *                 nullable=true,
+     *                 example=null
+     *             ),
+     *             @OA\Property(
+     *                 property="to",
+     *                 type="integer",
+     *                 nullable=true,
+     *                 example=15
+     *             ),
+     *             @OA\Property(
+     *                 property="total",
+     *                 type="integer",
+     *                 example=42
      *             )
      *         )
      *     ),
@@ -104,8 +173,10 @@ class PaymentPlanController extends Controller
             abort(Response::HTTP_FORBIDDEN, 'Unauthorized');
         }
 
-        $paymentPlans = PaymentPlan::all();
-        return response()->json(['payment_plans' => $paymentPlans], Response::HTTP_OK);
+        $paymentPlans = PaymentPlan::orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        return response()->json($paymentPlans, Response::HTTP_OK);
     }
 
     /**

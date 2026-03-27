@@ -4249,11 +4249,80 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "payment_plans": {
+                                        "current_page": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "data": {
                                             "type": "array",
                                             "items": {
                                                 "$ref": "#/components/schemas/PaymentPlan"
                                             }
+                                        },
+                                        "first_page_url": {
+                                            "type": "string",
+                                            "example": "http://localhost/api/payment-plans?page=1"
+                                        },
+                                        "from": {
+                                            "type": "integer",
+                                            "example": 1,
+                                            "nullable": true
+                                        },
+                                        "last_page": {
+                                            "type": "integer",
+                                            "example": 3
+                                        },
+                                        "last_page_url": {
+                                            "type": "string",
+                                            "example": "http://localhost/api/payment-plans?page=3"
+                                        },
+                                        "links": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "url": {
+                                                        "type": "string",
+                                                        "example": "http://localhost/api/payment-plans?page=1",
+                                                        "nullable": true
+                                                    },
+                                                    "label": {
+                                                        "type": "string",
+                                                        "example": "&laquo; Previous"
+                                                    },
+                                                    "active": {
+                                                        "type": "boolean",
+                                                        "example": false
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "next_page_url": {
+                                            "type": "string",
+                                            "example": "http://localhost/api/payment-plans?page=2",
+                                            "nullable": true
+                                        },
+                                        "path": {
+                                            "type": "string",
+                                            "example": "http://localhost/api/payment-plans"
+                                        },
+                                        "per_page": {
+                                            "type": "integer",
+                                            "example": 15
+                                        },
+                                        "prev_page_url": {
+                                            "type": "string",
+                                            "example": null,
+                                            "nullable": true
+                                        },
+                                        "to": {
+                                            "type": "integer",
+                                            "example": 15,
+                                            "nullable": true
+                                        },
+                                        "total": {
+                                            "type": "integer",
+                                            "example": 42
                                         }
                                     },
                                     "type": "object"
