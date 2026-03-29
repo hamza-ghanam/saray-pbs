@@ -15,6 +15,7 @@ return [
 
     'name' => env('APP_NAME', 'Laravel'),
     'frontend_url' => env('FEND_URL', 'https://www.uniquesaray.ae'),
+    'app_version' => env('APP_VERSION', '2.0'),
 
     /*
     |--------------------------------------------------------------------------
