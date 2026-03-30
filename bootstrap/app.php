@@ -15,23 +15,19 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        //
+        $middleware->redirectGuestsTo(fn() => null);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         $exceptions->render(function (NotFoundHttpException $e, Request $request) {
-            if ($request->is('api/*')) {
-                return response()->json([
-                    'message' => 'Record not found.'
-                ], 404);
-            }
+            return response()->json([
+                'message' => 'Record not found.'
+            ], 404);
         });
 
         // Handle Unauthenticated Exceptions
         $exceptions->render(function (AuthenticationException $e, Request $request) {
-            if ($request->is('api/*')) {
-                return response()->json([
-                    'message' => 'Unauthenticated.'
-                ], 401);
-            }
+            return response()->json([
+                'message' => 'Unauthenticated.'
+            ], 401);
         });
     })->create();

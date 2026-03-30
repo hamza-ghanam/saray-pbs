@@ -27,7 +27,10 @@ use App\Http\Controllers\BrokerCommissionController;
 
 //Index
 Route::get('/', function () {
-    return redirect('api/documentation');
+    return response()->json([
+        'status'  => true,
+        'message' => 'API is running.',
+    ]);
 });
 
 Route::get('/user', function (Request $request) {
