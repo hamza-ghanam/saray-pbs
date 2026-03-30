@@ -227,12 +227,12 @@
                 </td>
                 <td style="width: 48%; text-align: right; font-weight: bold;">
                     <img
-                        src="file:///{{ str_replace('\\','/', storage_path('app/private/signatures/company_stamp.png')) }}"
+                        src="file:///{{ str_replace('\\','/', storage_path('app/private/stamps/company_stamp_sales.png')) }}"
                         alt="Seller Initial" height="80" style="margin-right: 5px;"
                     >
                     <img
-                        src="file:///{{ str_replace('\\','/', storage_path('app/private/signatures/company_signature.png')) }}"
-                        alt="Seller Initial" height="80"
+                        src="file:///{{ str_replace('\\','/', storage_path('app/private/signatures/company/ceo_signature.png')) }}"
+                        alt="Seller Initial" height="60"
                     >
                     <br/>
                     Seller Initial
@@ -766,7 +766,7 @@
                 <b>Signed & delivered for and on behalf of the Seller:</b>
                 <h4>Name: <img src="{{ public_path('images/black_line.svg') }}" width="250" height="2" alt="___"/></h4>
                 <h4>Signature: <img
-                        src="file:///{{ str_replace('\\','/', storage_path('app/private/signatures/company_signature.png')) }}"
+                        src="file:///{{ str_replace('\\','/', storage_path('app/private/signatures/company/ceo_signature.png')) }}"
                         height="30" alt="{{ config('app.name') }} Signature"/>
                 </h4>
                 <h4>Date: &nbsp;&nbsp;&nbsp; {{ optional($companySignedAt)->format('d-M-Y') }}&nbsp;&nbsp;</h4>
@@ -777,7 +777,7 @@
                 <h4>الاسم: <img src="{{ public_path('images/black_line.svg') }}" width="250" height="2" alt="___"/></h4>
                 <h4>التوقيع:
                     <img
-                        src="file:///{{ str_replace('\\','/', storage_path('app/private/signatures/company_signature.png')) }}"
+                        src="file:///{{ str_replace('\\','/', storage_path('app/private/signatures/company/ceo_signature.png')) }}"
                         height="30" alt="{{ config('app.name') }} Signature"/>
                 </h4>
                 <h4 style="unicode-bidi: embed;">التاريخ:&nbsp;&nbsp;
@@ -3373,7 +3373,6 @@
         </tr>
 
         <tr>
-            <
             <td class="en" style="padding:10px 10px 10px 35px;">(a) with the prior
                 written consent of
                 the Seller given in the terms of a written assignment agreement in a form acceptable to the Seller,
@@ -3741,7 +3740,7 @@
             <td class="left-th" style="line-height: 2.5; width: 49%; padding: 7px; text-align: justify;">
                 <strong>Name: Unique Saray Properties L.L.C </strong> by its authorised representative
                 <h4>Signed: <img
-                        src="file:///{{ str_replace('\\','/', storage_path('app/private/signatures/company_signature.png')) }}"
+                        src="file:///{{ str_replace('\\','/', storage_path('app/private/signatures/company/ceo_signature.png')) }}"
                         height="30" alt="{{ config('app.name') }} Signature"/>
                 </h4>
                 <h4>Date: &nbsp;&nbsp;&nbsp; {{ optional($companySignedAt)->format('d-M-Y') }}&nbsp;&nbsp;</h4>
@@ -3755,7 +3754,7 @@
                 <strong>الاسم: يونيك سراي للعقارت ش.ذ.م.م</strong> من قبل الممثل المفوض
                 <h4>التوقيع:
                     <img
-                        src="file:///{{ str_replace('\\','/', storage_path('app/private/signatures/company_signature.png')) }}"
+                        src="file:///{{ str_replace('\\','/', storage_path('app/private/signatures/company/ceo_signature.png')) }}"
                         height="30" alt="{{ config('app.name') }} Signature"/>
                 </h4>
                 <h4 style="unicode-bidi: embed;">التاريخ:&nbsp;&nbsp;
@@ -4430,7 +4429,7 @@
             <td class="ar" style="line-height: 2.5;">
                 <strong>الاسم: يونيك سراي للعقارت ش.ذ.م.م</strong> من قبل الممثل المفوض
                 <h4>التوقيع:
-                    <img src="file:///{{ str_replace('\\','/', storage_path('app/private/signatures/company_signature.png')) }}"
+                    <img src="file:///{{ str_replace('\\','/', storage_path('app/private/signatures/company/ceo_signature.png')) }}"
                          height="30" alt="{{ config('app.name') }} Signature"/>
                 </h4>
                 <h4 style="unicode-bidi: embed;">التاريخ:&nbsp;&nbsp;

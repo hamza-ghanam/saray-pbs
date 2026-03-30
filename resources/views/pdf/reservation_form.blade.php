@@ -154,12 +154,12 @@
                 </td>
                 <td style="width: 48%; text-align: right; font-weight: bold;">
                     <img
-                        src="file:///{{ str_replace('\\','/', storage_path('app/private/signatures/company_stamp.png')) }}"
+                        src="file:///{{ str_replace('\\','/', storage_path('app/private/stamps/company_stamp_sales.png')) }}"
                         alt="Seller Initial" height="80" style="margin-right: 5px;"
                     >
                     <img
-                        src="file:///{{ str_replace('\\','/', storage_path('app/private/signatures/company_signature.png')) }}"
-                        alt="Seller Initial" height="80"
+                        src="file:///{{ str_replace('\\','/', storage_path('app/private/signatures/company/ceo_signature.png')) }}"
+                        alt="Seller Initial" height="60"
                     >
                     <br/>
                     Seller Initial
@@ -1120,7 +1120,7 @@
         <tr>
             <td class="left-th" style="line-height: 2.5; width: 49%; padding: 7px; text-align: justify;">
                 <h4>Name: Unique Saray Properties L.L.C </h4>
-                <h4>Signed: <img src="file:///{{ str_replace('\\','/', storage_path('app/private/signatures/company_signature.png')) }}"
+                <h4>Signed: <img src="file:///{{ str_replace('\\','/', storage_path('app/private/signatures/company/ceo_signature.png')) }}"
                                  height="30" alt="{{ config('app.name') }} Signature"/>
                 </h4>
                 <h4>Date: &nbsp;&nbsp;&nbsp; {{ optional($companySignedAt)->format('d-M-Y') }}&nbsp;&nbsp;</h4>
@@ -1129,7 +1129,7 @@
             <td class="rtl-text right-th" style="line-height: 2.5; width: 49%; padding: 7px; text-align: justify;">
                 <h4>الاسم: يونيك سراي للعقارت ش.ذ.م.م</h4>
                 <h4>التوقيع:
-                    <img src="file:///{{ str_replace('\\','/', storage_path('app/private/signatures/company_signature.png')) }}"
+                    <img src="file:///{{ str_replace('\\','/', storage_path('app/private/signatures/company/ceo_signature.png')) }}"
                          height="30" alt="{{ config('app.name') }} Signature"/>
                 </h4>
                 <h4 style="unicode-bidi: embed;">التاريخ:&nbsp;&nbsp;

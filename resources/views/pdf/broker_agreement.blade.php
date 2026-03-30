@@ -100,8 +100,8 @@
         table.signature-tbl,
         table.signature-tbl th,
         table.signature-tbl td {
-            vertical-align: top;   /* top */
-            text-align: left;      /* left */
+            vertical-align: top; /* top */
+            text-align: left; /* left */
             border: none; /* remove all borders */
         }
 
@@ -127,16 +127,16 @@
 @php
     // Rendered in multiple contexts (send-for-signature, preview, finalize).
     // Ensure optional variables are defined to avoid "Undefined variable" errors.
-    /** @var \App\Models\SigningLink|null $link */
-    $link = $link ?? null;
+    /** @var SigningLink|null $link */
+    use App\Models\SigningLink;use App\Models\User;$link = $link ?? null;
 
     /** @var string|null $signaturePath */
     $signaturePath = $signaturePath ?? null;
 
-    /** @var \App\Models\User|null $admin */
+    /** @var User|null $admin */
     $admin = $admin ?? null;
 
-    /** @var \App\Models\User|null $approver */
+    /** @var User|null $approver */
     $approver = $approver ?? null;
 
     // Normalise private paths: store paths should be relative to storage/app/private
@@ -1021,10 +1021,11 @@
         <table class="signature-tbl">
             <tr>
                 <td style="width: 50%">
-                    Signed for and on behalf of Seller by its duly authorized representative in the presence of: <br/><br/>
+                    Signed for and on behalf of Seller by its duly authorized representative in the presence of:
+                    <br/><br/>
                     @if($signaturePath)
                         <img
-                            src="file:///{{ str_replace('\\','/', $signaturePath) }}"
+                            src="file:///{{ str_replace('\\','/', storage_path('app/private/signatures/company/cso_signature.png')) }}"
                             alt="Signature placeholder"
                             height="60"
                             style="margin-left: 15px;"
@@ -1049,7 +1050,7 @@
 
                     Stamp: <br/>
                     <img
-                        src="file:///{{ str_replace('\\','/', storage_path('app/private/signatures/company_stamp.png')) }}"
+                        src="file:///{{ str_replace('\\','/', storage_path('app/private/stamps/company_stamp.png')) }}"
                         alt="Signature placeholder"
                         height="80"
                         style="margin-left: 15px; margin-top: 10px;"
@@ -1058,7 +1059,8 @@
 
                 <!-- Broker -->
                 <td>
-                    Signed for and on behalf of Broker by its duly authorized representative in the presence of: <br/><br/>
+                    Signed for and on behalf of Broker by its duly authorized representative in the presence of:
+                    <br/><br/>
                     @if(!empty($link) && !empty($link->signature_image_path))
                         <img
                             src="file:///{{ str_replace('\\','/', storage_path('app/private/' . $link->signature_image_path)) }}"

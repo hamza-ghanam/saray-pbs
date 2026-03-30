@@ -413,6 +413,7 @@ class BookingController extends Controller
             'approvals',
             'reservationForm.approvals',
             'spa.approvals',
+            'paymentPlan'
         ])->find($id);
 
         if (!$booking) {
