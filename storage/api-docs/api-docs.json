@@ -183,6 +183,11 @@
                                             "type": "integer",
                                             "example": 12
                                         },
+                                        "eoi_amount": {
+                                            "type": "number",
+                                            "format": "float",
+                                            "example": 10000
+                                        },
                                         "status": {
                                             "type": "string",
                                             "example": "Pre-Booked"
@@ -615,12 +620,18 @@
                             "schema": {
                                 "required": [
                                     "unit_id",
+                                    "eoi_amount",
                                     "customers"
                                 ],
                                 "properties": {
                                     "unit_id": {
                                         "type": "integer",
                                         "example": 12
+                                    },
+                                    "eoi_amount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 10000
                                     },
                                     "payment_plan_id": {
                                         "type": "integer",
@@ -1187,39 +1198,694 @@
                 ]
             }
         },
-        "/brokers/upload-signed-agreement": {
+        "/broker-commissions/rates": {
+            "get": {
+                "tags": [
+                    "Broker Commissions"
+                ],
+                "summary": "List broker commission rates",
+                "operationId": "listBrokerCommissionRates",
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Broker commission rates fetched successfully"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
             "post": {
                 "tags": [
-                    "Brokers"
+                    "Broker Commissions"
                 ],
-                "summary": "Upload or replace signed agreement for a pending Broker",
-                "description": "Upload or replace a signed agreement for a pending Broker.\n\nThis endpoint allows a user with role=\"Broker\" and status=\"Pending\"\nto authenticate via email/password (minimal check) and upload or replace\ntheir signed agreement (doc_type=\"signed_agreement\"). Only one agreement\nrecord exists per user; uploading again replaces the existing one.",
-                "operationId": "1e49b1d943c9c5996801dae8cbd779ba",
+                "summary": "Create a broker commission rate",
+                "operationId": "createBrokerCommissionRate",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "percentage",
+                                    "effective_from"
+                                ],
+                                "properties": {
+                                    "percentage": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 6
+                                    },
+                                    "effective_from": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "2026-03-07 09:00:00"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Broker commission rate created successfully"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation error or business rule violation"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/broker-commissions/rates/current": {
+            "get": {
+                "tags": [
+                    "Broker Commissions"
+                ],
+                "summary": "Get current broker commission rate",
+                "operationId": "getCurrentBrokerCommissionRate",
+                "responses": {
+                    "200": {
+                        "description": "Current broker commission rate fetched successfully"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "No effective broker commission rate found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/broker-commissions": {
+            "get": {
+                "tags": [
+                    "Broker Commissions"
+                ],
+                "summary": "List broker commissions",
+                "operationId": "listBrokerCommissions",
+                "parameters": [
+                    {
+                        "name": "broker_user_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64",
+                            "example": 12
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "partially_paid"
+                        }
+                    },
+                    {
+                        "name": "booking_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64",
+                            "example": 150
+                        }
+                    },
+                    {
+                        "name": "building_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64",
+                            "example": 3
+                        }
+                    },
+                    {
+                        "name": "date_from",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2026-03-01"
+                        }
+                    },
+                    {
+                        "name": "date_to",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date",
+                            "example": "2026-03-31"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Broker commissions fetched successfully"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/broker-commissions/{brokerCommission}": {
+            "get": {
+                "tags": [
+                    "Broker Commissions"
+                ],
+                "summary": "Show broker commission details",
+                "operationId": "showBrokerCommission",
+                "parameters": [
+                    {
+                        "name": "brokerCommission",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Broker commission fetched successfully"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/broker-commissions/{brokerCommission}/payments": {
+            "post": {
+                "tags": [
+                    "Broker Commissions"
+                ],
+                "summary": "Record a broker commission payment",
+                "operationId": "recordBrokerCommissionPayment",
+                "parameters": [
+                    {
+                        "name": "brokerCommission",
+                        "in": "path",
+                        "description": "ID of the broker commission",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
                         "multipart/form-data": {
                             "schema": {
                                 "required": [
+                                    "amount",
+                                    "payment_date"
+                                ],
+                                "properties": {
+                                    "amount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 20000
+                                    },
+                                    "payment_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-03-07"
+                                    },
+                                    "payment_method": {
+                                        "type": "string",
+                                        "example": "bank_transfer",
+                                        "nullable": true
+                                    },
+                                    "reference_number": {
+                                        "type": "string",
+                                        "example": "TRX-123456",
+                                        "nullable": true
+                                    },
+                                    "receipt": {
+                                        "description": "Optional payment receipt file upload.",
+                                        "type": "string",
+                                        "format": "binary",
+                                        "nullable": true
+                                    },
+                                    "notes": {
+                                        "type": "string",
+                                        "example": "First instalment of broker commission.",
+                                        "nullable": true
+                                    },
+                                    "paid_by": {
+                                        "type": "integer",
+                                        "format": "int64",
+                                        "example": 1,
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Broker commission payment recorded successfully"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation error or business rule violation"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/brokers/{brokerUserId}/agreements/generate": {
+            "post": {
+                "tags": [
+                    "Brokers"
+                ],
+                "summary": "Generate Broker Agreement PDF (store as UserDoc)",
+                "description": "Staff-only endpoint. Generates the Broker Agreement PDF and stores it privately as a UserDoc (doc_type=broker_agreement). Does not send a signing link. Use the send-for-signature endpoint after generation.",
+                "operationId": "generateBrokerAgreement",
+                "parameters": [
+                    {
+                        "name": "brokerUserId",
+                        "in": "path",
+                        "description": "Broker user ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 300
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Broker agreement PDF generated and returned as a download.",
+                        "content": {
+                            "application/pdf": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden (missing permission generate one-time link)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Broker not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Business rule error (wrong role/status/profile/documents)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "oneOf": [
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "User is not a Broker"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Broker must be Pending to generate agreement"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Broker profile missing"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Missing required documents"
+                                                },
+                                                "missing": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    },
+                                                    "example": [
+                                                        "trade_license",
+                                                        "bank_account"
+                                                    ]
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/brokers/{brokerUserId}/agreements/send-for-signature": {
+            "post": {
+                "tags": [
+                    "Brokers"
+                ],
+                "summary": "Send one-time signing link for existing Broker Agreement",
+                "description": "Staff-only endpoint. Sends a one-time signing link for an already generated Broker Agreement (doc_type=broker_agreement). The agreement must be generated beforehand using the generateBrokerAgreement endpoint.",
+                "operationId": "sendBrokerAgreementForSignature",
+                "parameters": [
+                    {
+                        "name": "brokerUserId",
+                        "in": "path",
+                        "description": "Broker user ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 123
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Signing link sent successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Signing link sent successfully."
+                                        },
+                                        "broker": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 123
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "format": "email",
+                                                    "example": "broker@example.com"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "agreement_doc_id": {
+                                            "type": "integer",
+                                            "example": 456
+                                        },
+                                        "signing": {
+                                            "description": "Signing link payload (implementation-dependent)",
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden (missing permission generate one-time link)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Broker not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Business rule error (agreement not generated, missing docs, wrong status)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "oneOf": [
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Broker agreement not generated yet. Generate it first."
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Missing required documents"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Broker must be Pending to send agreement for signature"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/brokers/agreements/{token}/submit-signature": {
+            "post": {
+                "tags": [
+                    "Brokers"
+                ],
+                "summary": "Submit broker agreement signature (token-based) + update broker profile stamp/representative/designation",
+                "description": "Broker submits a base64 signature image using a one-time token. Requires minimal authentication (email/password). Also saves representative and designation as strings and persists the stamp image by decoding base64, storing it privately, and writing the stored path to broker profile (stamp_path). Final PDF is generated later on admin approval.",
+                "operationId": "submitBrokerAgreementSignature",
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "path",
+                        "description": "One-time signing token (plain token, server matches by token_hash). Must be unused and not expired.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "c4b9c8b7b2e34c7fb2a1f4a3d3d2f1a0"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Minimal broker authentication + signature payload + broker profile signing metadata",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
                                     "email",
                                     "password",
-                                    "signed_agreement"
+                                    "signature",
+                                    "representative",
+                                    "designation",
+                                    "stamp"
                                 ],
                                 "properties": {
                                     "email": {
+                                        "description": "Broker email. Must match token recipient_email.",
                                         "type": "string",
                                         "format": "email",
                                         "example": "broker@example.com"
                                     },
                                     "password": {
+                                        "description": "Broker password for minimal authentication.",
                                         "type": "string",
                                         "format": "password",
-                                        "example": "strongpassword123"
+                                        "example": "StrongPassword123!"
                                     },
-                                    "signed_agreement": {
-                                        "description": "The signed agreement file (pdf only)",
+                                    "signature": {
+                                        "description": "Signature image as base64 string. Accepts data-URI (data:image/png;base64,...) or raw base64 (implementation-dependent).",
                                         "type": "string",
-                                        "format": "binary"
+                                        "example": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."
+                                    },
+                                    "representative": {
+                                        "description": "Broker representative full name to be stored in broker profile.",
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "John Doe"
+                                    },
+                                    "designation": {
+                                        "description": "Representative designation/title to be stored in broker profile.",
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "Sales Director"
+                                    },
+                                    "stamp": {
+                                        "description": "Company stamp image as base64. Server decodes and stores privately, and saves resulting path into broker_profile.stamp_path. Only PNG/JPEG allowed. Recommended ≤ 2MB after decoding.",
+                                        "type": "string",
+                                        "example": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."
+                                    },
+                                    "signed_at": {
+                                        "description": "Optional. If your SubmitSignatureAction supports client-sent timestamps; otherwise ignored.",
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "2026-02-22T11:03:00+04:00",
+                                        "nullable": true
                                     }
                                 },
                                 "type": "object"
@@ -1229,22 +1895,119 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Signed agreement uploaded or replaced successfully",
+                        "description": "Signature submitted successfully (not finalized).",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SubmitSignatureOk"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid credentials.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden (not pending broker / token not owned by email / token invalid/used/expired)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Token not found / invalid",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error (field errors).",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrors"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/brokers/{brokerUserId}/agreements/withdraw": {
+            "post": {
+                "tags": [
+                    "Brokers"
+                ],
+                "summary": "Withdraw broker agreement signature and resend a new signing link",
+                "description": "Withdraws the latest submitted broker agreement signature (if broker is not approved yet) and sends a new signing link for re-submission.",
+                "operationId": "withdrawBrokerAgreement",
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "description": "Broker user ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 123
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Withdrawal reason/message that will be recorded and sent to the broker.",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "reason"
+                                ],
+                                "properties": {
+                                    "reason": {
+                                        "type": "string",
+                                        "maxLength": 1000,
+                                        "example": "Your signature/stamp is not clear. Please re-submit the agreement with a clear stamp and signature."
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Withdrawn successfully and a new signing link has been sent.",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "id": {
-                                            "type": "integer",
-                                            "example": 15
-                                        },
                                         "message": {
                                             "type": "string",
-                                            "example": "Signed agreement replaced successfully"
-                                        },
-                                        "doc_path": {
-                                            "type": "string",
-                                            "example": "https://yourapp.com/storage/agreements/signed/agreement_15.pdf"
+                                            "example": "Broker agreement withdrawn and a new signing link has been sent."
                                         }
                                     },
                                     "type": "object"
@@ -1252,19 +2015,146 @@
                             }
                         }
                     },
-                    "401": {
-                        "description": "Invalid credentials"
+                    "403": {
+                        "description": "Forbidden - user lacks permission approve registration.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Forbidden"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Broker not found (or user is not a Broker).",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Broker not found."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity - broker already approved, no submitted signature exists, or invalid agreement document.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "oneOf": [
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Cannot withdraw: broker is already approved."
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Broker has no submitted signature to withdraw."
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Invalid broker agreement document."
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Unexpected error occurred."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/brokers/{user}/bookings": {
+            "get": {
+                "tags": [
+                    "Brokers"
+                ],
+                "summary": "Get all broker bookings with lightweight commission summary",
+                "operationId": "getBrokerBookings",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "description": "Broker user ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64",
+                            "example": 42
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Broker bookings fetched successfully"
                     },
                     "403": {
-                        "description": "User is not a pending Broker"
+                        "description": "Forbidden"
                     },
                     "422": {
                         "description": "Validation error"
-                    },
-                    "500": {
-                        "description": "Server error"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
             }
         },
         "/api/buildings": {
@@ -1434,6 +2324,49 @@
                     },
                     "422": {
                         "description": "Validation error"
+                    },
+                    "403": {
+                        "description": "Forbidden — insufficient permissions"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/buildings/listing": {
+            "get": {
+                "tags": [
+                    "Building"
+                ],
+                "summary": "List building ids and names only",
+                "description": "List building IDs and names only.",
+                "operationId": "6dce623481d828f06ddb86deb4ff2a0d",
+                "responses": {
+                    "200": {
+                        "description": "List of building ids and names",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "name": {
+                                                "type": "string",
+                                                "example": "Building A"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
                     },
                     "403": {
                         "description": "Forbidden — insufficient permissions"
@@ -2071,6 +3004,74 @@
                     },
                     "403": {
                         "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/dashboard/overview": {
+            "get": {
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Dashboard overview (role-aware)",
+                "operationId": "896d6191db2c9181addce22719986f79",
+                "parameters": [
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        },
+                        "example": "2026-03-01"
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        },
+                        "example": "2026-03-03"
+                    },
+                    {
+                        "name": "project_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 1
+                    },
+                    {
+                        "name": "debug",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "enum": [
+                                0,
+                                1
+                            ]
+                        },
+                        "example": 0
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation error"
                     }
                 },
                 "security": [
@@ -2748,17 +3749,23 @@
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "user_type"
+                                    "user_type",
+                                    "email"
                                 ],
                                 "properties": {
                                     "user_type": {
                                         "description": "Either 'Broker' or 'Contractor'",
                                         "type": "string",
+                                        "enum": [
+                                            "Broker",
+                                            "Contractor"
+                                        ],
                                         "example": "Broker"
                                     },
                                     "email": {
-                                        "description": "User email to share the OTL via it.",
+                                        "description": "Email address that will receive the one-time registration link.",
                                         "type": "string",
+                                        "format": "email",
                                         "example": "myemail@hotmail.com"
                                     }
                                 },
@@ -2769,13 +3776,76 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "One-time link successfully generated and shared by email."
+                        "description": "One-time link successfully generated and shared by email.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "One-time link successfully generated and shared by email."
+                                        },
+                                        "email": {
+                                            "type": "string",
+                                            "format": "email",
+                                            "example": "myemail@hotmail.com"
+                                        },
+                                        "user_type": {
+                                            "type": "string",
+                                            "enum": [
+                                                "Broker",
+                                                "Contractor"
+                                            ],
+                                            "example": "Broker"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "403": {
-                        "description": "Forbidden (user lacks permission)"
+                        "description": "Forbidden (user lacks permission)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Forbidden"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "422": {
-                        "description": "Validation error"
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "example": {
+                                                "email": [
+                                                    "The email field is required."
+                                                ],
+                                                "user_type": [
+                                                    "The selected user_type is invalid."
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -2979,7 +4049,8 @@
         "/users/{id}/approve": {
             "post": {
                 "tags": [
-                    "User Management"
+                    "User Management",
+                    "Brokers"
                 ],
                 "summary": "Approve user registration",
                 "description": "Approve a user's registration (from Pending to Active).",
@@ -3221,11 +4292,80 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "payment_plans": {
+                                        "current_page": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "data": {
                                             "type": "array",
                                             "items": {
                                                 "$ref": "#/components/schemas/PaymentPlan"
                                             }
+                                        },
+                                        "first_page_url": {
+                                            "type": "string",
+                                            "example": "http://localhost/api/payment-plans?page=1"
+                                        },
+                                        "from": {
+                                            "type": "integer",
+                                            "example": 1,
+                                            "nullable": true
+                                        },
+                                        "last_page": {
+                                            "type": "integer",
+                                            "example": 3
+                                        },
+                                        "last_page_url": {
+                                            "type": "string",
+                                            "example": "http://localhost/api/payment-plans?page=3"
+                                        },
+                                        "links": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "url": {
+                                                        "type": "string",
+                                                        "example": "http://localhost/api/payment-plans?page=1",
+                                                        "nullable": true
+                                                    },
+                                                    "label": {
+                                                        "type": "string",
+                                                        "example": "&laquo; Previous"
+                                                    },
+                                                    "active": {
+                                                        "type": "boolean",
+                                                        "example": false
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "next_page_url": {
+                                            "type": "string",
+                                            "example": "http://localhost/api/payment-plans?page=2",
+                                            "nullable": true
+                                        },
+                                        "path": {
+                                            "type": "string",
+                                            "example": "http://localhost/api/payment-plans"
+                                        },
+                                        "per_page": {
+                                            "type": "integer",
+                                            "example": 15
+                                        },
+                                        "prev_page_url": {
+                                            "type": "string",
+                                            "example": null,
+                                            "nullable": true
+                                        },
+                                        "to": {
+                                            "type": "integer",
+                                            "example": 15,
+                                            "nullable": true
+                                        },
+                                        "total": {
+                                            "type": "integer",
+                                            "example": 42
                                         }
                                     },
                                     "type": "object"
@@ -3271,9 +4411,9 @@
                                     "name",
                                     "dld_fee_percentage",
                                     "admin_fee",
-                                    "EOI",
                                     "blocks",
-                                    "handover_percentage"
+                                    "handover_percentage",
+                                    "post_handover_enabled"
                                 ],
                                 "properties": {
                                     "name": {
@@ -3290,15 +4430,18 @@
                                         "format": "float",
                                         "example": 500
                                     },
-                                    "EOI": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 10000
-                                    },
                                     "handover_percentage": {
                                         "type": "number",
                                         "format": "float",
                                         "example": 40
+                                    },
+                                    "post_handover_enabled": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "post_handover_months": {
+                                        "type": "integer",
+                                        "example": 24
                                     },
                                     "blocks": {
                                         "type": "array",
@@ -3409,15 +4552,18 @@
                                             "format": "float",
                                             "example": 500
                                         },
-                                        "EOI": {
-                                            "type": "number",
-                                            "format": "float",
-                                            "example": 10000
-                                        },
                                         "handover_percentage": {
                                             "type": "number",
                                             "format": "float",
                                             "example": 40
+                                        },
+                                        "post_handover_enabled": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "post_handover_months": {
+                                            "type": "integer",
+                                            "example": 24
                                         },
                                         "blocks": {
                                             "type": "array",
@@ -3625,6 +4771,354 @@
                 ]
             }
         },
+        "/bookings/{bookingId}/rf/send-for-signature": {
+            "post": {
+                "tags": [
+                    "Bookings/RF"
+                ],
+                "summary": "Send RF for signature (one link per signer)",
+                "description": "Send Reservation Form (RF) signing links to booking customers.\n\n- Requires authenticated user with \"generate reservation form\" permission.\n- If user has role \"Sales\", they can only send for signature for bookings they created.\n- Booking must be in status \"RF Pending\".\n- ReservationForm must exist and must have a generated PDF (file_path).\n- Sends one unique signing link per recipient (customerInfos where requires_signature=true).\n- If an active pending link exists for the same recipient & document, it will be marked as expired and a new link is generated.",
+                "operationId": "764e290499647cbdfadc4cd751238f21",
+                "parameters": [
+                    {
+                        "name": "bookingId",
+                        "in": "path",
+                        "description": "Booking ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 137
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "RF signing links sent successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "RF signing link(s) sent successfully."
+                                        },
+                                        "sent": {
+                                            "type": "integer",
+                                            "example": 2
+                                        },
+                                        "created": {
+                                            "type": "integer",
+                                            "example": 2
+                                        },
+                                        "recipients": {
+                                            "type": "array",
+                                            "items": {
+                                                "required": [
+                                                    "email",
+                                                    "url",
+                                                    "signing_link_id"
+                                                ],
+                                                "properties": {
+                                                    "email": {
+                                                        "type": "string",
+                                                        "format": "email",
+                                                        "example": "customer1@example.com"
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "John Doe",
+                                                        "nullable": true
+                                                    },
+                                                    "url": {
+                                                        "type": "string",
+                                                        "example": "https://frontend.example.com/sign/PLAIN_TOKEN"
+                                                    },
+                                                    "signing_link_id": {
+                                                        "type": "integer",
+                                                        "example": 999
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden – user lacks permission or Sales user trying to access another user's booking",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        {
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "example": "Unauthorized"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Forbidden"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Booking not found or ReservationForm not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Booking not found"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Reservation Form not found for this booking. Generate RF first."
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable – booking not in RF Pending, missing PDF, or no signer emails",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Cannot send for signature unless booking status is 'RF Pending'."
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Reservation Form PDF is missing. Generate RF again."
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "No customer emails found for this booking."
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/sign/rf/{token}/submit": {
+            "post": {
+                "tags": [
+                    "Signing/RF"
+                ],
+                "summary": "Submit RF signature (base64 PNG)",
+                "description": "Submit a signature for a Reservation Form (RF) using a one-time token.\n\n- Public endpoint (no auth) protected by one-time token.\n- Accepts a PNG signature as base64 (either raw base64 or data URL).\n- Marks the signing link as used (status -> expired) and stores signature image path.\n- If all required signers completed, the system finalises the RF (generates final signed PDF).",
+                "operationId": "790255e252412415f162c4c44d49b3f9",
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "path",
+                        "description": "One-time signing token (plain token received by email)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "9f3a2b7c8d...plain_token_here..."
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "signature"
+                                ],
+                                "properties": {
+                                    "signature": {
+                                        "description": "Signature as PNG base64. Can be raw base64 or prefixed with 'data:image/png;base64,'.",
+                                        "type": "string",
+                                        "example": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMB/6XfW8kAAAAASUVORK5CYII="
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Signature submitted successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Signature submitted successfully."
+                                        },
+                                        "finalized": {
+                                            "description": "True if this submission completed all required signatures and the RF was finalised.",
+                                            "type": "boolean",
+                                            "example": false
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Invalid token / link not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Invalid link."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "410": {
+                        "description": "Link expired or already used",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "This link is no longer valid."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error, invalid signature encoding, too large, or wrong document type",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        {
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "example": "The signature field is required."
+                                                },
+                                                "errors": {
+                                                    "type": "object",
+                                                    "example": {
+                                                        "signature": [
+                                                            "The signature field is required."
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Invalid signature encoding."
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Signature image is too large."
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Invalid document type for this endpoint."
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Failed to submit signature."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/bookings/{bookingId}/rf/upload-signed": {
             "post": {
                 "tags": [
@@ -3708,30 +5202,30 @@
                     "Bookings/RF"
                 ],
                 "summary": "Approve a signed Reservation Form",
-                "description": "Approve a signed Reservation Form.\n\nSets the Reservation Form status to \"Approved\", updates the related Booking status to \"SPA Pending\",\nand records an Approval entry.",
+                "description": "Approve a signed Reservation Form.\n\n- Requires authenticated user with \"approve reservation form\" permission.\n- Will NOT approve if required customer signatures are incomplete.\n- Will NOT approve if signed PDF is missing.\n- On success:\n- ReservationForm.status -> \"Approved\"\n- Booking.status -> \"SPA Pending\"\n- Creates an Approval record\n- Emails the final signed RF PDF to all booking customers that have an email.",
                 "operationId": "e177cd036e0c775cebf445a2d6c923b5",
                 "parameters": [
                     {
-                        "name": "id",
+                        "name": "bookingId",
                         "in": "path",
-                        "description": "ID of the booking whose ReservationForm will be approved",
+                        "description": "Booking ID whose Reservation Form will be approved",
                         "required": true,
                         "schema": {
                             "type": "integer",
-                            "example": 10
+                            "example": 137
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Reservation Form approved successfully",
+                        "description": "Reservation Form approved successfully and emailed",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "Reservation form has been approved"
+                                            "example": "Reservation form has been approved and sent to customer(s)."
                                         }
                                     },
                                     "type": "object"
@@ -3740,13 +5234,74 @@
                         }
                     },
                     "403": {
-                        "description": "Forbidden – user lacks 'approve reservation form' permission"
+                        "description": "Forbidden – user lacks 'approve reservation form' permission",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Forbidden"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "404": {
-                        "description": "Reservation Form not found for the given booking"
+                        "description": "Booking or Reservation Form not found for the given booking",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "No query results for model [App\\\\Models\\\\Booking] 137"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "422": {
-                        "description": "Cannot approve unless the form is Signed or other validation error"
+                        "description": "Unprocessable – missing signatures, not signed status, or missing signed PDF",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Cannot approve Reservation Form: required signatures are incomplete."
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Cannot approve a Reservation Form unless it is Signed."
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Cannot approve: signed PDF is missing."
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -4189,7 +5744,8 @@
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "unit_id"
+                                    "unit_id",
+                                    "eoi_amount"
                                 ],
                                 "properties": {
                                     "unit_id": {
@@ -4200,6 +5756,11 @@
                                         "type": "string",
                                         "example": "Special discount offer",
                                         "nullable": true
+                                    },
+                                    "eoi_amount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 10000
                                     },
                                     "payment_plan_ids": {
                                         "description": "Optional list of Payment Plan IDs to include",
@@ -4238,6 +5799,356 @@
                     },
                     "422": {
                         "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/signatures": {
+            "get": {
+                "tags": [
+                    "Signatures"
+                ],
+                "summary": "List signatures (latest attempt per recipient)",
+                "description": "List latest signature attempts per recipient for a given signable + documentable (using aliases).\n\nThis endpoint is generic and can be used for RF, SPA, etc. (no morphMap required).\nIt returns the latest SigningLink per recipient email (latest attempt).\n\nAliases:\n- signable_type: Booking\n- documentable_type: RF | SPA",
+                "operationId": "1457c63cf921073bda2349cce03d417d",
+                "parameters": [
+                    {
+                        "name": "signable_type",
+                        "in": "query",
+                        "description": "Signable type alias (e.g. Booking)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "Booking"
+                            ],
+                            "example": "Booking"
+                        }
+                    },
+                    {
+                        "name": "signable_id",
+                        "in": "query",
+                        "description": "Signable ID (e.g. booking id)",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 137
+                        }
+                    },
+                    {
+                        "name": "documentable_type",
+                        "in": "query",
+                        "description": "Documentable type alias (RF or SPA)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "RF",
+                                "SPA"
+                            ],
+                            "example": "RF"
+                        }
+                    },
+                    {
+                        "name": "documentable_id",
+                        "in": "query",
+                        "description": "Documentable ID (e.g. ReservationForm id or SPA id)",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 55
+                        }
+                    },
+                    {
+                        "name": "document_type",
+                        "in": "query",
+                        "description": "Document type (RF or SPA). If omitted, it can be inferred from documentable_type.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "RF",
+                                "SPA"
+                            ],
+                            "example": "RF"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List returned successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "count": {
+                                            "type": "integer",
+                                            "example": 2
+                                        },
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "signing_link_id": {
+                                                        "type": "integer",
+                                                        "example": 999
+                                                    },
+                                                    "email": {
+                                                        "type": "string",
+                                                        "format": "email",
+                                                        "example": "customer1@example.com"
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "John Doe",
+                                                        "nullable": true
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "expired"
+                                                    },
+                                                    "signed_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2026-01-28 18:20:10",
+                                                        "nullable": true
+                                                    },
+                                                    "has_signature": {
+                                                        "type": "boolean",
+                                                        "example": true
+                                                    },
+                                                    "signature_path": {
+                                                        "type": "string",
+                                                        "example": "signatures/rf/999_20260128_182010.png",
+                                                        "nullable": true
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2026-01-28 18:19:45"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden – user lacks permission",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Forbidden"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error (missing/invalid query parameters)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        {
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "example": "The signable_type field is required."
+                                                },
+                                                "errors": {
+                                                    "type": "object",
+                                                    "example": {
+                                                        "signable_type": [
+                                                            "The signable_type field is required."
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "example": "The documentable_type field must be one of RF or SPA."
+                                                },
+                                                "errors": {
+                                                    "type": "object",
+                                                    "example": {
+                                                        "documentable_type": [
+                                                            "The documentable_type field must be one of RF or SPA."
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/signatures/{signingLinkId}/reject": {
+            "post": {
+                "tags": [
+                    "Signatures"
+                ],
+                "summary": "Reject a signature and resend new signing link",
+                "description": "Reject a submitted signature and resend a new signing link to the same recipient.\n\n- Cancels the selected signature attempt (SigningLink).\n- Deletes signature image file (if exists).\n- Resets the related document finalisation fields (signed_at, signed_file_path, status -> 'Pending') if supported.\n- Generates and emails a new signing link to the same recipient (new token).",
+                "operationId": "224b8dbc5b2890ab4288c2b68c132c34",
+                "parameters": [
+                    {
+                        "name": "signingLinkId",
+                        "in": "path",
+                        "description": "SigningLink ID to reject",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 999
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "reason": {
+                                        "type": "string",
+                                        "example": "Customer uploaded the wrong image",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Rejected and resent successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Signature rejected and new signing link sent."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden – user lacks permission",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Forbidden"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "SigningLink not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "No query results for model [App\\\\Models\\\\SigningLink] 999"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable – no submitted signature on this link or validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "This signing link has no submitted signature."
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "example": "The reason may not be greater than 255 characters."
+                                                },
+                                                "errors": {
+                                                    "type": "object",
+                                                    "example": {
+                                                        "reason": [
+                                                            "The reason may not be greater than 255 characters."
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Failed to reject signature."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -4572,6 +6483,16 @@
                 "operationId": "4fad383f5a5218655d5cc113dc8e9198",
                 "parameters": [
                     {
+                        "name": "building_id",
+                        "in": "query",
+                        "description": "Filter units by building",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 5
+                        }
+                    },
+                    {
                         "name": "prop_type",
                         "in": "query",
                         "description": "Filter units by property type",
@@ -4682,17 +6603,17 @@
                                                     "internal_square": {
                                                         "type": "number",
                                                         "format": "float",
-                                                        "example": 102.0400000000000062527760746888816356658935546875
+                                                        "example": 102.04
                                                     },
                                                     "external_square": {
                                                         "type": "number",
                                                         "format": "float",
-                                                        "example": 38.14999999999999857891452847979962825775146484375
+                                                        "example": 38.15
                                                     },
                                                     "total_square": {
                                                         "type": "number",
                                                         "format": "float",
-                                                        "example": 140.18999999999999772626324556767940521240234375
+                                                        "example": 140.19
                                                     },
                                                     "furnished": {
                                                         "type": "boolean",
@@ -4705,7 +6626,7 @@
                                                     "price": {
                                                         "type": "number",
                                                         "format": "float",
-                                                        "example": 1621554.73999999999068677425384521484375
+                                                        "example": 1621554.74
                                                     },
                                                     "status": {
                                                         "type": "string",
@@ -4782,6 +6703,11 @@
                                                             "status": {
                                                                 "type": "string",
                                                                 "example": "RF Pending"
+                                                            },
+                                                            "eoi_amount": {
+                                                                "type": "number",
+                                                                "format": "float",
+                                                                "example": 10000
                                                             },
                                                             "created_by": {
                                                                 "type": "integer",
@@ -5072,6 +6998,11 @@
                                                 "status": {
                                                     "type": "string",
                                                     "example": "Booked"
+                                                },
+                                                "eoi_amount": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 10000
                                                 },
                                                 "created_by": {
                                                     "type": "integer",
@@ -6495,8 +8426,8 @@
                 "tags": [
                     "User Management"
                 ],
-                "summary": "Get user details, with docs download URLs",
-                "description": "Get user details, including role, permissions, and doc download links.",
+                "summary": "Get user details",
+                "description": "Get user details, including role, permissions, docs metadata, broker profile (if Broker),\nand the latest BROKER_AGREEMENT signing link (if any).\n\nNotes:\n- `latest_signing_link.signable_type` and `documentable_type` are returned as class basenames (e.g., `User`, `UserDoc`).\n- `broker_profile.stamp_url` is a protected endpoint that returns the broker stamp image.",
                 "operationId": "5f84a2bb6f570414aef011f7e9783c3b",
                 "parameters": [
                     {
@@ -6538,6 +8469,7 @@
                                             "example": "Broker"
                                         },
                                         "permissions": {
+                                            "description": "Role permissions",
                                             "type": "array",
                                             "items": {
                                                 "type": "string",
@@ -6545,22 +8477,166 @@
                                             }
                                         },
                                         "docs": {
-                                            "description": "User documents, each with doc_type and download_url",
+                                            "description": "User documents metadata",
                                             "type": "array",
                                             "items": {
                                                 "properties": {
+                                                    "doc_id": {
+                                                        "type": "integer",
+                                                        "example": 1458
+                                                    },
                                                     "doc_type": {
                                                         "type": "string",
-                                                        "example": "rera_cert"
+                                                        "example": "signed_agreement"
                                                     },
-                                                    "download_url": {
+                                                    "created_at": {
                                                         "type": "string",
-                                                        "format": "uri",
-                                                        "example": "http://your-domain.test/storage/docs/rera_cert_42.pdf"
+                                                        "format": "date-time",
+                                                        "example": "2026-02-28T09:00:00Z"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2026-02-28T09:00:00Z"
                                                     }
                                                 },
                                                 "type": "object"
                                             }
+                                        },
+                                        "broker_profile": {
+                                            "description": "Broker profile details if the user role is Broker",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 12
+                                                },
+                                                "rera_number": {
+                                                    "type": "string",
+                                                    "example": "123456",
+                                                    "nullable": true
+                                                },
+                                                "company_name": {
+                                                    "type": "string",
+                                                    "example": "ABC Real Estate LLC",
+                                                    "nullable": true
+                                                },
+                                                "phone": {
+                                                    "type": "string",
+                                                    "example": "+971501234567",
+                                                    "nullable": true
+                                                },
+                                                "stamp_url": {
+                                                    "type": "string",
+                                                    "format": "uri",
+                                                    "example": "http://your-domain.test/api/brokers/42/stamp"
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2026-02-28T09:00:00Z"
+                                                },
+                                                "updated_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2026-02-28T09:00:00Z"
+                                                }
+                                            },
+                                            "type": "object",
+                                            "nullable": true
+                                        },
+                                        "broker_commissions_summary": {
+                                            "description": "Lightweight broker commissions summary if the user role is Broker",
+                                            "properties": {
+                                                "total_count": {
+                                                    "type": "integer",
+                                                    "example": 12
+                                                },
+                                                "total_commission_amount": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 420000
+                                                },
+                                                "total_paid_amount": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 150000
+                                                },
+                                                "total_remaining_amount": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 270000
+                                                },
+                                                "due_count": {
+                                                    "type": "integer",
+                                                    "example": 4
+                                                },
+                                                "partially_paid_count": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "paid_count": {
+                                                    "type": "integer",
+                                                    "example": 3
+                                                },
+                                                "cancelled_count": {
+                                                    "type": "integer",
+                                                    "example": 0
+                                                }
+                                            },
+                                            "type": "object",
+                                            "nullable": true
+                                        },
+                                        "latest_signing_link": {
+                                            "description": "Latest BROKER_AGREEMENT signing link details (if any), so frontend can call /api/signatures.",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 987
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "signed"
+                                                },
+                                                "recipient_email": {
+                                                    "type": "string",
+                                                    "format": "email",
+                                                    "example": "broker@example.com"
+                                                },
+                                                "expires_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2026-03-01T10:30:00Z",
+                                                    "nullable": true
+                                                },
+                                                "signed_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2026-02-28T09:15:00Z",
+                                                    "nullable": true
+                                                },
+                                                "signable_type": {
+                                                    "type": "string",
+                                                    "example": "User"
+                                                },
+                                                "signable_id": {
+                                                    "type": "integer",
+                                                    "example": 300
+                                                },
+                                                "documentable_type": {
+                                                    "type": "string",
+                                                    "example": "UserDoc"
+                                                },
+                                                "documentable_id": {
+                                                    "type": "integer",
+                                                    "example": 1458
+                                                },
+                                                "document_type": {
+                                                    "type": "string",
+                                                    "example": "BROKER_AGREEMENT"
+                                                }
+                                            },
+                                            "type": "object",
+                                            "nullable": true
                                         }
                                     },
                                     "type": "object"
@@ -7450,6 +9526,7 @@
                 "required": [
                     "id",
                     "unit_id",
+                    "eoi_amount",
                     "customer_info_id",
                     "status",
                     "created_by",
@@ -7488,6 +9565,11 @@
                         "type": "number",
                         "format": "float",
                         "example": 5
+                    },
+                    "eoi_amount": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 10000
                     },
                     "receipt_path": {
                         "type": "string",
@@ -7535,6 +9617,12 @@
                         "type": "number",
                         "example": 10,
                         "nullable": true
+                    },
+                    "eoi_amount": {
+                        "description": "The Expression of Interest of the booking.",
+                        "type": "number",
+                        "example": 10000,
+                        "nullable": false
                     },
                     "notes": {
                         "description": "Booking-level internal notes",
@@ -7654,6 +9742,60 @@
                     "ar": {
                         "type": "string",
                         "example": "أفروديتي"
+                    }
+                },
+                "type": "object"
+            },
+            "ValidationErrors": {
+                "description": "Laravel validation errors map: field => array of messages",
+                "type": "object",
+                "example": {
+                    "email": [
+                        "The email field is required."
+                    ],
+                    "stamp": [
+                        "Stamp must be a PNG or JPEG image."
+                    ]
+                },
+                "additionalProperties": {
+                    "schema": "BrokerController",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "BrokerController": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                }
+            },
+            "ErrorResponse": {
+                "description": "Simple error payload",
+                "properties": {
+                    "error": {
+                        "type": "string",
+                        "example": "Invalid credentials"
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Invalid or expired token",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "SubmitSignatureOk": {
+                "description": "Generic success payload for signature submission",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "example": "Signature submitted successfully."
+                    },
+                    "data": {
+                        "type": "object",
+                        "additionalProperties": true
                     }
                 },
                 "type": "object"
@@ -7792,17 +9934,17 @@
                     "internal_square_m": {
                         "type": "number",
                         "format": "float",
-                        "example": 1295.829999999999927240423858165740966796875
+                        "example": 1295.83
                     },
                     "external_square_m": {
                         "type": "number",
                         "format": "float",
-                        "example": 169.56999999999999317878973670303821563720703125
+                        "example": 169.57
                     },
                     "total_square_m": {
                         "type": "number",
                         "format": "float",
-                        "example": 1465.40000000000009094947017729282379150390625
+                        "example": 1465.4
                     },
                     "furnished": {
                         "type": "boolean",
@@ -7974,11 +10116,9 @@
             "PaymentPlan": {
                 "title": "Payment Plan",
                 "required": [
-                    "unit_id",
                     "name",
                     "dld_fee_percentage",
                     "admin_fee",
-                    "EOI",
                     "booking_percentage",
                     "handover_percentage"
                 ],
@@ -7986,10 +10126,6 @@
                     "id": {
                         "type": "integer",
                         "readOnly": true,
-                        "example": 1
-                    },
-                    "unit_id": {
-                        "type": "integer",
                         "example": 1
                     },
                     "name": {
@@ -8006,11 +10142,6 @@
                         "format": "float",
                         "example": 4000
                     },
-                    "EOI": {
-                        "type": "number",
-                        "format": "float",
-                        "example": 100000
-                    },
                     "booking_percentage": {
                         "type": "number",
                         "format": "float",
@@ -8020,6 +10151,15 @@
                         "type": "number",
                         "format": "float",
                         "example": 40
+                    },
+                    "post_handover_enabled": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "post_handover_months": {
+                        "type": "integer",
+                        "example": 24,
+                        "nullable": true
                     },
                     "created_at": {
                         "type": "string",
@@ -8159,6 +10299,10 @@
             "description": "Bookings"
         },
         {
+            "name": "Broker Commissions",
+            "description": "Broker Commissions"
+        },
+        {
             "name": "Brokers",
             "description": "Brokers"
         },
@@ -8169,6 +10313,10 @@
         {
             "name": "Customers",
             "description": "Customers"
+        },
+        {
+            "name": "Dashboard",
+            "description": "Dashboard"
         },
         {
             "name": "Holdings",
@@ -8195,12 +10343,20 @@
             "description": "Bookings/RF"
         },
         {
+            "name": "Signing/RF",
+            "description": "Signing/RF"
+        },
+        {
             "name": "Roles & Permissions",
             "description": "Roles & Permissions"
         },
         {
             "name": "SalesOffers",
             "description": "SalesOffers"
+        },
+        {
+            "name": "Signatures",
+            "description": "Signatures"
         },
         {
             "name": "Bookings/SPA",

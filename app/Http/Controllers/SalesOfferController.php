@@ -6,15 +6,11 @@ use App\Models\PaymentPlan;
 use App\Models\SalesOffer;
 use App\Models\Unit;
 use App\Services\PaymentPlanService;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
 use Mccarlosen\LaravelMpdf\Facades\LaravelMpdf as MYPDF;
 use Symfony\Component\HttpFoundation\Response;
-use Barryvdh\DomPDF\Facade\Pdf as PDF;
-use Illuminate\Support\Collection;
 
 class SalesOfferController extends Controller
 {
@@ -37,9 +33,10 @@ class SalesOfferController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"unit_id"},
+     *             required={"unit_id","eoi_amount"},
      *             @OA\Property(property="unit_id", type="integer", example=1),
      *             @OA\Property(property="notes", type="string", example="Special discount offer", nullable=true),
+     *             @OA\Property(property="eoi_amount", type="number", format="float", example=10000),
      *             @OA\Property(
      *                 property="payment_plan_ids",
      *                 type="array",
@@ -83,7 +80,8 @@ class SalesOfferController extends Controller
             'notes' => ['nullable', 'string', 'max:2000'],
             'payment_plan_ids' => ['nullable', 'array'],
             'payment_plan_ids.*' => 'integer|exists:payment_plans,id',
-            'discount' => 'nullable|numeric|between:0,100'
+            'discount' => 'nullable|numeric|between:0,100',
+            'eoi_amount' => 'nullable|numeric|min:1',
         ]);
 
         $validator->after(function ($validator) use ($request) {
@@ -149,6 +147,7 @@ class SalesOfferController extends Controller
             'offer_price' => $offerPrice,
             'discount' => $discountPct,
             'notes' => $request->input('notes', null),
+            'eoi_amount' => $request->input('eoi_amount', null),
         ]);
 
         // Prepare the data array for the PDF view.

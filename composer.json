@@ -7,7 +7,10 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "ext-dom": "*",
+        "ext-fileinfo": "*",
         "ext-intl": "*",
+        "ext-libxml": "*",
         "ext-zip": "*",
         "barryvdh/laravel-dompdf": "^3.1",
         "carlos-meneses/laravel-mpdf": "^2.1",

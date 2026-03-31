@@ -35,10 +35,11 @@ class StorePaymentPlanRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'dld_fee_percentage' => ['required', 'numeric', 'between:0,100'],
             'admin_fee' => ['required', 'numeric', 'min:0'],
-            'EOI' => ['required', 'numeric', 'min:0'],
-            'handover_percentage' => ['required', 'numeric', 'min:0'],
+            'handover_percentage' => ['required', 'numeric', 'between:0,100'],
+            'post_handover_enabled' => ['required', 'boolean'],
+            'post_handover_months' => ['nullable', 'integer', 'min:0'],
 
-            'blocks' => ['required', 'array', 'min:2'],
+            'blocks' => ['required', 'array', 'min:1'],
             'blocks.*.type' => ['required', 'in:single,repeat'],
             'blocks.*.description' => ['required', 'string', 'max:255'],
             'blocks.*.percentage' => ['required', 'numeric', 'gt:0', 'lt:100'],
@@ -72,15 +73,25 @@ class StorePaymentPlanRequest extends FormRequest
         $validator->after(function (Validator $v) {
             $blocks = collect($this->input('blocks'));
 
-            // 1) Sum percentages: single + (repeat * count placeholder: will be dynamic later)
-            $totalPct = $blocks->reduce(function ($sum, $b) {
-                return $sum + $b['percentage'];
-            }, 0);
+            $handoverPct = (float) $this->input('handover_percentage', 0);
+            $postHandoverEnabled = $this->boolean('post_handover_enabled');
+            $postHandoverMonths = (int) $this->input('post_handover_months', 0);
 
-            if ($totalPct > 100) {
+            $singlesPct = (float) $blocks
+                ->where('type', 'single')
+                ->sum('percentage');
+
+            if (($singlesPct + $handoverPct) > 100) {
                 $v->errors()->add(
-                    'blocks',
-                    "Sum of block percentages must not exceed 100 (got {$totalPct}%)."
+                    'handover_percentage',
+                    'Singles total percentage plus handover percentage must not exceed 100.'
+                );
+            }
+
+            if ($postHandoverEnabled && $postHandoverMonths < 1) {
+                $v->errors()->add(
+                    'post_handover_months',
+                    'Post-handover months must be at least 1 when post-handover is enabled.'
                 );
             }
 
@@ -97,6 +108,36 @@ class StorePaymentPlanRequest extends FormRequest
                 }
             }
 
+            foreach (($this->input('blocks', [])) as $index => $block) {
+                if (($block['type'] ?? null) === 'single') {
+                    $hasDate = !empty($block['date']);
+                    $hasOffset = !empty($block['offset']);
+
+                    if (!$hasDate && !$hasOffset) {
+                        $v->errors()->add(
+                            "blocks.$index.date",
+                            'Single block must contain either date or offset.'
+                        );
+                    }
+                }
+
+                if (($block['type'] ?? null) === 'repeat') {
+                    if (empty($block['start_offset'])) {
+                        $v->errors()->add(
+                            "blocks.$index.start_offset",
+                            'Repeat block must contain start_offset.'
+                        );
+                    }
+
+                    if (empty($block['frequency'])) {
+                        $v->errors()->add(
+                            "blocks.$index.frequency",
+                            'Repeat block must contain frequency.'
+                        );
+                    }
+                }
+            }
+
             // 2) Ensure each single block's resolved date is unique
             $dates = $blocks->map(function ($b) {
                 $dt = Carbon::now();
@@ -105,8 +146,8 @@ class StorePaymentPlanRequest extends FormRequest
                         return Carbon::parse($b['date'])->toDateString();
                     }
                     $dt = $dt
-                        ->addMonths($b['offset']['months'] ?? 0)
-                        ->addYears($b['offset']['years'] ?? 0);
+                        ->addMonthsNoOverflow($b['offset']['months'] ?? 0)
+                        ->addYearsNoOverflow($b['offset']['years'] ?? 0);
                     return $dt->toDateString();
                 }
                 // skip repeats here

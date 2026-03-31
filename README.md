@@ -1,4 +1,4 @@
-# Saray Property Booking System
+# Property Booking System | GoCodi
 
 A robust API-based backend for managing property bookings and unit transactions. Built with Laravel 11 and powered by MySQL, this system streamlines the entire booking process—from building and unit management to sales approvals, document generation, and final booking.
 

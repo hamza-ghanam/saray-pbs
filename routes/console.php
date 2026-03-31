@@ -51,7 +51,7 @@ Schedule::call(function () {
     foreach ($units as $unit) {
         // Update the unit status to "Available" and reset hold_created_at.
         $unit->update([
-            'status' => 'Available',
+            'status' => Unit::STATUS_AVAILABLE,
             'hold_created_at' => null,
         ]);
 
@@ -92,7 +92,7 @@ Schedule::call(function () {
     foreach ($units as $unit) {
         // Update the unit status to "Cancelled" and update the timestamp.
         $unit->update([
-            'status' => 'Cancelled',
+            'status' => Unit::STATUS_CANCELLED,
             'status_created_at' => now(),
         ]);
 

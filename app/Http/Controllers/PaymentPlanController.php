@@ -82,9 +82,78 @@ class PaymentPlanController extends Controller
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(
-     *                 property="payment_plans",
+     *                 property="current_page",
+     *                 type="integer",
+     *                 example=1
+     *             ),
+     *             @OA\Property(
+     *                 property="data",
      *                 type="array",
      *                 @OA\Items(ref="#/components/schemas/PaymentPlan")
+     *             ),
+     *             @OA\Property(
+     *                 property="first_page_url",
+     *                 type="string",
+     *                 example="http://localhost/api/payment-plans?page=1"
+     *             ),
+     *             @OA\Property(
+     *                 property="from",
+     *                 type="integer",
+     *                 nullable=true,
+     *                 example=1
+     *             ),
+     *             @OA\Property(
+     *                 property="last_page",
+     *                 type="integer",
+     *                 example=3
+     *             ),
+     *             @OA\Property(
+     *                 property="last_page_url",
+     *                 type="string",
+     *                 example="http://localhost/api/payment-plans?page=3"
+     *             ),
+     *             @OA\Property(
+     *                 property="links",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="url", type="string", nullable=true, example="http://localhost/api/payment-plans?page=1"),
+     *                     @OA\Property(property="label", type="string", example="&laquo; Previous"),
+     *                     @OA\Property(property="active", type="boolean", example=false)
+     *                 )
+     *             ),
+     *             @OA\Property(
+     *                 property="next_page_url",
+     *                 type="string",
+     *                 nullable=true,
+     *                 example="http://localhost/api/payment-plans?page=2"
+     *             ),
+     *             @OA\Property(
+     *                 property="path",
+     *                 type="string",
+     *                 example="http://localhost/api/payment-plans"
+     *             ),
+     *             @OA\Property(
+     *                 property="per_page",
+     *                 type="integer",
+     *                 example=15
+     *             ),
+     *             @OA\Property(
+     *                 property="prev_page_url",
+     *                 type="string",
+     *                 nullable=true,
+     *                 example=null
+     *             ),
+     *             @OA\Property(
+     *                 property="to",
+     *                 type="integer",
+     *                 nullable=true,
+     *                 example=15
+     *             ),
+     *             @OA\Property(
+     *                 property="total",
+     *                 type="integer",
+     *                 example=42
      *             )
      *         )
      *     ),
@@ -104,8 +173,10 @@ class PaymentPlanController extends Controller
             abort(Response::HTTP_FORBIDDEN, 'Unauthorized');
         }
 
-        $paymentPlans = PaymentPlan::all();
-        return response()->json(['payment_plans' => $paymentPlans], Response::HTTP_OK);
+        $paymentPlans = PaymentPlan::orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        return response()->json($paymentPlans, Response::HTTP_OK);
     }
 
     /**
@@ -117,12 +188,13 @@ class PaymentPlanController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"name", "dld_fee_percentage", "admin_fee", "EOI", "blocks", "handover_percentage"},
+     *             required={"name", "dld_fee_percentage", "admin_fee", "blocks", "handover_percentage", "post_handover_enabled"},
      *             @OA\Property(property="name", type="string", example="Custom Plan A"),
      *             @OA\Property(property="dld_fee_percentage", type="number", format="float", example=2),
      *             @OA\Property(property="admin_fee", type="number", format="float", example=500),
-     *             @OA\Property(property="EOI", type="number", format="float", example=10000),
      *             @OA\Property(property="handover_percentage", type="number", format="float", example=40),
+     *             @OA\Property(property="post_handover_enabled", type="boolean", example=true),
+     *             @OA\Property(property="post_handover_months", type="integer", example=24),
      *             @OA\Property(
      *                 property="blocks",
      *                 type="array",
@@ -167,8 +239,9 @@ class PaymentPlanController extends Controller
      *             @OA\Property(property="name", type="string", example="Custom Plan A"),
      *             @OA\Property(property="dld_fee_percentage", type="number", format="float", example=2),
      *             @OA\Property(property="admin_fee", type="number", format="float", example=500),
-     *             @OA\Property(property="EOI", type="number", format="float", example=10000),
      *             @OA\Property(property="handover_percentage", type="number", format="float", example=40),
+     *             @OA\Property(property="post_handover_enabled", type="boolean", example=true),
+     *             @OA\Property(property="post_handover_months", type="integer", example=24),
      *             @OA\Property(
      *                 property="blocks",
      *                 type="array",
@@ -223,7 +296,6 @@ class PaymentPlanController extends Controller
      */
     public function store(
         StorePaymentPlanRequest $request,
-        Unit $unit,
         PaymentPlanService $builder
     ) {
         // 1) Grab the validated data
@@ -234,9 +306,12 @@ class PaymentPlanController extends Controller
             'name'                  => $data['name'],
             'dld_fee_percentage'    => $data['dld_fee_percentage'],
             'admin_fee'             => $data['admin_fee'],
-            'EOI'                   => $data['EOI'],
-            'blocks'                => $data['blocks'],   // <— store the blocks definition
+            'blocks'                => $data['blocks'],   // store the blocks definition
             'handover_percentage'   => $data['handover_percentage'],
+            'post_handover_enabled' => $data['post_handover_enabled'],
+            'post_handover_months'  => $data['post_handover_enabled']
+                ? ($data['post_handover_months'] ?? 0)
+                : 0,
         ]);
 
         // 4) Return the saved plan (including the blocks field)

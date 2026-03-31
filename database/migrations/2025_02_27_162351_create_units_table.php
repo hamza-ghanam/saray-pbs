@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -28,7 +27,10 @@ return new class extends Migration
             $table->date('completion_date')->nullable();
             // System
             $table->foreignId('building_id')->constrained()->onDelete('cascade');
-            $table->enum('status', ['Pending', 'Available', 'Pre-Booked', 'Booked', 'Completed', 'Sold', 'Pre-Hold', 'Hold', 'Cancelled']);
+            $table->enum('status', [
+                'Pending', 'Available', 'Pre-Booked', 'Booked', 'Completed',
+                'Sold', 'Pre-Hold', 'Hold', 'Processed', 'Cancelled'
+            ])->default('Pending');
             $table->timestamps();
             $table->softDeletes();
         });

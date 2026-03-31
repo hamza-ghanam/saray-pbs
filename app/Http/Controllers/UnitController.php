@@ -7,6 +7,7 @@ use App\Models\Approval;
 use App\Models\Building;
 use App\Models\Unit;
 use App\Models\User;
+use App\Services\ImageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -134,15 +135,19 @@ use ZipArchive;
  *     schema="PaymentPlan",
  *     type="object",
  *     title="Payment Plan",
- *     required={"unit_id", "name", "dld_fee_percentage", "admin_fee", "EOI", "booking_percentage", "handover_percentage"},
+ *     required={"name", "dld_fee_percentage", "admin_fee", "booking_percentage", "handover_percentage"},
  *     @OA\Property(property="id", type="integer", readOnly=true, example=1),
- *     @OA\Property(property="unit_id", type="integer", example=1),
  *     @OA\Property(property="name", type="string", example="60/40"),
+ *
  *     @OA\Property(property="dld_fee_percentage", type="number", format="float", example=65000.00),
  *     @OA\Property(property="admin_fee", type="number", format="float", example=4000.00),
- *     @OA\Property(property="EOI", type="number", format="float", example=100000.00),
+ *
  *     @OA\Property(property="booking_percentage", type="number", format="float", example=20),
  *     @OA\Property(property="handover_percentage", type="number", format="float", example=40),
+ *
+ *     @OA\Property(property="post_handover_enabled", type="boolean", example=true),
+ *     @OA\Property(property="post_handover_months", type="integer", nullable=true, example=24),
+ *
  *     @OA\Property(property="created_at", type="string", format="date-time", readOnly=true, example="2025-01-01T00:00:00Z"),
  *     @OA\Property(property="updated_at", type="string", format="date-time", readOnly=true, example="2025-01-02T00:00:00Z")
  * )
@@ -157,6 +162,13 @@ class UnitController extends Controller
      *     summary="List all units with optional filters and pagination",
      *     tags={"Units"},
      *     security={{"sanctum":{}}},
+     *     @OA\Parameter(
+     *         name="building_id",
+     *         in="query",
+     *         description="Filter units by building",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=5)
+     *     ),
      *     @OA\Parameter(
      *         name="prop_type",
      *         in="query",
@@ -270,6 +282,7 @@ class UnitController extends Controller
      *                         nullable=true,
      *                         @OA\Property(property="id",          type="integer", format="int64", example=6),
      *                         @OA\Property(property="status",      type="string",                example="RF Pending"),
+     *                         @OA\Property(property="eoi_amount",  type="number", format="float", example=10000),
      *                         @OA\Property(property="created_by",  type="integer", format="int64", example=17),
      *                         @OA\Property(property="created_at",  type="string", format="date-time", example="2025-05-02T16:08:40Z"),
      *                         @OA\Property(
@@ -362,6 +375,10 @@ class UnitController extends Controller
 
         if ($request->filled('status')) {
             $query->where('status', $request->input('status'));
+        }
+
+        if ($request->filled('building_id')) {
+            $query->where('building_id', $request->input('building_id'));
         }
 
         // Dynamic pagination: retrieve 'limit', cast to integer, and cap at 100 items per page.
@@ -556,6 +573,7 @@ class UnitController extends Controller
      *                 @OA\Property(property="id",         type="integer", format="int64", example=6),
      *                 @OA\Property(property="unit_id",    type="integer", format="int64", example=1),
      *                 @OA\Property(property="status",     type="string",                example="Booked"),
+     *                 @OA\Property(property="eoi_amount", type="number", format="float", example=10000),
      *                 @OA\Property(property="created_by", type="integer", format="int64", example=2),
      *                 @OA\Property(property="created_at", type="string", format="date-time", example="2025-04-15T11:00:00Z"),
      *                 @OA\Property(
@@ -974,35 +992,9 @@ class UnitController extends Controller
         }
 
         $path = $unit->floor_plan; // e.g. "floor_plans/xyz.png"
-        if (!Storage::disk('local')->exists($path)) {
-            abort(Response::HTTP_NOT_FOUND);
-        }
 
-        $fullPath = Storage::disk('local')->path($path);
-        $lastModified = gmdate('D, d M Y H:i:s', filemtime($fullPath)) . ' GMT';
-        $eTag = '"' . md5_file($fullPath) . '"';
-
-        // If the client already has the latest, short-circuit with 304
-        if ($request->headers->get('if-none-match') === $eTag ||
-            $request->headers->get('if-modified-since') === $lastModified
-        ) {
-            return response('', 304)
-                ->header('Cache-Control', 'no-cache, must-revalidate, max-age=0, proxy-revalidate')
-                ->header('Pragma', 'no-cache')
-                ->header('Expires', '0')
-                ->header('ETag', $eTag)
-                ->header('Last-Modified', $lastModified);
-        }
-
-        // Otherwise, send the file with no-cache + validators
-        return response()->file($fullPath, [
-            'Content-Disposition' => 'inline; filename="' . basename($path) . '"',
-            'Cache-Control' => 'no-cache, must-revalidate, max-age=0, proxy-revalidate',
-            'Pragma' => 'no-cache',
-            'Expires' => '0',
-            'Last-Modified' => $lastModified,
-            'ETag' => $eTag,
-        ]);
+        return app(ImageService::class)
+            ->streamImage($request, $path, true);
     }
 
     /**

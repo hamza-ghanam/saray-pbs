@@ -13,6 +13,7 @@ class SalesOffer extends Model
         'offer_price',
         'discount',
         'notes',
+        'eoi_amount',
     ];
 
     protected $casts = [

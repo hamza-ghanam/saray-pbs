@@ -313,6 +313,8 @@ return [
          */
         'constants' => [
             'L5_SWAGGER_CONST_HOST' => env('L5_SWAGGER_CONST_HOST', 'http://localhost:8000'),
+            'APP_VERSION' => config('app.app_version'),
+            'APP_TITLE' => env('APP_NAME', 'Property Booking System'),
         ],
     ],
 ];

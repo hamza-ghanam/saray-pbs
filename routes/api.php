@@ -22,12 +22,15 @@ use App\Http\Controllers\CustomerInfoController;
 use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\ResetPasswordController;
 use App\Http\Controllers\TranslateController;
-
-use Illuminate\Support\Facades\Storage;
+use App\Http\Controllers\SignedDocumentsController;
+use App\Http\Controllers\BrokerCommissionController;
 
 //Index
 Route::get('/', function () {
-    return redirect('api/documentation');
+    return response()->json([
+        'status'  => true,
+        'message' => 'API is running.',
+    ]);
 });
 
 Route::get('/user', function (Request $request) {
@@ -44,6 +47,7 @@ Route::post('/reset-password', [ResetPasswordController::class, 'reset']);
 // Building Management
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/buildings', [BuildingController::class, 'index']);
+    Route::get('/buildings/listing', [BuildingController::class, 'listing']);
     Route::post('/buildings', [BuildingController::class, 'store']);
     Route::get('/buildings/{id}', [BuildingController::class, 'show']);
     Route::put('/buildings/{id}', [BuildingController::class, 'update']);
@@ -107,6 +111,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/bookings/{id}/rf', [ReservationFormController::class, 'generate']);
     Route::post('/bookings/{id}/rf/upload-signed', [ReservationFormController::class, 'uploadSigned']);
     Route::post('/bookings/{id}/rf/approve', [ReservationFormController::class, 'approve']);
+
+    Route::post('/bookings/{id}/rf/send-for-signature', [ReservationFormController::class, 'sendForSignature']);
 });
 
 // Sales and Purchase Agreement (SPAs)
@@ -114,6 +120,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/bookings/{id}/spa', [SpaController::class, 'generate']);
     Route::post('/bookings/{id}/spa/upload-signed', [SpaController::class, 'uploadSigned']);
     Route::post('/bookings/{id}/spa/approve', [SpaController::class, 'approve']);
+
+    Route::post('/bookings/{id}/spa/send-for-signature', [SpaController::class, 'sendForSignature']);
 });
 
 // DLD Documents
@@ -140,8 +148,25 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/otls/generate', [OneTimeLinkController::class, 'generateLink']);
     Route::post('/users/{id}/approve', [OneTimeLinkController::class, 'approve']);
     Route::post('/brokers/{user}/agreements', [OneTimeLinkController::class, 'downloadAgreement']);
+    Route::post('/brokers/{user}/agreements/generate', [BrokerController::class, 'generateAgreement']);
+    Route::post('/brokers/{user}/agreements/send-for-signature', [BrokerController::class, 'sendAgreementForSignature']);
+    Route::post('/brokers/{user}/agreements/withdraw', [BrokerController::class, 'withdrawBrokerAgreement']);
+    Route::get('/brokers/{user}/stamp', [BrokerController::class, 'showStamp'])->name('stamp.image');
+    Route::get('/brokers/{user}/bookings', [BrokerController::class, 'brokerBookings']);
 });
 Route::post('/otls/register', [OneTimeLinkController::class, 'selfRegisterUser']);
+
+// Broker Commissions
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/broker-commissions/rates', [BrokerCommissionController::class, 'listCommissionRates']);
+    Route::get('/broker-commissions/rates/current', [BrokerCommissionController::class, 'currentCommissionRate']);
+    Route::post('/broker-commissions/rates', [BrokerCommissionController::class, 'storeCommissionRate']);
+
+    Route::get('/broker-commissions', [BrokerCommissionController::class, 'listCommissions']);
+    Route::get('/broker-commissions/{brokerCommission}', [BrokerCommissionController::class, 'showCommission']);
+
+    Route::post('/broker-commissions/{brokerCommission}/payments', [BrokerCommissionController::class, 'recordCommissionPayment']);
+});
 
 // Roles & Permissions
 Route::middleware('auth:sanctum')->group(function () {
@@ -170,7 +195,7 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 // Brokers
-Route::post('/brokers/upload-signed-agreement', [BrokerController::class, 'uploadSignedAgreement']);
+Route::post('/brokers/agreements/{token}/sign', [BrokerController::class, 'submitAgreementSignature']);
 
 // Unit Updates
 Route::middleware('auth:sanctum')->group(function () {
@@ -194,4 +219,22 @@ Route::middleware('auth:sanctum')->group(function () {
         ->name('translate.ar');
     Route::post('/translate/ar/multiple', [TranslateController::class, 'translateMultipleToArabic'])
         ->name('translate.ar.multiple');
+});
+
+// Signatures
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/signatures', [SignedDocumentsController::class, 'index']);
+    Route::get('/signatures/{signingLinkId}/image', [SignedDocumentsController::class, 'showImage'])->name('signatures.image');
+    Route::post('/signatures/{signingLinkId}/reject', [SignedDocumentsController::class, 'reject']);
+});
+
+Route::get('/sign/doc/{token}/download', [SignedDocumentsController::class, 'download']);
+Route::post('/bookings/rf/{token}/sign', [ReservationFormController::class, 'submitSignature']);
+
+Route::post('/bookings/spa/{token}/sign', [SpaController::class, 'submitSignature']);
+
+// Dashboard
+use App\Http\Controllers\DashboardController;
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/dashboard/overview', [DashboardController::class, 'overview']);
 });

@@ -76,10 +76,14 @@
 
         <p>We’re pleased to let you know that your account has been <strong>approved</strong> and is now active.</p>
 
+        @if($documentPath)
+            <p>Please find attached the final signed agreement.</p>
+        @endif
+
         <p>Click the link below to log in to the portal and get started:</p>
 
-        <blockquote cite="{{ config('services.frontend_url') }}">
-            {{ config('services.frontend_url') }}
+        <blockquote cite="{{ config('app.frontend_url') }}">
+            {{ config('app.frontend_url') }}
         </blockquote>
 
         <p>Best regards,</p>

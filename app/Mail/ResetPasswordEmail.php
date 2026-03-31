@@ -23,7 +23,7 @@ class ResetPasswordEmail extends Mailable
 
         $token = Password::createToken($user);
 
-        $frontend = config('services.frontend_url', config('app.url'));
+        $frontend = config('app.frontend_url', config('app.url'));
 
         $this->resetUrl = rtrim($frontend, '/') . '/reset-password?token='
             . urlencode($token) . '&email=' . urlencode($user->email);

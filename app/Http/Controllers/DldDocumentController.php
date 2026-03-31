@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\BrokerCommission\CreateBrokerCommissionFromBookedBookingAction;
 use App\Models\Booking;
 use App\Models\DldDocument;
 use App\Models\Unit;
@@ -134,14 +135,21 @@ class DldDocumentController extends Controller
 
             // 5. Update booking status
             $booking->update([
-                'status' => 'Booked',
+                'status' => Booking::STATUS_BOOKED,
+                'booked_at' => now(),
             ]);
 
             // 6. Update associated unit
             $booking->unit->update([
-                'status'            => 'Sold',
+                'status'            => Unit::STATUS_SOLD,
                 'status_changed_at' => now(),
             ]);
+
+            //  Create broker commission for this booking, if it's through a broker
+
+            if (!is_null($booking->sale_source_id)) {
+                app(CreateBrokerCommissionFromBookedBookingAction::class)->execute($booking);
+            }
         });
 
         $booking->load('dldDocument');

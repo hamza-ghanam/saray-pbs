@@ -103,6 +103,7 @@ use Mindee\Input\PathInput;
  *     required={
  *         "id",
  *         "unit_id",
+ *         "eoi_amount",
  *         "customer_info_id",
  *         "status",
  *         "created_by",
@@ -116,6 +117,7 @@ use Mindee\Input\PathInput;
  *     @OA\Property(property="status",             type="string",  example="Pre-Booked"),
  *     @OA\Property(property="price",              type="number",  format="float", example=1535432.00),
  *     @OA\Property(property="discount",           type="number",  format="float", example=5),
+ *     @OA\Property(property="eoi_amount",         type="number", format="float", example=10000),
  *     @OA\Property(property="receipt_path",       type="string",             example="receipts/abc123.pdf"),
  *     @OA\Property(property="created_by",         type="integer",            example=3),
  *     @OA\Property(property="confirmed_by",       type="integer", nullable=true, example=null),
@@ -144,6 +146,14 @@ use Mindee\Input\PathInput;
  *         description="The applicable discount of the booking price, can be passed ONLY IF the payment_plan_id is passed.",
  *         example=10
  *     ),
+ *
+ *     @OA\Property(
+ *          property="eoi_amount",
+ *          type="number",
+ *          nullable=false,
+ *          description="The Expression of Interest of the booking.",
+ *          example=10000
+ *      ),
  *
  *     @OA\Property(
  *         property="notes",
@@ -314,6 +324,7 @@ class BookingController extends Controller
      *             type="object",
      *             @OA\Property(property="id",        type="integer", example=42),
      *             @OA\Property(property="unit_id",   type="integer", example=12),
+     *             @OA\Property(property="eoi_amount", type="float", example=10000),
      *             @OA\Property(property="status",    type="string",  example="Pre-Booked"),
      *             @OA\Property(property="agent",     type="object", nullable=true,
      *                 @OA\Property(property="id", type="integer", example=3),
@@ -402,6 +413,7 @@ class BookingController extends Controller
             'approvals',
             'reservationForm.approvals',
             'spa.approvals',
+            'paymentPlan' // Get Booking->PP
         ])->find($id);
 
         if (!$booking) {
@@ -616,8 +628,9 @@ class BookingController extends Controller
      *         @OA\MediaType(
      *             mediaType="multipart/form-data",
      *             @OA\Schema(
-     *                 required={"unit_id", "customers"},
+     *                 required={"unit_id", "eoi_amount", "customers"},
      *                 @OA\Property(property="unit_id", type="integer", example=12),
+     *                 @OA\Property(property="eoi_amount", type="number", format="float", example=10000),
      *                 @OA\Property(property="payment_plan_id", type="integer", nullable=true, example=5),
      *                 @OA\Property(
      *                     property="receipt",
@@ -683,6 +696,7 @@ class BookingController extends Controller
 
         $validated = $request->validate([
             'unit_id' => 'required|integer|exists:units,id',
+            'eoi_amount' => 'required|numeric|min:1',
             'payment_plan_id' => 'nullable|integer|exists:payment_plans,id',
             'receipt' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
             'discount' => 'nullable|numeric|min:0|max:100',
@@ -845,6 +859,8 @@ class BookingController extends Controller
                 'agent_id' => $validated['agent_id'] ?? null,
                 'sale_source_id' => $validated['sale_source_id'] ?? null,
                 'agency_com_agent' => $validated['agency_com_agent'] ?? null,
+
+                'eoi_amount' => $validated['eoi_amount'] ?? null,
             ]);
 
             // 6. Create CustomerInfo entries
@@ -906,7 +922,7 @@ class BookingController extends Controller
 
             // 8. Update unit status
             $unit->update([
-                'status' => 'Pre-Booked',
+                'status' => Unit::STATUS_PRE_BOOKED,
                 'status_changed_at' => now(),
             ]);
 
@@ -1269,6 +1285,7 @@ class BookingController extends Controller
                     }
                 }
             ],
+            'eoi_amount' => 'sometimes|numeric|min:0',
             'sale_source_id' => 'sometimes|integer|exists:users,id',
             'agency_com_agent' => 'nullable|string|max:255',
 
@@ -1721,132 +1738,96 @@ class BookingController extends Controller
      *     @OA\Response(response=404, description="Booking not found"),
      *     @OA\Response(response=422, description="Validation error or duplicate approval from the same role")
      * )
+     * @throws \Throwable
      */
     public function approveBooking(Request $request, $id)
     {
         $user = $request->user();
         Log::info("User {$user->id} is attempting to approve booking ID: {$id}");
 
-        // 1. Retrieve the booking
-        $booking = Booking::find($id);
+        $booking = Booking::with('unit')->find($id);
         if (!$booking) {
-            return response()->json(['error' => 'Booking not found'], 404);
+            return response()->json(['error' => 'Booking not found'], Response::HTTP_NOT_FOUND);
         }
 
-        // 2. Check if user can approve bookings (adjust if you use a different policy/gate)
         if (!$user->can('approve booking')) {
             return response()->json(['error' => 'Forbidden'], Response::HTTP_FORBIDDEN);
         }
 
-        // 3. Identify the user's role (assuming each user has exactly one main role)
-        //    If users can have multiple roles, handle that logic here.
         $role = $user->getRoleNames()->first();
         if (!$role) {
             return response()->json(['error' => 'User has no role'], Response::HTTP_FORBIDDEN);
         }
 
-        // 4. Check for existing approval from this same role (avoid duplicates)
-        $existingApproval = $booking->approvals()
+        // Prevent duplicate approval from same role
+        $alreadyApproved = Approval::where('ref_id', $booking->id)
+            ->where('ref_type', Booking::class)
             ->where('approval_type', $role)
             ->where('status', 'Approved')
-            ->first();
+            ->exists();
 
-        if ($existingApproval) {
+        if ($alreadyApproved) {
             return response()->json([
                 'error' => "Booking already has an approval from role: {$role}."
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        // 5. CEO Flow => Single Approval is Enough OR CEO as Second Approval
-        if ($role === 'CEO' || $role === 'System Maintenance') {
-            // Create CEO approval
+        DB::beginTransaction();
+
+        try {
             $approval = Approval::create([
-                'ref_id' => $booking->id,
-                'ref_type' => 'App\Models\Booking', // Must match your morphTo
-                'approved_by' => $user->id,
+                'ref_id'        => $booking->id,
+                'ref_type'      => Booking::class,
+                'approved_by'   => $user->id,
                 'approval_type' => $role,
-                'status' => 'Approved',
+                'status'        => 'Approved',
             ]);
 
-            $booking->status = Booking::STATUS_RF_PENDING;
-            $booking->save();
+            // CEO or System Maintenance → single approval is enough
+            if (in_array($role, ['CEO', 'System Maintenance'])) {
+                $this->finalizeBooking($booking);
 
-            $booking->unit->status = Unit::STATUS_BOOKED;
-            $booking->unit->status_changed_at = now();
-            $booking->unit->save();
+                DB::commit();
+
+                return response()->json([
+                    'message'  => "Booking approved by {$role}.",
+                    'approval' => $approval,
+                ], Response::HTTP_CREATED);
+            }
+
+            // Non‑CEO flow → must be CSO or Accountant
+            if (!in_array($role, ['CSO', 'Accountant'])) {
+                DB::rollBack();
+                return response()->json([
+                    'error' => "Role {$role} is not allowed to approve bookings."
+                ], Response::HTTP_FORBIDDEN);
+            }
+
+            $approvedRoles = Approval::where('ref_id', $booking->id)
+                ->where('ref_type', Booking::class)
+                ->where('status', 'Approved')
+                ->distinct()
+                ->pluck('approval_type');
+
+            if ($approvedRoles->contains('CSO') && $approvedRoles->contains('Accountant')) {
+                $this->finalizeBooking($booking);
+            }
+
+            DB::commit();
 
             return response()->json([
-                'message' => "Booking approved by {$role}.",
+                'message'  => "Booking approved by {$role}.",
                 'approval' => $approval,
             ], Response::HTTP_CREATED);
-        }
 
-        // 6. Non-CEO Flow => Need 2 Distinct Approvals: CSO & Accountant
-        //    Check if the user's role is either "CSO" or "Accountant"
-        if (!in_array($role, ['CSO', 'Accountant'])) {
-            return response()->json([
-                'error' => "Role {$role} is not allowed to approve bookings."
-            ], Response::HTTP_FORBIDDEN);
-        }
-
-        // Create the new approval for CSO/Accountant
-        $approval = Approval::create([
-            'ref_id' => $booking->id,
-            'ref_type' => 'App\Models\Booking',
-            'approved_by' => $user->id,
-            'approval_type' => $role,
-            'status' => 'Approved',
-        ]);
-
-        // 7. Check how many distinct roles have approved so far
-        $rolesApproved = $booking->approvals()
-            ->where('status', 'Approved')
-            ->pluck('approval_type')
-            ->unique();
-
-        // If we have both "CSO" and "Accountant", then the booking is fully approved
-        if ($rolesApproved->contains('CSO') && $rolesApproved->contains('Accountant')) {
-            // e.g., finalize the booking or set status
-            $booking->status = Booking::STATUS_RF_PENDING;
-            $booking->save();
-
-            $booking->unit->status = Unit::STATUS_BOOKED;
-            $booking->unit->save();
-
-            $ceoUsers = User::role('CEO')->with('deviceTokens')->get();
-
-            // Extract tokens into a flat array
-            $createdByTokens = $booking->unit->user
-                ? $booking->unit->user->deviceTokens->pluck('token')->toArray()
-                : [];
-
-            $ceoTokens = $ceoUsers->pluck('deviceTokens')
-                ->flatten()
-                ->pluck('token')
-                ->toArray();
-
-            $deviceTokens = array_merge($ceoTokens, $createdByTokens);
-
-            $title = "Booking Approved";
-            $body = "Booking ID: {$booking->id} has been approved by {$role}.";
-            $data = [
-                'booking_id' => (string)$booking->id,
-                'approval_role' => $role,
-                'new_status' => $booking->status,
-                'timestamp' => now()->toIso8601String(),
-            ];
-            //    $this->fcmService->sendPushNotification($deviceTokens, $title, $body, $data);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error("Approval failed for booking {$booking->id}: {$e->getMessage()}");
 
             return response()->json([
-                'message' => "Booking approved by {$role}.",
-                'approval' => $approval,
-            ], Response::HTTP_CREATED);
+                'error' => 'Approval process failed.'
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-
-        return response()->json([
-            'message' => "Booking approved by {$role}",
-            'approval' => $approval,
-        ], Response::HTTP_CREATED);
     }
 
     /**
@@ -2085,4 +2066,21 @@ class BookingController extends Controller
             )
             : ['id' => null, 'name' => null, 'email' => null, 'status' => null, 'type' => 'Direct'];
     }
+
+    private function finalizeBooking(Booking $booking): void
+    {
+        if ($booking->status !== Booking::STATUS_RF_PENDING) {
+            $booking->update([
+                'status' => Booking::STATUS_RF_PENDING,
+            ]);
+        }
+
+        if ($booking->unit && $booking->unit->status !== Unit::STATUS_BOOKED) {
+            $booking->unit->update([
+                'status' => Unit::STATUS_BOOKED,
+                'status_changed_at' => now(),
+            ]);
+        }
+    }
 }
+

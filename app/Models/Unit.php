@@ -11,13 +11,14 @@ class Unit extends Model
 
     public const STATUS_PENDING = 'Pending';
     public const STATUS_AVAILABLE = 'Available';
-    public const STATUS_CANCELLED = 'Cancelled';
     public const STATUS_PRE_BOOKED = 'Pre-Booked';
     public const STATUS_BOOKED = 'Booked';
+    public const STATUS_COMPLETED = 'Completed';
+    public const STATUS_SOLD = 'Sold';
     public const STATUS_PRE_HOLD = 'Pre-Hold';
     public const STATUS_HOLD = 'Hold';
-    public const STATUS_COMPLETED = 'Completed';
     public const STATUS_PROCESSED = 'Processed';
+    public const STATUS_CANCELLED = 'Cancelled';
 
     protected $fillable = [
         'prop_type',
@@ -51,6 +52,7 @@ class Unit extends Model
 
     protected $casts = [
         'building_id' => 'integer',
+        'status_changed_at' => 'datetime',
     ];
 
     protected const SQFT_TO_SQM = 1 / 10.7639;

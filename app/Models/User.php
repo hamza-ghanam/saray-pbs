@@ -25,6 +25,8 @@ class User extends Authenticatable
         'email',
         'password',
         'status',
+        'doc_type',
+        'file_path',
     ];
 
     /**
@@ -94,5 +96,55 @@ class User extends Authenticatable
     public function bookingsAsSaleSource()
     {
         return $this->hasMany(Booking::class, 'sale_source_id');
+    }
+
+    public function signature()
+    {
+        return $this->hasOne(UserSignature::class);
+    }
+
+    public function withdrawnSigningLinks()
+    {
+        return $this->hasMany(SigningLink::class, 'withdrawn_by');
+    }
+
+    public function brokerCommissions()
+    {
+        return $this->hasMany(BrokerCommission::class, 'broker_user_id');
+    }
+
+    public function recordedBrokerCommissionPayments()
+    {
+        return $this->hasMany(BrokerCommissionPayment::class, 'paid_by');
+    }
+
+    public function createdBrokerCommissionRates()
+    {
+        return $this->hasMany(BrokerCommissionRate::class, 'created_by');
+    }
+
+    public function updatedBrokerCommissionRates()
+    {
+        return $this->hasMany(BrokerCommissionRate::class, 'updated_by');
+    }
+
+    public function createdBrokerCommissions()
+    {
+        return $this->hasMany(BrokerCommission::class, 'created_by');
+    }
+
+    public function updatedBrokerCommissions()
+    {
+        return $this->hasMany(BrokerCommission::class, 'updated_by');
+    }
+
+    public function createdBrokerCommissionPayments()
+    {
+        return $this->hasMany(BrokerCommissionPayment::class, 'created_by');
+    }
+
+    public function updatedBrokerCommissionPayments()
+    {
+        return $this->hasMany(BrokerCommissionPayment::class, 'updated_by');
     }
 }

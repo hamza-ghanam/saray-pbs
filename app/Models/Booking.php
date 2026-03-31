@@ -10,7 +10,7 @@ class Booking extends Model
     use SoftDeletes;
 
     public const STATUS_PRE_BOOKED = 'Pre-Booked';
-    public const STATUS_BOOKED = 'Hold';
+    public const STATUS_BOOKED = 'Booked';
     public const STATUS_RF_PENDING = 'RF Pending';
     public const STATUS_SPA_PENDING = 'SPA Pending';
     public const STATUS_CANCELLED = 'Cancelled';
@@ -28,6 +28,9 @@ class Booking extends Model
         'agent_id',
         'sale_source_id',
         'agency_com_agent',
+        'notes',
+        'booked_at',
+        'eoi_amount',
     ];
 
     protected $hidden = ['receipt_path'];
@@ -39,6 +42,7 @@ class Booking extends Model
         'unit_id' => 'integer',
         'price' => 'decimal:2',
         'discount' => 'decimal:2',
+        'booked_at' => 'datetime',
     ];
 
     public function user()
@@ -122,10 +126,16 @@ class Booking extends Model
         return $this->belongsTo(User::class, 'agent_id');
     }
 
-    public function saleSource()
+    public function broker()
     {
         return $this->belongsTo(User::class, 'sale_source_id');
     }
+
+    public function brokerCommission()
+    {
+        return $this->hasOne(BrokerCommission::class);
+    }
+
 
     public function canChangePaymentPlan()
     {

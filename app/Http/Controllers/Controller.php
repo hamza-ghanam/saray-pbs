@@ -5,8 +5,8 @@ use OpenApi\Attributes as OA;
 
 /**
  * @OA\Info(
- *     title="Saray Property Booking System",
- *     version="2.0"
+ *     title=APP_TITLE,
+ *     version=APP_VERSION
  * )
  *
  * @OA\Server(

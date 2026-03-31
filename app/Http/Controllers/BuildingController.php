@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Building;
+use App\Services\ImageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -97,6 +98,46 @@ class BuildingController extends Controller
         // Dynamic pagination
         $limit = min((int)$request->get('limit', 10), 100);
         $buildings = $query->paginate($limit);
+
+        return response()->json($buildings, Response::HTTP_OK);
+    }
+
+    /**
+     * List building IDs and names only.
+     *
+     * @OA\Get(
+     *     path="/api/buildings/listing",
+     *     summary="List building ids and names only",
+     *     tags={"Building"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="List of building ids and names",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="name", type="string", example="Building A")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=403, description="Forbidden — insufficient permissions")
+     * )
+     */
+    public function listing(Request $request)
+    {
+        $user = $request->user();
+        Log::info('User ' . $user->id . ' called BuildingController@listing');
+
+        if (!$user->can('view building')) {
+            abort(Response::HTTP_FORBIDDEN, 'Unauthorized');
+        }
+
+        $buildings = Building::query()
+            ->select(['id', 'name'])
+            ->orderBy('name')
+            ->get();
 
         return response()->json($buildings, Response::HTTP_OK);
     }
@@ -487,37 +528,8 @@ class BuildingController extends Controller
             abort(Response::HTTP_FORBIDDEN);
         }
 
-        $path = $building->image_path; // e.g. "building_images/xyz.png"
-        if (! Storage::disk('local')->exists($path)) {
-            abort(Response::HTTP_NOT_FOUND);
-        }
-
-        $fullPath = Storage::disk('local')->path($path);
-
-        // Compute strong validators
-        $lastModified = gmdate('D, d M Y H:i:s', filemtime($fullPath)) . ' GMT';
-        $eTag         = '"' . md5_file($fullPath) . '"';
-
-        // If the client already has the latest, short-circuit with 304
-        if ($request->headers->get('if-none-match') === $eTag ||
-            $request->headers->get('if-modified-since') === $lastModified
-        ) {
-            return response('', 304)
-                ->header('Cache-Control', 'no-cache, must-revalidate, max-age=0, proxy-revalidate')
-                ->header('Pragma', 'no-cache')
-                ->header('Expires', '0')
-                ->header('ETag', $eTag)
-                ->header('Last-Modified', $lastModified);
-        }
-
-        // Otherwise send the file with no-cache + validators
-        return response()->file($fullPath, [
-            'Content-Disposition' => 'inline; filename="' . basename($path) . '"',
-            'Cache-Control'       => 'no-cache, must-revalidate, max-age=0, proxy-revalidate',
-            'Pragma'              => 'no-cache',
-            'Expires'             => '0',
-            'Last-Modified'       => $lastModified,
-            'ETag'                => $eTag,
-        ]);
+        $path = $building->image_path;
+        return app(ImageService::class)
+            ->streamImage($request, $path, true);
     }
 }
