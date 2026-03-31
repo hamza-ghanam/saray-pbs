@@ -81,7 +81,7 @@ class SalesOfferController extends Controller
             'payment_plan_ids' => ['nullable', 'array'],
             'payment_plan_ids.*' => 'integer|exists:payment_plans,id',
             'discount' => 'nullable|numeric|between:0,100',
-            'eoi_amount' => 'required|numeric|min:1',
+            'eoi_amount' => 'nullable|numeric|min:1',
         ]);
 
         $validator->after(function ($validator) use ($request) {
