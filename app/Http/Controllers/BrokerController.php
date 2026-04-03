@@ -14,6 +14,7 @@ use App\Services\DocumentSignatureService;
 use App\Services\ImageService;
 use App\Services\PdfService;
 use finfo;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -348,7 +349,7 @@ class BrokerController extends Controller
     )
     {
         $ctx = $this->getPendingBrokerAgreementContext($request, $brokerUserId);
-        if ($ctx instanceof \Illuminate\Http\JsonResponse) {
+        if ($ctx instanceof JsonResponse) {
             // Override message to keep exact old behaviour if status not pending
             if ($ctx->getStatusCode() === Response::HTTP_UNPROCESSABLE_ENTITY) {
                 $payload = $ctx->getData(true);

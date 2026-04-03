@@ -139,7 +139,7 @@ class ReservationFormController extends Controller
             }
             */
 
-            $booking->paymentPlan->dld_fee = round($booking->price * ($booking->paymentPlan->dld_fee_percentage / 100), 2);
+            $booking->paymentPlan->dld_fee = $booking->paymentPlan?->calculateDldFee($booking->price);
 
             $booking->load([
                 'installments.paymentPlan',     // for grouping and headings
@@ -334,7 +334,7 @@ class ReservationFormController extends Controller
      * @OA\Post(
      *     path="/sign/rf/{token}/submit",
      *     summary="Submit RF signature (base64 PNG)",
-     *     tags={"Signing/RF"},
+     *     tags={"Bookings/RF"},
      *
      *     @OA\Parameter(
      *         name="token",
@@ -458,70 +458,6 @@ class ReservationFormController extends Controller
         );
     }
 
-    /**
-     * Upload a signed Reservation Form (RF) file for a booking.
-     *
-     * This endpoint accepts a PDF file for the ReservationForm associated with the given booking.
-     * If the RF is no longer "Pending", only users with the "CEO" or "System Maintenance" roles
-     * may overwrite it; otherwise a 409 Conflict is returned.
-     *
-     * @OA\Post(
-     *     path="/bookings/{bookingId}/rf/upload-signed",
-     *     summary="Upload a signed Reservation Form for a booking",
-     *     tags={"Bookings/RF"},
-     *     security={{"sanctum":{}}},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         description="ID of the booking whose ReservationForm will be updated",
-     *         required=true,
-     *         @OA\Schema(type="integer", example=42)
-     *     ),
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\MediaType(
-     *             mediaType="multipart/form-data",
-     *             @OA\Schema(
-     *                 required={"signed_rf"},
-     *                 @OA\Property(
-     *                     property="signed_rf",
-     *                     type="string",
-     *                     format="binary",
-     *                     description="The signed Reservation Form file (PDF, max 2 MB)"
-     *                 )
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Signed RF successfully uploaded",
-     *         @OA\JsonContent(
-     *             type="object",
-     *             @OA\Property(
-     *                 property="message",
-     *                 type="string",
-     *                 example="Signed RF successfully uploaded"
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=403,
-     *         description="Forbidden – missing permission to upload signed RF"
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Reservation Form not found for the given booking"
-     *     ),
-     *     @OA\Response(
-     *         response=409,
-     *         description="Conflict – RF already signed and user lacks override role"
-     *     ),
-     *     @OA\Response(
-     *         response=422,
-     *         description="Validation error (e.g., no file or wrong MIME type)"
-     *     )
-     * )
-     */
     public function uploadSigned(Request $request, $id)
     {
         $user = $request->user();

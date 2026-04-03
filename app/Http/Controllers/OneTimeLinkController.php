@@ -412,9 +412,6 @@ class OneTimeLinkController extends Controller
         }
     }
 
-
-
-
     /**
      * Approve a user's registration (from Pending to Active).
      *
