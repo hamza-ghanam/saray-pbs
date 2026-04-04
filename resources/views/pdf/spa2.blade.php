@@ -3281,6 +3281,14 @@
         </tr>
 
         <tr>
+            <td class="en">10.7. The Purchaser agrees that the sale of the Property by the Seller to the Purchaser may have caused the Seller to pay agency fees (Agency Fees) to an agent (Agent) and if this Agreement is cancelled/terminated for whatsoever cause, the Seller shall, without prejudice to the Seller's rights under this Agreement, be entitled to withhold from the refund of any Purchase Price Payments to the Purchaser (to the extent that the Purchaser is entitled to a refund of the Purchase Price Payments (or part thereof)) or otherwise file a claim to recover, the Agency Fees paid by the Seller to the Agent.
+            </td>
+            <td class="separator"></td>
+            <td class="ar">10-7 يقر المشتري بأن بيع العقار من البائع إلى المشتري قد يترتب عليه أن يقوم البائع بسداد عمولات وساطة عقارية (عمولات الوساطة) لوسيط عقاري (الوسيط العقاري)، وفي حال إلغاء/فسخ هذا الاتفاق لأي سبب كان، يحق للبائع—دون الإخلال بأي من حقوقه بموجب هذا الاتفاق—أن يقتطع من أي مبالغ من ثمن الشراء مستحقة للرد إلى المشتري (إلى الحد الذي يحق فيه للمشتري استرداد تلك المبالغ أو أي جزء منها)، أو أن يتقدم بمطالبة لاسترداد عمولات الوساطة العقارية التي قام البائع بسدادها للوسيط العقاري.
+            </td>
+        </tr>
+
+        <tr>
             <th class="left-th section-heading" style="width:49%; text-align:justify; padding:10px;">11. Force Majeure
             </th>
             <td class="separator"></td>
