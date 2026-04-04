@@ -4954,7 +4954,7 @@
         "/sign/rf/{token}/submit": {
             "post": {
                 "tags": [
-                    "Signing/RF"
+                    "Bookings/RF"
                 ],
                 "summary": "Submit RF signature (base64 PNG)",
                 "description": "Submit a signature for a Reservation Form (RF) using a one-time token.\n\n- Public endpoint (no auth) protected by one-time token.\n- Accepts a PNG signature as base64 (either raw base64 or data URL).\n- Marks the signing link as used (status -> expired) and stores signature image path.\n- If all required signers completed, the system finalises the RF (generates final signed PDF).",
@@ -5117,83 +5117,6 @@
                         }
                     }
                 }
-            }
-        },
-        "/bookings/{bookingId}/rf/upload-signed": {
-            "post": {
-                "tags": [
-                    "Bookings/RF"
-                ],
-                "summary": "Upload a signed Reservation Form for a booking",
-                "description": "Upload a signed Reservation Form (RF) file for a booking.\n\nThis endpoint accepts a PDF file for the ReservationForm associated with the given booking.\nIf the RF is no longer \"Pending\", only users with the \"CEO\" or \"System Maintenance\" roles\nmay overwrite it; otherwise a 409 Conflict is returned.",
-                "operationId": "41f0ef977afba81d2bcd873237ceae0f",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "ID of the booking whose ReservationForm will be updated",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "example": 42
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "multipart/form-data": {
-                            "schema": {
-                                "required": [
-                                    "signed_rf"
-                                ],
-                                "properties": {
-                                    "signed_rf": {
-                                        "description": "The signed Reservation Form file (PDF, max 2 MB)",
-                                        "type": "string",
-                                        "format": "binary"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Signed RF successfully uploaded",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Signed RF successfully uploaded"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden – missing permission to upload signed RF"
-                    },
-                    "404": {
-                        "description": "Reservation Form not found for the given booking"
-                    },
-                    "409": {
-                        "description": "Conflict – RF already signed and user lacks override role"
-                    },
-                    "422": {
-                        "description": "Validation error (e.g., no file or wrong MIME type)"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
             }
         },
         "/bookings/{bookingId}/rf/approve": {
@@ -6203,39 +6126,134 @@
                 ]
             }
         },
-        "/bookings/{bookingId}/spa/upload-signed": {
+        "/bookings/{bookingId}/spa/send-for-signature": {
             "post": {
                 "tags": [
                     "Bookings/SPA"
                 ],
-                "summary": "Upload a signed SPA file",
-                "description": "Upload a signed SPA file.\n\nThis endpoint accepts a PDF file for a specific SPA record.\nIf the SPA is no longer \"Pending\", only users with \"CEO\" or \"System Maintenance\" roles\ncan overwrite it. Otherwise, a 409 (Conflict) error is returned.",
-                "operationId": "d1edf58fc13494ce92fdabe154bcdfc8",
+                "summary": "Send SPA signing link(s)",
+                "description": "Send SPA for signature.\n\nGenerates and sends signing link(s) for the SPA document related to the given booking.",
+                "operationId": "0d055233e4ec7dfe5d29d8b4afe7ffba",
                 "parameters": [
                     {
-                        "name": "id",
+                        "name": "bookingId",
                         "in": "path",
-                        "description": "ID of the SPA to update",
+                        "description": "ID of the booking whose SPA will be sent for signature",
                         "required": true,
                         "schema": {
                             "type": "integer",
-                            "example": 10
+                            "format": "int64",
+                            "example": 42
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "SPA signing link(s) sent successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "SPA signing link(s) sent successfully."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden (no permission to send SPA for signature)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Unauthorized"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "SPA document not found for this booking",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "SPA not found for this booking. Generate SPA first."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation or business rule error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "SPA PDF is missing. Generate SPA again."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/spa/sign/{token}": {
+            "post": {
+                "tags": [
+                    "Bookings/SPA"
+                ],
+                "summary": "Submit SPA signature",
+                "description": "Submit SPA signature.\n\nAllows a user to sign the SPA document using a secure token.\nOnce all required signatures are completed, the final signed SPA is generated.",
+                "operationId": "a72524fb0987ff10e825f67ca5df0ed9",
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "path",
+                        "description": "Unique signing token sent to the user",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "a1b2c3d4e5f6..."
                         }
                     }
                 ],
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "multipart/form-data": {
+                        "application/json": {
                             "schema": {
                                 "required": [
-                                    "signed_spa"
+                                    "signature"
                                 ],
                                 "properties": {
-                                    "signed_spa": {
-                                        "description": "The signed SPA file (PDF, max 2 MB)",
+                                    "signature": {
+                                        "description": "Base64 encoded signature image",
                                         "type": "string",
-                                        "format": "binary"
+                                        "format": "byte",
+                                        "example": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."
                                     }
                                 },
                                 "type": "object"
@@ -6245,37 +6263,14 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Signed SPA uploaded and record updated",
+                        "description": "Signature submitted successfully",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "spa": {
-                                            "description": "Updated SPA record",
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 10
-                                                },
-                                                "booking_id": {
-                                                    "type": "integer",
-                                                    "example": 42
-                                                },
-                                                "status": {
-                                                    "type": "string",
-                                                    "example": "Signed"
-                                                },
-                                                "signed_at": {
-                                                    "type": "string",
-                                                    "format": "date-time",
-                                                    "example": "2025-05-03T12:34:56Z"
-                                                },
-                                                "signed_file_path": {
-                                                    "type": "string",
-                                                    "example": "spa_forms/SPA_42_signed.pdf"
-                                                }
-                                            },
-                                            "type": "object"
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Signature submitted successfully."
                                         }
                                     },
                                     "type": "object"
@@ -6283,24 +6278,55 @@
                             }
                         }
                     },
-                    "403": {
-                        "description": "Forbidden – missing permission to upload final SPA"
-                    },
                     "404": {
-                        "description": "SPA not found"
-                    },
-                    "409": {
-                        "description": "Conflict – SPA already signed and user lacks override role"
+                        "description": "Invalid or expired signing link",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Invalid or expired signing link."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "422": {
-                        "description": "Validation error (e.g., no file or wrong MIME type)"
+                        "description": "Validation or business rule error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Invalid document type for this endpoint."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Signature already submitted or link already used",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "This document has already been signed."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
+                }
             }
         },
         "/bookings/{bookingId}/spa/approve": {
@@ -10341,10 +10367,6 @@
         {
             "name": "Bookings/RF",
             "description": "Bookings/RF"
-        },
-        {
-            "name": "Signing/RF",
-            "description": "Signing/RF"
         },
         {
             "name": "Roles & Permissions",

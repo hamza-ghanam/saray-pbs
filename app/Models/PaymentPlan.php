@@ -67,4 +67,14 @@ class PaymentPlan extends Model
                 ->update(['is_default' => true]);
         });
     }
+
+    public function calculateDldFee(float $price): float
+    {
+        $percentage = (float) $this->dld_fee_percentage;
+
+        return round(
+            $price * ($percentage / 100),
+            2
+        );
+    }
 }

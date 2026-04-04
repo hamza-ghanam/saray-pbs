@@ -134,7 +134,7 @@ class SpaController extends Controller
             }
             */
 
-            $booking->paymentPlan->dld_fee = round($booking->price * ($booking->paymentPlan->dld_fee_percentage / 100), 2);
+            $booking->paymentPlan->dld_fee = $booking->paymentPlan?->calculateDldFee($booking->price);
 
             $booking->load([
                 'installments.paymentPlan',     // for grouping and headings
@@ -203,6 +203,66 @@ class SpaController extends Controller
         }
     }
 
+    /**
+     * Send SPA for signature.
+     *
+     * Generates and sends signing link(s) for the SPA document related to the given booking.
+     *
+     * @OA\Post(
+     *     path="/bookings/{bookingId}/spa/send-for-signature",
+     *     summary="Send SPA signing link(s)",
+     *     tags={"Bookings/SPA"},
+     *     security={{"sanctum":{}}},
+     *
+     *     @OA\Parameter(
+     *         name="bookingId",
+     *         in="path",
+     *         description="ID of the booking whose SPA will be sent for signature",
+     *         required=true,
+     *         @OA\Schema(type="integer", format="int64", example=42)
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="SPA signing link(s) sent successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 example="SPA signing link(s) sent successfully."
+     *             )
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=403,
+     *         description="Forbidden (no permission to send SPA for signature)",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="error", type="string", example="Unauthorized")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=404,
+     *         description="SPA document not found for this booking",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="error", type="string", example="SPA not found for this booking. Generate SPA first.")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation or business rule error",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="error", type="string", example="SPA PDF is missing. Generate SPA again.")
+     *         )
+     *     )
+     * )
+     */
     public function sendForSignature(Request $request, int $bookingId, SendForSignatureAction $action)
     {
         return $action->handle($request, $bookingId, new SignatureSendConfig(
@@ -216,10 +276,84 @@ class SpaController extends Controller
         ));
     }
 
+    /**
+     * Submit SPA signature.
+     *
+     * Allows a user to sign the SPA document using a secure token.
+     * Once all required signatures are completed, the final signed SPA is generated.
+     *
+     * @OA\Post(
+     *     path="/spa/sign/{token}",
+     *     summary="Submit SPA signature",
+     *     tags={"Bookings/SPA"},
+     *
+     *     @OA\Parameter(
+     *         name="token",
+     *         in="path",
+     *         description="Unique signing token sent to the user",
+     *         required=true,
+     *         @OA\Schema(type="string", example="a1b2c3d4e5f6...")
+     *     ),
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"signature"},
+     *             @OA\Property(
+     *                 property="signature",
+     *                 type="string",
+     *                 format="byte",
+     *                 description="Base64 encoded signature image",
+     *                 example="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."
+     *             )
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Signature submitted successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 example="Signature submitted successfully."
+     *             )
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=404,
+     *         description="Invalid or expired signing link",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="error", type="string", example="Invalid or expired signing link.")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation or business rule error",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="error", type="string", example="Invalid document type for this endpoint.")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=409,
+     *         description="Signature already submitted or link already used",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="error", type="string", example="This document has already been signed.")
+     *         )
+     *     )
+     * )
+     */
     public function submitSignature(Request $request, string $token, SubmitSignatureAction $action, FinalizeSignedDocumentService $finalizer){
         $cfg = new SignatureSubmitConfig(
             type: DocumentType::SPA,
-            expectedDocumentClass: \App\Models\SPA::class,
+            expectedDocumentClass: SPA::class,
             signatureDir: 'signatures/spa',
             invalidDocMessage: 'Invalid document type for this endpoint.',
         );
@@ -242,63 +376,7 @@ class SpaController extends Controller
         );
     }
 
-    /**
-     * Upload a signed SPA file.
-     *
-     * This endpoint accepts a PDF file for a specific SPA record.
-     * If the SPA is no longer "Pending", only users with "CEO" or "System Maintenance" roles
-     * can overwrite it. Otherwise, a 409 (Conflict) error is returned.
-     *
-     * @OA\Post(
-     *     path="/bookings/{bookingId}/spa/upload-signed",
-     *     summary="Upload a signed SPA file",
-     *     tags={"Bookings/SPA"},
-     *     security={{"sanctum":{}}},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         description="ID of the SPA to update",
-     *         required=true,
-     *         @OA\Schema(type="integer", example=10)
-     *     ),
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\MediaType(
-     *             mediaType="multipart/form-data",
-     *             @OA\Schema(
-     *                 required={"signed_spa"},
-     *                 @OA\Property(
-     *                     property="signed_spa",
-     *                     type="string",
-     *                     format="binary",
-     *                     description="The signed SPA file (PDF, max 2 MB)"
-     *                 )
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Signed SPA uploaded and record updated",
-     *         @OA\JsonContent(
-     *             type="object",
-     *             @OA\Property(
-     *                 property="spa",
-     *                 type="object",
-     *                 description="Updated SPA record",
-     *                 @OA\Property(property="id",                type="integer",   example=10),
-     *                 @OA\Property(property="booking_id",        type="integer",   example=42),
-     *                 @OA\Property(property="status",            type="string",    example="Signed"),
-     *                 @OA\Property(property="signed_at",         type="string",    format="date-time", example="2025-05-03T12:34:56Z"),
-     *                 @OA\Property(property="signed_file_path",  type="string",    example="spa_forms/SPA_42_signed.pdf")
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(response=403, description="Forbidden – missing permission to upload final SPA"),
-     *     @OA\Response(response=404, description="SPA not found"),
-     *     @OA\Response(response=409, description="Conflict – SPA already signed and user lacks override role"),
-     *     @OA\Response(response=422, description="Validation error (e.g., no file or wrong MIME type)")
-     * )
-     */
+
     public function uploadSigned(Request $request, $id)
     {
         $user = $request->user();
