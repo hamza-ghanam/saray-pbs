@@ -65,10 +65,10 @@ return [
              * Middleware allows to prevent unexpected access to API documentation
              */
             'middleware' => [
-                'api' => [],
-                'asset' => [],
-                'docs' => [],
-                'oauth2_callback' => [],
+                'api'             => ['swagger.auth'],
+                'asset'           => ['swagger.auth'],
+                'docs'            => ['swagger.auth'],
+                'oauth2_callback' => ['swagger.auth'],
             ],
 
             /*
@@ -316,5 +316,10 @@ return [
             'APP_VERSION' => config('app.app_version'),
             'APP_TITLE' => env('APP_NAME', 'Property Booking System'),
         ],
+    ],
+    'enabled' => env('L5_SWAGGER_ENABLED', false),
+    'swagger_auth' => [
+        'user' => env('SWAGGER_USER'),
+        'pass' => env('SWAGGER_PASS'),
     ],
 ];
