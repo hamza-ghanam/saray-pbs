@@ -58,6 +58,24 @@ final class SubmitSignatureAction
                 return response()->json(['error' => 'Invalid document type for this endpoint.'], Response::HTTP_UNPROCESSABLE_ENTITY);
             }
 
+            // Reject self-service signing if the document is already finalized.
+            // This protects against using an old/public signing link after manual upload/finalization
+            // or any other completed flow.
+            $documentStatus = (string) ($doc->status ?? '');
+            $documentSignedAt = $doc->signed_at ?? null;
+            $documentSignedFilePath = (string) ($doc->signed_file_path ?? '');
+
+            if (
+                in_array($documentStatus, ['Signed', 'Approved'], true)
+                || $documentSignedAt !== null
+                || $documentSignedFilePath !== ''
+            ) {
+                DB::rollBack();
+                return response()->json([
+                    'error' => 'Document already finalized.'
+                ], Response::HTTP_CONFLICT);
+            }
+
             // Decode base64
             $sig = trim((string) $request->input('signature'));
             $sig = preg_replace('/^data:image\/png;base64,/', '', $sig);

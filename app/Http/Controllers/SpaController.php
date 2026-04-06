@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Signature\CustomerSignatureUploadConfig;
 use App\Actions\Signature\FinalizeConfig;
 use App\Actions\Signature\FinalizeSignedDocumentService;
 use App\Actions\Signature\SendForSignatureAction;
 use App\Actions\Signature\SignatureSendConfig;
 use App\Actions\Signature\SignatureSubmitConfig;
 use App\Actions\Signature\SubmitSignatureAction;
+use App\Actions\Signature\UploadCustomerSignatureAction;
 use App\Enums\DocumentType;
 use App\Mail\RFSPAMail;
 use App\Mail\SalesPurchaseAgreementMail;
@@ -199,9 +201,14 @@ class SpaController extends Controller
     }
 
     /**
-     * Send SPA for signature.
+     * Send SPA signing links to booking customers.
      *
-     * Generates and sends signing link(s) for the SPA document related to the given booking.
+     * - Requires authenticated user with proper permission.
+     * - If user has role "Sales", they can only send for signature for bookings they created.
+     * - Booking must be in status "SPA Pending".
+     * - SPA must exist and must have a generated PDF (file_path).
+     * - Sends signing link(s) to recipients (customerInfos where requires_signature=true).
+     * - If a recipient already signed the document, no new link is sent for that recipient.
      *
      * @OA\Post(
      *     path="/bookings/{bookingId}/spa/send-for-signature",
@@ -219,13 +226,13 @@ class SpaController extends Controller
      *
      *     @OA\Response(
      *         response=200,
-     *         description="SPA signing link(s) sent successfully",
+     *         description="SPA signing links processed successfully",
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(
      *                 property="message",
      *                 type="string",
-     *                 example="SPA signing link(s) sent successfully."
+     *                 example="SPA signing link(s) processed successfully."
      *             )
      *         )
      *     ),
@@ -267,7 +274,9 @@ class SpaController extends Controller
             documentTypeValue: DocumentType::SPA->value,
             missingDocMessage: 'SPA not found for this booking. Generate SPA first.',
             missingPdfMessage: 'SPA PDF is missing. Generate SPA again.',
-            successMessage: 'SPA signing link(s) sent successfully.'
+            successMessage: 'SPA signing link(s) sent successfully.',
+            finalizedStatuses: ['Signed', 'Approved'],
+            alreadyFinalizedMessage: 'Document already finalized.',
         ));
     }
 
@@ -284,7 +293,7 @@ class SpaController extends Controller
      *     path="/bookings/spa/{token}/sign",
      *     summary="Submit SPA signature (base64 PNG)",
      *     tags={"Bookings/SPA"},
-     *     description="Public self-service signing flow. The customer submits their SPA signature via a one-time token. The system stores signature_source = \"customer_self\" to distinguish it from staff-assisted uploads (signature_source = \"staff_uploaded\").",
+     *     description="Public self-service signing flow. The customer submits their SPA signature via a one-time token. The system stores signature_source as customer_self to distinguish it from staff-assisted uploads, which use staff_uploaded.",
      *
      *     @OA\Parameter(
      *         name="token",
@@ -310,7 +319,7 @@ class SpaController extends Controller
      *
      *     @OA\Response(
      *         response=200,
-     *         description="Signature submitted successfully (signature_source = customer_self)",
+     *         description="Signature submitted successfully. signature_source is customer_self.",
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(property="message", type="string", example="Signature submitted successfully."),
@@ -320,12 +329,7 @@ class SpaController extends Controller
      *                 description="True if this submission completed all required signatures and the SPA was finalised.",
      *                 example=false
      *             ),
-     *             @OA\Property(
-     *                 property="signature_source",
-     *                 type="string",
-     *                 example="customer_self",
-     *                 description="Indicates that the signature was submitted directly by the customer via the self-service flow."
-     *             )
+     *             @OA\Property(property="signature_source", type="string", example="customer_self", description="Signature source value.")
      *         )
      *     ),
      *
@@ -435,18 +439,18 @@ class SpaController extends Controller
      * - Requires authenticated user with "upload final spa" permission.
      * - SPA must exist and be strictly in Pending status.
      * - customer_id must belong to this booking and must require signature.
-     * - If a pending signing link already exists for that customer, it is reused.
-     * - If no signing link exists yet, one is created silently (without sending email).
+     * - Reuses/refreshes the signer record used for the signing flow without sending email.
      * - Stores the uploaded signature image exactly like digital submitSignature flow.
      * - Marks the link as signed and records `signature_source = staff_uploaded`.
      * - Attempts finalisation using the same FinalizeSignedDocumentService used by submitSignature.
+     * - Triggers finalisation immediately if this upload completes all required signatures.
      *
      * @OA\Post(
      *     path="/bookings/{bookingId}/spa/upload-signature",
      *     summary="Upload customer signature for SPA (staff-assisted)",
      *     tags={"Bookings/SPA"},
      *     security={{"sanctum":{}}},
-     *     description="This endpoint allows staff to upload a customer's signature image instead of using the email-based signing flow. It simulates the same behaviour as submitSignature, but without sending email. The created/used signing link is marked with signature_source = \"staff_uploaded\", while the normal self-service submitSignature flow marks signature_source = \"customer_self\".",
+     *     description="This endpoint allows staff to upload a customer's signature image instead of using the email-based signing flow. It simulates the same behaviour as submitSignature, but without sending email. The signing record uses signature_source staff_uploaded, while the normal self-service submitSignature flow uses customer_self. If this upload completes all required signatures, the SPA is finalized immediately.",
      *
      *     @OA\Parameter(
      *         name="bookingId",
@@ -478,13 +482,13 @@ class SpaController extends Controller
      *
      *     @OA\Response(
      *         response=200,
-     *         description="Customer signature uploaded successfully and stored with signature_source = staff_uploaded.",
+     *         description="Customer signature uploaded successfully. signature_source is staff_uploaded. The document may also be finalized immediately if this was the last required signature.",
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(property="message", type="string", example="Customer signature uploaded successfully."),
-     *             @OA\Property(property="finalized", type="boolean", example=false, description="True if SPA got fully signed and finalized"),
+     *             @OA\Property(property="finalized", type="boolean", example=false, description="True if this upload completed all required signatures and the SPA was finalized immediately."),
      *             @OA\Property(property="signing_link_id", type="integer", example=1234),
-     *             @OA\Property(property="signature_source", type="string", example="staff_uploaded", description="Indicates the signature was uploaded by staff on behalf of the customer rather than submitted directly by the customer.")
+     *             @OA\Property(property="signature_source", type="string", example="staff_uploaded", description="Signature source value.")
      *         )
      *     ),
      *
@@ -516,7 +520,7 @@ class SpaController extends Controller
      *
      *     @OA\Response(
      *         response=409,
-     *         description="Conflict (already signed)",
+     *         description="Conflict (this signer already signed)",
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(property="error", type="string", example="This signer has already submitted a signature.")

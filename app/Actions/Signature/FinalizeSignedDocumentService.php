@@ -52,6 +52,8 @@ readonly class FinalizeSignedDocumentService
             return null; // not complete (or no required emails)
         }
 
+        $hasStaffUploadedSignature = collect($signaturesByEmail)->contains(fn ($signature) => ($signature['signature_source'] ?? null) === SigningLink::SIGNATURE_SOURCE_STAFF_UPLOADED);
+
         // calc (if needed)
         if ($booking->paymentPlan) {
             $booking->paymentPlan->dld_fee = round($booking->price * ($booking->paymentPlan->dld_fee_percentage / 100), 2);
@@ -67,6 +69,7 @@ readonly class FinalizeSignedDocumentService
             'installments' => $booking->installments,
             'unit' => $booking->unit,
             'signaturesByEmail' => $signaturesByEmail,
+            'hasStaffUploadedSignature' => $hasStaffUploadedSignature,
             'finalSignedAt' => $finalSignedAt,
             'companySignedAt' => $documentable->company_signed_at ?? null,
         ];
@@ -112,11 +115,14 @@ readonly class FinalizeSignedDocumentService
             return null; // not complete (or no required emails)
         }
 
+        $hasStaffUploadedSignature = collect($signaturesByEmail)->contains(fn ($signature) => ($signature['signature_source'] ?? null) === SigningLink::SIGNATURE_SOURCE_STAFF_UPLOADED);
+
         $finalSignedAt = now();
 
         $data = [
             'agreement'         => $agreementDoc,
             'signaturesByEmail' => $signaturesByEmail,
+            'hasStaffUploadedSignature' => $hasStaffUploadedSignature,
             'finalSignedAt'     => $finalSignedAt,
             'companySignedAt'   => $agreementDoc->company_signed_at ?? null,
             'user'              => $agreementDoc->user,
@@ -145,7 +151,7 @@ readonly class FinalizeSignedDocumentService
     }
 
     /**
-     * @return array<string, array{path:string, signed_at:mixed}>|null
+     * @return array<string, array{path:string, signed_at:mixed, signature_source:?string}>|null
      * null => not complete / no required emails
      */
     private function getSignaturesByEmailIfComplete(
@@ -185,6 +191,7 @@ readonly class FinalizeSignedDocumentService
                 strtolower(trim((string)$l->recipient_email)) => [
                     'path' => Storage::disk('local')->path($l->signature_image_path),
                     'signed_at' => $l->signed_at,
+                    'signature_source' => $l->signature_source,
                 ],
             ])
             ->toArray();

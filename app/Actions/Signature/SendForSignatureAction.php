@@ -43,6 +43,12 @@ final readonly class SendForSignatureAction
             return response()->json(['error' => $cfg->missingDocMessage], ResponseAlias::HTTP_NOT_FOUND);
         }
 
+        if (!empty($cfg->finalizedStatuses) && in_array((string) ($doc->status ?? ''), $cfg->finalizedStatuses, true)) {
+            return response()->json([
+                'error' => $cfg->alreadyFinalizedMessage,
+            ], ResponseAlias::HTTP_CONFLICT);
+        }
+
         if (empty($doc->file_path)) {
             return response()->json(['error' => $cfg->missingPdfMessage], ResponseAlias::HTTP_UNPROCESSABLE_ENTITY);
         }

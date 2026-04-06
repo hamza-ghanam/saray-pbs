@@ -230,10 +230,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/signatures/{signingLinkId}/reject', [SignedDocumentsController::class, 'reject']);
 });
 
-Route::get('/sign/doc/{token}/download', [SignedDocumentsController::class, 'download']);
+Route::get('/sign/doc/{token}/download', [SignedDocumentsController::class, 'downloadDocumentVariant']);
 Route::post('/bookings/rf/{token}/sign', [ReservationFormController::class, 'submitSignature']);
 
 Route::post('/bookings/spa/{token}/sign', [SpaController::class, 'submitSignature']);
+
+Route::get('/sign/doc/{token}/download-document', [SignedDocumentsController::class, 'downloadDocumentByToken']);
 
 // Dashboard
 use App\Http\Controllers\DashboardController;
