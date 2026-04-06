@@ -268,7 +268,7 @@ class SpaController extends Controller
     public function sendForSignature(Request $request, int $bookingId, SendForSignatureAction $action)
     {
         return $action->handle($request, $bookingId, new SignatureSendConfig(
-            permission: 'generate spa',
+            permission: 'upload signed spa',
             requiredBookingStatus: Booking::STATUS_SPA_PENDING,
             documentModelClass: SPA::class,
             documentTypeValue: DocumentType::SPA->value,
