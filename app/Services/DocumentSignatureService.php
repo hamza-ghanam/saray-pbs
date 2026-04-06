@@ -146,7 +146,7 @@ class DocumentSignatureService
                     ]);
                 }
 
-                $signUrl = rtrim(config('app.frontend_url'), '/') . '/sign/' . $plainToken;
+                $signUrl = rtrim(config('app.frontend_url'), '/') . '/sign/' . strtolower($type->value) . '/' . $plainToken;
 
                 $humanTitle = match ($type->value) {
                     'RF'               => 'Reservation Form',
