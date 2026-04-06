@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Actions;
+namespace App\Actions\Signature;
 
+use App\Enums\DocumentType;
 use App\Models\Booking;
 use App\Services\DocumentSignatureService;
-use App\Enums\DocumentType;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 

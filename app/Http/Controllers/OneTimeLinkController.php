@@ -3,33 +3,26 @@
 namespace App\Http\Controllers;
 
 
-use App\Actions\FinalizeConfig;
-use App\Actions\FinalizeSignedDocumentService;
-use App\Actions\SignatureSubmitConfig;
-use App\Actions\SubmitSignatureAction;
-use App\Contracts\Documents\SignableDocument;
+use App\Actions\Signature\FinalizeConfig;
+use App\Actions\Signature\FinalizeSignedDocumentService;
 use App\Enums\DocumentType;
-use App\Mail\BrokerAgreementMail;
 use App\Mail\OneTimeLinkMail;
 use App\Models\OneTimeLink;
 use App\Models\SigningLink;
 use App\Models\User;
 use App\Models\UserDoc;
-use App\Services\BrevoMailer;
 use App\Services\DocumentSignatureService;
 use App\Services\PdfService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Hash;
 use Random\RandomException;
 use Symfony\Component\HttpFoundation\Response;
-use Barryvdh\DomPDF\Facade\Pdf as PDF;
-use Illuminate\Support\Facades\Mail;
 
 class OneTimeLinkController extends Controller
 {

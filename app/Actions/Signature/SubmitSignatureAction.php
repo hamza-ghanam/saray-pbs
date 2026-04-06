@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Actions;
+namespace App\Actions\Signature;
 
 use App\Models\SigningLink;
 use Illuminate\Http\Request;
@@ -85,6 +85,7 @@ final class SubmitSignatureAction
                 'status'               => SigningLink::STATUS_SIGNED,
                 'client_ip'            => $request->ip(),
                 'user_agent'           => (string) $request->userAgent(),
+                'signature_source'     => SigningLink::SIGNATURE_SOURCE_CUSTOMER_SELF,
             ])->save();
 
             // Finalize if complete (حسب الوثيقة)
@@ -97,6 +98,7 @@ final class SubmitSignatureAction
 
             return response()->json([
                 'message'   => 'Signature submitted successfully.',
+                'signature_source' => SigningLink::SIGNATURE_SOURCE_CUSTOMER_SELF,
                 'finalized' => $finalized,
             ], Response::HTTP_OK);
 

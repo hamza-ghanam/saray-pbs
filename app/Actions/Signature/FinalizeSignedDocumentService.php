@@ -1,21 +1,17 @@
 <?php
 
-namespace App\Actions;
+namespace App\Actions\Signature;
 
-use App\Enums\DocumentType;
 use App\Models\Booking;
 use App\Models\SigningLink;
 use App\Models\User;
 use App\Models\UserDoc;
-use App\Models\UserSignature;
 use App\Services\PdfService;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use PhpParser\Node\Scalar\String_;
 
 readonly class FinalizeSignedDocumentService
 {

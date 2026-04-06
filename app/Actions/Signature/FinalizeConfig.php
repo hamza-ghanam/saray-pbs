@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Actions;
+namespace App\Actions\Signature;
 
 use App\Enums\DocumentType;
 

@@ -109,7 +109,8 @@ Route::middleware('auth:sanctum')->group(function () {
 // Reservation Forms
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/bookings/{id}/rf', [ReservationFormController::class, 'generate']);
-    Route::post('/bookings/{id}/rf/upload-signed', [ReservationFormController::class, 'uploadSigned']);
+    //Route::post('/bookings/{id}/rf/upload-signed', [ReservationFormController::class, 'uploadSigned']);
+    Route::post('/bookings/{id}/rf/upload-signature', [ReservationFormController::class, 'uploadCustomerSignature']);
     Route::post('/bookings/{id}/rf/approve', [ReservationFormController::class, 'approve']);
 
     Route::post('/bookings/{id}/rf/send-for-signature', [ReservationFormController::class, 'sendForSignature']);
@@ -118,7 +119,8 @@ Route::middleware('auth:sanctum')->group(function () {
 // Sales and Purchase Agreement (SPAs)
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/bookings/{id}/spa', [SpaController::class, 'generate']);
-    Route::post('/bookings/{id}/spa/upload-signed', [SpaController::class, 'uploadSigned']);
+    // Route::post('/bookings/{id}/spa/upload-signed', [SpaController::class, 'uploadSigned']);
+    Route::post('/bookings/{id}/spa/upload-signature', [SpaController::class, 'uploadCustomerSignature']);
     Route::post('/bookings/{id}/spa/approve', [SpaController::class, 'approve']);
 
     Route::post('/bookings/{id}/spa/send-for-signature', [SpaController::class, 'sendForSignature']);
