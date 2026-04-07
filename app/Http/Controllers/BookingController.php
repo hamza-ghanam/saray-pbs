@@ -2267,7 +2267,7 @@ class BookingController extends Controller
                     'signed_at' => $signedLink?->signed_at,
                     'signature_source' => $signedLink?->signature_source,
                     'signature_image_download_url' => $signedLink && !empty($signedLink->signature_image_path)
-                        ? route('signatures.image', ['id' => $signedLink->id])
+                        ? route('signatures.image', ['signingLinkId' => $signedLink->id])
                         : null,
                 ] : null,
             ];
