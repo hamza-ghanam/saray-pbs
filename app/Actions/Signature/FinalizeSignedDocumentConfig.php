@@ -4,7 +4,7 @@ namespace App\Actions\Signature;
 
 use App\Enums\DocumentType;
 
-final class FinalizeConfig
+final class FinalizeSignedDocumentConfig
 {
     public ?\Closure $persist = null;
 

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Signature\CustomerSignatureUploadConfig;
-use App\Actions\Signature\FinalizeConfig;
+use App\Actions\Signature\FinalizeSignedDocumentConfig;
 use App\Actions\Signature\FinalizeSignedDocumentService;
 use App\Actions\Signature\SendForSignatureAction;
 use App\Actions\Signature\SignatureSendConfig;
@@ -409,7 +409,7 @@ class SpaController extends Controller
             invalidDocMessage: 'Invalid document type for this endpoint.',
         );
 
-        $config = new FinalizeConfig(
+        $config = new FinalizeSignedDocumentConfig(
             type: DocumentType::SPA,
             view: 'pdf.spa2',
             signedDir: 'spa_forms/signed',
@@ -579,7 +579,7 @@ class SpaController extends Controller
             invalidStatusMessage: 'Customer signature upload is only allowed when SPA status is Pending.',
         );
 
-        $finalizeCfg = new FinalizeConfig(
+        $finalizeCfg = new FinalizeSignedDocumentConfig(
             type: DocumentType::SPA,
             view: 'pdf.spa2',
             signedDir: 'spa_forms/signed',
@@ -706,7 +706,7 @@ class SpaController extends Controller
             ->firstOrFail();
 
         // ✅ block if signatures incomplete OR not finalized
-        $config = new FinalizeConfig(
+        $config = new FinalizeSignedDocumentConfig(
             type: DocumentType::SPA,
             view: 'pdf.spa2',
             signedDir: 'spa_forms/signed',

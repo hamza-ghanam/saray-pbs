@@ -78,12 +78,12 @@ class RbacSeeder extends Seeder
         */
 
         $permissions = [
-            'upload signed spa',
+            'manage general settings',
         ];
 
 
 
-        $roles = ['CRM Officer', 'CSO', 'CEO', 'COO', 'System Maintenance'];
+        $roles = ['System Maintenance'];
 
         foreach ($roles as $roleName) {
             $role = Role::findByName($roleName);

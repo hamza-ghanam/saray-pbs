@@ -24,6 +24,7 @@ use App\Http\Controllers\ResetPasswordController;
 use App\Http\Controllers\TranslateController;
 use App\Http\Controllers\SignedDocumentsController;
 use App\Http\Controllers\BrokerCommissionController;
+use App\Http\Controllers\GeneralSettingController;
 
 //Index
 Route::get('/', function () {
@@ -241,4 +242,8 @@ Route::get('/sign/doc/{token}/download-document', [SignedDocumentsController::cl
 use App\Http\Controllers\DashboardController;
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/dashboard/overview', [DashboardController::class, 'overview']);
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::apiResource('general-settings', GeneralSettingController::class);
 });

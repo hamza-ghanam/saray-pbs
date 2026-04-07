@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 
-use App\Actions\Signature\FinalizeConfig;
+use App\Actions\Signature\FinalizeSignedDocumentConfig;
 use App\Actions\Signature\FinalizeSignedDocumentService;
 use App\Enums\DocumentType;
 use App\Mail\OneTimeLinkMail;
@@ -524,11 +524,11 @@ class OneTimeLinkController extends Controller
         ], Response::HTTP_OK);
     }
     /**
-     * Returns FinalizeConfig for broker agreement with proper persist strategy.
+     * Returns FinalizeSignedDocumentConfig for broker agreement with proper persist strategy.
      */
-    private function brokerAgreementFinalizeConfig(): FinalizeConfig
+    private function brokerAgreementFinalizeConfig(): FinalizeSignedDocumentConfig
     {
-        $cfg = new FinalizeConfig(
+        $cfg = new FinalizeSignedDocumentConfig(
             type: DocumentType::BROKER_AGREEMENT,
             view: 'pdf.broker_agreement',
             signedDir: 'agreements/brokers/signed',
@@ -536,7 +536,7 @@ class OneTimeLinkController extends Controller
         );
 
         // Persist strategy: create NEW UserDoc (doc_type = signed_agreement)
-        $cfg->persist = function (UserDoc $agreementDoc, string $path, $finalSignedAt, FinalizeConfig $cfg) {
+        $cfg->persist = function (UserDoc $agreementDoc, string $path, $finalSignedAt, FinalizeSignedDocumentConfig $cfg) {
             $brokerId = $agreementDoc->user_id;
 
             // Replace previous signed agreement (matches old behaviour)

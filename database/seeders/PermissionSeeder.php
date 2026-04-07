@@ -13,7 +13,7 @@ class PermissionSeeder extends Seeder
     public function run(): void
     {
         $permissions = [
-            'upload signed spa',
+            'manage general settings',
         ];
 
         foreach ($permissions as $permission) {

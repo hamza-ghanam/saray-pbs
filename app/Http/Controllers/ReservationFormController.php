@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Signature\CustomerSignatureUploadConfig;
-use App\Actions\Signature\FinalizeConfig;
+use App\Actions\Signature\FinalizeSignedDocumentConfig;
 use App\Actions\Signature\FinalizeSignedDocumentService;
 use App\Actions\Signature\SendForSignatureAction;
 use App\Actions\Signature\SignatureSendConfig;
@@ -446,7 +446,7 @@ class ReservationFormController extends Controller
             invalidDocMessage: 'Invalid document type for this endpoint.',
         );
 
-        $config = new FinalizeConfig(
+        $config = new FinalizeSignedDocumentConfig(
             type: DocumentType::RF,
             view: 'pdf.reservation_form',
             signedDir: 'reservation_forms/signed',
@@ -616,7 +616,7 @@ class ReservationFormController extends Controller
             invalidStatusMessage: 'Customer signature upload is only allowed when RF status is Pending.',
         );
 
-        $finalizeCfg = new FinalizeConfig(
+        $finalizeCfg = new FinalizeSignedDocumentConfig(
             type: DocumentType::RF,
             view: 'pdf.reservation_form',
             signedDir: 'reservation_forms/signed',
@@ -781,7 +781,7 @@ class ReservationFormController extends Controller
         $rf = $booking->reservationForm()->firstOrFail();
 
         // ✅ block if signatures incomplete OR not finalized
-        $config = new FinalizeConfig(
+        $config = new FinalizeSignedDocumentConfig(
             type: DocumentType::RF,
             view: 'pdf.reservation_form',
             signedDir: 'reservation_forms/signed',

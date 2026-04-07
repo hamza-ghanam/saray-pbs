@@ -22,7 +22,7 @@ readonly class FinalizeSignedDocumentService
     /**
      * @return string|null Signed file path if finalized (or already finalized), null if not ready / failed
      */
-    public function finalizeBookingIfComplete(Model $documentable, int $bookingId, FinalizeConfig $cfg): ?string
+    public function finalizeBookingIfComplete(Model $documentable, int $bookingId, FinalizeSignedDocumentConfig $cfg): ?string
     {
         // already finalized
         if (!empty($documentable->signed_at) && !empty($documentable->signed_file_path)) {
@@ -84,11 +84,11 @@ readonly class FinalizeSignedDocumentService
     }
 
     public function finalizeBrokerAgreementIfComplete(
-        UserDoc        $agreementDoc,
-        FinalizeConfig $cfg,
-        User           $approver,
-        string         $signaturePath,
-        SigningLink    $link
+        UserDoc                      $agreementDoc,
+        FinalizeSignedDocumentConfig $cfg,
+        User                         $approver,
+        string                       $signaturePath,
+        SigningLink                  $link
     ): ?string
     {
         $existingSigned = UserDoc::query()
@@ -198,11 +198,11 @@ readonly class FinalizeSignedDocumentService
     }
 
     private function finaliseAndPersist(
-        Model                   $documentable,
-        FinalizeConfig          $cfg,
-        array                   $data,
-        string                  $fileKey,
-        CarbonInterface $finalSignedAt
+        Model                        $documentable,
+        FinalizeSignedDocumentConfig $cfg,
+        array                        $data,
+        string                       $fileKey,
+        CarbonInterface              $finalSignedAt
     ): ?string
     {
         $fileName = $cfg->filePrefix . $fileKey . '_' . $finalSignedAt->format('Ymd_His') . '.pdf';

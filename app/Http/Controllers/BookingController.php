@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Mappers\BilingualFieldsMapper;
 use App\Models\Approval;
 use App\Models\Booking;
+use App\Models\GeneralSetting;
 use App\Models\PaymentPlan;
 use App\Models\Unit;
 use App\Models\User;
@@ -555,8 +556,11 @@ class BookingController extends Controller
         $path = $file->getRealPath();
 
         try {
-            $apiKey = config('services.mindee.api_key');
-            $modelId = config('services.mindee.model_id');
+            $apiKey = setting('mindee_api_key') ?? config('services.mindee.api_key');
+            $modelId = setting('mindee_model_id') ?? config('services.mindee.model_id');
+
+            // $apiKey = config('services.mindee.api_key');
+            // $modelId = config('services.mindee.model_id');
 
             $mindeeClient = new ClientV2($apiKey);
 
