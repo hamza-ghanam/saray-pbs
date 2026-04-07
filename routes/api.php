@@ -100,6 +100,8 @@ Route::middleware('auth:sanctum')->group(function () {
         ->name('bookings.download_document');
     Route::get('/bookings/{id}', [BookingController::class, 'show']);
     Route::post('/bookings/{id}/approve', [BookingController::class, 'approveBooking']);
+
+    Route::get('/bookings/{id}/signers', [BookingController::class, 'signers']);
 });
 
 Route::middleware('auth:sanctum')->group(function () {

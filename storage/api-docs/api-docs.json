@@ -1198,6 +1198,179 @@
                 ]
             }
         },
+        "/bookings/{id}/signers": {
+            "get": {
+                "tags": [
+                    "Bookings"
+                ],
+                "summary": "Get booking signers for RF or SPA",
+                "description": "Show booking signers for RF / SPA with signing status.\n\nReturns each customer_info that requires signature, whether they signed,\nand if signed, the latest matching SigningLink metadata including signed_at,\nsignature_source, and a downloadable signature image URL.\n\nQuery params:\n- document_type: RF or SPA (required)",
+                "operationId": "6dcdfaf4d42bc3d9d8465e9d43af926b",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Booking ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 216
+                        }
+                    },
+                    {
+                        "name": "document_type",
+                        "in": "query",
+                        "description": "Document type to inspect",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "RF",
+                                "SPA"
+                            ],
+                            "example": "RF"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Signers retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "booking_id": {
+                                            "type": "integer",
+                                            "example": 216
+                                        },
+                                        "document_type": {
+                                            "type": "string",
+                                            "example": "RF"
+                                        },
+                                        "document_id": {
+                                            "type": "integer",
+                                            "example": 12,
+                                            "nullable": true
+                                        },
+                                        "signers": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "customer_id": {
+                                                        "type": "integer",
+                                                        "example": 301
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "John Smith"
+                                                    },
+                                                    "email": {
+                                                        "type": "string",
+                                                        "example": "john@example.com"
+                                                    },
+                                                    "requires_signature": {
+                                                        "type": "boolean",
+                                                        "example": true
+                                                    },
+                                                    "signed": {
+                                                        "type": "boolean",
+                                                        "example": true
+                                                    },
+                                                    "signing_link": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 999
+                                                            },
+                                                            "signed_at": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": "2026-04-07T10:20:30Z",
+                                                                "nullable": true
+                                                            },
+                                                            "signature_source": {
+                                                                "type": "string",
+                                                                "example": "customer_self",
+                                                                "nullable": true
+                                                            },
+                                                            "signature_image_download_url": {
+                                                                "type": "string",
+                                                                "example": "https://example.com/api/signatures/999/image",
+                                                                "nullable": true
+                                                            }
+                                                        },
+                                                        "type": "object",
+                                                        "nullable": true
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthorized"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Booking or requested document not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Booking not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation or business error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "document_type": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string",
+                                                "example": "The selected document type is invalid."
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/broker-commissions/rates": {
             "get": {
                 "tags": [
