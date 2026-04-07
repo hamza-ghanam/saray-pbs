@@ -22,8 +22,6 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->redirectGuestsTo(fn() => null);
         $middleware->alias([
             'swagger.auth' => SwaggerAuth::class,
-        ]);
-        $middleware->alias([
             'permission' => PermissionMiddleware::class,
             'role' => RoleMiddleware::class,
             'role_or_permission' => RoleOrPermissionMiddleware::class,
