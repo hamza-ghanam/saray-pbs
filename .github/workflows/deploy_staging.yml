@@ -1,0 +1,22 @@
+name: Deploy Staging
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy staging
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SARAY_SERVER_IP }}
+          username: ${{ secrets.SARAY_SERVER_USER }}
+          key: ${{ secrets.SARAY_SERVER_SSH_KEY }}
+          port: 22                         
+          script: |
+            cd /opt/deploy
+            chmod +x deploy_staging_api.sh
+            ./opt/deploy/deploy_staging_api.sh
