@@ -18,5 +18,4 @@ jobs:
           port: 22                         
           script: |
             cd /opt/deploy
-            chmod +x deploy_staging_api.sh
-            ./opt/deploy/deploy_staging_api.sh
+            ./deploy_staging_api.sh
