@@ -1023,28 +1023,18 @@
                 <td style="width: 50%">
                     Signed for and on behalf of Seller by its duly authorized representative in the presence of:
                     <br/><br/>
-                    @if($signaturePath)
+
                         <img
                             src="file:///{{ str_replace('\\','/', storage_path('app/private/signatures/company/cso_signature.png')) }}"
                             alt="Signature placeholder"
                             height="60"
                             style="margin-left: 15px;"
                         >
-                    @else
-                        <span style="height: 60px;">
-                            ________________________________
-                        </span>
-                    @endif
+
                     <br/>
                     Signature “Unique Saray Development” <br/><br/>
 
-                    @if($admin)
-                        <i>{{ $admin->name }}</i>
-                    @elseif($approver)
-                        <i>{{ $approver->name }}</i>
-                    @else
-                        ________________________________
-                    @endif
+                    <i>Feras Zaiter</i>
                     <br/>
                     Print name of authorized representative <br/><br/>
 
@@ -1052,8 +1042,7 @@
                     <img
                         src="file:///{{ str_replace('\\','/', storage_path('app/private/stamps/company_stamp.png')) }}"
                         alt="Signature placeholder"
-                        height="80"
-                        style="margin-left: 15px; margin-top: 10px;"
+                        style="height: 42mm; margin-left: 15px; margin-top: 10px;"
                     >
                 </td>
 
@@ -1077,7 +1066,7 @@
                     Signature authorized representative. <br/><br/>
 
                     @if($user->brokerProfile->designation)
-                        {{ $user->brokerProfile->designation }}
+                        <i>{{ $user->brokerProfile->designation }}</i>
                     @else
                         ________________________________
                     @endif
@@ -1085,7 +1074,7 @@
                     Designation. <br/><br/>
 
                     @if($user->brokerProfile->representative)
-                        {{ $user->brokerProfile->representative }}
+                        <i>{{ $user->brokerProfile->representative }}</i>
                     @else
                         ________________________________
                     @endif
@@ -1097,8 +1086,7 @@
                         <img
                             src="file:///{{ str_replace('\\','/', storage_path('app/private/' . $brokerStampRel)) }}"
                             alt="Signature placeholder"
-                            height="60"
-                            style="margin-left: 15px; margin-top: 10px;"
+                            style="height: 42mm; margin-left: 15px; margin-top: 10px;"
                         >
                     @else
                         <img

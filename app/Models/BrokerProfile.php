@@ -20,11 +20,13 @@ class BrokerProfile extends Model
         'stamp_path',
         'designation',
         'agreed_at',
+        'approved_at',
     ];
 
     protected $casts = [
         'user_id' => 'integer',
         'agreed_at' => 'datetime',
+        'approved_at' => 'datetime',
     ];
 
     public function user()

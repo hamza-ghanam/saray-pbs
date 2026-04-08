@@ -134,7 +134,8 @@ class OneTimeLinkController extends Controller
      *             type="object",
      *             @OA\Property(property="message", type="string", example="One-time link successfully generated and shared by email."),
      *             @OA\Property(property="email", type="string", format="email", example="myemail@hotmail.com"),
-     *             @OA\Property(property="user_type", type="string", example="Broker", enum={"Broker","Contractor"})
+     *             @OA\Property(property="user_type", type="string", example="Broker", enum={"Broker","Contractor"}),
+     *             @OA\Property(property="token", type="string", example="9f3a2b7c8d...plain_token_here...", description="Plain signing token returned by the service for internal use in composing the signing URL on the client side.")
      *         )
      *     ),
      *
@@ -219,6 +220,7 @@ class OneTimeLinkController extends Controller
             'message' => 'One-time link successfully generated and shared by email.',
             'email'     => $request->email,
             'user_type' => $otl->user_type,
+            'token'     => $otl->plain_token,
         ], Response::HTTP_CREATED);
     }
 
@@ -497,8 +499,10 @@ class OneTimeLinkController extends Controller
 
             $finalizeConfig = $this->brokerAgreementFinalizeConfig();
 
-            $finalisedPath = $finalizer->finalizeBrokerAgreementIfComplete($agreement, $finalizeConfig, $admin_user, $signaturePath, $link);
-
+            $finalisedPath = $finalizer->finalizeBrokerAgreementIfComplete(
+                $agreement, $finalizeConfig, $admin_user, $signaturePath ?? '', $link
+            );
+//
             if (!$finalisedPath) {
                 return response()->json([
                     'error' => 'Broker agreement is not fully signed or could not be finalised.'

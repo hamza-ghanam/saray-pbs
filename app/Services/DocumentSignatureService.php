@@ -180,7 +180,7 @@ class DocumentSignatureService
                 $result['recipients'][] = [
                     'email' => $recipient['email'],
                     'name'  => $recipient['name'],
-                    'url'   => $signUrl,
+                    'token'   => $plainToken,
                     'signing_link_id' => $link->id,
                 ];
             } catch (\Throwable $e) {
