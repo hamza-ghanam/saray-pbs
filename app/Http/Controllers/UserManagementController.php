@@ -122,6 +122,7 @@ class UserManagementController extends Controller
 
         // Dynamic pagination: retrieve the 'limit' parameter (default 10, capped at 100)
         $limit = min((int)$request->get('limit', 10), 100);
+        $query->orderByDesc('created_at');
         $usersPaginated = $query->paginate($limit);
 
         // Transform each user into the desired output format.
