@@ -1042,8 +1042,7 @@
                     <img
                         src="file:///{{ str_replace('\\','/', storage_path('app/private/stamps/company_stamp.png')) }}"
                         alt="Signature placeholder"
-                        height="80"
-                        style="margin-left: 15px; margin-top: 10px;"
+                        style="height: 42mm; margin-left: 15px; margin-top: 10px;"
                     >
                 </td>
 
