@@ -1023,28 +1023,18 @@
                 <td style="width: 50%">
                     Signed for and on behalf of Seller by its duly authorized representative in the presence of:
                     <br/><br/>
-                    @if($signaturePath)
+
                         <img
                             src="file:///{{ str_replace('\\','/', storage_path('app/private/signatures/company/cso_signature.png')) }}"
                             alt="Signature placeholder"
                             height="60"
                             style="margin-left: 15px;"
                         >
-                    @else
-                        <span style="height: 60px;">
-                            ________________________________
-                        </span>
-                    @endif
+
                     <br/>
                     Signature “Unique Saray Development” <br/><br/>
 
-                    @if($admin)
-                        <i>{{ $admin->name }}</i>
-                    @elseif($approver)
-                        <i>{{ $approver->name }}</i>
-                    @else
-                        ________________________________
-                    @endif
+                    <i>Feras Zaiter</i>
                     <br/>
                     Print name of authorized representative <br/><br/>
 
