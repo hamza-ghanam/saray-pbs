@@ -1066,7 +1066,7 @@
                     Signature authorized representative. <br/><br/>
 
                     @if($user->brokerProfile->designation)
-                        {{ $user->brokerProfile->designation }}
+                        <i>{{ $user->brokerProfile->designation }}</i>
                     @else
                         ________________________________
                     @endif
@@ -1074,7 +1074,7 @@
                     Designation. <br/><br/>
 
                     @if($user->brokerProfile->representative)
-                        {{ $user->brokerProfile->representative }}
+                        <i>{{ $user->brokerProfile->representative }}</i>
                     @else
                         ________________________________
                     @endif
@@ -1086,7 +1086,7 @@
                         <img
                             src="file:///{{ str_replace('\\','/', storage_path('app/private/' . $brokerStampRel)) }}"
                             alt="Signature placeholder"
-                            style="height: 45mm; margin-left: 15px; margin-top: 10px;"
+                            style="height: 42mm; margin-left: 15px; margin-top: 10px;"
                         >
                     @else
                         <img
