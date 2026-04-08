@@ -3970,6 +3970,11 @@
                                                 "Contractor"
                                             ],
                                             "example": "Broker"
+                                        },
+                                        "token": {
+                                            "description": "Plain signing token returned by the service for internal use in composing the signing URL on the client side.",
+                                            "type": "string",
+                                            "example": "9f3a2b7c8d...plain_token_here..."
                                         }
                                     },
                                     "type": "object"

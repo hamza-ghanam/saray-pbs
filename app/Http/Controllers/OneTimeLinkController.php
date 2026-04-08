@@ -134,7 +134,7 @@ class OneTimeLinkController extends Controller
      *             type="object",
      *             @OA\Property(property="message", type="string", example="One-time link successfully generated and shared by email."),
      *             @OA\Property(property="email", type="string", format="email", example="myemail@hotmail.com"),
-     *             @OA\Property(property="user_type", type="string", example="Broker", enum={"Broker","Contractor"})
+     *             @OA\Property(property="user_type", type="string", example="Broker", enum={"Broker","Contractor"}),
      *             @OA\Property(property="token", type="string", example="9f3a2b7c8d...plain_token_here...", description="Plain signing token returned by the service for internal use in composing the signing URL on the client side.")
      *         )
      *     ),
