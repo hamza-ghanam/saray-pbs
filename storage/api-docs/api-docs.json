@@ -2283,6 +2283,103 @@
                 ]
             }
         },
+        "/brokers/{userId}/stamp": {
+            "get": {
+                "tags": [
+                    "Brokers"
+                ],
+                "summary": "Show broker stamp image",
+                "description": "Streams the broker stamp image stored in broker profile (stamp_path).",
+                "operationId": "showBrokerStamp",
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "description": "Broker user ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 298
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Broker stamp image streamed successfully",
+                        "content": {
+                            "image/png": {}
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - missing permission view users",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Forbidden"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Broker not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "User is not a broker",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "User doesn't exist or not a broker!"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Stamp image missing or could not be streamed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/brokers/{user}/bookings": {
             "get": {
                 "tags": [
