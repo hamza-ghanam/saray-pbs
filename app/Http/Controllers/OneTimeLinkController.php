@@ -135,6 +135,7 @@ class OneTimeLinkController extends Controller
      *             @OA\Property(property="message", type="string", example="One-time link successfully generated and shared by email."),
      *             @OA\Property(property="email", type="string", format="email", example="myemail@hotmail.com"),
      *             @OA\Property(property="user_type", type="string", example="Broker", enum={"Broker","Contractor"})
+     *             @OA\Property(property="user_type", type="string", example="Broker", enum={"Broker","Contractor"})
      *         )
      *     ),
      *
@@ -219,7 +220,7 @@ class OneTimeLinkController extends Controller
             'message' => 'One-time link successfully generated and shared by email.',
             'email'     => $request->email,
             'user_type' => $otl->user_type,
-            'url'     => $otl->plain_token,
+            'token'     => $otl->plain_token,
         ], Response::HTTP_CREATED);
     }
 
