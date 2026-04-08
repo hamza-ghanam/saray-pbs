@@ -219,7 +219,7 @@ class OneTimeLinkController extends Controller
             'message' => 'One-time link successfully generated and shared by email.',
             'email'     => $request->email,
             'user_type' => $otl->user_type,
-            'token'     => $otl->plain_token,
+            'url'     => $otlUrl,
         ], Response::HTTP_CREATED);
     }
 
