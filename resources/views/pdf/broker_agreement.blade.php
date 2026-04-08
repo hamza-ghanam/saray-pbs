@@ -1086,8 +1086,7 @@
                         <img
                             src="file:///{{ str_replace('\\','/', storage_path('app/private/' . $brokerStampRel)) }}"
                             alt="Signature placeholder"
-                            height="60"
-                            style="margin-left: 15px; margin-top: 10px;"
+                            style="height: 45mm; margin-left: 15px; margin-top: 10px;"
                         >
                     @else
                         <img
