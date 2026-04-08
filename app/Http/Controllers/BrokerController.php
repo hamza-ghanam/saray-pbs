@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Actions\SignatureSubmitConfig;
-use App\Actions\SubmitSignatureAction;
+use App\Actions\Signature\SignatureSubmitConfig;
+use App\Actions\Signature\SubmitSignatureAction;
 use App\Enums\DocumentType;
 use App\Models\Booking;
 use App\Models\BrokerCommission;
-use App\Models\BrokerCommissionRate;
 use App\Models\SigningLink;
+use App\Models\User;
 use App\Models\UserDoc;
 use App\Services\DocumentSignatureService;
 use App\Services\ImageService;
@@ -17,11 +17,10 @@ use finfo;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Hash;
-use App\Models\User;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 

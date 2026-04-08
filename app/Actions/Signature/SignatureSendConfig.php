@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Actions;
+namespace App\Actions\Signature;
 
 final class SignatureSendConfig
 {
@@ -13,5 +13,7 @@ final class SignatureSendConfig
         public string $missingPdfMessage,
         public string $successMessage,
         public string $forbiddenMessage = 'Forbidden',
+        public array $finalizedStatuses = [],
+        public string $alreadyFinalizedMessage = 'Document already finalized.',
     ) {}
 }

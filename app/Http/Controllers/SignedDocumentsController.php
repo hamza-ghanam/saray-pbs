@@ -181,6 +181,54 @@ class SignedDocumentsController extends Controller
         ], ResponseAlias::HTTP_OK);
     }
 
+    /**
+     * Stream a signature image by SigningLink ID.
+     *
+     * - Requires authenticated user.
+     * - Intended for admin/internal use to preview a submitted signature image.
+     * - Returns the stored image file associated with the signing link.
+     *
+     * @OA\Get(
+     *     path="/signatures/{signingLinkId}/image",
+     *     summary="View signature image",
+     *     tags={"Signatures"},
+     *     security={{"sanctum":{}}},
+     *
+     *     @OA\Parameter(
+     *         name="signingLinkId",
+     *         in="path",
+     *         required=true,
+     *         description="SigningLink ID",
+     *         @OA\Schema(type="integer", example=999)
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Signature image streamed successfully",
+     *         @OA\MediaType(
+     *             mediaType="image/png"
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=403,
+     *         description="Forbidden",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="error", type="string", example="Forbidden")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=404,
+     *         description="Signing link or signature image not found",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="No query results for model [App\\Models\\SigningLink] 999")
+     *         )
+     *     )
+     * )
+     */
     public function showImage(Request $request, $id)
     {
         $signingLink = SigningLink::findOrFail($id);
@@ -362,7 +410,7 @@ class SignedDocumentsController extends Controller
         }
     }
 
-    public function download(Request $request, string $token)
+    public function downloadDocumentVariant(Request $request, string $token)
     {
         $variant = (string) $request->query('variant', 'latest'); // latest|original|signed
         if (!in_array($variant, ['latest', 'original', 'signed'], true)) {
@@ -391,7 +439,10 @@ class SignedDocumentsController extends Controller
 
         // ---- Resolve paths (generic via method-exists) ----
         if (! $doc instanceof SignableDocument) {
-            return response()->json(['error' => 'Document does not support PDF download.'], ResponseAlias::HTTP_UNPROCESSABLE_ENTITY);
+            return response()->json([
+                'error' => 'Document does not support PDF download.'
+            ],
+            ResponseAlias::HTTP_UNPROCESSABLE_ENTITY);
         }
 
         $originalPath = $doc->getOriginalPdfPath();
@@ -414,6 +465,109 @@ class SignedDocumentsController extends Controller
         return Storage::disk('local')->download($path, $fileName, [
             'Content-Type' => 'application/pdf',
         ]);
+    }
+
+    /**
+     * Download the signable document using a valid signing token.
+     *
+     * - Public endpoint (no auth).
+     * - Resolves the SigningLink by SHA-256 hash of the plain token.
+     * - Allows download only while the signing link is still valid.
+     * - Returns the original unsigned PDF associated with the document.
+     *
+     * @OA\Get(
+     *     path="/sign/doc/{token}/download-document",
+     *     summary="Download signable document by signing token",
+     *     tags={"Signing Links"},
+     *
+     *     @OA\Parameter(
+     *         name="token",
+     *         in="path",
+     *         required=true,
+     *         description="Plain signing token received by the signer",
+     *         @OA\Schema(type="string", example="9f3a2b7c8d...plain_token_here...")
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="PDF downloaded successfully",
+     *         @OA\MediaType(mediaType="application/pdf")
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=404,
+     *         description="Signing link not found or document file missing",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="error", type="string", example="Invalid signing link.")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=410,
+     *         description="Signing link expired, used, or no longer valid",
+     *         @OA\JsonContent(
+     *             oneOf={
+     *                 @OA\Schema(
+     *                     type="object",
+     *                     @OA\Property(property="error", type="string", example="This signing link has expired.")
+     *                 ),
+     *                 @OA\Schema(
+     *                     type="object",
+     *                     @OA\Property(property="error", type="string", example="This signing link is no longer valid.")
+     *                 )
+     *             }
+     *         )
+     *     )
+     * )
+     */
+    public function downloadDocumentByToken(string $token)
+    {
+        $link = SigningLink::query()
+            ->where('token_hash', hash('sha256', $token))
+            ->first();
+
+        if (!$link) {
+            return response()->json([
+                'error' => 'Invalid signing link.'
+            ], ResponseAlias::HTTP_NOT_FOUND);
+        }
+
+        if (!empty($link->expires_at) && now()->greaterThan($link->expires_at)) {
+            return response()->json([
+                'error' => 'This signing link has expired.'
+            ], ResponseAlias::HTTP_GONE);
+        }
+
+        if (!empty($link->signed_at) || in_array((string) $link->status, [
+            SigningLink::STATUS_SIGNED, SigningLink::STATUS_EXPIRED, SigningLink::STATUS_WITHDRAWN
+            ], true)) {
+            return response()->json([
+                'error' => 'This signing link is no longer valid.'
+            ], ResponseAlias::HTTP_GONE);
+        }
+
+        $document = $link->documentable;
+
+        if (!$document instanceof SignableDocument) {
+            return response()->json([
+                'error' => 'Invalid document for this signing link.'
+            ], ResponseAlias::HTTP_NOT_FOUND);
+        }
+
+        $filePath = $document->getOriginalPdfPath();
+
+        if (empty($filePath) || !Storage::disk('local')->exists($filePath)) {
+            return response()->json([
+                'error' => 'Document file not found.'
+            ], ResponseAlias::HTTP_NOT_FOUND);
+        }
+
+        return response()->download(
+            Storage::disk('local')->path($filePath),
+            basename($filePath),
+            ['Content-Type' => 'application/pdf']
+        );
     }
 
     private function fallbackFileName(SigningLink $link, string $variant): string

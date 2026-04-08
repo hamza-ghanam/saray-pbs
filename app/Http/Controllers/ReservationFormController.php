@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Actions\FinalizeConfig;
-use App\Actions\FinalizeSignedDocumentService;
-use App\Actions\SendForSignatureAction;
-use App\Actions\SignatureSendConfig;
-use App\Actions\SignatureSubmitConfig;
-use App\Actions\SubmitSignatureAction;
+use App\Actions\Signature\CustomerSignatureUploadConfig;
+use App\Actions\Signature\FinalizeSignedDocumentConfig;
+use App\Actions\Signature\FinalizeSignedDocumentService;
+use App\Actions\Signature\SendForSignatureAction;
+use App\Actions\Signature\SignatureSendConfig;
+use App\Actions\Signature\SignatureSubmitConfig;
+use App\Actions\Signature\SubmitSignatureAction;
+use App\Actions\Signature\UploadCustomerSignatureAction;
+use App\Enums\DocumentType;
 use App\Mail\RFSPAMail;
 use App\Models\Approval;
 use App\Models\Booking;
@@ -15,15 +18,13 @@ use App\Models\ReservationForm;
 use App\Models\SigningLink;
 use App\Models\Unit;
 use App\Services\PaymentPlanService;
-use App\Enums\DocumentType;
 use App\Services\PdfService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
-use Barryvdh\DomPDF\Facade\Pdf as PDF;
+use Illuminate\Support\Facades\Validator;
 use Symfony\Component\HttpFoundation\Response;
 
 class ReservationFormController extends Controller
@@ -214,8 +215,8 @@ class ReservationFormController extends Controller
      * - If user has role "Sales", they can only send for signature for bookings they created.
      * - Booking must be in status "RF Pending".
      * - ReservationForm must exist and must have a generated PDF (file_path).
-     * - Sends one unique signing link per recipient (customerInfos where requires_signature=true).
-     * - If an active pending link exists for the same recipient & document, it will be marked as expired and a new link is generated.
+     * - Sends signing link(s) to recipients (customerInfos where requires_signature=true).
+     * - If a recipient already signed the document, no new link is sent for that recipient.
      *
      * @OA\Post(
      *     path="/bookings/{bookingId}/rf/send-for-signature",
@@ -233,10 +234,10 @@ class ReservationFormController extends Controller
      *
      *     @OA\Response(
      *         response=200,
-     *         description="RF signing links sent successfully",
+     *         description="RF signing links processed successfully",
      *         @OA\JsonContent(
      *             type="object",
-     *             @OA\Property(property="message", type="string", example="RF signing link(s) sent successfully."),
+     *             @OA\Property(property="message", type="string", example="RF signing link(s) processed successfully."),
      *             @OA\Property(property="sent", type="integer", example=2),
      *             @OA\Property(property="created", type="integer", example=2),
      *             @OA\Property(
@@ -319,7 +320,9 @@ class ReservationFormController extends Controller
             documentTypeValue: DocumentType::RF->value,
             missingDocMessage: 'Reservation Form not found for this booking. Generate RF first.',
             missingPdfMessage: 'Reservation Form PDF is missing. Generate RF again.',
-            successMessage: 'RF signing link(s) sent successfully.'
+            successMessage: 'RF signing link(s) sent successfully.',
+            finalizedStatuses: ['Signed', 'Approved'],
+            alreadyFinalizedMessage: 'Document already finalized.',
         ));
     }
 
@@ -329,12 +332,14 @@ class ReservationFormController extends Controller
      * - Public endpoint (no auth) protected by one-time token.
      * - Accepts a PNG signature as base64 (either raw base64 or data URL).
      * - Marks the signing link as used (status -> expired) and stores signature image path.
+     * - Stores signature_source = "customer_self" (self-service signing by the customer).
      * - If all required signers completed, the system finalises the RF (generates final signed PDF).
      *
      * @OA\Post(
-     *     path="/sign/rf/{token}/submit",
+     *     path="/bookings/rf/{token}/sign",
      *     summary="Submit RF signature (base64 PNG)",
      *     tags={"Bookings/RF"},
+     *     description="Public self-service signing flow. The customer submits their signature via a one-time token. The system stores signature_source as customer_self to distinguish it from staff-assisted uploads, which use staff_uploaded.",
      *
      *     @OA\Parameter(
      *         name="token",
@@ -360,7 +365,7 @@ class ReservationFormController extends Controller
      *
      *     @OA\Response(
      *         response=200,
-     *         description="Signature submitted successfully",
+     *         description="Signature submitted successfully. signature_source is customer_self.",
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(property="message", type="string", example="Signature submitted successfully."),
@@ -369,7 +374,8 @@ class ReservationFormController extends Controller
      *                 type="boolean",
      *                 description="True if this submission completed all required signatures and the RF was finalised.",
      *                 example=false
-     *             )
+     *             ),
+     *             @OA\Property(property="signature_source", type="string", example="customer_self", description="Indicates that the signature was submitted directly by the customer through the self-service flow.")
      *         )
      *     ),
      *
@@ -440,13 +446,14 @@ class ReservationFormController extends Controller
             invalidDocMessage: 'Invalid document type for this endpoint.',
         );
 
-        $config = new FinalizeConfig(
+        $config = new FinalizeSignedDocumentConfig(
             type: DocumentType::RF,
             view: 'pdf.reservation_form',
             signedDir: 'reservation_forms/signed',
             filePrefix: 'RF_SIGNED_FINAL_',
         );
 
+        // Customer self-service digital signature flow (signature_source should be customer_self inside the submit action/service).
         return $action->handle(
             $request,
             $token,
@@ -455,6 +462,178 @@ class ReservationFormController extends Controller
                 $signedPath = $finalizer->finalizeBookingIfComplete($rf, $rf->booking_id, $config);
                 return !empty($signedPath);
             }
+        );
+    }
+
+    /**
+     * Upload customer signature (base64) for Reservation Form (RF) by staff.
+     *
+     * This endpoint allows staff to upload a customer's signature image instead of using
+     * the email-based signing flow. It simulates the same behaviour as submitSignature:
+     *
+     * - No email is sent.
+     * - Reuses/refreshes the signer record used for the signing flow without sending email.
+     * - Stores signature image and marks link as signed.
+     * - Sets signature_source = "staff_uploaded".
+     * - Mirrors the regular digital signing flow, where self-service submitSignature stores signature_source = "customer_self".
+     * - Triggers finalisation immediately if this upload completes all required signatures.
+     * - customer_id must belong to this booking and must require signature.
+     *
+     * @OA\Post(
+     *     path="/bookings/{bookingId}/rf/upload-signature",
+     *     summary="Upload customer signature for RF (staff-assisted)",
+     *     tags={"Bookings/RF"},
+     *     security={{"sanctum":{}}},
+     *
+     *     description="This endpoint allows staff to upload a customer's signature image instead of using the email-based signing flow. It simulates the same behaviour as submitSignature, but without sending email. The signing record is marked with signature_source as staff_uploaded, while the normal self-service submitSignature flow uses customer_self. If this upload completes all required signatures, the Reservation Form is finalized immediately.",
+     *
+     *     @OA\Parameter(
+     *         name="bookingId",
+     *         in="path",
+     *         required=true,
+     *         description="Booking ID",
+     *         @OA\Schema(type="integer", example=137)
+     *     ),
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             type="object",
+     *             required={"customer_id","signature"},
+     *
+     *             @OA\Property(
+     *                 property="customer_id",
+     *                 type="integer",
+     *                 example=55,
+     *                 description="CustomerInfo ID of the signer (must belong to this booking and require signature)"
+     *             ),
+     *
+     *             @OA\Property(
+     *                 property="signature",
+     *                 type="string",
+     *                 description="Signature as PNG base64 (raw or data URL)",
+     *                 example="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA..."
+     *             )
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Customer signature uploaded successfully. signature_source is staff_uploaded. The document may also be finalized immediately if this was the last required signature.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Customer signature uploaded successfully."),
+     *             @OA\Property(property="finalized", type="boolean", example=false, description="True if this upload completed all required signatures and the RF was finalized immediately."),
+     *             @OA\Property(property="signing_link_id", type="integer", example=1234),
+     *             @OA\Property(property="signature_source", type="string", example="staff_uploaded", description="Indicates the signature was uploaded by staff on behalf of the customer instead of being submitted directly by the customer.")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=403,
+     *         description="Forbidden",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="error", type="string", example="Forbidden")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=404,
+     *         description="Booking or RF not found",
+     *         @OA\JsonContent(
+     *             oneOf={
+     *                 @OA\Schema(
+     *                     type="object",
+     *                     @OA\Property(property="error", type="string", example="Booking not found")
+     *                 ),
+     *                 @OA\Schema(
+     *                     type="object",
+     *                     @OA\Property(property="error", type="string", example="Reservation Form not found for this booking. Generate RF first.")
+     *                 )
+     *             }
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=409,
+     *         description="Conflict (this signer already signed)",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="error", type="string", example="This signer has already submitted a signature.")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation or business rule error",
+     *         @OA\JsonContent(
+     *             oneOf={
+     *                 @OA\Schema(
+     *                     type="object",
+     *                     @OA\Property(property="error", type="string", example="Customer signature upload is only allowed when RF status is Pending.")
+     *                 ),
+     *                 @OA\Schema(
+     *                     type="object",
+     *                     @OA\Property(property="error", type="string", example="No signer with this customer_id was found for the booking.")
+     *                 ),
+     *                 @OA\Schema(
+     *                     type="object",
+     *                     @OA\Property(property="error", type="string", example="Invalid signature encoding.")
+     *                 ),
+     *                 @OA\Schema(
+     *                     type="object",
+     *                     @OA\Property(property="error", type="string", example="Signature image is too large.")
+     *                 )
+     *             }
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=500,
+     *         description="Internal server error",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="error", type="string", example="Failed to upload customer signature.")
+     *         )
+     *     )
+     * )
+     */
+    public function uploadCustomerSignature(
+        Request $request,
+        int $bookingId,
+        UploadCustomerSignatureAction $action,
+        FinalizeSignedDocumentService $finalizer
+    ) {
+        $cfg = new CustomerSignatureUploadConfig(
+            permission: 'upload signed reservation form',
+            bookingRelation: 'reservationForm',
+            expectedDocumentClass: ReservationForm::class,
+            type: DocumentType::RF,
+            signatureDir: 'signatures/rf',
+            filePrefix: 'rf_signature',
+            documentNotFoundMessage: 'Reservation Form not found for this booking. Generate RF first.',
+            invalidStatusMessage: 'Customer signature upload is only allowed when RF status is Pending.',
+        );
+
+        $finalizeCfg = new FinalizeSignedDocumentConfig(
+            type: DocumentType::RF,
+            view: 'pdf.reservation_form',
+            signedDir: 'reservation_forms/signed',
+            filePrefix: 'RF_SIGNED_FINAL_',
+        );
+
+        return $action->handle(
+            request: $request,
+            bookingId: $bookingId,
+            cfg: $cfg,
+            finalize: fn ($rf) => !empty(
+            $finalizer->finalizeBookingIfComplete(
+                documentable: $rf,
+                bookingId: $rf->booking_id,
+                cfg: $finalizeCfg
+            )
+            )
         );
     }
 
@@ -602,7 +781,7 @@ class ReservationFormController extends Controller
         $rf = $booking->reservationForm()->firstOrFail();
 
         // ✅ block if signatures incomplete OR not finalized
-        $config = new FinalizeConfig(
+        $config = new FinalizeSignedDocumentConfig(
             type: DocumentType::RF,
             view: 'pdf.reservation_form',
             signedDir: 'reservation_forms/signed',

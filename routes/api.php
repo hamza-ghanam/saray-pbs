@@ -24,6 +24,7 @@ use App\Http\Controllers\ResetPasswordController;
 use App\Http\Controllers\TranslateController;
 use App\Http\Controllers\SignedDocumentsController;
 use App\Http\Controllers\BrokerCommissionController;
+use App\Http\Controllers\GeneralSettingController;
 
 //Index
 Route::get('/', function () {
@@ -99,6 +100,8 @@ Route::middleware('auth:sanctum')->group(function () {
         ->name('bookings.download_document');
     Route::get('/bookings/{id}', [BookingController::class, 'show']);
     Route::post('/bookings/{id}/approve', [BookingController::class, 'approveBooking']);
+
+    Route::get('/bookings/{id}/signers', [BookingController::class, 'signers']);
 });
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -109,7 +112,8 @@ Route::middleware('auth:sanctum')->group(function () {
 // Reservation Forms
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/bookings/{id}/rf', [ReservationFormController::class, 'generate']);
-    Route::post('/bookings/{id}/rf/upload-signed', [ReservationFormController::class, 'uploadSigned']);
+    //Route::post('/bookings/{id}/rf/upload-signed', [ReservationFormController::class, 'uploadSigned']);
+    Route::post('/bookings/{id}/rf/upload-signature', [ReservationFormController::class, 'uploadCustomerSignature']);
     Route::post('/bookings/{id}/rf/approve', [ReservationFormController::class, 'approve']);
 
     Route::post('/bookings/{id}/rf/send-for-signature', [ReservationFormController::class, 'sendForSignature']);
@@ -118,7 +122,8 @@ Route::middleware('auth:sanctum')->group(function () {
 // Sales and Purchase Agreement (SPAs)
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/bookings/{id}/spa', [SpaController::class, 'generate']);
-    Route::post('/bookings/{id}/spa/upload-signed', [SpaController::class, 'uploadSigned']);
+    // Route::post('/bookings/{id}/spa/upload-signed', [SpaController::class, 'uploadSigned']);
+    Route::post('/bookings/{id}/spa/upload-signature', [SpaController::class, 'uploadCustomerSignature']);
     Route::post('/bookings/{id}/spa/approve', [SpaController::class, 'approve']);
 
     Route::post('/bookings/{id}/spa/send-for-signature', [SpaController::class, 'sendForSignature']);
@@ -228,13 +233,19 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/signatures/{signingLinkId}/reject', [SignedDocumentsController::class, 'reject']);
 });
 
-Route::get('/sign/doc/{token}/download', [SignedDocumentsController::class, 'download']);
+Route::get('/sign/doc/{token}/download', [SignedDocumentsController::class, 'downloadDocumentVariant']);
 Route::post('/bookings/rf/{token}/sign', [ReservationFormController::class, 'submitSignature']);
 
 Route::post('/bookings/spa/{token}/sign', [SpaController::class, 'submitSignature']);
+
+Route::get('/sign/doc/{token}/download-document', [SignedDocumentsController::class, 'downloadDocumentByToken']);
 
 // Dashboard
 use App\Http\Controllers\DashboardController;
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/dashboard/overview', [DashboardController::class, 'overview']);
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::apiResource('general-settings', GeneralSettingController::class);
 });

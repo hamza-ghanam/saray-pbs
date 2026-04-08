@@ -1,21 +1,17 @@
 <?php
 
-namespace App\Actions;
+namespace App\Actions\Signature;
 
-use App\Enums\DocumentType;
 use App\Models\Booking;
 use App\Models\SigningLink;
 use App\Models\User;
 use App\Models\UserDoc;
-use App\Models\UserSignature;
 use App\Services\PdfService;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use PhpParser\Node\Scalar\String_;
 
 readonly class FinalizeSignedDocumentService
 {
@@ -26,7 +22,7 @@ readonly class FinalizeSignedDocumentService
     /**
      * @return string|null Signed file path if finalized (or already finalized), null if not ready / failed
      */
-    public function finalizeBookingIfComplete(Model $documentable, int $bookingId, FinalizeConfig $cfg): ?string
+    public function finalizeBookingIfComplete(Model $documentable, int $bookingId, FinalizeSignedDocumentConfig $cfg): ?string
     {
         // already finalized
         if (!empty($documentable->signed_at) && !empty($documentable->signed_file_path)) {
@@ -56,6 +52,8 @@ readonly class FinalizeSignedDocumentService
             return null; // not complete (or no required emails)
         }
 
+        $hasStaffUploadedSignature = collect($signaturesByEmail)->contains(fn ($signature) => ($signature['signature_source'] ?? null) === SigningLink::SIGNATURE_SOURCE_STAFF_UPLOADED);
+
         // calc (if needed)
         if ($booking->paymentPlan) {
             $booking->paymentPlan->dld_fee = round($booking->price * ($booking->paymentPlan->dld_fee_percentage / 100), 2);
@@ -71,6 +69,7 @@ readonly class FinalizeSignedDocumentService
             'installments' => $booking->installments,
             'unit' => $booking->unit,
             'signaturesByEmail' => $signaturesByEmail,
+            'hasStaffUploadedSignature' => $hasStaffUploadedSignature,
             'finalSignedAt' => $finalSignedAt,
             'companySignedAt' => $documentable->company_signed_at ?? null,
         ];
@@ -85,11 +84,11 @@ readonly class FinalizeSignedDocumentService
     }
 
     public function finalizeBrokerAgreementIfComplete(
-        UserDoc        $agreementDoc,
-        FinalizeConfig $cfg,
-        User           $approver,
-        string         $signaturePath,
-        SigningLink    $link
+        UserDoc                      $agreementDoc,
+        FinalizeSignedDocumentConfig $cfg,
+        User                         $approver,
+        string                       $signaturePath,
+        SigningLink                  $link
     ): ?string
     {
         $existingSigned = UserDoc::query()
@@ -116,11 +115,14 @@ readonly class FinalizeSignedDocumentService
             return null; // not complete (or no required emails)
         }
 
+        $hasStaffUploadedSignature = collect($signaturesByEmail)->contains(fn ($signature) => ($signature['signature_source'] ?? null) === SigningLink::SIGNATURE_SOURCE_STAFF_UPLOADED);
+
         $finalSignedAt = now();
 
         $data = [
             'agreement'         => $agreementDoc,
             'signaturesByEmail' => $signaturesByEmail,
+            'hasStaffUploadedSignature' => $hasStaffUploadedSignature,
             'finalSignedAt'     => $finalSignedAt,
             'companySignedAt'   => $agreementDoc->company_signed_at ?? null,
             'user'              => $agreementDoc->user,
@@ -149,7 +151,7 @@ readonly class FinalizeSignedDocumentService
     }
 
     /**
-     * @return array<string, array{path:string, signed_at:mixed}>|null
+     * @return array<string, array{path:string, signed_at:mixed, signature_source:?string}>|null
      * null => not complete / no required emails
      */
     private function getSignaturesByEmailIfComplete(
@@ -189,17 +191,18 @@ readonly class FinalizeSignedDocumentService
                 strtolower(trim((string)$l->recipient_email)) => [
                     'path' => Storage::disk('local')->path($l->signature_image_path),
                     'signed_at' => $l->signed_at,
+                    'signature_source' => $l->signature_source,
                 ],
             ])
             ->toArray();
     }
 
     private function finaliseAndPersist(
-        Model                   $documentable,
-        FinalizeConfig          $cfg,
-        array                   $data,
-        string                  $fileKey,
-        CarbonInterface $finalSignedAt
+        Model                        $documentable,
+        FinalizeSignedDocumentConfig $cfg,
+        array                        $data,
+        string                       $fileKey,
+        CarbonInterface              $finalSignedAt
     ): ?string
     {
         $fileName = $cfg->filePrefix . $fileKey . '_' . $finalSignedAt->format('Ymd_His') . '.pdf';

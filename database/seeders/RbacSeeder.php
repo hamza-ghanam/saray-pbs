@@ -78,12 +78,16 @@ class RbacSeeder extends Seeder
         */
 
         $permissions = [
-            'upload DLD document',
+            'manage general settings',
         ];
 
 
 
-        $role = Role::findByName('System Maintenance');
-        $role->givePermissionTo($permissions);
+        $roles = ['System Maintenance'];
+
+        foreach ($roles as $roleName) {
+            $role = Role::findByName($roleName);
+            $role->givePermissionTo($permissions);
+        }
     }
 }

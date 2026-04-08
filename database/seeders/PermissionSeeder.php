@@ -13,36 +13,7 @@ class PermissionSeeder extends Seeder
     public function run(): void
     {
         $permissions = [
-            'add building',
-            'edit building',
-            'delete building',
-            'view building',
-            'add unit',
-            'edit unit',
-            'delete unit',
-            'view unit',
-            'search unit',
-            'approve unit',
-            'book unit',
-            'hold unit',
-            'generate sales offer',
-            'approve booking',
-            'generate reservation form',
-            'approve reservation form',
-            'generate spa',
-            'sign spa',
-            'upload final spa',
-            'generate one-time link',
-            'approve registration',
-            'add unit update',
-            'delete unit update',
-            'add sales',
-            'add crm officer',
-            'add crm accountant',
-            'add hr admin',
-            'add cso',
-            'add cfo',
-            'add ceo',
+            'manage general settings',
         ];
 
         foreach ($permissions as $permission) {

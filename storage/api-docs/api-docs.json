@@ -1198,6 +1198,179 @@
                 ]
             }
         },
+        "/bookings/{id}/signers": {
+            "get": {
+                "tags": [
+                    "Bookings"
+                ],
+                "summary": "Get booking signers for RF or SPA",
+                "description": "Show booking signers for RF / SPA with signing status.\n\nReturns each customer_info that requires signature, whether they signed,\nand if signed, the latest matching SigningLink metadata including signed_at,\nsignature_source, and a downloadable signature image URL.\n\nQuery params:\n- document_type: RF or SPA (required)",
+                "operationId": "6dcdfaf4d42bc3d9d8465e9d43af926b",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Booking ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 216
+                        }
+                    },
+                    {
+                        "name": "document_type",
+                        "in": "query",
+                        "description": "Document type to inspect",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "RF",
+                                "SPA"
+                            ],
+                            "example": "RF"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Signers retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "booking_id": {
+                                            "type": "integer",
+                                            "example": 216
+                                        },
+                                        "document_type": {
+                                            "type": "string",
+                                            "example": "RF"
+                                        },
+                                        "document_id": {
+                                            "type": "integer",
+                                            "example": 12,
+                                            "nullable": true
+                                        },
+                                        "signers": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "customer_id": {
+                                                        "type": "integer",
+                                                        "example": 301
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "John Smith"
+                                                    },
+                                                    "email": {
+                                                        "type": "string",
+                                                        "example": "john@example.com"
+                                                    },
+                                                    "requires_signature": {
+                                                        "type": "boolean",
+                                                        "example": true
+                                                    },
+                                                    "signed": {
+                                                        "type": "boolean",
+                                                        "example": true
+                                                    },
+                                                    "signing_link": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 999
+                                                            },
+                                                            "signed_at": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": "2026-04-07T10:20:30Z",
+                                                                "nullable": true
+                                                            },
+                                                            "signature_source": {
+                                                                "type": "string",
+                                                                "example": "customer_self",
+                                                                "nullable": true
+                                                            },
+                                                            "signature_image_download_url": {
+                                                                "type": "string",
+                                                                "example": "https://example.com/api/signatures/999/image",
+                                                                "nullable": true
+                                                            }
+                                                        },
+                                                        "type": "object",
+                                                        "nullable": true
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthorized"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Booking or requested document not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Booking not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation or business error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "document_type": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string",
+                                                "example": "The selected document type is invalid."
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/broker-commissions/rates": {
             "get": {
                 "tags": [
@@ -4777,7 +4950,7 @@
                     "Bookings/RF"
                 ],
                 "summary": "Send RF for signature (one link per signer)",
-                "description": "Send Reservation Form (RF) signing links to booking customers.\n\n- Requires authenticated user with \"generate reservation form\" permission.\n- If user has role \"Sales\", they can only send for signature for bookings they created.\n- Booking must be in status \"RF Pending\".\n- ReservationForm must exist and must have a generated PDF (file_path).\n- Sends one unique signing link per recipient (customerInfos where requires_signature=true).\n- If an active pending link exists for the same recipient & document, it will be marked as expired and a new link is generated.",
+                "description": "Send Reservation Form (RF) signing links to booking customers.\n\n- Requires authenticated user with \"generate reservation form\" permission.\n- If user has role \"Sales\", they can only send for signature for bookings they created.\n- Booking must be in status \"RF Pending\".\n- ReservationForm must exist and must have a generated PDF (file_path).\n- Sends signing link(s) to recipients (customerInfos where requires_signature=true).\n- If a recipient already signed the document, no new link is sent for that recipient.",
                 "operationId": "764e290499647cbdfadc4cd751238f21",
                 "parameters": [
                     {
@@ -4793,14 +4966,14 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "RF signing links sent successfully",
+                        "description": "RF signing links processed successfully",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "RF signing link(s) sent successfully."
+                                            "example": "RF signing link(s) processed successfully."
                                         },
                                         "sent": {
                                             "type": "integer",
@@ -4951,14 +5124,14 @@
                 ]
             }
         },
-        "/sign/rf/{token}/submit": {
+        "/bookings/rf/{token}/sign": {
             "post": {
                 "tags": [
                     "Bookings/RF"
                 ],
                 "summary": "Submit RF signature (base64 PNG)",
-                "description": "Submit a signature for a Reservation Form (RF) using a one-time token.\n\n- Public endpoint (no auth) protected by one-time token.\n- Accepts a PNG signature as base64 (either raw base64 or data URL).\n- Marks the signing link as used (status -> expired) and stores signature image path.\n- If all required signers completed, the system finalises the RF (generates final signed PDF).",
-                "operationId": "790255e252412415f162c4c44d49b3f9",
+                "description": "Public self-service signing flow. The customer submits their signature via a one-time token. The system stores signature_source as customer_self to distinguish it from staff-assisted uploads, which use staff_uploaded.",
+                "operationId": "bc8df2c54fee3c8864f1a3a4cd7b6ecb",
                 "parameters": [
                     {
                         "name": "token",
@@ -4993,7 +5166,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Signature submitted successfully",
+                        "description": "Signature submitted successfully. signature_source is customer_self.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -5006,6 +5179,11 @@
                                             "description": "True if this submission completed all required signatures and the RF was finalised.",
                                             "type": "boolean",
                                             "example": false
+                                        },
+                                        "signature_source": {
+                                            "description": "Indicates that the signature was submitted directly by the customer through the self-service flow.",
+                                            "type": "string",
+                                            "example": "customer_self"
                                         }
                                     },
                                     "type": "object"
@@ -5117,6 +5295,215 @@
                         }
                     }
                 }
+            }
+        },
+        "/bookings/{bookingId}/rf/upload-signature": {
+            "post": {
+                "tags": [
+                    "Bookings/RF"
+                ],
+                "summary": "Upload customer signature for RF (staff-assisted)",
+                "description": "This endpoint allows staff to upload a customer's signature image instead of using the email-based signing flow. It simulates the same behaviour as submitSignature, but without sending email. The signing record is marked with signature_source as staff_uploaded, while the normal self-service submitSignature flow uses customer_self. If this upload completes all required signatures, the Reservation Form is finalized immediately.",
+                "operationId": "78c2ae5178ed295115f38b35b030192e",
+                "parameters": [
+                    {
+                        "name": "bookingId",
+                        "in": "path",
+                        "description": "Booking ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 137
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "customer_id",
+                                    "signature"
+                                ],
+                                "properties": {
+                                    "customer_id": {
+                                        "description": "CustomerInfo ID of the signer (must belong to this booking and require signature)",
+                                        "type": "integer",
+                                        "example": 55
+                                    },
+                                    "signature": {
+                                        "description": "Signature as PNG base64 (raw or data URL)",
+                                        "type": "string",
+                                        "example": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA..."
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Customer signature uploaded successfully. signature_source is staff_uploaded. The document may also be finalized immediately if this was the last required signature.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Customer signature uploaded successfully."
+                                        },
+                                        "finalized": {
+                                            "description": "True if this upload completed all required signatures and the RF was finalized immediately.",
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "signing_link_id": {
+                                            "type": "integer",
+                                            "example": 1234
+                                        },
+                                        "signature_source": {
+                                            "description": "Indicates the signature was uploaded by staff on behalf of the customer instead of being submitted directly by the customer.",
+                                            "type": "string",
+                                            "example": "staff_uploaded"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Forbidden"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Booking or RF not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Booking not found"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Reservation Form not found for this booking. Generate RF first."
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict (this signer already signed)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "This signer has already submitted a signature."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation or business rule error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Customer signature upload is only allowed when RF status is Pending."
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "No signer with this customer_id was found for the booking."
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Invalid signature encoding."
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Signature image is too large."
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Failed to upload customer signature."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
             }
         },
         "/bookings/{bookingId}/rf/approve": {
@@ -5934,6 +6321,73 @@
                 ]
             }
         },
+        "/signatures/{signingLinkId}/image": {
+            "get": {
+                "tags": [
+                    "Signatures"
+                ],
+                "summary": "View signature image",
+                "description": "Stream a signature image by SigningLink ID.\n\n- Requires authenticated user.\n- Intended for admin/internal use to preview a submitted signature image.\n- Returns the stored image file associated with the signing link.",
+                "operationId": "e0a0f1a7902e184fa5f74f02840264a7",
+                "parameters": [
+                    {
+                        "name": "signingLinkId",
+                        "in": "path",
+                        "description": "SigningLink ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 999
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Signature image streamed successfully",
+                        "content": {
+                            "image/png": {}
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Forbidden"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Signing link or signature image not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "No query results for model [App\\\\Models\\\\SigningLink] 999"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/signatures/{signingLinkId}/reject": {
             "post": {
                 "tags": [
@@ -6081,6 +6535,81 @@
                 ]
             }
         },
+        "/sign/doc/{token}/download-document": {
+            "get": {
+                "tags": [
+                    "Signing Links"
+                ],
+                "summary": "Download signable document by signing token",
+                "description": "Download the signable document using a valid signing token.\n\n- Public endpoint (no auth).\n- Resolves the SigningLink by SHA-256 hash of the plain token.\n- Allows download only while the signing link is still valid.\n- Returns the original unsigned PDF associated with the document.",
+                "operationId": "df2f741461cf078089835c60b0658bb3",
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "path",
+                        "description": "Plain signing token received by the signer",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "9f3a2b7c8d...plain_token_here..."
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "PDF downloaded successfully",
+                        "content": {
+                            "application/pdf": {}
+                        }
+                    },
+                    "404": {
+                        "description": "Signing link not found or document file missing",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Invalid signing link."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "410": {
+                        "description": "Signing link expired, used, or no longer valid",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "This signing link has expired."
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "This signing link is no longer valid."
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/bookings/{bookingId}/spa": {
             "get": {
                 "tags": [
@@ -6132,7 +6661,7 @@
                     "Bookings/SPA"
                 ],
                 "summary": "Send SPA signing link(s)",
-                "description": "Send SPA for signature.\n\nGenerates and sends signing link(s) for the SPA document related to the given booking.",
+                "description": "Send SPA signing links to booking customers.\n\n- Requires authenticated user with proper permission.\n- If user has role \"Sales\", they can only send for signature for bookings they created.\n- Booking must be in status \"SPA Pending\".\n- SPA must exist and must have a generated PDF (file_path).\n- Sends signing link(s) to recipients (customerInfos where requires_signature=true).\n- If a recipient already signed the document, no new link is sent for that recipient.",
                 "operationId": "0d055233e4ec7dfe5d29d8b4afe7ffba",
                 "parameters": [
                     {
@@ -6149,14 +6678,14 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "SPA signing link(s) sent successfully",
+                        "description": "SPA signing links processed successfully",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "message": {
                                             "type": "string",
-                                            "example": "SPA signing link(s) sent successfully."
+                                            "example": "SPA signing link(s) processed successfully."
                                         }
                                     },
                                     "type": "object"
@@ -6220,23 +6749,23 @@
                 ]
             }
         },
-        "/spa/sign/{token}": {
+        "/bookings/spa/{token}/sign": {
             "post": {
                 "tags": [
                     "Bookings/SPA"
                 ],
-                "summary": "Submit SPA signature",
-                "description": "Submit SPA signature.\n\nAllows a user to sign the SPA document using a secure token.\nOnce all required signatures are completed, the final signed SPA is generated.",
-                "operationId": "a72524fb0987ff10e825f67ca5df0ed9",
+                "summary": "Submit SPA signature (base64 PNG)",
+                "description": "Public self-service signing flow. The customer submits their SPA signature via a one-time token. The system stores signature_source as customer_self to distinguish it from staff-assisted uploads, which use staff_uploaded.",
+                "operationId": "eac97da6c5cc0277a87e744ca1b0340b",
                 "parameters": [
                     {
                         "name": "token",
                         "in": "path",
-                        "description": "Unique signing token sent to the user",
+                        "description": "One-time signing token (plain token received by email)",
                         "required": true,
                         "schema": {
                             "type": "string",
-                            "example": "a1b2c3d4e5f6..."
+                            "example": "9f3a2b7c8d...plain_token_here..."
                         }
                     }
                 ],
@@ -6250,10 +6779,9 @@
                                 ],
                                 "properties": {
                                     "signature": {
-                                        "description": "Base64 encoded signature image",
+                                        "description": "Signature as PNG base64. Can be raw base64 or prefixed with 'data:image/png;base64,'.",
                                         "type": "string",
-                                        "format": "byte",
-                                        "example": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."
+                                        "example": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMB/6XfW8kAAAAASUVORK5CYII="
                                     }
                                 },
                                 "type": "object"
@@ -6263,7 +6791,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Signature submitted successfully",
+                        "description": "Signature submitted successfully. signature_source is customer_self.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -6271,6 +6799,16 @@
                                         "message": {
                                             "type": "string",
                                             "example": "Signature submitted successfully."
+                                        },
+                                        "finalized": {
+                                            "description": "True if this submission completed all required signatures and the SPA was finalised.",
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "signature_source": {
+                                            "description": "Signature source value.",
+                                            "type": "string",
+                                            "example": "customer_self"
                                         }
                                     },
                                     "type": "object"
@@ -6279,7 +6817,7 @@
                         }
                     },
                     "404": {
-                        "description": "Invalid or expired signing link",
+                        "description": "Invalid token / link not found",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -6294,15 +6832,15 @@
                             }
                         }
                     },
-                    "422": {
-                        "description": "Validation or business rule error",
+                    "410": {
+                        "description": "Link expired or already used",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "error": {
                                             "type": "string",
-                                            "example": "Invalid document type for this endpoint."
+                                            "example": "This link is no longer valid."
                                         }
                                     },
                                     "type": "object"
@@ -6310,8 +6848,63 @@
                             }
                         }
                     },
+                    "422": {
+                        "description": "Validation error, invalid signature encoding, too large, or wrong document type",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        {
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "example": "The signature field is required."
+                                                },
+                                                "errors": {
+                                                    "type": "object",
+                                                    "example": {
+                                                        "signature": [
+                                                            "The signature field is required."
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Invalid signature encoding."
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Signature image is too large."
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Invalid document type for this endpoint."
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
                     "409": {
-                        "description": "Signature already submitted or link already used",
+                        "description": "Signature already submitted",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -6325,8 +6918,233 @@
                                 }
                             }
                         }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Failed to submit signature."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 }
+            }
+        },
+        "/bookings/{bookingId}/spa/upload-signature": {
+            "post": {
+                "tags": [
+                    "Bookings/SPA"
+                ],
+                "summary": "Upload customer signature for SPA (staff-assisted)",
+                "description": "This endpoint allows staff to upload a customer's signature image instead of using the email-based signing flow. It simulates the same behaviour as submitSignature, but without sending email. The signing record uses signature_source staff_uploaded, while the normal self-service submitSignature flow uses customer_self. If this upload completes all required signatures, the SPA is finalized immediately.",
+                "operationId": "52d30e7b4af17554ddc6783b44540787",
+                "parameters": [
+                    {
+                        "name": "bookingId",
+                        "in": "path",
+                        "description": "Booking ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 137
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "customer_id",
+                                    "signature"
+                                ],
+                                "properties": {
+                                    "customer_id": {
+                                        "description": "CustomerInfo ID of the signer (must belong to this booking and require signature)",
+                                        "type": "integer",
+                                        "example": 55
+                                    },
+                                    "signature": {
+                                        "description": "Signature as PNG base64 (raw or data URL)",
+                                        "type": "string",
+                                        "example": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA..."
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Customer signature uploaded successfully. signature_source is staff_uploaded. The document may also be finalized immediately if this was the last required signature.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Customer signature uploaded successfully."
+                                        },
+                                        "finalized": {
+                                            "description": "True if this upload completed all required signatures and the SPA was finalized immediately.",
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "signing_link_id": {
+                                            "type": "integer",
+                                            "example": 1234
+                                        },
+                                        "signature_source": {
+                                            "description": "Signature source value.",
+                                            "type": "string",
+                                            "example": "staff_uploaded"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Forbidden"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Booking or SPA not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Booking not found"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "SPA not found for this booking. Generate SPA first."
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict (this signer already signed)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "This signer has already submitted a signature."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation or business rule error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Customer signature upload is only allowed when SPA status is Pending."
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "No signer with this customer_id was found for the booking."
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Invalid signature encoding."
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Signature image is too large."
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Failed to upload customer signature."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
             }
         },
         "/bookings/{bookingId}/spa/approve": {
@@ -10379,6 +11197,10 @@
         {
             "name": "Signatures",
             "description": "Signatures"
+        },
+        {
+            "name": "Signing Links",
+            "description": "Signing Links"
         },
         {
             "name": "Bookings/SPA",

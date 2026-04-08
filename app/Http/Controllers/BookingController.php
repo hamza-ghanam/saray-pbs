@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Mappers\BilingualFieldsMapper;
 use App\Models\Approval;
 use App\Models\Booking;
+use App\Models\GeneralSetting;
 use App\Models\PaymentPlan;
 use App\Models\Unit;
 use App\Models\User;
@@ -25,6 +26,8 @@ use Illuminate\Support\Str;
 use Mindee\ClientV2;
 use Mindee\Input\InferenceParameters;
 use Mindee\Input\PathInput;
+use App\Enums\DocumentType;
+use App\Models\SigningLink;
 
 /**
  * @OA\Schema(
@@ -555,8 +558,11 @@ class BookingController extends Controller
         $path = $file->getRealPath();
 
         try {
-            $apiKey = config('services.mindee.api_key');
-            $modelId = config('services.mindee.model_id');
+            $apiKey = setting('mindee_api_key') ?? config('services.mindee.api_key');
+            $modelId = setting('mindee_model_id') ?? config('services.mindee.model_id');
+
+            // $apiKey = config('services.mindee.api_key');
+            // $modelId = config('services.mindee.model_id');
 
             $mindeeClient = new ClientV2($apiKey);
 
@@ -2081,6 +2087,198 @@ class BookingController extends Controller
                 'status_changed_at' => now(),
             ]);
         }
+    }
+
+    /**
+     * Show booking signers for RF / SPA with signing status.
+     *
+     * Returns each customer_info that requires signature, whether they signed,
+     * and if signed, the latest matching SigningLink metadata including signed_at,
+     * signature_source, and a downloadable signature image URL.
+     *
+     * Query params:
+     * - document_type: RF or SPA (required)
+     *
+     * @OA\Get(
+     *     path="/bookings/{id}/signers",
+     *     summary="Get booking signers for RF or SPA",
+     *     tags={"Bookings"},
+     *     security={{"sanctum":{}}},
+     *
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="Booking ID",
+     *         @OA\Schema(type="integer", example=216)
+     *     ),
+     *
+     *     @OA\Parameter(
+     *         name="document_type",
+     *         in="query",
+     *         required=true,
+     *         description="Document type to inspect",
+     *         @OA\Schema(type="string", enum={"RF","SPA"}, example="RF")
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Signers retrieved successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="booking_id", type="integer", example=216),
+     *             @OA\Property(property="document_type", type="string", example="RF"),
+     *             @OA\Property(property="document_id", type="integer", nullable=true, example=12),
+     *             @OA\Property(
+     *                 property="signers",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="customer_id", type="integer", example=301),
+     *                     @OA\Property(property="name", type="string", example="John Smith"),
+     *                     @OA\Property(property="email", type="string", example="john@example.com"),
+     *                     @OA\Property(property="requires_signature", type="boolean", example=true),
+     *                     @OA\Property(property="signed", type="boolean", example=true),
+     *                     @OA\Property(
+     *                         property="signing_link",
+     *                         type="object",
+     *                         nullable=true,
+     *                         @OA\Property(property="id", type="integer", example=999),
+     *                         @OA\Property(property="signed_at", type="string", format="date-time", nullable=true, example="2026-04-07T10:20:30Z"),
+     *                         @OA\Property(property="signature_source", type="string", nullable=true, example="customer_self"),
+     *                         @OA\Property(property="signature_image_download_url", type="string", nullable=true, example="https://example.com/api/signatures/999/image")
+     *                     )
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=403,
+     *         description="Forbidden",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Unauthorized")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=404,
+     *         description="Booking or requested document not found",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Booking not found")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation or business error",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="document_type", type="array", @OA\Items(type="string", example="The selected document type is invalid."))
+     *         )
+     *     )
+     * )
+     */
+    public function signers(Request $request, $id)
+    {
+        $user = $request->user();
+
+        if (!$user->can('view booking')) {
+            return response()->json(['message' => 'Unauthorized'], Response::HTTP_FORBIDDEN);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'document_type' => ['required', Rule::in([DocumentType::RF->value, DocumentType::SPA->value])],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $booking = Booking::with(['customerInfos', 'reservationForm', 'spa'])->find($id);
+        if (!$booking) {
+            return response()->json(['message' => 'Booking not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        if ($user->hasRole('Sales') && $booking->created_by !== $user->id) {
+            return response()->json(['message' => 'Forbidden'], Response::HTTP_FORBIDDEN);
+        }
+
+        $documentType = (string) $request->query('document_type');
+
+        $document = $documentType === DocumentType::RF->value
+            ? $booking->reservationForm
+            : $booking->spa;
+
+        if (!$document) {
+            return response()->json([
+                'message' => $documentType === DocumentType::RF->value
+                    ? 'Reservation Form not found for this booking.'
+                    : 'SPA not found for this booking.'
+            ], Response::HTTP_NOT_FOUND);
+        }
+
+        $customerInfos = $booking->customerInfos
+            ->filter(fn ($customer) => (bool) ($customer->requires_signature ?? true))
+            ->values();
+
+        $emails = $customerInfos
+            ->pluck('email')
+            ->filter()
+            ->map(fn ($email) => strtolower(trim((string) $email)))
+            ->unique()
+            ->values();
+
+        $links = SigningLink::query()
+            ->whereMorphedTo('documentable', $document)
+            ->where('document_type', $documentType)
+            ->when($emails->isNotEmpty(), function ($query) use ($emails) {
+                $query->whereIn(DB::raw('LOWER(TRIM(recipient_email))'), $emails->all());
+            })
+            ->orderByDesc('signed_at')
+            ->orderByDesc('id')
+            ->get()
+            ->groupBy(fn ($link) => strtolower(trim((string) $link->recipient_email)));
+
+        $signers = $customerInfos->map(function ($customer) use ($links) {
+            $email = strtolower(trim((string) ($customer->email ?? '')));
+            $group = $email !== '' ? collect($links->get($email, [])) : collect();
+
+            $latestLink = $group->first();
+
+            $signedLink = $group->first(function ($link) {
+                return !empty($link->signed_at) && !empty($link->signature_image_path);
+            });
+
+            $effectiveLink = $signedLink ?: $latestLink;
+
+            return [
+                'customer_id' => $customer->id,
+                'name' => is_array($customer->name)
+                    ? ($customer->name['en'] ?? $customer->name['ar'] ?? null)
+                    : $customer->name,
+                'email' => $customer->email,
+                'requires_signature' => (bool) ($customer->requires_signature ?? true),
+                'signed' => !empty($signedLink),
+                'signing_link' => $effectiveLink ? [
+                    'id' => $effectiveLink->id,
+                    'signed_at' => $signedLink?->signed_at,
+                    'signature_source' => $signedLink?->signature_source,
+                    'signature_image_download_url' => $signedLink && !empty($signedLink->signature_image_path)
+                        ? route('signatures.image', ['signingLinkId' => $signedLink->id])
+                        : null,
+                ] : null,
+            ];
+        })->values();
+
+        return response()->json([
+            'booking_id' => $booking->id,
+            'document_type' => $documentType,
+            'document_id' => $document->id,
+            'signers' => $signers,
+        ], Response::HTTP_OK);
     }
 }
 

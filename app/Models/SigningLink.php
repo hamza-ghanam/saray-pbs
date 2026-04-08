@@ -17,6 +17,9 @@ class SigningLink extends Model
     public const STATUS_EXPIRED   = 'expired';
     public const STATUS_WITHDRAWN = 'withdrawn';
 
+    public const SIGNATURE_SOURCE_CUSTOMER_SELF = 'customer_self';
+    public const SIGNATURE_SOURCE_STAFF_UPLOADED = 'staff_uploaded';
+
     /**
      * Runtime-only token (NOT persisted).
      */
@@ -48,6 +51,8 @@ class SigningLink extends Model
         'withdrawn_at',
         'withdrawn_by',
         'withdraw_reason',
+
+        'signature_source',
     ];
 
     protected $casts = [

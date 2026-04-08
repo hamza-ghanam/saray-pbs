@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Actions;
+namespace App\Actions\Signature;
 
+use App\Enums\DocumentType;
 use App\Models\Booking;
 use App\Services\DocumentSignatureService;
-use App\Enums\DocumentType;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
@@ -41,6 +41,12 @@ final readonly class SendForSignatureAction
         $doc = $docClass::where('booking_id', $booking->id)->first();
         if (!$doc) {
             return response()->json(['error' => $cfg->missingDocMessage], ResponseAlias::HTTP_NOT_FOUND);
+        }
+
+        if (!empty($cfg->finalizedStatuses) && in_array((string) ($doc->status ?? ''), $cfg->finalizedStatuses, true)) {
+            return response()->json([
+                'error' => $cfg->alreadyFinalizedMessage,
+            ], ResponseAlias::HTTP_CONFLICT);
         }
 
         if (empty($doc->file_path)) {
