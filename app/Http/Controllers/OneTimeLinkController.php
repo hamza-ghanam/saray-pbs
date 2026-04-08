@@ -499,7 +499,9 @@ class OneTimeLinkController extends Controller
 
             $finalizeConfig = $this->brokerAgreementFinalizeConfig();
 
-            $finalisedPath = $finalizer->finalizeBrokerAgreementIfComplete($agreement, $finalizeConfig, $admin_user, $signaturePath ?? '', $link);
+            $finalisedPath = $finalizer->finalizeBrokerAgreementIfComplete(
+                $agreement, $finalizeConfig, $admin_user, $signaturePath ?? '', $link
+            );
 
             if (!$finalisedPath) {
                 return response()->json([
