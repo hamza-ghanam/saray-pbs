@@ -502,7 +502,7 @@ class OneTimeLinkController extends Controller
             $finalisedPath = $finalizer->finalizeBrokerAgreementIfComplete(
                 $agreement, $finalizeConfig, $admin_user, $signaturePath ?? '', $link
             );
-
+//
             if (!$finalisedPath) {
                 return response()->json([
                     'error' => 'Broker agreement is not fully signed or could not be finalised.'
