@@ -459,7 +459,7 @@ class OneTimeLinkController extends Controller
         if (!$user) {
             return response()->json(['error' => 'User not found'], Response::HTTP_NOT_FOUND);
         }
-dd($user->status);
+
         if ($user->status !== 'Pending') {
             return response()->json(['error' => 'User is not in pending status'], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
