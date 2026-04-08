@@ -455,12 +455,6 @@ class OneTimeLinkController extends Controller
             ? $admin_user->signature->absolutePath()
             : null;
 
-        if (!$signaturePath) {
-            return response()->json([
-                'error' => 'Approver signature is missing or inactive. Please upload and activate your signature first.'
-            ], Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
- //
         $user = User::find($userId);
         if (!$user) {
             return response()->json(['error' => 'User not found'], Response::HTTP_NOT_FOUND);
@@ -505,7 +499,7 @@ class OneTimeLinkController extends Controller
 
             $finalizeConfig = $this->brokerAgreementFinalizeConfig();
 
-            $finalisedPath = $finalizer->finalizeBrokerAgreementIfComplete($agreement, $finalizeConfig, $admin_user, $signaturePath, $link);
+            $finalisedPath = $finalizer->finalizeBrokerAgreementIfComplete($agreement, $finalizeConfig, $admin_user, $signaturePath ?? '', $link);
 
             if (!$finalisedPath) {
                 return response()->json([
