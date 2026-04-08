@@ -910,6 +910,75 @@ class BrokerController extends Controller
         }
     }
 
+    /**
+     * Show broker stamp image.
+     *
+     * - Requires authenticated user.
+     * - Requires `view users` permission.
+     * - Only works for users with role `Broker`.
+     * - Streams the stored broker stamp image from broker profile.
+     *
+     * @OA\Get(
+     *     path="/brokers/{userId}/stamp",
+     *     operationId="showBrokerStamp",
+     *     tags={"Brokers"},
+     *     summary="Show broker stamp image",
+     *     description="Streams the broker stamp image stored in broker profile (stamp_path).",
+     *     security={{"sanctum":{}}},
+     *
+     *     @OA\Parameter(
+     *         name="userId",
+     *         in="path",
+     *         required=true,
+     *         description="Broker user ID",
+     *         @OA\Schema(type="integer", example=298)
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Broker stamp image streamed successfully",
+     *         @OA\MediaType(
+     *             mediaType="image/png"
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated",
+     *         @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=403,
+     *         description="Forbidden - missing permission view users",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="error", type="string", example="Forbidden")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=404,
+     *         description="Broker not found",
+     *         @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=422,
+     *         description="User is not a broker",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="error", type="string", example="User doesn't exist or not a broker!")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=500,
+     *         description="Stamp image missing or could not be streamed",
+     *         @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+     *     )
+     * )
+     */
     public function showStamp(Request $request,int $userId)
     {
         $authUser = $request->user();

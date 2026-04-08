@@ -233,11 +233,9 @@ class SignedDocumentsController extends Controller
     {
         $signingLink = SigningLink::findOrFail($id);
 
-        /*
-        if (! auth()->user()->can('view signature')) {
+        if (! auth()->user()->can('view customer') && ! auth()->user()->can('view users')) {
             abort(ResponseAlias::HTTP_FORBIDDEN);
         }
-        */
 
         $path = $signingLink->signature_image_path;
         return app(ImageService::class)
