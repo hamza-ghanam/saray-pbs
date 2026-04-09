@@ -200,7 +200,7 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 // Brokers
-Route::post('/brokers/agreements/{token}/sign', [BrokerController::class, 'submitAgreementSignature']);
+Route::post('/brokers/agreements/{token}/submit-signature', [BrokerController::class, 'submitAgreementSignature']);
 
 // Unit Updates
 Route::middleware('auth:sanctum')->group(function () {
