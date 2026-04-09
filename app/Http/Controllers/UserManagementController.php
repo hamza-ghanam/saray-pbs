@@ -306,9 +306,9 @@ class UserManagementController extends Controller
 
                 $brokerProfilePayload = [
                     'id' => $brokerProfile->id,
-                    'rera_number' => $brokerProfile->rera_number ?? null,
-                    'company_name' => $brokerProfile->company_name ?? null,
-                    'phone' => $brokerProfile->phone ?? null,
+                    'rera_number' => $brokerProfile->rera_registration_number ?? null,
+                    'representative' => $brokerProfile->representative ?? null,
+                    'designation' => $brokerProfile->designation ?? null,
                     'stamp_url' => url("/api/brokers/{$user->id}/stamp"),
                     'created_at' => $brokerProfile->created_at,
                     'updated_at' => $brokerProfile->updated_at,
@@ -365,6 +365,7 @@ class UserManagementController extends Controller
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
+            'phone' => $user->phone,
             'status' => $user->status,
             'role' => $roleName,
             'permissions' => $permissions,
