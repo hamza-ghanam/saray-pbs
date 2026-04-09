@@ -471,7 +471,7 @@ class SignedDocumentsController extends Controller
      * - Public endpoint (no auth).
      * - Resolves the SigningLink by SHA-256 hash of the plain token.
      * - Allows download only while the signing link is still valid.
-     * - Returns the original unsigned PDF associated with the document.
+     * - Returns the original unsigned PDF associated with the document (RF, SPA or Broker Agreement).
      *
      * @OA\Get(
      *     path="/sign/doc/{token}/download-document",
