@@ -3747,7 +3747,8 @@
         <tr>
             <td class="left-th" style="line-height: 2.5; width: 49%; padding: 7px; text-align: justify;">
                 <strong>Name: Unique Saray Properties L.L.C </strong> by its authorised representative
-                <h4>Signed: <img
+                <h4>Signed:
+                    <img
                         src="file:///{{ str_replace('\\','/', storage_path('app/private/signatures/company/ceo_signature.png')) }}"
                         height="30" alt="{{ config('app.name') }} Signature"/>
                 </h4>
