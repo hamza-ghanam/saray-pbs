@@ -4425,8 +4425,10 @@
         <tr>
             <td class="en" style="line-height: 2.5;">
                 <strong>Name: Unique Saray Properties L.L.C </strong> by its authorised representative
-                <h4>Signed: <img src="file:///{{ str_replace('\\','/', storage_path('app/private/signatures/company_signature.png')) }}"
-                                 height="30" alt="{{ config('app.name') }} Signature"/>
+                <h4>Signed:
+                    <img
+                        src="file:///{{ str_replace('\\','/', storage_path('app/private/signatures/company/ceo_signature.png')) }}"
+                        height="30" alt="{{ config('app.name') }} Signature"/>
                 </h4>
                 <h4>Date: &nbsp;&nbsp;&nbsp; {{ optional($companySignedAt)->format('d-M-Y') }}&nbsp;&nbsp;</h4>
                 <br/>
