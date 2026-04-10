@@ -268,7 +268,7 @@ class SpaController extends Controller
     public function sendForSignature(Request $request, int $bookingId, SendForSignatureAction $action)
     {
         return $action->handle($request, $bookingId, new SignatureSendConfig(
-            permission: 'upload signed spa',
+            permission: 'generate spa',
             requiredBookingStatus: Booking::STATUS_SPA_PENDING,
             documentModelClass: SPA::class,
             documentTypeValue: DocumentType::SPA->value,
@@ -436,7 +436,7 @@ class SpaController extends Controller
      * provides their signature image to staff, who uploads it through the system.
      *
      * Behaviour:
-     * - Requires authenticated user with "upload final spa" permission.
+     * - Requires authenticated user with "upload signed spa" permission.
      * - SPA must exist and be strictly in Pending status.
      * - customer_id must belong to this booking and must require signature.
      * - Reuses/refreshes the signer record used for the signing flow without sending email.
@@ -569,7 +569,7 @@ class SpaController extends Controller
         FinalizeSignedDocumentService $finalizer
     ) {
         $cfg = new CustomerSignatureUploadConfig(
-            permission: 'upload final spa',
+            permission: 'upload signed spa',
             bookingRelation: 'spa',
             expectedDocumentClass: SPA::class,
             type: DocumentType::SPA,
@@ -605,7 +605,7 @@ class SpaController extends Controller
         $user = $request->user();
         Log::info("User {$user->id} is uploading a signed SPA for SPA ID: {$id}");
 
-        if (!$user->can('upload final spa')) {
+        if (!$user->can('upload signed spa')) {
             return response()->json(['error' => 'Forbidden'], 403);
         }
 
