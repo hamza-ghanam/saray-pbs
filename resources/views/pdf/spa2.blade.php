@@ -227,7 +227,7 @@
                 </td>
                 <td style="width: 48%; text-align: right; font-weight: bold;">
                     <img
-                        src="file:///{{ str_replace('\\','/', storage_path('app/private/stamps/company_stamp_sales.png')) }}"
+                        src="file:///{{ str_replace('\\','/', storage_path('app/private/stamps/company_stamp.png')) }}"
                         alt="Seller Initial" height="80" style="margin-right: 5px;"
                     >
                     <img
