@@ -126,7 +126,7 @@ class Booking extends Model
         return $this->belongsTo(User::class, 'agent_id');
     }
 
-    public function broker()
+    public function saleSource()
     {
         return $this->belongsTo(User::class, 'sale_source_id');
     }

@@ -773,6 +773,8 @@ class SpaController extends Controller
         $view = 'emails.rf_spa_final';
 
         foreach ($spa->booking->customerInfos as $customer) {
+            if (empty($customer->email)) continue;
+
             Mail::to($customer->email)->queue(
                 new RFSPAMail($spa->booking, $customer, $fileName, $spa->signed_file_path, $docType, $subject, $view)
             );
