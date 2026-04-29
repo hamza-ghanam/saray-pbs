@@ -1133,7 +1133,7 @@
                          height="30" alt="{{ config('app.name') }} Signature"/>
                 </h4>
                 <h4 style="unicode-bidi: embed;">التاريخ:&nbsp;&nbsp;
-                    &nbsp;{{ optional($companySignedAt)->locale('ar')->isoFormat('D-MMM-YYYY') }}&nbsp;
+                    &nbsp;{{ $companySignedAt ? $companySignedAt->locale('ar')->isoFormat('D-MMM-YYYY') : '' }}&nbsp;
                 </h4>
             </td>
         </tr>
