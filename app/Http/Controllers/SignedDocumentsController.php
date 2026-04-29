@@ -43,36 +43,36 @@ class SignedDocumentsController extends Controller
      *         name="signable_type",
      *         in="query",
      *         required=true,
-     *         description="Signable type alias (e.g. Booking)",
-     *         @OA\Schema(type="string", enum={"Booking"}, example="Booking")
+     *         description="Signable type alias. Use 'Booking' for RF/SPA, 'User' for broker agreements.",
+     *         @OA\Schema(type="string", enum={"Booking","User"}, example="Booking")
      *     ),
      *     @OA\Parameter(
      *         name="signable_id",
      *         in="query",
      *         required=true,
-     *         description="Signable ID (e.g. booking id)",
+     *         description="Signable ID (e.g. booking id or user id)",
      *         @OA\Schema(type="integer", example=137)
      *     ),
      *     @OA\Parameter(
      *         name="documentable_type",
      *         in="query",
      *         required=true,
-     *         description="Documentable type alias (RF or SPA)",
-     *         @OA\Schema(type="string", enum={"RF","SPA"}, example="RF")
+     *         description="Documentable type alias. RF = ReservationForm, SPA = SPA, UserDoc = broker agreement.",
+     *         @OA\Schema(type="string", enum={"RF","SPA","UserDoc"}, example="RF")
      *     ),
      *     @OA\Parameter(
      *         name="documentable_id",
      *         in="query",
      *         required=true,
-     *         description="Documentable ID (e.g. ReservationForm id or SPA id)",
+     *         description="Documentable ID (e.g. ReservationForm id, SPA id, or UserDoc id)",
      *         @OA\Schema(type="integer", example=55)
      *     ),
      *     @OA\Parameter(
      *         name="document_type",
      *         in="query",
      *         required=false,
-     *         description="Document type (RF or SPA). If omitted, it can be inferred from documentable_type.",
-     *         @OA\Schema(type="string", enum={"RF","SPA"}, example="RF")
+     *         description="Document type filter. If omitted, defaults to the value of documentable_type.",
+     *         @OA\Schema(type="string", enum={"RF","SPA","BROKER_AGREEMENT"}, example="RF")
      *     ),
      *
      *     @OA\Response(
@@ -92,7 +92,7 @@ class SignedDocumentsController extends Controller
      *                     @OA\Property(property="status", type="string", example="expired"),
      *                     @OA\Property(property="signed_at", type="string", format="date-time", nullable=true, example="2026-01-28 18:20:10"),
      *                     @OA\Property(property="has_signature", type="boolean", example=true),
-     *                     @OA\Property(property="signature_path", type="string", nullable=true, example="signatures/rf/999_20260128_182010.png"),
+     *                     @OA\Property(property="signature_path", type="string", nullable=true, description="URL to the signature image via GET /signatures/{id}/image, or null if no signature submitted yet.", example="https://api.example.com/signatures/999/image"),
      *                     @OA\Property(property="created_at", type="string", format="date-time", example="2026-01-28 18:19:45")
      *                 )
      *             )
@@ -120,8 +120,8 @@ class SignedDocumentsController extends Controller
      *                 ),
      *                 @OA\Schema(
      *                     type="object",
-     *                     @OA\Property(property="message", type="string", example="The documentable_type field must be one of RF or SPA."),
-     *                     @OA\Property(property="errors", type="object", example={"documentable_type":{"The documentable_type field must be one of RF or SPA."}})
+     *                     @OA\Property(property="message", type="string", example="The documentable_type field must be one of RF, SPA, or UserDoc."),
+     *                     @OA\Property(property="errors", type="object", example={"documentable_type":{"The documentable_type field must be one of RF, SPA, or UserDoc."}})
      *                 )
      *             }
      *         )
@@ -212,10 +212,10 @@ class SignedDocumentsController extends Controller
      *
      *     @OA\Response(
      *         response=403,
-     *         description="Forbidden",
+     *         description="Forbidden – user lacks 'view customer' or 'view users' permission",
      *         @OA\JsonContent(
      *             type="object",
-     *             @OA\Property(property="error", type="string", example="Forbidden")
+     *             @OA\Property(property="message", type="string", example="Forbidden.")
      *         )
      *     ),
      *
@@ -494,16 +494,28 @@ class SignedDocumentsController extends Controller
      *
      *     @OA\Response(
      *         response=404,
-     *         description="Signing link not found or document file missing",
+     *         description="Signing link not found, document invalid, or PDF file missing",
      *         @OA\JsonContent(
-     *             type="object",
-     *             @OA\Property(property="error", type="string", example="Invalid signing link.")
+     *             oneOf={
+     *                 @OA\Schema(
+     *                     type="object",
+     *                     @OA\Property(property="error", type="string", example="Invalid signing link.")
+     *                 ),
+     *                 @OA\Schema(
+     *                     type="object",
+     *                     @OA\Property(property="error", type="string", example="Invalid document for this signing link.")
+     *                 ),
+     *                 @OA\Schema(
+     *                     type="object",
+     *                     @OA\Property(property="error", type="string", example="Document file not found.")
+     *                 )
+     *             }
      *         )
      *     ),
      *
      *     @OA\Response(
      *         response=410,
-     *         description="Signing link expired, used, or no longer valid",
+     *         description="Signing link expired, already used, or withdrawn",
      *         @OA\JsonContent(
      *             oneOf={
      *                 @OA\Schema(
