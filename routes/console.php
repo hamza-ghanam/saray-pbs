@@ -38,16 +38,17 @@ if (!function_exists('getUnitCreatorTokens')) {
     }
 }
 
-// TEST: Write dummy data into cache table every minute
+// TEST: Write dummy data into approvals table every minute
 Schedule::call(function () {
-    $key = 'test:dummy:' . now()->format('Y-m-d_H-i');
-    DB::table('cache')->insert(
-        ['key' => $key],
-        [
-            'value'      => serialize(['message' => 'dummy test', 'timestamp' => now()->toIso8601String()]),
-            'expiration' => now()->addMinutes(5)->timestamp,
-        ]
-    );
+    DB::table('approvals')->insert([
+        'ref_id'        => rand(1, 100),
+        'ref_type'      => collect(['Unit', 'Booking'])->random(),
+        'approved_by'   => 1,
+        'approval_type' => collect(['CSO', 'Accountant', 'CFO', 'CEO'])->random(),
+        'status'        => collect(['Pending', 'Approved', 'Rejected'])->random(),
+        'created_at'    => now(),
+        'updated_at'    => now(),
+    ]);
 })->everyMinute();
 
 // Scheduled task for cancelling hold (hourly)
