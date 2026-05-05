@@ -91,7 +91,7 @@ Schedule::call(function () {
         ];
         $fcmService->sendPushNotification($deviceTokens, $title, $body, $data);
     }
-})->hourly();
+})->hourly()->name('hold-units');;
 
 // Scheduled task for releasing Pre-Hold units after 1 week (hourly)
 Schedule::call(function () {
@@ -144,12 +144,12 @@ Schedule::call(function () {
         ]);
         throw $e;
     }
-})->everyFiveMinutes()->name('pre-hold-units');
+})->hourly()->name('pre-hold-units');
 
 // Scheduled task for cancelling booking (daily)
 Schedule::call(function () {
     // Retrieve units in Pre-Booked or Booked status for 14 days or more.
-    $units = Unit::whereIn('status', ['Pre-Booked', 'Booked'])
+    $units = Unit::whereIn('status', [Unit::STATUS_BOOKED, Unit::STATUS_PRE_BOOKED])
         ->where('status_created_at', '<=', now()->subDays(14))
         ->get();
 
@@ -185,4 +185,4 @@ Schedule::call(function () {
         ];
         $fcmService->sendPushNotification($deviceTokens, $title, $body, $data);
     }
-})->daily();
+})->daily()->name('booked-pre-booked-units');
