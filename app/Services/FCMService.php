@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Log;
 use Kreait\Firebase\Messaging;
 use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Messaging\Notification;
+use Kreait\Laravel\Firebase\Facades\Firebase;
 use Throwable;
 
 class FCMService
@@ -17,7 +18,7 @@ class FCMService
      */
     public function __construct(Messaging $messaging)
     {
-        $this->messaging = $messaging;
+        $this->messaging = Firebase::messaging();
     }
 
     /**
