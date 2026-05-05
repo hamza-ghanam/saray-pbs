@@ -95,40 +95,54 @@ Schedule::call(function () {
 
 // Scheduled task for releasing Pre-Hold units after 1 week (hourly)
 Schedule::call(function () {
-    $units = Unit::where('status', Unit::STATUS_PRE_HOLD)
-        ->where('status_changed_at', '<=', now()->subWeek())
-        ->get();
+    try {
+        $units = Unit::where('status', Unit::STATUS_PRE_HOLD)
+            ->where('status_changed_at', '<=', now()->subWeek())
+            ->get();
 
-    $fcmService = app(FCMService::class);
-    $ceoTokens = getCeoTokens();
-
-    foreach ($units as $unit) {
-        $unit->update([
-            'status'            => Unit::STATUS_AVAILABLE,
-            'status_changed_at' => now(),
-        ]);
-
-        $holding = $unit->holdings()
-            ->whereNotIn('status', ['Cancelled', 'Rejected'])
-            ->latest()
-            ->first();
-
-        if ($holding) {
-            $holding->update(['status' => 'Cancelled']);
+        if ($units->isEmpty()) {
+            return;
         }
 
-        $creatorTokens = getUnitCreatorTokens($unit);
-        $deviceTokens  = array_merge($ceoTokens, $creatorTokens);
+        $fcmService = app(FCMService::class);
+        $ceoTokens  = getCeoTokens();
 
-        $fcmService->sendPushNotification(
-            $deviceTokens,
-            'Pre-Hold Released',
-            "Unit ID: {$unit->id} has been released back to Available after 1 week in Pre-Hold.",
-            [
-                'unit_id'   => (string) $unit->id,
-                'timestamp' => now()->toIso8601String(),
-            ]
-        );
+        foreach ($units as $unit) {
+            $unit->update([
+                'status'            => Unit::STATUS_AVAILABLE,
+                'status_changed_at' => now(),
+            ]);
+
+            $holding = $unit->holdings()
+                ->whereNotIn('status', ['Cancelled', 'Rejected'])
+                ->latest()
+                ->first();
+
+            if ($holding) {
+                $holding->update(['status' => 'Cancelled']);
+            }
+
+            $creatorTokens = getUnitCreatorTokens($unit);
+            $deviceTokens  = array_merge($ceoTokens, $creatorTokens);
+
+            if (!empty($deviceTokens)) {
+                $fcmService->sendPushNotification(
+                    $deviceTokens,
+                    'Pre-Hold Released',
+                    "Unit ID: {$unit->id} has been released back to Available after 1 week in Pre-Hold.",
+                    [
+                        'unit_id'   => (string) $unit->id,
+                        'timestamp' => now()->toIso8601String(),
+                    ]
+                );
+            }
+        }
+    } catch (\Throwable $e) {
+        \Illuminate\Support\Facades\Log::error('[pre-hold-units] ' . $e->getMessage(), [
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+        ]);
+        throw $e;
     }
 })->everyFiveMinutes()->name('pre-hold-units');
 
