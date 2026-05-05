@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use GuzzleHttp\Client;
+use GuzzleHttp\ClientInterface;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\ServiceProvider;
 use Symfony\Component\Mailer\Transport;
@@ -13,7 +15,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(ClientInterface::class, Client::class);
     }
 
     /**
