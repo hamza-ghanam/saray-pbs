@@ -1,6 +1,7 @@
 <?php
 use App\Models\Unit;
 use App\Models\User;
+use App\Services\FCMService;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schedule;
@@ -38,27 +39,27 @@ if (!function_exists('getUnitCreatorTokens')) {
     }
 }
 
-// TEST: Write dummy data into approvals table every minute
-Schedule::call(function () {
-    DB::table('approvals')->insert([
-        'ref_id'        => rand(1000, 9999),
-        'ref_type'      => collect(['Unit', 'Booking'])->random(),
-        'approved_by'   => 3,
-        'approval_type' => collect(['CSO', 'Accountant', 'CFO', 'CEO'])->random(),
-        'status'        => collect(['Pending', 'Approved', 'Rejected'])->random(),
-        'created_at'    => now(),
-        'updated_at'    => now(),
-    ]);
-})->everyMinute();
+//// TEST: Write dummy data into approvals table every minute
+//Schedule::call(function () {
+//    DB::table('approvals')->insert([
+//        'ref_id'        => rand(1000, 9999),
+//        'ref_type'      => collect(['Unit', 'Booking'])->random(),
+//        'approved_by'   => 3,
+//        'approval_type' => collect(['CSO', 'Accountant', 'CFO', 'CEO'])->random(),
+//        'status'        => collect(['Pending', 'Approved', 'Rejected'])->random(),
+//        'created_at'    => now(),
+//        'updated_at'    => now(),
+//    ]);
+//})->everyMinute();
 
 // Scheduled task for cancelling hold (hourly)
 Schedule::call(function () {
     // Retrieve units that are on "Hold" for at least 24 hours.
-    $units = Unit::where('status', 'Hold')
+    $units = Unit::where('status', Unit::STATUS_HOLD)
         ->where('status_changed_at', '<=', now()->subDay())
         ->get();
 
-    $fcmService = app(\App\Services\FCMService::class);
+    $fcmService = app(FCMService::class);
     $ceoTokens = getCeoTokens();
 
     foreach ($units as $unit) {
@@ -91,6 +92,45 @@ Schedule::call(function () {
         $fcmService->sendPushNotification($deviceTokens, $title, $body, $data);
     }
 })->hourly();
+
+// Scheduled task for releasing Pre-Hold units after 1 week (hourly)
+Schedule::call(function () {
+    $units = Unit::where('status', Unit::STATUS_PRE_HOLD)
+        ->where('status_changed_at', '<=', now()->subWeek())
+        ->get();
+
+    $fcmService = app(FCMService::class);
+    $ceoTokens = getCeoTokens();
+
+    foreach ($units as $unit) {
+        $unit->update([
+            'status'            => Unit::STATUS_AVAILABLE,
+            'status_changed_at' => now(),
+        ]);
+
+        $holding = $unit->holdings()
+            ->whereNotIn('status', ['Cancelled', 'Rejected'])
+            ->latest()
+            ->first();
+
+        if ($holding) {
+            $holding->update(['status' => 'Cancelled']);
+        }
+
+        $creatorTokens = getUnitCreatorTokens($unit);
+        $deviceTokens  = array_merge($ceoTokens, $creatorTokens);
+
+        $fcmService->sendPushNotification(
+            $deviceTokens,
+            'Pre-Hold Released',
+            "Unit ID: {$unit->id} has been released back to Available after 1 week in Pre-Hold.",
+            [
+                'unit_id'   => (string) $unit->id,
+                'timestamp' => now()->toIso8601String(),
+            ]
+        );
+    }
+})->everyFiveMinutes();
 
 // Scheduled task for cancelling booking (daily)
 Schedule::call(function () {
