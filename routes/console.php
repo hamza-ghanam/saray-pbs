@@ -41,9 +41,9 @@ if (!function_exists('getUnitCreatorTokens')) {
 // TEST: Write dummy data into approvals table every minute
 Schedule::call(function () {
     DB::table('approvals')->insert([
-        'ref_id'        => rand(1, 100),
+        'ref_id'        => rand(1000, 9999),
         'ref_type'      => collect(['Unit', 'Booking'])->random(),
-        'approved_by'   => 1,
+        'approved_by'   => 3,
         'approval_type' => collect(['CSO', 'Accountant', 'CFO', 'CEO'])->random(),
         'status'        => collect(['Pending', 'Approved', 'Rejected'])->random(),
         'created_at'    => now(),
