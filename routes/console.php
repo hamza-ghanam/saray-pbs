@@ -38,6 +38,18 @@ if (!function_exists('getUnitCreatorTokens')) {
     }
 }
 
+// TEST: Write dummy data into cache table every minute
+Schedule::call(function () {
+    $key = 'test:dummy:' . now()->format('Y-m-d_H-i');
+    DB::table('cache')->updateOrInsert(
+        ['key' => $key],
+        [
+            'value'      => serialize(['message' => 'dummy test', 'timestamp' => now()->toIso8601String()]),
+            'expiration' => now()->addMinutes(5)->timestamp,
+        ]
+    );
+})->everyMinute();
+
 // Scheduled task for cancelling hold (hourly)
 Schedule::call(function () {
     // Retrieve units that are on "Hold" for at least 24 hours.
