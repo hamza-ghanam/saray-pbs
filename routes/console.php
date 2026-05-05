@@ -130,7 +130,7 @@ Schedule::call(function () {
             ]
         );
     }
-})->everyFiveMinutes();
+})->everyFiveMinutes()->name('pre-hold-units');
 
 // Scheduled task for cancelling booking (daily)
 Schedule::call(function () {
