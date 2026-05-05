@@ -41,7 +41,7 @@ if (!function_exists('getUnitCreatorTokens')) {
 // TEST: Write dummy data into cache table every minute
 Schedule::call(function () {
     $key = 'test:dummy:' . now()->format('Y-m-d_H-i');
-    DB::table('cache')->updateOrInsert(
+    DB::table('cache')->insert(
         ['key' => $key],
         [
             'value'      => serialize(['message' => 'dummy test', 'timestamp' => now()->toIso8601String()]),
