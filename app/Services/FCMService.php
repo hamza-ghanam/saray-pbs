@@ -16,7 +16,7 @@ class FCMService
     /**
      * Inject the Firebase Messaging instance.
      */
-    public function __construct(Messaging $messaging)
+    public function __construct()
     {
         $this->messaging = Firebase::messaging();
     }
