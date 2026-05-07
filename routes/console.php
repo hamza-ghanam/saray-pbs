@@ -3,9 +3,7 @@ use App\Models\Unit;
 use App\Models\User;
 use App\Services\FCMService;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schedule;
-use Symfony\Component\HttpFoundation\Response;
 
 // Artisan "inspire" command remains unchanged.
 Artisan::command('inspire', function () {
@@ -19,7 +17,7 @@ if (!function_exists('getCeoTokens')) {
      * @return array
      */
     function getCeoTokens(): array {
-        $ceoUsers = \App\Models\User::role('CEO')->with('deviceTokens')->get();
+        $ceoUsers = User::role('CEO')->with('deviceTokens')->get();
         return $ceoUsers->pluck('deviceTokens')
             ->flatten()
             ->pluck('token')
@@ -31,10 +29,10 @@ if (!function_exists('getUnitCreatorTokens')) {
     /**
      * Retrieve device tokens for the user who created the given unit.
      *
-     * @param \App\Models\Unit $unit
+     * @param Unit $unit
      * @return array
      */
-    function getUnitCreatorTokens(\App\Models\Unit $unit): array {
+    function getUnitCreatorTokens(Unit $unit): array {
         return $unit->user ? $unit->user->deviceTokens->pluck('token')->toArray() : [];
     }
 }
@@ -138,7 +136,7 @@ Schedule::call(function () {
             }
         }
     } catch (\Throwable $e) {
-        \Illuminate\Support\Facades\Log::error('[pre-hold-units] ' . $e->getMessage(), [
+        Log::error('[pre-hold-units] ' . $e->getMessage(), [
             'file' => $e->getFile(),
             'line' => $e->getLine(),
         ]);
