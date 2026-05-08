@@ -18,6 +18,7 @@ class GeneralSettingSeeder extends Seeder
             ['group' => 'company', 'key' => 'dld',        'value' => '2055',                                                                                                   'type' => 'string'],
             ['group' => 'company', 'key' => 'email',      'value' => 'info@uniquesaray.com',                                                                                   'type' => 'string'],
             ['group' => 'company', 'key' => 'phone',      'value' => '+971 4 55 48787',                                                                                        'type' => 'string'],
+            ['group' => 'company', 'key' => 'broker_auth_rep',      'value' => 'Feras Zaiter',                                                                                        'type' => 'string'],
             ['group' => 'company', 'key' => 'po_box',     'value' => '.....',                                                                                                  'type' => 'string'],
             ['group' => 'company', 'key' => 'address',    'value' => 'Offices 301 & 308, building 2, Bay Square, Business Bay Building, Dubai, United Arab Emirates',          'type' => 'string'],
             ['group' => 'company', 'key' => 'address_ar', 'value' => 'دبي، منطقة الخليج التجاري، بي سيكوير، المبنى رقم (2)، المكتبين (301،302)',                             'type' => 'string'],
