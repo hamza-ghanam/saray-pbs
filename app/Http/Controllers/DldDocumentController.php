@@ -147,9 +147,11 @@ class DldDocumentController extends Controller
 
             //  Create broker commission for this booking, if it's through a broker
 
+            /*
             if (!is_null($booking->sale_source_id)) {
                 app(CreateBrokerCommissionFromBookedBookingAction::class)->execute($booking);
             }
+            */
         });
 
         $booking->load('dldDocument');

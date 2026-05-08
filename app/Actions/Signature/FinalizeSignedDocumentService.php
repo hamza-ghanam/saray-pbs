@@ -7,6 +7,7 @@ use App\Models\SigningLink;
 use App\Models\User;
 use App\Models\UserDoc;
 use App\Services\PdfService;
+use App\Services\TranslationService;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
@@ -15,7 +16,7 @@ use Illuminate\Support\Facades\Storage;
 
 readonly class FinalizeSignedDocumentService
 {
-    public function __construct(private PdfService $pdf)
+    public function __construct(private PdfService $pdf, private TranslationService $translation)
     {
     }
 
@@ -62,16 +63,26 @@ readonly class FinalizeSignedDocumentService
         // IMPORTANT: take one "now" only (avoid drifting timestamps)
         $finalSignedAt = now();
 
+        $building = $booking->unit?->building;
+        $buildingTranslations = $building
+            ? $this->translation->translateMultiple([
+                'name'     => $building->name,
+                'location' => $building->location,
+            ])
+            : ['name' => null, 'location' => null];
+
         $data = [
-            'booking' => $booking,
-            'customerInfos' => $booking->customerInfos,
-            'paymentPlan' => $booking->paymentPlan,
-            'installments' => $booking->installments,
-            'unit' => $booking->unit,
-            'signaturesByEmail' => $signaturesByEmail,
+            'booking'               => $booking,
+            'customerInfos'         => $booking->customerInfos,
+            'paymentPlan'           => $booking->paymentPlan,
+            'installments'          => $booking->installments,
+            'unit'                  => $booking->unit,
+            'signaturesByEmail'     => $signaturesByEmail,
             'hasStaffUploadedSignature' => $hasStaffUploadedSignature,
-            'finalSignedAt' => $finalSignedAt,
-            'companySignedAt' => $documentable->company_signed_at ?? null,
+            'finalSignedAt'         => $finalSignedAt,
+            'companySignedAt'       => $documentable->company_signed_at ?? null,
+            'buildingNameAr'        => $buildingTranslations['name'],
+            'buildingLocationAr'    => $buildingTranslations['location'],
         ];
 
         return $this->finaliseAndPersist(

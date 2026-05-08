@@ -136,7 +136,7 @@
     <div style="margin-left: -45px; height: 150px;">
         <div style="height: 50px">&nbsp;</div>
         <img
-            src="{{ public_path('images/Saray_Header.png') }}"
+            src="{{ public_path('images/app_header.png') }}"
             alt="Company Header"
             style="width:50%; max-width:200mm;"
         />

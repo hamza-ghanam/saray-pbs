@@ -7,6 +7,7 @@ use App\Actions\Signature\SubmitSignatureAction;
 use App\Enums\DocumentType;
 use App\Models\Booking;
 use App\Models\BrokerCommission;
+use App\Models\Building;
 use App\Models\SigningLink;
 use App\Models\User;
 use App\Models\UserDoc;
@@ -201,6 +202,7 @@ class BrokerController extends Controller
                     'userType'      => 'Broker',
                     'signaturePath' => $signaturePath,
                     'admin'         => $adminUser,
+                    'buildingName'  => Building::orderBy('id')->value('name'),
                 ], $pdfPath);
 
                 // 3) Create/replace agreement UserDoc

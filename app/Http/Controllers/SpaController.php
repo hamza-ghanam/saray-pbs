@@ -19,6 +19,7 @@ use App\Models\SPA;
 use App\Models\Unit;
 use App\Services\PaymentPlanService;
 use App\Services\PdfService;
+use App\Services\TranslationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -34,10 +35,12 @@ use Symfony\Component\HttpFoundation\Response;
 class SpaController extends Controller
 {
     protected PaymentPlanService $paymentPlanService;
+    protected TranslationService $translationService;
 
-    public function __construct(PaymentPlanService $paymentPlanService)
+    public function __construct(PaymentPlanService $paymentPlanService, TranslationService $translationService)
     {
         $this->paymentPlanService = $paymentPlanService;
+        $this->translationService = $translationService;
     }
 
     /**
@@ -139,13 +142,23 @@ class SpaController extends Controller
                 'customerInfos'
             ]);
 
+            $building = $booking->unit->building;
+            $buildingTranslations = $building
+                ? $this->translationService->translateMultiple([
+                    'name'     => $building->name,
+                    'location' => $building->location,
+                ])
+                : ['name' => null, 'location' => null];
+
             $spaData = [
-                'booking' => $booking,
-                'customerInfos' => $booking->customerInfos,
-                'paymentPlan' => $booking->paymentPlan,
-                'installments' => $booking->installments,
-                'unit' => $booking->unit,
+                'booking'         => $booking,
+                'customerInfos'   => $booking->customerInfos,
+                'paymentPlan'     => $booking->paymentPlan,
+                'installments'    => $booking->installments,
+                'unit'            => $booking->unit,
                 'companySignedAt' => $companySignedAt,
+                'buildingNameAr'  => $buildingTranslations['name'],
+                'buildingLocationAr' => $buildingTranslations['location'],
             ];
 
             /*

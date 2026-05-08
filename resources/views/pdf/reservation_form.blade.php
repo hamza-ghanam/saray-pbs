@@ -106,7 +106,7 @@
     <div style="margin-left: -45px; height: 150px;">
         <div style="height: 50px">&nbsp;</div>
         <img
-            src="{{ public_path('images/Saray_Header.png') }}"
+            src="{{ public_path('images/app_header.png') }}"
             alt="Company Header"
             style="width:50%; max-width:200mm;"
         />
@@ -203,7 +203,7 @@
         </tr>
         <tr>
             <th class="left-th">Seller:</th>
-            <td style="text-align: center;">Unique Saray Properties L.L.C</td>
+            <td style="text-align: center;">{{ config('app.tenant_name') }}</td>
             <th class="rtl-text right-th">البائع:</th>
         </tr>
         <tr>
@@ -328,7 +328,7 @@
             <!-- Fax NO. -->
             <tr>
                 <th class="left-th">Fax NO.:</th>
-                <td class="centred-text" colspan="2"> {{ $customerInfo->fax }} </td>
+                <td class="centred-text" colspan="2"> {{ $customerInfo->fax ?? 'N/A' }} </td>
                 <th class="rtl-text right-th">رقم الفاكس:</th>
             </tr>
 
@@ -797,7 +797,7 @@
                 Bank Name
             </td>
             <td class="left-th" style="width: 50%; text-align: center; padding: 10px;">
-                Emirates NBD Bank PJSC
+                {{ config('app.tenant_account_bank') }}
             </td>
             <td class="rtl-text right-th" style="width: 25%; padding: 10px;">
                 اسم المصرف
@@ -808,7 +808,7 @@
                 Account Name
             </td>
             <td class="left-th" style="width: 50%; text-align: center; padding: 10px;">
-                UNIQUE SARAY PROPERTIES LLC.
+                {{ config('app.tenant_account_name') }}
             </td>
             <td class="rtl-text right-th" style="width: 25%; padding: 10px;">
                 اسم الحساب
@@ -819,7 +819,7 @@
                 Account No.
             </td>
             <td class="left-th" style="width: 50%; text-align: center; padding: 10px;">
-                1015931383801
+                {{ config('app.tenant_account_number') }}
             </td>
             <td class="rtl-text right-th" style="width: 25%;  padding: 10px;">
                 رقم الحساب
@@ -830,7 +830,7 @@
                 IBAN
             </td>
             <td class="left-th" style="width: 50%; text-align: center;  padding: 10px;">
-                AE940260001015931383801
+                {{ config('app.tenant_account_iban') }}
             </td>
             <td class="rtl-text right-th" style="width: 25%;  padding: 10px;">
                 آيبان
@@ -852,7 +852,7 @@
                 Swift
             </td>
             <td class="left-th" style="width: 50%; text-align: center;  padding: 10px;">
-                EBILAEAD
+                {{ config('app.tenant_account_swift') }}
             </td>
             <td class="rtl-text right-th" style="width: 25%;  padding: 10px;">
                 سويفت
@@ -874,7 +874,7 @@
                 Bank Name
             </td>
             <td class="left-th" style="width: 50%; text-align: center;  padding: 10px;">
-                Emirates NBD Bank PJSC
+                {{ config('app.tenant_account_bank') }}
             </td>
             <td class="rtl-text right-th" style="width: 25%;  padding: 10px;">
                 اسم المصرف
@@ -885,7 +885,7 @@
                 Account Name
             </td>
             <td class="left-th" style="width: 50%; text-align: center;  padding: 10px;">
-                Saray Prime Residence Escrow Account
+                {{ config('app.tenant_escrow_account_name') }}
             </td>
             <td class="rtl-text right-th" style="width: 25%;  padding: 10px;">
                 اسم الحساب
@@ -896,7 +896,7 @@
                 Account No.
             </td>
             <td class="left-th" style="width: 50%; text-align: center;  padding: 10px;">
-                0205931383803
+                {{ config('app.tenant_escrow_account_number') }}
             </td>
             <td class="rtl-text right-th" style="width: 25%;  padding: 10px;">
                 رقم الحساب
@@ -907,7 +907,7 @@
                 IBAN
             </td>
             <td class="left-th" style="width: 50%; text-align: center;  padding: 10px;">
-                AE180260000205931383803
+                {{ config('app.tenant_escrow_account_iban') }}
             </td>
             <td class="rtl-text right-th" style="width: 25%;  padding: 10px;">
                 آيبان
@@ -929,7 +929,7 @@
                 BIC Code
             </td>
             <td class="left-th" style="width: 50%; text-align: center;  padding: 10px;">
-                EBILAEADXXX
+                {{ config('app.tenant_escrow_account_bic')  }}
             </td>
             <td class="rtl-text right-th" style="width: 25%;  padding: 10px;">
                 رمز BIC
@@ -1119,7 +1119,7 @@
     <table class="info-table">
         <tr>
             <td class="left-th" style="line-height: 2.5; width: 49%; padding: 7px; text-align: justify;">
-                <h4>Name: Unique Saray Properties L.L.C </h4>
+                <h4>Name: {{ config('app.tenant_name') }} </h4>
                 <h4>Signed: <img src="file:///{{ str_replace('\\','/', storage_path('app/private/signatures/company/cso_signature.png')) }}"
                                  height="30" alt="{{ config('app.name') }} Signature"/>
                 </h4>
@@ -1127,7 +1127,7 @@
             </td>
             <td style="text-align: center;"></td>
             <td class="rtl-text right-th" style="line-height: 2.5; width: 49%; padding: 7px; text-align: justify;">
-                <h4>الاسم: يونيك سراي للعقارت ش.ذ.م.م</h4>
+                <h4>الاسم: {{ config('app.tenant_name_ar') }}</h4>
                 <h4>التوقيع:
                     <img src="file:///{{ str_replace('\\','/', storage_path('app/private/signatures/company/cso_signature.png')) }}"
                          height="30" alt="{{ config('app.name') }} Signature"/>

@@ -99,7 +99,7 @@
 <body>
 <!-- TODO: Customize the final PDF file -->
 <header>
-    <img src="{{ public_path('images/Saray_Header.png') }}" alt="Company Header" style="width: 50%;">
+    <img src="{{ public_path('images/app_header.png') }}" alt="Company Header" style="width: 50%;">
 </header>
 
 <footer>

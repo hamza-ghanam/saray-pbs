@@ -149,7 +149,7 @@
     <div style="margin-left: -45px; height: 150px;">
         <div style="height: 50px">&nbsp;</div>
         <img
-            src="{{ public_path('images/Saray_Header.png') }}"
+            src="{{ public_path('images/app_header.png') }}"
             alt="Company Header"
             style="width:50%; max-width:200mm;"
         />
@@ -194,12 +194,10 @@
         </p>
         <p>
             BETWEEN<br/>
-            Unique Saray Development, a company duly registered in the Emirate of Dubai, United Arab Emirates with
-            license number 1343857 and having its address at PO Box ………. Bay Square, Business Bay Building, Dubai,
-            United Arab
-            Emirates, telephone: 04 554 8787,
-            email id: info@uniquesaray.com (the "Seller");
-
+            {{ config('app.tenant_name') }}, a company duly registered in the Emirate of Dubai, United Arab Emirates with
+            license number {{ config('app.tenant_license') }} and having its address at PO Box {{ config('app.tenant_po_box') }}.
+            {{ config('app.tenant_address') }}, telephone: {{ config('app.tenant_phone') }},
+            email id: {{ config('app.tenant_email') }} (the "Seller");
         </p>
         <p>
             AND<br/>
@@ -976,7 +974,7 @@
             </thead>
             <tbody>
             <tr>
-                <td rowspan="3">Saray Prime Residence Tower</td>
+                <td rowspan="3">{{ $buildingName ?? 'N/A' }}</td>
                 <td>0 – 5,000,000</td>
                 <td>5%</td>
             </tr>
@@ -1032,7 +1030,7 @@
                         >
 
                     <br/>
-                    Signature “Unique Saray Development” <br/><br/>
+                    Signature "{{ config('app.tenant_name') }}" <br/><br/>
 
                     <i>Feras Zaiter</i>
                     <br/>

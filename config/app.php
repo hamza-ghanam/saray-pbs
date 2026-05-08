@@ -14,8 +14,33 @@ return [
     */
 
     'name' => env('APP_NAME', 'Laravel'),
-    'frontend_url' => env('FEND_URL', 'https://www.uniquesaray.ae'),
+    'frontend_url' => env('FEND_URL', ''),
     'app_version' => env('APP_VERSION', '2.0'),
+
+    'tenant_name' => env('TENANT_NAME', 'N/A'),
+    'tenant_name_ar' => env('TENANT_NAME_AR', 'N/A'),
+    'tenant_license' => env('TENANT_LICENSE', 'N/A'),
+    'tenant_dld' => env('TENANT_DLD', 'N/A'),
+    'tenant_email' => env('TENANT_EMAIL', 'N/A'),
+    'tenant_po_box' => env('TENANT_PO_BOX', 'N/A'),
+    'tenant_address' => env('TENANT_ADDRESS', 'N/A'),
+    'tenant_address_ar' => env('TENANT_ADDRESS_AR', 'N/A'),
+    'tenant_phone' => env('TENANT_PHONE', 'N/A'),
+
+    'tenant_account_name' => env('TENANT_ACCOUNT_NAME', 'N/A'),
+    'tenant_account_bank' => env('TENANT_ACCOUNT_BANK', 'N/A'),
+    'tenant_account_branch' => env('TENANT_ACCOUNT_BRANCH', 'N/A'),
+    'tenant_account_number' => env('TENANT_ACCOUNT_NUMBER', 'N/A'),
+    'tenant_account_iban' => env('TENANT_ACCOUNT_IBAN', 'N/A'),
+    'tenant_account_swift' => env('TENANT_ACCOUNT_SWIFT', 'N/A'),
+
+    'tenant_escrow_account_name' => env('TENANT_ESCROW_ACCOUNT_NAME', 'N/A'),
+    'tenant_escrow_account_bank' => env('TENANT_ESCROW_ACCOUNT_BANK', 'N/A'),
+    'tenant_escrow_account_branch' => env('TENANT_ESCROW_ACCOUNT_BRANCH', 'N/A'),
+    'tenant_escrow_account_number' => env('TENANT_ESCROW_ACCOUNT_NUMBER', 'N/A'),
+    'tenant_escrow_account_iban' => env('TENANT_ESCROW_ACCOUNT_IBAN', 'N/A'),
+    'tenant_escrow_account_bic' => env('TENANT_ESCROW_ACCOUNT_BIC', 'N/A'),
+
 
     /*
     |--------------------------------------------------------------------------

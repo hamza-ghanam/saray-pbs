@@ -125,7 +125,7 @@
 <body>
 <!-- TODO: Customize the final PDF file -->
 <header>
-    <img src="{{ public_path('images/Saray_Header.png') }}" alt="Company Header" style="width: 50%;">
+    <img src="{{ public_path('images/app_header.png') }}" alt="Company Header" style="width: 50%;">
 </header>
 
 <footer>
@@ -146,8 +146,7 @@
         <h2>Particulars</h2>
         <p><span class="label">1. Effective Date:</span><span class="value">{{ $booking->latest_approved_at->toDateString() }}</span></p>
         <p><span class="label">2. Seller:</span><span class="value">
-            Unique Saray Properties L.L.C, of office 301 & 308, building 2,
-                Bay Square, Business bay, Dubai, UAE, Dubai, UAE, its nominees,
+            {{ config('app.tenant_name') }}, {{ config('app.tenant_address') }}, its nominees,
                 successors in title and assigns.
             </span>
         </p>

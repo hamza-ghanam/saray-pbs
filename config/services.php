@@ -38,7 +38,7 @@ return [
     'brevo' => [
         'key'          => env('BREVO_API_KEY2'),
         'sender_email' => env('BREVO_SENDER_EMAIL'),
-        'sender_name'  => env('BREVO_SENDER_NAME', 'Unique Saray'),
+        'sender_name'  => env('BREVO_SENDER_NAME', env('TENANT_NAME')),
     ],
 
     'mindee' => [

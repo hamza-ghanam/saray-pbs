@@ -74,7 +74,7 @@
 <div class="container">
     <div class="header">
         <img
-            src="{{ asset('images/saray_logo.png') }}"
+            src="{{ asset('images/app_logo.png') }}"
             alt="{{ config('app.name') }} Logo"
             style="max-width: 200px; height: auto; display: inline-block; margin-bottom: 15px;"
         >

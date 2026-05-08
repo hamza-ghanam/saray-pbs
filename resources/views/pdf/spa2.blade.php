@@ -179,7 +179,7 @@
     <div style="margin-left: -45px; height: 150px;">
         <div style="height: 50px">&nbsp;</div>
         <img
-            src="{{ public_path('images/Saray_Header.png') }}"
+            src="{{ public_path('images/app_header.png') }}"
             alt="Company Header"
             style="width:50%; max-width:200mm;"
         />
@@ -273,7 +273,7 @@
 <!-- 9) Your main content -->
 <main>
     <h1 class="" style="text-align:center;">
-        Saray Prime Residence Tower<br/>Residential Building
+        {{ $unit->building->name }}<br/>Residential Building
     </h1>
     <br/>
     @if($unit->building->image_path)
@@ -290,9 +290,8 @@
     </h2>
     <br/>
     <h4 class="" style="text-align:center;">
-        Wadi Al Safa 5<br/>
-        Dubai Land – Dubai<br/>
-        Plot No. (6488586)
+        {{ $unit->building->location }}<br/>
+        Plot No. ({{ $unit->building->plot_no }})
     </h4>
     <br/>
     @foreach($customerInfos as $customerInfo)
@@ -307,14 +306,14 @@
     <table class="contract-table">
         <tr>
             <th class="en">
-                Saray Prime Residence Tower – Residential Building <br/>
+                {{ $unit->building->name }} – Residential Building <br/>
                 Residential Unit Sale and Purchase Agreement <br>
-                Dubai Wadi Al Safa 5 – Dubai Land - Dubai
+                {{ $unit->building->location }}
             </th>
             <th class="ar">
-                سراي بريميوم ريزدنس - بناية سكنية<br/>
+                {{ $buildingNameAr ?? 'N/A' }} - بناية سكنية<br/>
                 اتفاقية بيع وشراء وحدة سكنية<br/>
-                وادي الصفا 5 – دبي لاند - دبي<br/>
+                {{ $buildingLocationAr ?? 'N/A' }}<br/>
             </th>
         </tr>
     </table>
@@ -341,22 +340,22 @@
         <tr>
             <td class="en">
                 <b>2. Seller:</b>
-                <strong>Unique Saray Properties L.L.C</strong>,Licensed by Dubai Department of Economy and Tourism under
-                license No. (1343857), and licensed as a real estate developer by the DLD under license No. (2055).
-                office 301 & 308, building 2, , Bay Square, Business bay, Dubai, UAE, PO Box [000000], Dubai, UAE<br/>
-                Phone No.: +971 4 55 48787.<br/>
-                Email: crm@uniquesaray.com,<br/>
+                <strong>{{ config('app.tenant_name') }}</strong>, Licensed by Dubai Department of Economy and Tourism under
+                license No. ({{ config('app.tenant_license') }}), and licensed as a real estate developer by the DLD under license No. ({{ config('app.tenant_dld') }}).
+                {{ config('app.tenant_address') }} PO Box [{{ config('app.tenant_po_box') }}], Dubai, UAE<br/>
+                Phone No.: {{ config('app.tenant_phone') }}<br/>
+                Email: {{ config('app.tenant_email') }}<br/>
                 Its nominees, successors in title and assigns.
             </td>
             <td class="separator"></td>
             <td class="ar">
                 <b>2. البائع:</b>
-                <strong>شركة يونيك سراي للعقارت ش.ذ.م.م.</strong>
-                والمرخصة لدى دبي للاقتصاد والسياحة برقم (1343857)، والمرخصة كمطور عقاري من دائرة الأراضي والأملاك دبي
-                برقم (2055)
-                الكائنة في دبي، منطقة الخليج التجاري، بي سيكوير، المبنى رقم (2)، مكتب رقم (301،302).<br/>
-                هاتف رقم: [+971 4 55 48787.],<br/>
-                البريد الالكتروني: crm@uniquesaray.com<br/>
+                <strong>شركة {{ config('app.tenant_name_ar') }}</strong>
+                والمرخصة لدى دبي للاقتصاد والسياحة برقم ({{ config('app.tenant_license') }})، والمرخصة كمطور عقاري من دائرة الأراضي والأملاك دبي
+                برقم ({{ config('app.tenant_dld') }})
+                الكائنة في ({{ config('app.tenant_address_ar') }}).<br/>
+                هاتف رقم: <span dir="ltr">[{{ config('app.tenant_phone') }}]</span>,<br/>
+                البريد الالكتروني: {{ config('app.tenant_email') }}<br/>
                 والأشخاص التي تعينهم والورثة في الملكية والمتنازل إليهم.
             </td>
         </tr>
@@ -431,7 +430,7 @@
             <!-- Fax NO. -->
             <tr>
                 <th class="left-th">Fax NO.:</th>
-                <td class="centred-text" colspan="2"> {{ $customerInfo->fax }} </td>
+                <td class="centred-text" colspan="2"> {{ $customerInfo->fax ?: 'N/A' }} </td>
                 <th class="rtl-text right-th">رقم الفاكس:</th>
             </tr>
 
@@ -446,47 +445,47 @@
         <!-- Corporations -->
         <tr>
             <th class="left-th" style="text-decoration: underline;">For corporations:</th>
-            <td class="centred-text" colspan="2">&nbsp;</td>
+            <td class="centred-text" colspan="2">N/A</td>
             <th class="rtl-text right-th" style="text-decoration: underline;">بالنسبة للشركات:</th>
         </tr>
         <tr>
             <th class="left-th">Nationality:</th>
-            <td class="centred-text" colspan="2">&nbsp;</td>
+            <td class="centred-text" colspan="2">N/A</td>
             <th class="rtl-text right-th">الجنسية:</th>
         </tr>
         <tr>
             <th class="left-th">License/Registration NO.:</th>
-            <td class="centred-text" colspan="2">&nbsp;</td>
+            <td class="centred-text" colspan="2">N/A</td>
             <th class="rtl-text right-th">رقم الترخيص/رقم التسجيل:</th>
         </tr>
         <tr>
             <th class="left-th">Address:</th>
-            <td class="centred-text" colspan="2">&nbsp;</td>
+            <td class="centred-text" colspan="2">N/A</td>
             <th class="rtl-text right-th">العنوان:</th>
         </tr>
         <tr>
             <th class="left-th">Physical Address:</th>
-            <td class="centred-text" colspan="2">&nbsp;</td>
+            <td class="centred-text" colspan="2">N/A</td>
             <th class="rtl-text right-th">العنوان الفعلي:</th>
         </tr>
         <tr>
             <th class="left-th">P.O. Box:</th>
-            <td class="centred-text" colspan="2">&nbsp;</td>
+            <td class="centred-text" colspan="2">N/A</td>
             <th class="rtl-text right-th">ص.ب.:</th>
         </tr>
         <tr>
             <th class="left-th">Phone NO.:</th>
-            <td class="centred-text" colspan="2">&nbsp;</td>
+            <td class="centred-text" colspan="2">N/A</td>
             <th class="rtl-text right-th">رقم الهاتف:</th>
         </tr>
         <tr>
             <th class="left-th">Fax NO.:</th>
-            <td class="centred-text" colspan="2">&nbsp;</td>
+            <td class="centred-text" colspan="2">N/A</td>
             <th class="rtl-text right-th">رقم الفاكس:</th>
         </tr>
         <tr>
             <th class="left-th">Email address:</th>
-            <td class="centred-text" colspan="2">&nbsp;</td>
+            <td class="centred-text" colspan="2">N/A</td>
             <th class="rtl-text right-th">البريد الإلكتروني:</th>
         </tr>
         <tr>
@@ -529,7 +528,7 @@
             <th class="left-th">Project:</th>
             <td class="centred-text" colspan="2">{{ $unit->building->name }} Residential Building, Project
                 No: {{ $unit->building->project_no }}<br/>
-                سراي برايم ريزدنس - بناية سكنية، مشروع رقم: {{ $unit->building->project_no }}
+                {{ $buildingNameAr }} - بناية سكنية، مشروع رقم: {{ $unit->building->project_no }}
             </td>
             <th class="rtl-text right-th">المشروع:</th>
         </tr>
@@ -551,67 +550,83 @@
             </td>
             <th class="rtl-text right-th" style="width: 27%;">6. جدول سداد الدفعات</th>
         </tr>
-        <tr>
-            <th class="left-th">
-                7.1. Escrow Account
-            </th>
-            <td class="centred-text" colspan="2"></td>
-            <th class="rtl-text right-th">7.1. حساب الضمان:</th>
-        </tr>
-        <tr>
-            <td class="left-th">
-                Bank Name:
-            </td>
-            <td class="centred-text" colspan="2">Emirates NBD Bank PJSC</td>
-            <th class="rtl-text right-th">
-                اسم البنك:
-            </th>
-        </tr>
-        <tr>
-            <td class="left-th">
-                Bank Branch Name and Address:
-            </td>
-            <td class="centred-text" colspan="2">Main Brach</td>
-            <th class="rtl-text right-th">
-                اسم وعنوان فرع البنك:
-            </th>
-        </tr>
-        <tr>
-            <td class="left-th">
-                Account Name:
-            </td>
-            <td class="centred-text" colspan="2">SARAY PRIME RESIDENCE</td>
-            <th class="rtl-text right-th">
-                اسم الحساب:
-            </th>
-        </tr>
-        <tr>
-            <td class="left-th">
-                Account Number:
-            </td>
-            <td class="centred-text" colspan="2">0205931383803</td>
-            <th class="rtl-text right-th">
-                رقم الحساب:
-            </th>
-        </tr>
-        <tr>
-            <td class="left-th">
-                Swift Code:
-            </td>
-            <td class="centred-text" colspan="2">EBILAEADXXX</td>
-            <th class="rtl-text right-th">
-                رمز SWIFT:
-            </th>
-        </tr>
-        <tr>
-            <td class="left-th">
-                IBAN No:
-            </td>
-            <td class="centred-text" colspan="2">AE180260000205931383803</td>
-            <th class="rtl-text right-th">
-                رقم IBAN:
-            </th>
-        </tr>
+
+        @if($unit->building->project_no == 4058)
+            <tr>
+                <th class="left-th">
+                    7.1. Escrow Account
+                </th>
+                <td class="centred-text" colspan="2"></td>
+                <th class="rtl-text right-th">7.1. حساب الضمان:</th>
+            </tr>
+            <tr>
+                <td class="left-th">
+                    Bank Name:
+                </td>
+                <td class="centred-text" colspan="2">
+                    {{ config('app.tenant_escrow_account_bank') }}
+                </td>
+                <th class="rtl-text right-th">
+                    اسم البنك:
+                </th>
+            </tr>
+            <tr>
+                <td class="left-th">
+                    Bank Branch Name and Address:
+                </td>
+                <td class="centred-text" colspan="2">
+                    {{ config('app.tenant_escrow_account_branch') }}
+                </td>
+                <th class="rtl-text right-th">
+                    اسم وعنوان فرع البنك:
+                </th>
+            </tr>
+            <tr>
+                <td class="left-th">
+                    Account Name:
+                </td>
+                <td class="centred-text" colspan="2">
+                    {{ config('app.tenant_escrow_account_name') }}
+                </td>
+                <th class="rtl-text right-th">
+                    اسم الحساب:
+                </th>
+            </tr>
+            <tr>
+                <td class="left-th">
+                    Account Number:
+                </td>
+                <td class="centred-text" colspan="2">
+                    {{ config('app.tenant_escrow_account_number') }}
+                </td>
+                <th class="rtl-text right-th">
+                    رقم الحساب:
+                </th>
+            </tr>
+            <tr>
+                <td class="left-th">
+                    IBAN No:
+                </td>
+                <td class="centred-text" colspan="2">
+                    {{ config('app.tenant_escrow_account_iban') }}
+                </td>
+                <th class="rtl-text right-th">
+                    رقم IBAN:
+                </th>
+            </tr>
+            <tr>
+                <td class="left-th">
+                    BIC Code:
+                </td>
+                <td class="centred-text" colspan="2">
+                    {{ config('app.tenant_escrow_account_bic') }}
+                </td>
+                <th class="rtl-text right-th">
+                    رمز BIC:
+                </th>
+            </tr>
+        @endif
+
         <tr>
             <th class="left-th">
                 7.2. Corporate Account
@@ -623,7 +638,9 @@
             <td class="left-th">
                 Bank Name:
             </td>
-            <td class="centred-text" colspan="2">Emirates NBD Bank PJSC</td>
+            <td class="centred-text" colspan="2">
+                {{ config('app.tenant_account_bank') }}
+            </td>
             <th class="rtl-text right-th">
                 اسم البنك:
             </th>
@@ -632,7 +649,9 @@
             <td class="left-th">
                 Bank Branch Name and Address:
             </td>
-            <td class="centred-text" colspan="2">Main Brach</td>
+            <td class="centred-text" colspan="2">
+                {{ config('app.tenant_account_branch') }}
+            </td>
             <th class="rtl-text right-th">
                 اسم وعنوان فرع البنك:
             </th>
@@ -641,7 +660,9 @@
             <td class="left-th">
                 Account Name:
             </td>
-            <td class="centred-text" colspan="2">UNIQUE SARAY PROPERTIES LLC.</td>
+            <td class="centred-text" colspan="2">
+                {{ config('app.tenant_account_name') }}
+            </td>
             <th class="rtl-text right-th">
                 اسم الحساب:
             </th>
@@ -650,9 +671,22 @@
             <td class="left-th">
                 Account Number:
             </td>
-            <td class="centred-text" colspan="2">1015931383801</td>
+            <td class="centred-text" colspan="2">
+                {{ config('app.tenant_account_number') }}
+            </td>
             <th class="rtl-text right-th">
                 رقم الحساب:
+            </th>
+        </tr>
+        <tr>
+            <td class="left-th">
+                IBAN No:
+            </td>
+            <td class="centred-text" colspan="2">
+                {{ config('app.tenant_account_iban') }}
+            </td>
+            <th class="rtl-text right-th">
+                رقم IBAN:
             </th>
         </tr>
         <tr>
@@ -670,18 +704,11 @@
             <td class="left-th">
                 Swift Code:
             </td>
-            <td class="centred-text" colspan="2">EBILAEAD</td>
+            <td class="centred-text" colspan="2">
+                {{ config('app.tenant_account_swift') }}
+            </td>
             <th class="rtl-text right-th">
                 رمز SWIFT:
-            </th>
-        </tr>
-        <tr>
-            <td class="left-th">
-                IBAN No:
-            </td>
-            <td class="centred-text" colspan="2">AE940260001015931383801</td>
-            <th class="rtl-text right-th">
-                رقم IBAN:
             </th>
         </tr>
         <tr>
@@ -3746,7 +3773,7 @@
     <table class="contract-table">
         <tr>
             <td class="left-th" style="line-height: 2.5; width: 49%; padding: 7px; text-align: justify;">
-                <strong>Name: Unique Saray Properties L.L.C </strong> by its authorised representative
+                <strong>Name: {{ config('app.tenant_name') }}</strong> by its authorised representative
                 <h4>Signed:
                     <img
                         src="file:///{{ str_replace('\\','/', storage_path('app/private/signatures/company/ceo_signature.png')) }}"
@@ -3760,7 +3787,7 @@
             </td>
             <td class="centred-text"></td>
             <td class="rtl-text right-th" style="line-height: 2.5; width: 49%; padding: 7px; text-align: justify;">
-                <strong>الاسم: يونيك سراي للعقارت ش.ذ.م.م</strong> من قبل الممثل المفوض
+                <strong>الاسم: {{ config('app.tenant_name_ar') }}</strong> من قبل الممثل المفوض
                 <h4>التوقيع:
                     <img
                         src="file:///{{ str_replace('\\','/', storage_path('app/private/signatures/company/ceo_signature.png')) }}"
@@ -4381,8 +4408,7 @@
             <td class="en">
                 WHEREAS: <br/>
 
-                A. The Purchaser proposes to take title to Unit No. {{ $unit->unit_no }} located in the project Saray
-                Prime Residence, Dubai, United Arab Emirates.
+                A. The Purchaser proposes to take title to Unit No. {{ $unit->unit_no }} located in the project {{ $unit->building->name }}, {{ $unit->building->location }}.
                 <br/>
                 B. The Purchaser has read and understood the Association Constitution and the Jointly Owned Property
                 Declaration (“Rules of the Association”) and agrees to be bound by their terms.
@@ -4391,8 +4417,7 @@
             <td class="ar">
                 حيث أن: <br/>
 
-                أ. المشتري يرغب بتملك الوحدة رقم: {{ $unit->unit_no }} ضمن مشروع Saray Prime Residence الكائن في إمارة
-                دبي، الإمارات العربية المتحدة.
+                أ. المشتري يرغب بتملك الوحدة رقم: {{ $unit->unit_no }} ضمن مشروع {{ $buildingNameAr }} الكائن في {{ $buildingLocationAr }}
                 <br/>
                 ب. وقد قام المشتري بقراءة وفهم دستور الجمعية و نظام الملكية المشتركة ("قواعد الجمعية")، ويقر بالموافقة
                 على الالتزام بجميع ما ورد فيها.
@@ -4424,7 +4449,7 @@
     <table class="contract-table">
         <tr>
             <td class="en" style="line-height: 2.5;">
-                <strong>Name: Unique Saray Properties L.L.C </strong> by its authorised representative
+                <strong>Name: {{ config('app.tenant_name') }} </strong> by its authorised representative
                 <h4>Signed:
                     <img
                         src="file:///{{ str_replace('\\','/', storage_path('app/private/signatures/company/ceo_signature.png')) }}"
@@ -4438,7 +4463,7 @@
             </td>
             <td class="centred-text"></td>
             <td class="ar" style="line-height: 2.5;">
-                <strong>الاسم: يونيك سراي للعقارت ش.ذ.م.م</strong> من قبل الممثل المفوض
+                <strong>الاسم: {{ config('app.tenant_name_ar') }}</strong> من قبل الممثل المفوض
                 <h4>التوقيع:
                     <img src="file:///{{ str_replace('\\','/', storage_path('app/private/signatures/company/ceo_signature.png')) }}"
                          height="30" alt="{{ config('app.name') }} Signature"/>
