@@ -203,7 +203,7 @@
         </tr>
         <tr>
             <th class="left-th">Seller:</th>
-            <td style="text-align: center;">{{ config('app.tenant_name') }}</td>
+            <td style="text-align: center;">{{ $company['name'] }}</td>
             <th class="rtl-text right-th">البائع:</th>
         </tr>
         <tr>
@@ -797,7 +797,7 @@
                 Bank Name
             </td>
             <td class="left-th" style="width: 50%; text-align: center; padding: 10px;">
-                {{ config('app.tenant_account_bank') }}
+                {{ $bank['bank'] }}
             </td>
             <td class="rtl-text right-th" style="width: 25%; padding: 10px;">
                 اسم المصرف
@@ -808,7 +808,7 @@
                 Account Name
             </td>
             <td class="left-th" style="width: 50%; text-align: center; padding: 10px;">
-                {{ config('app.tenant_account_name') }}
+                {{ $bank['account_name'] }}
             </td>
             <td class="rtl-text right-th" style="width: 25%; padding: 10px;">
                 اسم الحساب
@@ -819,7 +819,7 @@
                 Account No.
             </td>
             <td class="left-th" style="width: 50%; text-align: center; padding: 10px;">
-                {{ config('app.tenant_account_number') }}
+                {{ $bank['account_number'] }}
             </td>
             <td class="rtl-text right-th" style="width: 25%;  padding: 10px;">
                 رقم الحساب
@@ -830,7 +830,7 @@
                 IBAN
             </td>
             <td class="left-th" style="width: 50%; text-align: center;  padding: 10px;">
-                {{ config('app.tenant_account_iban') }}
+                {{ $bank['iban'] }}
             </td>
             <td class="rtl-text right-th" style="width: 25%;  padding: 10px;">
                 آيبان
@@ -852,7 +852,7 @@
                 Swift
             </td>
             <td class="left-th" style="width: 50%; text-align: center;  padding: 10px;">
-                {{ config('app.tenant_account_swift') }}
+                {{ $bank['swift'] }}
             </td>
             <td class="rtl-text right-th" style="width: 25%;  padding: 10px;">
                 سويفت
@@ -874,7 +874,7 @@
                 Bank Name
             </td>
             <td class="left-th" style="width: 50%; text-align: center;  padding: 10px;">
-                {{ config('app.tenant_account_bank') }}
+                {{ $bank['bank'] }}
             </td>
             <td class="rtl-text right-th" style="width: 25%;  padding: 10px;">
                 اسم المصرف
@@ -885,7 +885,7 @@
                 Account Name
             </td>
             <td class="left-th" style="width: 50%; text-align: center;  padding: 10px;">
-                {{ config('app.tenant_escrow_account_name') }}
+                {{ $escrow['account_name'] }}
             </td>
             <td class="rtl-text right-th" style="width: 25%;  padding: 10px;">
                 اسم الحساب
@@ -896,7 +896,7 @@
                 Account No.
             </td>
             <td class="left-th" style="width: 50%; text-align: center;  padding: 10px;">
-                {{ config('app.tenant_escrow_account_number') }}
+                {{ $escrow['account_number'] }}
             </td>
             <td class="rtl-text right-th" style="width: 25%;  padding: 10px;">
                 رقم الحساب
@@ -907,7 +907,7 @@
                 IBAN
             </td>
             <td class="left-th" style="width: 50%; text-align: center;  padding: 10px;">
-                {{ config('app.tenant_escrow_account_iban') }}
+                {{ $escrow['iban'] }}
             </td>
             <td class="rtl-text right-th" style="width: 25%;  padding: 10px;">
                 آيبان
@@ -929,7 +929,7 @@
                 BIC Code
             </td>
             <td class="left-th" style="width: 50%; text-align: center;  padding: 10px;">
-                {{ config('app.tenant_escrow_account_bic')  }}
+                {{ $escrow['bic']  }}
             </td>
             <td class="rtl-text right-th" style="width: 25%;  padding: 10px;">
                 رمز BIC
@@ -1119,18 +1119,18 @@
     <table class="info-table">
         <tr>
             <td class="left-th" style="line-height: 2.5; width: 49%; padding: 7px; text-align: justify;">
-                <h4>Name: {{ config('app.tenant_name') }} </h4>
+                <h4>Name: {{ $company['name'] }} </h4>
                 <h4>Signed: <img src="file:///{{ str_replace('\\','/', storage_path('app/private/signatures/company/cso_signature.png')) }}"
-                                 height="30" alt="{{ config('app.name') }} Signature"/>
+                                 height="30" alt="{{ $company['name'] }} Signature"/>
                 </h4>
                 <h4>Date: &nbsp;&nbsp;&nbsp; {{ optional($companySignedAt)->format('d-M-Y') }}&nbsp;&nbsp;</h4>
             </td>
             <td style="text-align: center;"></td>
             <td class="rtl-text right-th" style="line-height: 2.5; width: 49%; padding: 7px; text-align: justify;">
-                <h4>الاسم: {{ config('app.tenant_name_ar') }}</h4>
+                <h4>الاسم: {{ $company['name_ar'] }}</h4>
                 <h4>التوقيع:
                     <img src="file:///{{ str_replace('\\','/', storage_path('app/private/signatures/company/cso_signature.png')) }}"
-                         height="30" alt="{{ config('app.name') }} Signature"/>
+                         height="30" alt="{{ $company['name'] }} Signature"/>
                 </h4>
                 <h4 style="unicode-bidi: embed;">التاريخ:&nbsp;&nbsp;
                     &nbsp;{{ $companySignedAt ? $companySignedAt->locale('ar')->isoFormat('D-MMM-YYYY') : '' }}&nbsp;

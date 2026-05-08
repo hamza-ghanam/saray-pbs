@@ -340,22 +340,22 @@
         <tr>
             <td class="en">
                 <b>2. Seller:</b>
-                <strong>{{ config('app.tenant_name') }}</strong>, Licensed by Dubai Department of Economy and Tourism under
-                license No. ({{ config('app.tenant_license') }}), and licensed as a real estate developer by the DLD under license No. ({{ config('app.tenant_dld') }}).
-                {{ config('app.tenant_address') }} PO Box [{{ config('app.tenant_po_box') }}], Dubai, UAE<br/>
-                Phone No.: {{ config('app.tenant_phone') }}<br/>
-                Email: {{ config('app.tenant_email') }}<br/>
+                <strong>{{ $company['name'] }}</strong>, Licensed by Dubai Department of Economy and Tourism under
+                license No. ({{ $company['license'] }}), and licensed as a real estate developer by the DLD under license No. ({{ $company['dld'] }}).
+                {{ $company['address'] }} PO Box [{{ $company['po_box'] }}], Dubai, UAE<br/>
+                Phone No.: {{ $company['phone'] }}<br/>
+                Email: {{ $company['email'] }}<br/>
                 Its nominees, successors in title and assigns.
             </td>
             <td class="separator"></td>
             <td class="ar">
                 <b>2. البائع:</b>
-                <strong>شركة {{ config('app.tenant_name_ar') }}</strong>
-                والمرخصة لدى دبي للاقتصاد والسياحة برقم ({{ config('app.tenant_license') }})، والمرخصة كمطور عقاري من دائرة الأراضي والأملاك دبي
-                برقم ({{ config('app.tenant_dld') }})
-                الكائنة في ({{ config('app.tenant_address_ar') }}).<br/>
-                هاتف رقم: <span dir="ltr">[{{ config('app.tenant_phone') }}]</span>,<br/>
-                البريد الالكتروني: {{ config('app.tenant_email') }}<br/>
+                <strong>شركة {{ $company['name_ar'] }}</strong>
+                والمرخصة لدى دبي للاقتصاد والسياحة برقم ({{ $company['license'] }})، والمرخصة كمطور عقاري من دائرة الأراضي والأملاك دبي
+                برقم ({{ $company['dld'] }})
+                الكائنة في ({{ $company['address_ar'] }}).<br/>
+                هاتف رقم: <span dir="ltr">[{{ $company['phone'] }}]</span>,<br/>
+                البريد الالكتروني: {{ $company['email'] }}<br/>
                 والأشخاص التي تعينهم والورثة في الملكية والمتنازل إليهم.
             </td>
         </tr>
@@ -564,7 +564,7 @@
                     Bank Name:
                 </td>
                 <td class="centred-text" colspan="2">
-                    {{ config('app.tenant_escrow_account_bank') }}
+                    {{ $escrow['bank'] }}
                 </td>
                 <th class="rtl-text right-th">
                     اسم البنك:
@@ -575,7 +575,7 @@
                     Bank Branch Name and Address:
                 </td>
                 <td class="centred-text" colspan="2">
-                    {{ config('app.tenant_escrow_account_branch') }}
+                    {{ $escrow['branch'] }}
                 </td>
                 <th class="rtl-text right-th">
                     اسم وعنوان فرع البنك:
@@ -586,7 +586,7 @@
                     Account Name:
                 </td>
                 <td class="centred-text" colspan="2">
-                    {{ config('app.tenant_escrow_account_name') }}
+                    {{ $escrow['account_name'] }}
                 </td>
                 <th class="rtl-text right-th">
                     اسم الحساب:
@@ -597,7 +597,7 @@
                     Account Number:
                 </td>
                 <td class="centred-text" colspan="2">
-                    {{ config('app.tenant_escrow_account_number') }}
+                    {{ $escrow['account_number'] }}
                 </td>
                 <th class="rtl-text right-th">
                     رقم الحساب:
@@ -608,7 +608,7 @@
                     IBAN No:
                 </td>
                 <td class="centred-text" colspan="2">
-                    {{ config('app.tenant_escrow_account_iban') }}
+                    {{ $escrow['iban'] }}
                 </td>
                 <th class="rtl-text right-th">
                     رقم IBAN:
@@ -619,7 +619,7 @@
                     BIC Code:
                 </td>
                 <td class="centred-text" colspan="2">
-                    {{ config('app.tenant_escrow_account_bic') }}
+                    {{ $escrow['bic'] }}
                 </td>
                 <th class="rtl-text right-th">
                     رمز BIC:
@@ -639,7 +639,7 @@
                 Bank Name:
             </td>
             <td class="centred-text" colspan="2">
-                {{ config('app.tenant_account_bank') }}
+                {{ $bank['bank'] }}
             </td>
             <th class="rtl-text right-th">
                 اسم البنك:
@@ -650,7 +650,7 @@
                 Bank Branch Name and Address:
             </td>
             <td class="centred-text" colspan="2">
-                {{ config('app.tenant_account_branch') }}
+                {{ $bank['branch'] }}
             </td>
             <th class="rtl-text right-th">
                 اسم وعنوان فرع البنك:
@@ -661,7 +661,7 @@
                 Account Name:
             </td>
             <td class="centred-text" colspan="2">
-                {{ config('app.tenant_account_name') }}
+                {{ $bank['account_name'] }}
             </td>
             <th class="rtl-text right-th">
                 اسم الحساب:
@@ -672,7 +672,7 @@
                 Account Number:
             </td>
             <td class="centred-text" colspan="2">
-                {{ config('app.tenant_account_number') }}
+                {{ $bank['account_number'] }}
             </td>
             <th class="rtl-text right-th">
                 رقم الحساب:
@@ -683,7 +683,7 @@
                 IBAN No:
             </td>
             <td class="centred-text" colspan="2">
-                {{ config('app.tenant_account_iban') }}
+                {{ $bank['iban'] }}
             </td>
             <th class="rtl-text right-th">
                 رقم IBAN:
@@ -705,7 +705,7 @@
                 Swift Code:
             </td>
             <td class="centred-text" colspan="2">
-                {{ config('app.tenant_account_swift') }}
+                {{ $bank['swift'] }}
             </td>
             <th class="rtl-text right-th">
                 رمز SWIFT:
@@ -794,7 +794,7 @@
                 <h4>Name: <img src="{{ public_path('images/black_line.svg') }}" width="250" height="2" alt="___"/></h4>
                 <h4>Signature: <img
                         src="file:///{{ str_replace('\\','/', storage_path('app/private/signatures/company/ceo_signature.png')) }}"
-                        height="30" alt="{{ config('app.name') }} Signature"/>
+                        height="30" alt="{{ $company['name'] }} Signature"/>
                 </h4>
                 <h4>Date: &nbsp;&nbsp;&nbsp; {{ optional($companySignedAt)->format('d-M-Y') }}&nbsp;&nbsp;</h4>
             </td>
@@ -805,7 +805,7 @@
                 <h4>التوقيع:
                     <img
                         src="file:///{{ str_replace('\\','/', storage_path('app/private/signatures/company/ceo_signature.png')) }}"
-                        height="30" alt="{{ config('app.name') }} Signature"/>
+                        height="30" alt="{{ $company['name'] }} Signature"/>
                 </h4>
                 <h4 style="unicode-bidi: embed;">التاريخ:&nbsp;&nbsp;
                     &nbsp;{{ optional($companySignedAt)->locale('ar')->isoFormat('D-MMM-YYYY') }}&nbsp;
@@ -3773,11 +3773,11 @@
     <table class="contract-table">
         <tr>
             <td class="left-th" style="line-height: 2.5; width: 49%; padding: 7px; text-align: justify;">
-                <strong>Name: {{ config('app.tenant_name') }}</strong> by its authorised representative
+                <strong>Name: {{ $company['name'] }}</strong> by its authorised representative
                 <h4>Signed:
                     <img
                         src="file:///{{ str_replace('\\','/', storage_path('app/private/signatures/company/ceo_signature.png')) }}"
-                        height="30" alt="{{ config('app.name') }} Signature"/>
+                        height="30" alt="{{ $company['name'] }} Signature"/>
                 </h4>
                 <h4>Date: &nbsp;&nbsp;&nbsp; {{ optional($companySignedAt)->format('d-M-Y') }}&nbsp;&nbsp;</h4>
                 <br/>
@@ -3787,11 +3787,11 @@
             </td>
             <td class="centred-text"></td>
             <td class="rtl-text right-th" style="line-height: 2.5; width: 49%; padding: 7px; text-align: justify;">
-                <strong>الاسم: {{ config('app.tenant_name_ar') }}</strong> من قبل الممثل المفوض
+                <strong>الاسم: {{ $company['name_ar'] }}</strong> من قبل الممثل المفوض
                 <h4>التوقيع:
                     <img
                         src="file:///{{ str_replace('\\','/', storage_path('app/private/signatures/company/ceo_signature.png')) }}"
-                        height="30" alt="{{ config('app.name') }} Signature"/>
+                        height="30" alt="{{ $company['name'] }} Signature"/>
                 </h4>
                 <h4 style="unicode-bidi: embed;">التاريخ:&nbsp;&nbsp;
                     &nbsp;{{ optional($companySignedAt)->locale('ar')->isoFormat('D-MMM-YYYY') }}&nbsp;
@@ -4449,11 +4449,11 @@
     <table class="contract-table">
         <tr>
             <td class="en" style="line-height: 2.5;">
-                <strong>Name: {{ config('app.tenant_name') }} </strong> by its authorised representative
+                <strong>Name: {{ $company['name'] }} </strong> by its authorised representative
                 <h4>Signed:
                     <img
                         src="file:///{{ str_replace('\\','/', storage_path('app/private/signatures/company/ceo_signature.png')) }}"
-                        height="30" alt="{{ config('app.name') }} Signature"/>
+                        height="30" alt="{{ $company['name'] }} Signature"/>
                 </h4>
                 <h4>Date: &nbsp;&nbsp;&nbsp; {{ optional($companySignedAt)->format('d-M-Y') }}&nbsp;&nbsp;</h4>
                 <br/>
@@ -4463,10 +4463,10 @@
             </td>
             <td class="centred-text"></td>
             <td class="ar" style="line-height: 2.5;">
-                <strong>الاسم: {{ config('app.tenant_name_ar') }}</strong> من قبل الممثل المفوض
+                <strong>الاسم: {{ $company['name_ar'] }}</strong> من قبل الممثل المفوض
                 <h4>التوقيع:
                     <img src="file:///{{ str_replace('\\','/', storage_path('app/private/signatures/company/ceo_signature.png')) }}"
-                         height="30" alt="{{ config('app.name') }} Signature"/>
+                         height="30" alt="{{ $company['name'] }} Signature"/>
                 </h4>
                 <h4 style="unicode-bidi: embed;">التاريخ:&nbsp;&nbsp;
                     &nbsp;{{ optional($companySignedAt)->locale('ar')->isoFormat('D-MMM-YYYY') }}&nbsp;

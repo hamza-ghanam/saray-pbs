@@ -8,6 +8,7 @@ use App\Enums\DocumentType;
 use App\Models\Booking;
 use App\Models\BrokerCommission;
 use App\Models\Building;
+use App\Models\GeneralSetting;
 use App\Models\SigningLink;
 use App\Models\User;
 use App\Models\UserDoc;
@@ -196,6 +197,8 @@ class BrokerController extends Controller
                 $pdfPath = "agreements/brokers/{$pdfName}";
 
                 // 2) Render & store PDF (mPDF via your PdfService)
+                $company = GeneralSetting::getGroup('company');
+
                 $pdfService->store('pdf.broker_agreement', [
                     'user'          => $broker,
                     'brokerProfile' => $broker->brokerProfile,
@@ -203,6 +206,7 @@ class BrokerController extends Controller
                     'signaturePath' => $signaturePath,
                     'admin'         => $adminUser,
                     'buildingName'  => Building::orderBy('id')->value('name'),
+                    'company'       => $company,
                 ], $pdfPath);
 
                 // 3) Create/replace agreement UserDoc

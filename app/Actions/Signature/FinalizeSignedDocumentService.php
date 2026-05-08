@@ -3,6 +3,7 @@
 namespace App\Actions\Signature;
 
 use App\Models\Booking;
+use App\Models\GeneralSetting;
 use App\Models\SigningLink;
 use App\Models\User;
 use App\Models\UserDoc;
@@ -63,6 +64,10 @@ readonly class FinalizeSignedDocumentService
         // IMPORTANT: take one "now" only (avoid drifting timestamps)
         $finalSignedAt = now();
 
+        $company = GeneralSetting::getGroup('company');
+        $bank    = GeneralSetting::getGroup('bank');
+        $escrow  = GeneralSetting::getGroup('escrow');
+
         $building = $booking->unit?->building;
         $buildingTranslations = $building
             ? $this->translation->translateMultiple([
@@ -72,17 +77,20 @@ readonly class FinalizeSignedDocumentService
             : ['name' => null, 'location' => null];
 
         $data = [
-            'booking'               => $booking,
-            'customerInfos'         => $booking->customerInfos,
-            'paymentPlan'           => $booking->paymentPlan,
-            'installments'          => $booking->installments,
-            'unit'                  => $booking->unit,
-            'signaturesByEmail'     => $signaturesByEmail,
-            'hasStaffUploadedSignature' => $hasStaffUploadedSignature,
-            'finalSignedAt'         => $finalSignedAt,
-            'companySignedAt'       => $documentable->company_signed_at ?? null,
-            'buildingNameAr'        => $buildingTranslations['name'],
-            'buildingLocationAr'    => $buildingTranslations['location'],
+            'booking'                  => $booking,
+            'customerInfos'            => $booking->customerInfos,
+            'paymentPlan'              => $booking->paymentPlan,
+            'installments'             => $booking->installments,
+            'unit'                     => $booking->unit,
+            'signaturesByEmail'        => $signaturesByEmail,
+            'hasStaffUploadedSignature'=> $hasStaffUploadedSignature,
+            'finalSignedAt'            => $finalSignedAt,
+            'companySignedAt'          => $documentable->company_signed_at ?? null,
+            'buildingNameAr'           => $buildingTranslations['name'],
+            'buildingLocationAr'       => $buildingTranslations['location'],
+            'company'                  => $company,
+            'bank'                     => $bank,
+            'escrow'                   => $escrow,
         ];
 
         return $this->finaliseAndPersist(

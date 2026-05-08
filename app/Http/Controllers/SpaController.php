@@ -17,6 +17,7 @@ use App\Models\Approval;
 use App\Models\Booking;
 use App\Models\SPA;
 use App\Models\Unit;
+use App\Models\GeneralSetting;
 use App\Services\PaymentPlanService;
 use App\Services\PdfService;
 use App\Services\TranslationService;
@@ -142,6 +143,10 @@ class SpaController extends Controller
                 'customerInfos'
             ]);
 
+            $company = GeneralSetting::getGroup('company');
+            $bank    = GeneralSetting::getGroup('bank');
+            $escrow  = GeneralSetting::getGroup('escrow');
+
             $building = $booking->unit->building;
             $buildingTranslations = $building
                 ? $this->translationService->translateMultiple([
@@ -151,14 +156,17 @@ class SpaController extends Controller
                 : ['name' => null, 'location' => null];
 
             $spaData = [
-                'booking'         => $booking,
-                'customerInfos'   => $booking->customerInfos,
-                'paymentPlan'     => $booking->paymentPlan,
-                'installments'    => $booking->installments,
-                'unit'            => $booking->unit,
-                'companySignedAt' => $companySignedAt,
-                'buildingNameAr'  => $buildingTranslations['name'],
+                'booking'            => $booking,
+                'customerInfos'      => $booking->customerInfos,
+                'paymentPlan'        => $booking->paymentPlan,
+                'installments'       => $booking->installments,
+                'unit'               => $booking->unit,
+                'companySignedAt'    => $companySignedAt,
+                'buildingNameAr'     => $buildingTranslations['name'],
                 'buildingLocationAr' => $buildingTranslations['location'],
+                'company'            => $company,
+                'bank'               => $bank,
+                'escrow'             => $escrow,
             ];
 
             /*

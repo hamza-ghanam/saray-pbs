@@ -15,6 +15,7 @@ use App\Mail\RFSPAMail;
 use App\Models\Approval;
 use App\Models\Booking;
 use App\Models\ReservationForm;
+use App\Models\GeneralSetting;
 use App\Models\SigningLink;
 use App\Models\Unit;
 use App\Services\PaymentPlanService;
@@ -148,13 +149,20 @@ class ReservationFormController extends Controller
                 'customerInfos'
             ]);
 
+            $company = GeneralSetting::getGroup('company');
+            $bank    = GeneralSetting::getGroup('bank');
+            $escrow  = GeneralSetting::getGroup('escrow');
+
             $reservationData = [
-                'booking' => $booking,
-                'customerInfos' => $booking->customerInfos,
-                'paymentPlan' => $booking->paymentPlan,
-                'installments' => $booking->installments,
-                'unit' => $booking->unit,
-                'companySignedAt' => $companySignedAt,
+                'booking'        => $booking,
+                'customerInfos'  => $booking->customerInfos,
+                'paymentPlan'    => $booking->paymentPlan,
+                'installments'   => $booking->installments,
+                'unit'           => $booking->unit,
+                'companySignedAt'=> $companySignedAt,
+                'company'        => $company,
+                'bank'           => $bank,
+                'escrow'         => $escrow,
             ];
 
             // 5. Generate the PDF (using your Blade view)

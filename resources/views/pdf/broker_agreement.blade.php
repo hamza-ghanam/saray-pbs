@@ -194,10 +194,10 @@
         </p>
         <p>
             BETWEEN<br/>
-            {{ config('app.tenant_name') }}, a company duly registered in the Emirate of Dubai, United Arab Emirates with
-            license number {{ config('app.tenant_license') }} and having its address at PO Box {{ config('app.tenant_po_box') }}.
-            {{ config('app.tenant_address') }}, telephone: {{ config('app.tenant_phone') }},
-            email id: {{ config('app.tenant_email') }} (the "Seller");
+            {{ $company['name'] }}, a company duly registered in the Emirate of Dubai, United Arab Emirates with
+            license number {{ $company['license'] }} and having its address at PO Box {{ $company['po_box'] }}.
+            {{ $company['address'] }}, telephone: {{ $company['phone'] }},
+            email id: {{ $company['email'] }} (the "Seller");
         </p>
         <p>
             AND<br/>
@@ -1030,9 +1030,9 @@
                         >
 
                     <br/>
-                    Signature "{{ config('app.tenant_name') }}" <br/><br/>
+                    Signature "{{ $company['name'] }}" <br/><br/>
 
-                    <i>Feras Zaiter</i>
+                    <i>{{ $company['broker_auth_rep'] }}</i>
                     <br/>
                     Print name of authorized representative <br/><br/>
 
