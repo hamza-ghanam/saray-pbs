@@ -400,7 +400,7 @@
             <!-- Emirates ID NO. -->
             <tr>
                 <th class="left-th">Emirates ID NO.:</th>
-                <td class="centred-text" colspan="2"> {{ $customerInfo->emirates_id_number }} </td>
+                <td class="centred-text" colspan="2"> {{ $customerInfo->emirates_id_number ?? 'N/A' }} </td>
                 <th class="rtl-text right-th">رقم الهوية الإماراتية:</th>
             </tr>
 
