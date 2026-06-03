@@ -138,6 +138,8 @@ readonly class FinalizeSignedDocumentService
 
         $finalSignedAt = now();
 
+        $company = GeneralSetting::getGroup('company');
+
         $data = [
             'agreement'         => $agreementDoc,
             'signaturesByEmail' => $signaturesByEmail,
@@ -148,6 +150,7 @@ readonly class FinalizeSignedDocumentService
             'approver'          => $approver,
             'signaturePath'     => $signaturePath,
             'link'              => $link,
+            'company'           => $company,
         ];
 
         return $this->finaliseAndPersist(
