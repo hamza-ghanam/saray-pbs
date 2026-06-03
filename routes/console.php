@@ -1,6 +1,8 @@
 <?php
 use App\Models\Unit;
 use App\Models\User;
+use App\Jobs\SendInstallmentRemindersJob;
+use App\Models\Installment;
 use App\Services\FCMService;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -184,3 +186,10 @@ Schedule::call(function () {
         $fcmService->sendPushNotification($deviceTokens, $title, $body, $data);
     }
 })->daily()->name('booked-pre-booked-units');
+
+// Runs daily at 9:00 AM - dispatches one reminder job per unpaid installment due within 7 days
+Schedule::call(function () {
+    Installment::unpaid()
+        ->whereBetween('date', [now()->toDateString(), now()->addDays(7)->toDateString()])
+        ->each(fn (Installment $installment) => SendInstallmentRemindersJob::dispatch($installment));
+})->dailyAt('09:00')->name('send-installment-reminders');

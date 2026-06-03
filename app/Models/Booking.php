@@ -136,7 +136,15 @@ class Booking extends Model
         return $this->hasOne(BrokerCommission::class);
     }
 
+    public function invoices()
+    {
+        return $this->hasMany(Invoice::class);
+    }
 
+    public function installmentPayments()
+    {
+        return $this->hasMany(InstallmentPayment::class);
+    }
     public function canChangePaymentPlan()
     {
         return in_array($this->status, [

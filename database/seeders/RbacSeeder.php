@@ -78,12 +78,18 @@ class RbacSeeder extends Seeder
         */
 
         $permissions = [
-            'manage general settings',
+            // Installments
+            'view installments',
+            'record installment payment',
+            'verify installment payment',
+            'reject installment payment',
+
+            // Invoices
+            'issue invoice',
+            'view invoices',
         ];
 
-
-
-        $roles = ['System Maintenance'];
+        $roles = ['System Maintenance', 'CEO', 'CFO'];
 
         foreach ($roles as $roleName) {
             $role = Role::findByName($roleName);
