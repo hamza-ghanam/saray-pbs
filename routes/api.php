@@ -137,6 +137,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // Installment Payments
 Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/installments', [InstallmentPaymentController::class, 'index']);
     Route::get('/bookings/{booking}/installments', [InstallmentPaymentController::class, 'listInstallments']);
     Route::get('/bookings/{booking}/installments/{installment}', [InstallmentPaymentController::class, 'showInstallment']);
     Route::post('/bookings/{booking}/installments/{installment}/payments', [InstallmentPaymentController::class, 'recordPayment']);

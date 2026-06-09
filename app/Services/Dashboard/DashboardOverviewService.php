@@ -2,7 +2,11 @@
 
 namespace App\Services\Dashboard;
 
+use App\Enums\InstallmentPaymentStatusEnum;
+use App\Enums\InstallmentStatusEnum;
 use App\Models\Booking;
+use App\Models\Installment;
+use App\Models\InstallmentPayment;
 use App\Models\Unit;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -247,6 +251,18 @@ class DashboardOverviewService
             'units_stuck_in_hold' => [
                 'value' => $this->unitsStuckInHoldCount(7),
             ],
+            'installments_overdue' => [
+                'value' => $this->overdueInstallmentsCount(),
+            ],
+            'installments_due_today' => [
+                'value' => $this->dueTodayInstallmentsCount(),
+            ],
+            'installments_pending_verification' => [
+                'value' => $this->pendingVerificationCount(),
+            ],
+            'installments_collected_in_period' => [
+                'value' => $this->collectedInPeriod(),
+            ],
         ];
     }
 
@@ -343,6 +359,22 @@ class DashboardOverviewService
             ];
         }
 
+        $overdueInstallments = $this->overdueInstallmentsCount();
+        if ($overdueInstallments > 0) {
+            $alerts[] = [
+                'type'  => 'overdue_installments',
+                'count' => $overdueInstallments,
+            ];
+        }
+
+        $pendingVerification = $this->pendingVerificationCount();
+        if ($pendingVerification > 0) {
+            $alerts[] = [
+                'type'  => 'installments_pending_verification',
+                'count' => $pendingVerification,
+            ];
+        }
+
         return $alerts;
     }
 
@@ -432,5 +464,39 @@ class DashboardOverviewService
             'total_value' => (float)$r->total_value,
             'bookings_count' => (int)$r->bookings_count,
         ])->toArray();
+    }
+
+    private function overdueInstallmentsCount(): int
+    {
+        return Installment::query()
+            ->where('status', InstallmentStatusEnum::OVERDUE)
+            ->when($this->projectId, fn($q) => $q->whereHas('booking.unit', fn($q) => $q->where('building_id', $this->projectId)))
+            ->count();
+    }
+
+    private function dueTodayInstallmentsCount(): int
+    {
+        return Installment::query()
+            ->whereDate('date', Carbon::today())
+            ->whereNotIn('status', [InstallmentStatusEnum::PAID, InstallmentStatusEnum::WAIVED])
+            ->when($this->projectId, fn($q) => $q->whereHas('booking.unit', fn($q) => $q->where('building_id', $this->projectId)))
+            ->count();
+    }
+
+    private function pendingVerificationCount(): int
+    {
+        return InstallmentPayment::query()
+            ->where('status', InstallmentPaymentStatusEnum::PENDING_VERIFICATION)
+            ->when($this->projectId, fn($q) => $q->whereHas('installment.booking.unit', fn($q) => $q->where('building_id', $this->projectId)))
+            ->count();
+    }
+
+    private function collectedInPeriod(): float
+    {
+        return (float) InstallmentPayment::query()
+            ->where('status', InstallmentPaymentStatusEnum::VERIFIED)
+            ->whereBetween('payment_date', [$this->from->toDateString(), $this->to->toDateString()])
+            ->when($this->projectId, fn($q) => $q->whereHas('installment.booking.unit', fn($q) => $q->where('building_id', $this->projectId)))
+            ->sum('amount');
     }
 }

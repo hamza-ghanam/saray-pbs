@@ -33,7 +33,7 @@ class Installment extends Model
     protected $casts = [
         'payment_plan_id'   => 'integer',
         'booking_id'        => 'integer',
-        'date'              => 'date',
+        'date'              => 'date:Y-m-d',
         'percentage'        => 'decimal:2',
         'amount'            => 'decimal:2',
         'paid_amount'       => 'decimal:2',

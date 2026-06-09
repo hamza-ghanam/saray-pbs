@@ -6,9 +6,11 @@ use App\Actions\InstallmentPayment\RecordInstallmentPaymentAction;
 use App\Actions\InstallmentPayment\VerifyInstallmentPaymentAction;
 use App\Actions\InstallmentPayment\RejectInstallmentPaymentAction;
 use App\Actions\Invoice\IssueInvoiceAction;
+use App\Enums\InstallmentPaymentStatusEnum;
 use App\Models\Booking;
 use App\Models\Installment;
 use App\Models\InstallmentPayment;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
@@ -18,6 +20,103 @@ use Illuminate\Support\Facades\Storage;
 
 class InstallmentPaymentController extends Controller
 {
+    /**
+     * @OA\Get(
+     *     path="/installments",
+     *     summary="List all installments (filterable)",
+     *     operationId="indexInstallments",
+     *     tags={"Installment Payments"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(name="period", in="query", required=false, description="Shorthand date window for due_date", @OA\Schema(type="string", enum={"today","this_week","this_month"})),
+     *     @OA\Parameter(name="due_from", in="query", required=false, @OA\Schema(type="string", format="date")),
+     *     @OA\Parameter(name="due_to", in="query", required=false, @OA\Schema(type="string", format="date")),
+     *     @OA\Parameter(name="status", in="query", required=false, @OA\Schema(type="string", enum={"pending","partially_paid","paid","overdue","waived"})),
+     *     @OA\Parameter(name="pending_verification", in="query", required=false, description="Filter installments that have at least one payment awaiting verification", @OA\Schema(type="boolean")),
+     *     @OA\Parameter(name="booking_id", in="query", required=false, @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="project_id", in="query", required=false, description="Filter by building/project ID", @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="per_page", in="query", required=false, @OA\Schema(type="integer", default=25)),
+     *     @OA\Response(response=200, description="Installments fetched successfully"),
+     *     @OA\Response(response=403, description="Forbidden"),
+     *     @OA\Response(response=422, description="Validation error")
+     * )
+     */
+    public function index(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user->can('view installments')) {
+            return response()->json(['error' => 'Forbidden'], Response::HTTP_FORBIDDEN);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'period'               => ['nullable', 'string', 'in:today,this_week,this_month'],
+            'due_from'             => ['nullable', 'date_format:Y-m-d'],
+            'due_to'               => ['nullable', 'date_format:Y-m-d', 'after_or_equal:due_from'],
+            'status'               => ['nullable', 'string', 'in:pending,partially_paid,paid,overdue,waived'],
+            'pending_verification' => ['nullable', 'boolean'],
+            'booking_id'           => ['nullable', 'integer', 'min:1'],
+            'project_id'           => ['nullable', 'integer', 'min:1'],
+            'per_page'             => ['nullable', 'integer', 'min:1', 'max:100'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $query = Installment::query()
+            ->whereHas('booking')
+            ->with([
+                'booking:id,unit_id,status',
+                'booking.unit:id,unit_no,building_id',
+                'booking.unit.building:id,name',
+                'booking.customerInfos:id,booking_id,name_en,name_ar,phone_number,email',
+                'payments:id,installment_id,payment_date,amount,payment_method,reference_number,status,verified_at,created_at',
+            ]);
+
+        // Date window: due_from/due_to take precedence over period
+        if ($request->filled('due_from') || $request->filled('due_to')) {
+            if ($request->filled('due_from')) {
+                $query->where('date', '>=', $request->input('due_from'));
+            }
+            if ($request->filled('due_to')) {
+                $query->where('date', '<=', $request->input('due_to'));
+            }
+        } elseif ($request->filled('period')) {
+            match ($request->input('period')) {
+                'today'      => $query->whereDate('date', Carbon::today()),
+                'this_week'  => $query->whereBetween('date', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]),
+                'this_month' => $query->whereBetween('date', [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()]),
+            };
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->input('status'));
+        }
+
+        if ($request->boolean('pending_verification')) {
+            $query->whereHas('payments', function ($q) {
+                $q->where('status', InstallmentPaymentStatusEnum::PENDING_VERIFICATION);
+            });
+        }
+
+        if ($request->filled('booking_id')) {
+            $query->where('booking_id', $request->input('booking_id'));
+        }
+
+        if ($request->filled('project_id')) {
+            $query->whereHas('booking.unit', function ($q) use ($request) {
+                $q->where('building_id', $request->input('project_id'));
+            });
+        }
+
+        $perPage = (int) $request->input('per_page', 25);
+
+        return response()->json(
+            $query->orderBy('date')->paginate($perPage),
+            Response::HTTP_OK
+        );
+    }
+
     /**
      * @OA\Get(
      *     path="/bookings/{booking}/installments",
