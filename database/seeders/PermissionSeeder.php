@@ -13,7 +13,15 @@ class PermissionSeeder extends Seeder
     public function run(): void
     {
         $permissions = [
-            'manage general settings',
+            // Installments
+            'view installments',
+            'record installment payment',
+            'verify installment payment',
+            'reject installment payment',
+
+            // Invoices
+            'issue invoice',
+            'view invoices',
         ];
 
         foreach ($permissions as $permission) {

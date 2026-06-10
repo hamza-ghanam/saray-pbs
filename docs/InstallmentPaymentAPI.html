@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Installment Payment API – Complete Reference</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --navy:    #1F3864;
+  --blue:    #2E5299;
+  --green:   #1a7f37;
+  --amber:   #d97706;
+  --red:     #b91c1c;
+  --purple:  #7c3aed;
+  --teal:    #0f766e;
+  --sky:     #0369a1;
+  --gray:    #6b7280;
+  --bg:      #f0f3f8;
+  --sidebar: #1a2035;
+  --sidebar-w: 248px;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Segoe UI', Calibri, Arial, sans-serif;
+  background: var(--bg);
+  color: #1a2035;
+  font-size: 10.5pt;
+  line-height: 1.6;
+}
+
+/* ════════════════════════════════════
+   SIDEBAR
+════════════════════════════════════ */
+#sidebar {
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  width: var(--sidebar-w);
+  background: var(--sidebar);
+  overflow-y: auto;
+  z-index: 100;
+  padding: 0 0 40px 0;
+}
+#sidebar .logo {
+  padding: 20px 18px 16px;
+  border-bottom: 1px solid #2d3a55;
+  font-size: 11.5pt;
+  font-weight: 700;
+  color: #e2e8f0;
+  line-height: 1.3;
+}
+#sidebar .logo span {
+  display: block;
+  font-size: 8pt;
+  font-weight: 400;
+  color: #64748b;
+  margin-top: 3px;
+}
+#sidebar nav { padding: 10px 0; }
+#sidebar .nav-group { margin-bottom: 4px; }
+#sidebar .nav-group-label {
+  font-size: 7.5pt;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: #475569;
+  padding: 10px 18px 4px;
+}
+#sidebar a {
+  display: block;
+  padding: 6px 18px 6px 24px;
+  font-size: 9pt;
+  color: #94a3b8;
+  text-decoration: none;
+  border-left: 3px solid transparent;
+  transition: all .15s;
+}
+#sidebar a:hover, #sidebar a.active {
+  color: #e2e8f0;
+  background: rgba(255,255,255,.06);
+  border-left-color: var(--blue);
+}
+#sidebar .badge-get-sm  { display:inline-block; font-size:7pt; font-weight:700; padding:1px 5px; border-radius:2px; background:var(--green); color:#fff; margin-right:5px; vertical-align:middle; }
+#sidebar .badge-post-sm { display:inline-block; font-size:7pt; font-weight:700; padding:1px 5px; border-radius:2px; background:#b45309; color:#fff; margin-right:5px; vertical-align:middle; }
+
+/* ════════════════════════════════════
+   MAIN CONTENT
+════════════════════════════════════ */
+#main {
+  margin-left: var(--sidebar-w);
+  padding: 48px 52px 100px;
+  max-width: 1100px;
+}
+
+/* ── Page title ── */
+.page-title {
+  font-size: 24pt;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 4px;
+}
+.page-subtitle {
+  color: #5a6a8a;
+  font-size: 10pt;
+  margin-bottom: 10px;
+}
+.page-meta {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  background: #fff;
+  border-radius: 10px;
+  padding: 14px 20px;
+  margin: 20px 0 50px;
+  box-shadow: 0 1px 6px rgba(0,0,0,.08);
+  font-size: 9.5pt;
+}
+.page-meta .meta-item { display: flex; flex-direction: column; gap: 2px; }
+.page-meta .meta-label { font-size: 7.5pt; font-weight: 700; text-transform: uppercase; letter-spacing:.06em; color: #94a3b8; }
+.page-meta .meta-value code { background: #f1f5f9; padding: 2px 7px; border-radius: 4px; font-size: 9pt; }
+
+/* ── Section headings ── */
+.section-title {
+  font-size: 14pt;
+  font-weight: 700;
+  color: var(--navy);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  padding-left: 14px;
+  border-left: 4px solid var(--blue);
+  margin-bottom: 24px;
+  margin-top: 60px;
+}
+.section-title:first-of-type { margin-top: 0; }
+
+h3 {
+  font-size: 11pt;
+  font-weight: 700;
+  color: var(--navy);
+  margin: 22px 0 8px;
+}
+
+/* ── Dividers ── */
+.divider { border: none; border-top: 2px solid #dde3ee; margin: 50px 0; }
+
+/* ── Method + URL header ── */
+.endpoint-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fff;
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 6px rgba(0,0,0,.08);
+  flex-wrap: wrap;
+}
+.method-badge {
+  font-size: 9pt;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 4px;
+  color: #fff;
+  flex-shrink: 0;
+}
+.method-badge.get  { background: var(--green); }
+.method-badge.post { background: #b45309; }
+.endpoint-header code {
+  font-size: 10pt;
+  font-family: Consolas, 'Courier New', monospace;
+  color: var(--navy);
+  background: #f1f5f9;
+  padding: 3px 10px;
+  border-radius: 5px;
+}
+.endpoint-header .ep-desc {
+  font-size: 9.5pt;
+  color: #475569;
+  margin-left: auto;
+}
+
+/* ── Inline code & pre ── */
+code {
+  font-family: Consolas, 'Courier New', monospace;
+  font-size: 9.5pt;
+  background: #eef2f9;
+  padding: 1px 5px;
+  border-radius: 3px;
+  color: #1e3a5f;
+}
+pre {
+  font-family: Consolas, 'Courier New', monospace;
+  font-size: 9pt;
+  background: #1a2035;
+  color: #e2e8f0;
+  border-radius: 8px;
+  padding: 16px 20px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  margin: 10px 0 18px;
+  line-height: 1.55;
+}
+
+/* ── Tables ── */
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 10px 0 18px;
+  font-size: 9.5pt;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 5px rgba(0,0,0,.07);
+}
+th {
+  background: var(--blue);
+  color: #fff;
+  text-align: left;
+  padding: 8px 12px;
+  font-size: 9pt;
+}
+td {
+  border-bottom: 1px solid #e8edf5;
+  padding: 7px 12px;
+  vertical-align: top;
+}
+tr:last-child td { border-bottom: none; }
+tr:nth-child(even) td { background: #f6f8fd; }
+.error-table th { background: #7f1d1d; }
+.status-table th { background: #374151; }
+
+/* ── Badge labels ── */
+.badge-req { display:inline-block; font-size:7.5pt; font-weight:700; padding:1px 6px; border-radius:3px; color:#fff; background:var(--red); margin-right:2px; }
+.badge-opt { display:inline-block; font-size:7.5pt; font-weight:700; padding:1px 6px; border-radius:3px; color:#fff; background:var(--sky); margin-right:2px; }
+
+/* ── Note box ── */
+.note {
+  background: #fffbeb;
+  border-left: 4px solid var(--amber);
+  border-radius: 0 6px 6px 0;
+  padding: 10px 16px;
+  margin: 12px 0;
+  font-size: 9.5pt;
+  color: #451a03;
+}
+
+/* ── Permission pill ── */
+.perm {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 8.5pt;
+  color: #374151;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 20px;
+  padding: 2px 10px;
+  margin: 4px 0 12px;
+}
+
+/* ═══════════════════════════════════
+   FLOW SECTION — Auth flow nodes
+═══════════════════════════════════ */
+.auth-flow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  flex-wrap: wrap;
+  background: #fff;
+  border-radius: 14px;
+  padding: 30px 20px;
+  box-shadow: 0 1px 8px rgba(0,0,0,.08);
+  margin-bottom: 8px;
+}
+.node {
+  border-radius: 8px;
+  padding: 10px 18px;
+  font-size: 9.5pt;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0,0,0,.13);
+}
+.node.start    { background:var(--navy); color:#fff; border-radius:24px; }
+.node.decision { background:#fff; color:var(--navy); border:2px solid var(--blue); }
+.node.success  { background:var(--green); color:#fff; }
+.node.danger   { background:var(--red); color:#fff; }
+.h-arrow {
+  display:flex; align-items:center;
+  width:44px; position:relative; flex-shrink:0;
+}
+.h-arrow::after {
+  content:''; position:absolute;
+  left:0; right:0; top:50%;
+  height:2px; background:#94a3b8;
+  transform:translateY(-50%);
+}
+.h-arrow .arrowhead {
+  position:absolute; right:0; top:50%;
+  transform:translateY(-50%);
+  width:0; height:0;
+  border-top:6px solid transparent;
+  border-bottom:6px solid transparent;
+  border-left:9px solid #94a3b8;
+}
+.auth-note {
+  text-align:center; font-size:8.5pt;
+  color:var(--red); margin: 8px 0 30px;
+}
+
+/* ═══════════════════════════════════
+   FLOW SECTION — Endpoint cards
+═══════════════════════════════════ */
+.endpoints-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 14px;
+  margin-bottom: 40px;
+}
+.ep-card {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 1px 6px rgba(0,0,0,.09);
+  overflow: hidden;
+}
+.ep-card .ch {
+  display:flex; align-items:center; gap:8px;
+  padding: 9px 13px;
+  font-size: 9pt; font-weight: 700;
+}
+.ep-card .cb {
+  padding: 8px 13px 13px;
+  font-size: 8.5pt; color: #374151; line-height:1.55;
+}
+.ep-card .cb code {
+  display:block; margin-bottom:5px;
+  font-size:8pt; background:#f1f5f9;
+  padding:2px 6px; border-radius:3px;
+  word-break:break-all;
+}
+.ep-card .cp {
+  font-size:7.5pt; color:#6b7280;
+  margin-top:6px; display:flex;
+  align-items:center; gap:3px;
+}
+.ep-card .cp::before { content:'🔑'; }
+
+/* ═══════════════════════════════════
+   FLOW SECTION — SVG containers
+═══════════════════════════════════ */
+.svg-box {
+  background:#fff;
+  border-radius:14px;
+  padding:30px 20px;
+  box-shadow:0 1px 8px rgba(0,0,0,.08);
+  margin-bottom:40px;
+  overflow-x:auto;
+}
+svg.flow { display:block; margin:0 auto; }
+
+/* ═══════════════════════════════════
+   Legend
+═══════════════════════════════════ */
+.legend {
+  display:flex; flex-wrap:wrap;
+  gap:14px; margin-top:18px;
+  justify-content:center;
+}
+.legend-item { display:flex; align-items:center; gap:7px; font-size:9pt; color:#374151; }
+.legend-dot  { width:13px; height:13px; border-radius:50%; flex-shrink:0; }
+
+/* ═══════════════════════════════════
+   Scroll to top
+═══════════════════════════════════ */
+#top-btn {
+  position:fixed; bottom:28px; right:28px;
+  background:var(--blue); color:#fff;
+  border:none; border-radius:50%;
+  width:40px; height:40px; font-size:16px;
+  cursor:pointer; box-shadow:0 2px 10px rgba(0,0,0,.2);
+  display:flex; align-items:center; justify-content:center;
+  z-index:200;
+}
+#top-btn:hover { background:var(--navy); }
+</style>
+</head>
+<body>
+
+<!-- ═══════ SIDEBAR ═══════ -->
+<aside id="sidebar">
+  <div class="logo">
+    Installment Payment API
+    <span>Frontend Reference &amp; Flow</span>
+  </div>
+  <nav>
+    <div class="nav-group">
+      <div class="nav-group-label">Diagrams</div>
+      <a href="#flow-auth">Auth &amp; Permission Flow</a>
+      <a href="#flow-endpoints">Endpoints Overview</a>
+      <a href="#flow-lifecycle">Payment Lifecycle</a>
+      <a href="#flow-states">Installment Status Machine</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">API Reference</div>
+      <a href="#ep-index"><span class="badge-get-sm">GET</span>List All Installments</a>
+      <a href="#ep-list"><span class="badge-get-sm">GET</span>List by Booking</a>
+      <a href="#ep-show"><span class="badge-get-sm">GET</span>Show Installment</a>
+      <a href="#ep-record"><span class="badge-post-sm">POST</span>Record Payment</a>
+      <a href="#ep-verify"><span class="badge-post-sm">POST</span>Verify Payment</a>
+      <a href="#ep-reject"><span class="badge-post-sm">POST</span>Reject Payment</a>
+      <a href="#ep-invoice"><span class="badge-post-sm">POST</span>Issue Invoice</a>
+      <a href="#ep-download"><span class="badge-get-sm">GET</span>Download Invoice PDF</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Reference</div>
+      <a href="#ref-statuses">Status Reference</a>
+    </div>
+  </nav>
+</aside>
+
+<!-- ═══════ MAIN ═══════ -->
+<main id="main">
+
+  <p class="page-title">Installment Payment API</p>
+  <p class="page-subtitle">Complete frontend reference — flow diagrams &amp; endpoint documentation</p>
+
+  <div class="page-meta">
+    <div class="meta-item">
+      <span class="meta-label">Base URL</span>
+      <span class="meta-value"><code>http://localhost:8000/api</code></span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-label">Authentication</span>
+      <span class="meta-value"><code>Authorization: Bearer {token}</code> (Sanctum)</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-label">Date Format</span>
+      <span class="meta-value"><code>YYYY-MM-DD</code> for all inputs &amp; outputs</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-label">Content Type</span>
+      <span class="meta-value"><code>application/json</code> — except file uploads: <code>multipart/form-data</code></span>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════
+       DIAGRAMS
+  ══════════════════════════════════════════════════ -->
+
+  <!-- 1. Auth Flow -->
+  <p class="section-title" id="flow-auth">1 · Request Auth &amp; Permission</p>
+
+  <div class="auth-flow">
+    <div class="auth-step" style="display:flex;align-items:center;">
+      <div class="node start">HTTP Request</div>
+    </div>
+    <div class="h-arrow"><div class="arrowhead"></div></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+      <div class="node decision" style="font-size:9pt;">Bearer token<br>present?</div>
+      <div style="display:flex;align-items:center;gap:6px;margin-top:4px;">
+        <div class="node danger" style="font-size:8.5pt;padding:6px 12px;">401 Unauthenticated</div>
+        <span style="font-size:8pt;color:var(--red);">← No</span>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;">
+      <div class="h-arrow" style="width:44px;"><div class="arrowhead"></div></div>
+      <span style="font-size:8pt;color:var(--green);margin-top:-10px;">Yes</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+      <div class="node decision" style="font-size:9pt;">Has required<br>permission?</div>
+      <div style="display:flex;align-items:center;gap:6px;margin-top:4px;">
+        <div class="node danger" style="font-size:8.5pt;padding:6px 12px;">403 Forbidden</div>
+        <span style="font-size:8pt;color:var(--red);">← No</span>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;">
+      <div class="h-arrow" style="width:44px;"><div class="arrowhead"></div></div>
+      <span style="font-size:8pt;color:var(--green);margin-top:-10px;">Yes</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+      <div class="node decision" style="font-size:9pt;">Validate<br>params?</div>
+      <div style="display:flex;align-items:center;gap:6px;margin-top:4px;">
+        <div class="node danger" style="font-size:8.5pt;padding:6px 12px;">422 Unprocessable</div>
+        <span style="font-size:8pt;color:var(--red);">← Fail</span>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;">
+      <div class="h-arrow" style="width:44px;"><div class="arrowhead"></div></div>
+      <span style="font-size:8pt;color:var(--green);margin-top:-10px;">Pass</span>
+    </div>
+    <div class="node success">Execute Endpoint</div>
+  </div>
+
+  <!-- 2. Endpoints Overview -->
+  <p class="section-title" id="flow-endpoints">2 · Endpoints Overview</p>
+  <div class="endpoints-grid">
+    <div class="ep-card">
+      <div class="ch" style="background:#e8f5e9;"><span style="background:var(--green);color:#fff;font-size:7.5pt;font-weight:700;padding:2px 6px;border-radius:3px;">GET</span> List All Installments</div>
+      <div class="cb"><code>/api/installments</code>Paginated (default 25). Filters: <code>period</code>, <code>due_from/to</code>, <code>status</code>, <code>pending_verification</code>, <code>booking_id</code>, <code>project_id</code>.<div class="cp">view installments</div></div>
+    </div>
+    <div class="ep-card">
+      <div class="ch" style="background:#e8f5e9;"><span style="background:var(--green);color:#fff;font-size:7.5pt;font-weight:700;padding:2px 6px;border-radius:3px;">GET</span> List by Booking</div>
+      <div class="cb"><code>/api/bookings/{id}/installments</code>All installments for one booking (not paginated). Optional filter: <code>status</code>.<div class="cp">view installments</div></div>
+    </div>
+    <div class="ep-card">
+      <div class="ch" style="background:#e8f5e9;"><span style="background:var(--green);color:#fff;font-size:7.5pt;font-weight:700;padding:2px 6px;border-radius:3px;">GET</span> Show Installment</div>
+      <div class="cb"><code>/api/bookings/{id}/installments/{id}</code>Full detail: payments, verifier &amp; creator info.<div class="cp">view installments</div></div>
+    </div>
+    <div class="ep-card">
+      <div class="ch" style="background:#fff3e0;"><span style="background:#b45309;color:#fff;font-size:7.5pt;font-weight:700;padding:2px 6px;border-radius:3px;">POST</span> Record Payment</div>
+      <div class="cb"><code>/api/.../installments/{id}/payments</code>Body: <code>amount</code>, <code>payment_date</code>, <code>payment_method</code>, <code>reference_number</code>, <code>receipt</code> (file), <code>notes</code>.<div class="cp">record installment payment</div></div>
+    </div>
+    <div class="ep-card">
+      <div class="ch" style="background:#fff3e0;"><span style="background:#b45309;color:#fff;font-size:7.5pt;font-weight:700;padding:2px 6px;border-radius:3px;">POST</span> Verify Payment</div>
+      <div class="cb"><code>/api/.../payments/{id}/verify</code>No body needed. Updates <code>paid_amount</code> &amp; recalculates installment status.<div class="cp">verify installment payment</div></div>
+    </div>
+    <div class="ep-card">
+      <div class="ch" style="background:#fff3e0;"><span style="background:#b45309;color:#fff;font-size:7.5pt;font-weight:700;padding:2px 6px;border-radius:3px;">POST</span> Reject Payment</div>
+      <div class="cb"><code>/api/.../payments/{id}/reject</code>Optional body: <code>reason</code> (max 1000 chars). Stored as <code>rejection_reason</code>.<div class="cp">reject installment payment</div></div>
+    </div>
+    <div class="ep-card">
+      <div class="ch" style="background:#fff3e0;"><span style="background:#b45309;color:#fff;font-size:7.5pt;font-weight:700;padding:2px 6px;border-radius:3px;">POST</span> Issue Invoice</div>
+      <div class="cb"><code>/api/.../payments/{id}/invoice</code>Optional: <code>vat_rate</code>, <code>notes</code>. Payment must be <code>verified</code>.<div class="cp">issue invoice</div></div>
+    </div>
+    <div class="ep-card">
+      <div class="ch" style="background:#e8f5e9;"><span style="background:var(--green);color:#fff;font-size:7.5pt;font-weight:700;padding:2px 6px;border-radius:3px;">GET</span> Download Invoice PDF</div>
+      <div class="cb"><code>/api/invoices/{id}/download</code>Returns binary PDF. Use <code>responseType: 'blob'</code> in Axios.<div class="cp">view invoices</div></div>
+    </div>
+  </div>
+
+  <!-- 3. Payment Lifecycle SVG -->
+  <p class="section-title" id="flow-lifecycle">3 · Payment Lifecycle</p>
+  <div class="svg-box">
+  <svg class="flow" width="780" height="620" viewBox="0 0 780 620" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="arr"        markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#64748b"/></marker>
+      <marker id="arr-red"    markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#b91c1c"/></marker>
+      <marker id="arr-green"  markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#1a7f37"/></marker>
+      <marker id="arr-purple" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#7c3aed"/></marker>
+      <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.12"/></filter>
+    </defs>
+    <!-- POST /payments -->
+    <rect x="255" y="20" width="270" height="50" rx="25" fill="#1F3864" filter="url(#sh)"/>
+    <text x="390" y="41" text-anchor="middle" fill="#fff" font-size="10" font-weight="700" font-family="Segoe UI,Arial">POST .../installments/{id}/payments</text>
+    <text x="390" y="57" text-anchor="middle" fill="#93c5fd" font-size="9" font-family="Segoe UI,Arial">amount · payment_date · method · receipt · notes</text>
+    <line x1="390" y1="70" x2="390" y2="110" stroke="#64748b" stroke-width="2" marker-end="url(#arr)"/>
+    <!-- RecordInstallmentPaymentAction -->
+    <rect x="270" y="110" width="240" height="44" rx="8" fill="#2E5299" filter="url(#sh)"/>
+    <text x="390" y="128" text-anchor="middle" fill="#fff" font-size="10.5" font-weight="700" font-family="Segoe UI,Arial">RecordInstallmentPaymentAction</text>
+    <text x="390" y="144" text-anchor="middle" fill="#bfdbfe" font-size="8.5" font-family="Segoe UI,Arial">validates · stores receipt · saves payment</text>
+    <line x1="390" y1="154" x2="390" y2="196" stroke="#64748b" stroke-width="2" marker-end="url(#arr)"/>
+    <!-- pending_verification -->
+    <rect x="255" y="196" width="270" height="46" rx="8" fill="#d97706" filter="url(#sh)"/>
+    <text x="390" y="216" text-anchor="middle" fill="#fff" font-size="11" font-weight="700" font-family="Segoe UI,Arial">Payment Status</text>
+    <text x="390" y="233" text-anchor="middle" fill="#fef3c7" font-size="10.5" font-weight="700" font-family="Consolas,monospace">pending_verification</text>
+    <!-- fork left: verify -->
+    <line x1="280" y1="242" x2="160" y2="310" stroke="#1a7f37" stroke-width="2" marker-end="url(#arr-green)"/>
+    <text x="188" y="278" text-anchor="middle" fill="#1a7f37" font-size="9" font-weight="700" font-family="Segoe UI,Arial">Verify</text>
+    <!-- fork right: reject -->
+    <line x1="500" y1="242" x2="620" y2="310" stroke="#b91c1c" stroke-width="2" marker-end="url(#arr-red)"/>
+    <text x="592" y="278" text-anchor="middle" fill="#b91c1c" font-size="9" font-weight="700" font-family="Segoe UI,Arial">Reject</text>
+    <!-- Verify action -->
+    <rect x="60" y="310" width="200" height="44" rx="8" fill="#1a7f37" filter="url(#sh)"/>
+    <text x="160" y="328" text-anchor="middle" fill="#fff" font-size="10" font-weight="700" font-family="Segoe UI,Arial">VerifyInstallmentPayment</text>
+    <text x="160" y="344" text-anchor="middle" fill="#bbf7d0" font-size="8.5" font-family="Segoe UI,Arial">updates paid_amount · recalc status</text>
+    <!-- Reject action -->
+    <rect x="520" y="310" width="200" height="44" rx="8" fill="#b91c1c" filter="url(#sh)"/>
+    <text x="620" y="328" text-anchor="middle" fill="#fff" font-size="10" font-weight="700" font-family="Segoe UI,Arial">RejectInstallmentPayment</text>
+    <text x="620" y="344" text-anchor="middle" fill="#fca5a5" font-size="8.5" font-family="Segoe UI,Arial">stores rejection_reason</text>
+    <line x1="160" y1="354" x2="160" y2="396" stroke="#1a7f37" stroke-width="2" marker-end="url(#arr-green)"/>
+    <line x1="620" y1="354" x2="620" y2="396" stroke="#b91c1c" stroke-width="2" marker-end="url(#arr-red)"/>
+    <!-- verified status -->
+    <rect x="60" y="396" width="200" height="40" rx="8" fill="#1a7f37" filter="url(#sh)"/>
+    <text x="160" y="413" text-anchor="middle" fill="#fff" font-size="10.5" font-weight="700" font-family="Segoe UI,Arial">Payment Status</text>
+    <text x="160" y="429" text-anchor="middle" fill="#bbf7d0" font-size="10.5" font-weight="700" font-family="Consolas,monospace">verified</text>
+    <!-- rejected status -->
+    <rect x="520" y="396" width="200" height="40" rx="8" fill="#b91c1c" filter="url(#sh)"/>
+    <text x="620" y="413" text-anchor="middle" fill="#fff" font-size="10.5" font-weight="700" font-family="Segoe UI,Arial">Payment Status</text>
+    <text x="620" y="429" text-anchor="middle" fill="#fca5a5" font-size="10.5" font-weight="700" font-family="Consolas,monospace">rejected</text>
+    <!-- verified → invoice -->
+    <line x1="160" y1="436" x2="160" y2="478" stroke="#7c3aed" stroke-width="2" marker-end="url(#arr-purple)"/>
+    <text x="168" y="460" fill="#7c3aed" font-size="9" font-weight="700" font-family="Segoe UI,Arial">Issue Invoice</text>
+    <!-- IssueInvoiceAction -->
+    <rect x="40" y="478" width="240" height="44" rx="8" fill="#7c3aed" filter="url(#sh)"/>
+    <text x="160" y="496" text-anchor="middle" fill="#fff" font-size="10" font-weight="700" font-family="Segoe UI,Arial">IssueInvoiceAction</text>
+    <text x="160" y="512" text-anchor="middle" fill="#e9d5ff" font-size="8.5" font-family="Segoe UI,Arial">generates PDF · stores invoice record</text>
+    <line x1="160" y1="522" x2="160" y2="562" stroke="#7c3aed" stroke-width="2" marker-end="url(#arr-purple)"/>
+    <!-- Invoice stored -->
+    <rect x="40" y="562" width="240" height="40" rx="8" fill="#0f766e" filter="url(#sh)"/>
+    <text x="160" y="579" text-anchor="middle" fill="#fff" font-size="10.5" font-weight="700" font-family="Segoe UI,Arial">Invoice PDF Stored</text>
+    <text x="160" y="595" text-anchor="middle" fill="#99f6e4" font-size="9" font-family="Segoe UI,Arial">GET /invoices/{id}/download → binary PDF</text>
+    <!-- side note -->
+    <rect x="310" y="396" width="160" height="86" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5" filter="url(#sh)"/>
+    <text x="390" y="415" text-anchor="middle" fill="#1F3864" font-size="9.5" font-weight="700" font-family="Segoe UI,Arial">Installment Status</text>
+    <text x="390" y="432" text-anchor="middle" fill="#334155" font-size="9" font-family="Segoe UI,Arial">recalculated after each</text>
+    <text x="390" y="447" text-anchor="middle" fill="#334155" font-size="9" font-family="Segoe UI,Arial">payment verification:</text>
+    <text x="390" y="463" text-anchor="middle" fill="#d97706" font-size="9" font-family="Consolas,monospace">pending → partially_paid</text>
+    <text x="390" y="477" text-anchor="middle" fill="#1a7f37" font-size="9" font-family="Consolas,monospace">partially_paid → paid</text>
+    <line x1="260" y1="416" x2="310" y2="440" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5,4" marker-end="url(#arr)"/>
+  </svg>
+  </div>
+
+  <!-- 4. Installment Status Machine -->
+  <p class="section-title" id="flow-states">4 · Installment Status Machine</p>
+  <div class="svg-box">
+  <svg class="flow" width="760" height="260" viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="sa" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#64748b"/></marker>
+    </defs>
+    <rect x="20"  y="100" width="130" height="50" rx="8" fill="#d97706"/>
+    <text x="85"  y="121" text-anchor="middle" fill="#fff" font-size="10" font-weight="700" font-family="Segoe UI,Arial">pending</text>
+    <text x="85"  y="138" text-anchor="middle" fill="#fef3c7" font-size="8" font-family="Segoe UI,Arial">no payment yet</text>
+    <rect x="230" y="100" width="150" height="50" rx="8" fill="#0369a1"/>
+    <text x="305" y="121" text-anchor="middle" fill="#fff" font-size="10" font-weight="700" font-family="Segoe UI,Arial">partially_paid</text>
+    <text x="305" y="138" text-anchor="middle" fill="#bae6fd" font-size="8" font-family="Segoe UI,Arial">some verified payments</text>
+    <rect x="460" y="100" width="130" height="50" rx="8" fill="#1a7f37"/>
+    <text x="525" y="121" text-anchor="middle" fill="#fff" font-size="10" font-weight="700" font-family="Segoe UI,Arial">paid</text>
+    <text x="525" y="138" text-anchor="middle" fill="#bbf7d0" font-size="8" font-family="Segoe UI,Arial">fully covered</text>
+    <rect x="20"  y="190" width="130" height="50" rx="8" fill="#b91c1c"/>
+    <text x="85"  y="211" text-anchor="middle" fill="#fff" font-size="10" font-weight="700" font-family="Segoe UI,Arial">overdue</text>
+    <text x="85"  y="227" text-anchor="middle" fill="#fca5a5" font-size="8" font-family="Segoe UI,Arial">due date passed, unpaid</text>
+    <rect x="620" y="145" width="120" height="50" rx="8" fill="#6b7280"/>
+    <text x="680" y="166" text-anchor="middle" fill="#fff" font-size="10" font-weight="700" font-family="Segoe UI,Arial">waived</text>
+    <text x="680" y="182" text-anchor="middle" fill="#e5e7eb" font-size="8" font-family="Segoe UI,Arial">manually set</text>
+    <!-- transitions -->
+    <line x1="150" y1="122" x2="228" y2="122" stroke="#64748b" stroke-width="2" marker-end="url(#sa)"/>
+    <text x="189" y="112" text-anchor="middle" fill="#475569" font-size="8" font-family="Segoe UI,Arial">payment verified (partial)</text>
+    <line x1="380" y1="122" x2="458" y2="122" stroke="#64748b" stroke-width="2" marker-end="url(#sa)"/>
+    <text x="419" y="112" text-anchor="middle" fill="#475569" font-size="8" font-family="Segoe UI,Arial">payment verified (full)</text>
+    <line x1="85" y1="150" x2="85" y2="188" stroke="#b91c1c" stroke-width="2" marker-end="url(#sa)"/>
+    <text x="112" y="172" fill="#b91c1c" font-size="8" font-family="Segoe UI,Arial">due date passed</text>
+    <path d="M 230 150 Q 180 190 152 205" stroke="#b91c1c" stroke-width="2" fill="none" marker-end="url(#sa)"/>
+    <text x="170" y="196" text-anchor="middle" fill="#b91c1c" font-size="8" font-family="Segoe UI,Arial">due date passed</text>
+    <path d="M 152 202 Q 200 170 228 145" stroke="#0369a1" stroke-width="1.5" fill="none" stroke-dasharray="5,3" marker-end="url(#sa)"/>
+    <text x="218" y="170" text-anchor="middle" fill="#0369a1" font-size="7.5" font-family="Segoe UI,Arial">late payment</text>
+    <path d="M 150 115 Q 400 50 618 162" stroke="#6b7280" stroke-width="1.5" fill="none" stroke-dasharray="5,3" marker-end="url(#sa)"/>
+    <text x="400" y="62" text-anchor="middle" fill="#6b7280" font-size="8" font-family="Segoe UI,Arial">manual waive</text>
+    <line x1="590" y1="125" x2="635" y2="148" stroke="#6b7280" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#sa)"/>
+    <!-- legend -->
+    <line x1="20" y1="24" x2="46" y2="24" stroke="#6b7280" stroke-width="1.5" stroke-dasharray="5,3"/>
+    <text x="52" y="28" fill="#475569" font-size="8.5" font-family="Segoe UI,Arial">= manual / exceptional transition</text>
+    <line x1="20" y1="46" x2="46" y2="46" stroke="#64748b" stroke-width="2"/>
+    <text x="52" y="50" fill="#475569" font-size="8.5" font-family="Segoe UI,Arial">= automatic transition (system or payment verification)</text>
+  </svg>
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#d97706"></div>pending</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#0369a1"></div>partially_paid</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#1a7f37"></div>paid</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#b91c1c"></div>overdue</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#6b7280"></div>waived</div>
+  </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ══════════════════════════════════════════════════
+       API REFERENCE
+  ══════════════════════════════════════════════════ -->
+
+  <!-- EP 1: List All -->
+  <p class="section-title" id="ep-index">5 · List All Installments</p>
+  <div class="endpoint-header">
+    <span class="method-badge get">GET</span>
+    <code>/api/installments</code>
+    <span class="ep-desc">Admin-wide paginated list</span>
+  </div>
+  <p>Returns a paginated list of all installments across all bookings. Soft-deleted bookings are excluded. Results are ordered by due date ascending.</p>
+  <div class="perm">view installments</div>
+
+  <h3>Query Parameters</h3>
+  <table>
+    <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
+    <tr><td><code>period</code></td><td>string</td><td>No</td><td>Shorthand date window: <code>today</code>, <code>this_week</code>, <code>this_month</code>. Ignored if <code>due_from</code> / <code>due_to</code> are set.</td></tr>
+    <tr><td><code>due_from</code></td><td>YYYY-MM-DD</td><td>No</td><td>Due date on or after this date. Takes precedence over <code>period</code>.</td></tr>
+    <tr><td><code>due_to</code></td><td>YYYY-MM-DD</td><td>No</td><td>Due date on or before this date. Must be ≥ <code>due_from</code>.</td></tr>
+    <tr><td><code>status</code></td><td>string</td><td>No</td><td><code>pending</code>, <code>partially_paid</code>, <code>paid</code>, <code>overdue</code>, <code>waived</code></td></tr>
+    <tr><td><code>pending_verification</code></td><td>boolean</td><td>No</td><td>When <code>true</code>, returns only installments with at least one payment awaiting verification.</td></tr>
+    <tr><td><code>booking_id</code></td><td>integer</td><td>No</td><td>Filter by a specific booking.</td></tr>
+    <tr><td><code>project_id</code></td><td>integer</td><td>No</td><td>Filter by building / project ID.</td></tr>
+    <tr><td><code>per_page</code></td><td>integer</td><td>No</td><td>Items per page. Default: <code>25</code>. Max: <code>100</code>.</td></tr>
+  </table>
+
+  <h3>Success Response — 200 OK</h3>
+  <pre>{
+  "current_page": 1,
+  "data": [
+    {
+      "id": 5208,
+      "payment_plan_id": 85,
+      "booking_id": 175,
+      "description": "Monthly installment",
+      "percentage": "1.00",
+      "date": "2026-06-09",
+      "amount": "14569.90",
+      "status": "pending",
+      "paid_amount": "0.00",
+      "remaining_amount": 14569.90,
+      "booking": {
+        "id": 175,
+        "unit_id": 12,
+        "status": "Booked",
+        "unit": {
+          "id": 12,
+          "unit_no": "A-101",
+          "building_id": 3,
+          "building": { "id": 3, "name": "Tower C" }
+        },
+        "customer_infos": [
+          {
+            "id": 88,
+            "booking_id": 175,
+            "name_en": "John Doe",
+            "name_ar": "جون دو",
+            "phone_number": "+971500000000",
+            "email": "john@example.com"
+          }
+        ]
+      },
+      "payments": [
+        {
+          "id": 301,
+          "installment_id": 5208,
+          "payment_date": "2026-06-01",
+          "amount": "5000.00",
+          "payment_method": "bank_transfer",
+          "reference_number": "TRX-001",
+          "status": "pending_verification",
+          "verified_at": null,
+          "created_at": "2026-06-01T10:00:00.000000Z"
+        }
+      ]
+    }
+  ],
+  "last_page": 4,
+  "per_page": 25,
+  "total": 92
+}</pre>
+
+  <h3>Error Responses</h3>
+  <table class="error-table">
+    <tr><th>Status</th><th>Condition</th></tr>
+    <tr><td>403</td><td>User lacks <code>view installments</code> permission</td></tr>
+    <tr><td>422</td><td>Invalid date format, unknown status value</td></tr>
+  </table>
+
+  <hr class="divider">
+
+  <!-- EP 2: List by Booking -->
+  <p class="section-title" id="ep-list">6 · List Installments for a Booking</p>
+  <div class="endpoint-header">
+    <span class="method-badge get">GET</span>
+    <code>/api/bookings/{booking_id}/installments</code>
+    <span class="ep-desc">All installments for one booking</span>
+  </div>
+  <p>Returns all installments for a specific booking (not paginated — a booking has a fixed, small number of installments).</p>
+  <div class="perm">view installments</div>
+
+  <h3>Path Parameters</h3>
+  <table>
+    <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+    <tr><td><code>booking_id</code></td><td>integer</td><td>The booking ID.</td></tr>
+  </table>
+
+  <h3>Query Parameters</h3>
+  <table>
+    <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
+    <tr><td><code>status</code></td><td>string</td><td>No</td><td>Filter by status: <code>pending</code>, <code>partially_paid</code>, <code>paid</code>, <code>overdue</code>, <code>waived</code></td></tr>
+  </table>
+
+  <h3>Success Response — 200 OK</h3>
+  <pre>{
+  "data": [
+    {
+      "id": 5208,
+      "booking_id": 175,
+      "description": "Monthly installment",
+      "date": "2026-06-09",
+      "amount": "14569.90",
+      "status": "pending",
+      "paid_amount": "0.00",
+      "remaining_amount": 14569.90,
+      "payments": [
+        {
+          "id": 301,
+          "installment_id": 5208,
+          "payment_date": "2026-06-01",
+          "amount": "5000.00",
+          "payment_method": "bank_transfer",
+          "reference_number": "TRX-001",
+          "status": "pending_verification",
+          "verified_at": null,
+          "created_at": "2026-06-01T10:00:00.000000Z",
+          "verified_by": null
+        }
+      ]
+    }
+  ]
+}</pre>
+
+  <h3>Error Responses</h3>
+  <table class="error-table">
+    <tr><th>Status</th><th>Condition</th></tr>
+    <tr><td>403</td><td>User lacks permission</td></tr>
+    <tr><td>404</td><td>Booking not found</td></tr>
+    <tr><td>422</td><td>Invalid status value</td></tr>
+  </table>
+
+  <hr class="divider">
+
+  <!-- EP 3: Show -->
+  <p class="section-title" id="ep-show">7 · Show a Single Installment</p>
+  <div class="endpoint-header">
+    <span class="method-badge get">GET</span>
+    <code>/api/bookings/{booking_id}/installments/{installment_id}</code>
+    <span class="ep-desc">Full detail</span>
+  </div>
+  <p>Returns the full detail of one installment, including all payments with verifier and creator info.</p>
+  <div class="perm">view installments</div>
+
+  <h3>Path Parameters</h3>
+  <table>
+    <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+    <tr><td><code>booking_id</code></td><td>integer</td><td>The booking ID.</td></tr>
+    <tr><td><code>installment_id</code></td><td>integer</td><td>The installment ID.</td></tr>
+  </table>
+
+  <h3>Success Response — 200 OK</h3>
+  <pre>{
+  "id": 5208,
+  "booking_id": 175,
+  "description": "Monthly installment",
+  "date": "2026-06-09",
+  "amount": "14569.90",
+  "status": "partially_paid",
+  "paid_amount": "5000.00",
+  "remaining_amount": 9569.90,
+  "payments": [
+    {
+      "id": 301,
+      "payment_date": "2026-06-01",
+      "amount": "5000.00",
+      "payment_method": "bank_transfer",
+      "reference_number": "TRX-001",
+      "status": "verified",
+      "verified_at": "2026-06-02T08:30:00.000000Z",
+      "notes": "First partial payment",
+      "created_at": "2026-06-01T10:00:00.000000Z",
+      "verified_by": { "id": 5, "name": "Admin User" },
+      "created_by": { "id": 3, "name": "Agent Name" }
+    }
+  ]
+}</pre>
+
+  <h3>Error Responses</h3>
+  <table class="error-table">
+    <tr><th>Status</th><th>Condition</th></tr>
+    <tr><td>403</td><td>User lacks permission</td></tr>
+    <tr><td>404</td><td>Booking not found, or installment does not belong to this booking</td></tr>
+  </table>
+
+  <hr class="divider">
+
+  <!-- EP 4: Record Payment -->
+  <p class="section-title" id="ep-record">8 · Record a Payment</p>
+  <div class="endpoint-header">
+    <span class="method-badge post">POST</span>
+    <code>/api/bookings/{booking_id}/installments/{installment_id}/payments</code>
+  </div>
+  <p>Records a new payment against an installment. The payment is created with status <code>pending_verification</code> and must be verified before it affects <code>paid_amount</code>.</p>
+  <div class="perm">record installment payment</div>
+
+  <h3>Path Parameters</h3>
+  <table>
+    <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+    <tr><td><code>booking_id</code></td><td>integer</td><td>The booking ID.</td></tr>
+    <tr><td><code>installment_id</code></td><td>integer</td><td>The installment ID.</td></tr>
+  </table>
+
+  <h3>Request Body — <code>multipart/form-data</code></h3>
+  <table>
+    <tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr>
+    <tr><td><code>amount</code></td><td>number</td><td><span class="badge-req">Required</span></td><td>Payment amount. Must be &gt; 0.</td></tr>
+    <tr><td><code>payment_date</code></td><td>date</td><td><span class="badge-req">Required</span></td><td>Date the payment was made. Format: <code>YYYY-MM-DD</code>.</td></tr>
+    <tr><td><code>payment_method</code></td><td>string</td><td><span class="badge-opt">Optional</span></td><td><code>cash</code>, <code>bank_transfer</code>, <code>cheque</code>, <code>card</code>, <code>other</code></td></tr>
+    <tr><td><code>reference_number</code></td><td>string</td><td><span class="badge-opt">Optional</span></td><td>Transaction / cheque reference. Max 255 chars.</td></tr>
+    <tr><td><code>receipt</code></td><td>file</td><td><span class="badge-opt">Optional</span></td><td>Accepted: <code>pdf</code>, <code>jpg</code>, <code>jpeg</code>, <code>png</code>. Max 5 MB.</td></tr>
+    <tr><td><code>notes</code></td><td>string</td><td><span class="badge-opt">Optional</span></td><td>Free-text notes.</td></tr>
+  </table>
+
+  <div class="note"><strong>Note:</strong> Even if the amount fully covers the installment, status will not change to <code>paid</code> until the payment is <strong>verified</strong>.</div>
+
+  <h3>Success Response — 201 Created</h3>
+  <pre>{
+  "message": "Payment recorded successfully.",
+  "payment": {
+    "id": 302,
+    "installment_id": 5208,
+    "amount": "9569.90",
+    "payment_date": "2026-06-09",
+    "payment_method": "cheque",
+    "reference_number": "CHQ-002",
+    "status": "pending_verification",
+    "verified_at": null,
+    "notes": null,
+    "created_at": "2026-06-09T07:15:00.000000Z",
+    "created_by": { "id": 3, "name": "Agent Name" }
+  },
+  "installment": {
+    "id": 5208,
+    "status": "partially_paid",
+    "paid_amount": "5000.00",
+    "remaining_amount": 9569.90
+  }
+}</pre>
+
+  <h3>Error Responses</h3>
+  <table class="error-table">
+    <tr><th>Status</th><th>Condition</th></tr>
+    <tr><td>403</td><td>User lacks permission</td></tr>
+    <tr><td>404</td><td>Installment does not belong to this booking</td></tr>
+    <tr><td>422</td><td>Validation error, or business rule violation (e.g. installment already paid or waived)</td></tr>
+    <tr><td>500</td><td>Server error (receipt upload or DB failure)</td></tr>
+  </table>
+
+  <hr class="divider">
+
+  <!-- EP 5: Verify -->
+  <p class="section-title" id="ep-verify">9 · Verify a Payment</p>
+  <div class="endpoint-header">
+    <span class="method-badge post">POST</span>
+    <code>/api/bookings/{booking_id}/installments/{installment_id}/payments/{payment_id}/verify</code>
+  </div>
+  <p>Marks a payment as verified. Updates the installment's <code>paid_amount</code> and recalculates its status. No request body needed.</p>
+  <div class="perm">verify installment payment</div>
+
+  <h3>Path Parameters</h3>
+  <table>
+    <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+    <tr><td><code>booking_id</code></td><td>integer</td><td>The booking ID.</td></tr>
+    <tr><td><code>installment_id</code></td><td>integer</td><td>The installment ID.</td></tr>
+    <tr><td><code>payment_id</code></td><td>integer</td><td>The payment ID to verify.</td></tr>
+  </table>
+
+  <h3>Success Response — 200 OK</h3>
+  <pre>{
+  "message": "Payment verified successfully.",
+  "payment": {
+    "id": 302,
+    "status": "verified",
+    "verified_at": "2026-06-09T09:00:00.000000Z",
+    "verified_by": { "id": 5, "name": "Admin User" }
+  },
+  "installment": {
+    "id": 5208,
+    "status": "paid",
+    "paid_amount": "14569.90",
+    "remaining_amount": 0
+  }
+}</pre>
+
+  <h3>Error Responses</h3>
+  <table class="error-table">
+    <tr><th>Status</th><th>Condition</th></tr>
+    <tr><td>403</td><td>User lacks permission</td></tr>
+    <tr><td>404</td><td>Payment does not belong to this installment/booking</td></tr>
+    <tr><td>422</td><td>Payment is not in <code>pending_verification</code> status</td></tr>
+    <tr><td>500</td><td>Server error</td></tr>
+  </table>
+
+  <hr class="divider">
+
+  <!-- EP 6: Reject -->
+  <p class="section-title" id="ep-reject">10 · Reject a Payment</p>
+  <div class="endpoint-header">
+    <span class="method-badge post">POST</span>
+    <code>/api/bookings/{booking_id}/installments/{installment_id}/payments/{payment_id}/reject</code>
+  </div>
+  <p>Marks a payment as rejected. The installment's <code>paid_amount</code> is not affected. The rejection reason is stored in <code>rejection_reason</code> — separate from the payment's <code>notes</code>.</p>
+  <div class="perm">reject installment payment</div>
+
+  <h3>Path Parameters</h3>
+  <table>
+    <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+    <tr><td><code>booking_id</code></td><td>integer</td><td>The booking ID.</td></tr>
+    <tr><td><code>installment_id</code></td><td>integer</td><td>The installment ID.</td></tr>
+    <tr><td><code>payment_id</code></td><td>integer</td><td>The payment ID to reject.</td></tr>
+  </table>
+
+  <h3>Request Body — JSON</h3>
+  <table>
+    <tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr>
+    <tr><td><code>reason</code></td><td>string</td><td><span class="badge-opt">Optional</span></td><td>Rejection reason. Max 1000 chars. Stored in <code>rejection_reason</code>.</td></tr>
+  </table>
+
+  <h3>Success Response — 200 OK</h3>
+  <pre>{
+  "message": "Payment rejected successfully.",
+  "payment": {
+    "id": 302,
+    "status": "rejected",
+    "rejection_reason": "Receipt is unclear.",
+    "verified_at": null
+  }
+}</pre>
+
+  <h3>Error Responses</h3>
+  <table class="error-table">
+    <tr><th>Status</th><th>Condition</th></tr>
+    <tr><td>403</td><td>User lacks permission</td></tr>
+    <tr><td>404</td><td>Payment does not belong to this installment/booking</td></tr>
+    <tr><td>422</td><td>Payment is already verified or rejected</td></tr>
+    <tr><td>500</td><td>Server error</td></tr>
+  </table>
+
+  <hr class="divider">
+
+  <!-- EP 7: Invoice -->
+  <p class="section-title" id="ep-invoice">11 · Issue an Invoice</p>
+  <div class="endpoint-header">
+    <span class="method-badge post">POST</span>
+    <code>/api/bookings/{booking_id}/installments/{installment_id}/payments/{payment_id}/invoice</code>
+  </div>
+  <p>Generates and stores a PDF invoice for a verified payment. Payment must be in <code>verified</code> status.</p>
+  <div class="perm">issue invoice</div>
+
+  <h3>Path Parameters</h3>
+  <table>
+    <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+    <tr><td><code>booking_id</code></td><td>integer</td><td>The booking ID.</td></tr>
+    <tr><td><code>installment_id</code></td><td>integer</td><td>The installment ID.</td></tr>
+    <tr><td><code>payment_id</code></td><td>integer</td><td>The verified payment to invoice.</td></tr>
+  </table>
+
+  <h3>Request Body — JSON</h3>
+  <table>
+    <tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr>
+    <tr><td><code>vat_rate</code></td><td>number</td><td><span class="badge-opt">Optional</span></td><td>VAT percentage. Default: <code>0</code>. Range: 0–100.</td></tr>
+    <tr><td><code>notes</code></td><td>string</td><td><span class="badge-opt">Optional</span></td><td>Notes to print on the invoice.</td></tr>
+  </table>
+
+  <h3>Success Response — 201 Created</h3>
+  <pre>{
+  "message": "Invoice issued successfully.",
+  "invoice": {
+    "id": 55,
+    "invoice_number": "INV-2026-0055",
+    "amount": "9569.90",
+    "vat_rate": "5.00",
+    "vat_amount": "478.50",
+    "total_amount": "10048.40",
+    "pdf_path": "invoices/INV-2026-0055.pdf",
+    "notes": null,
+    "created_at": "2026-06-09T09:05:00.000000Z"
+  }
+}</pre>
+
+  <h3>Error Responses</h3>
+  <table class="error-table">
+    <tr><th>Status</th><th>Condition</th></tr>
+    <tr><td>403</td><td>User lacks permission</td></tr>
+    <tr><td>404</td><td>Payment not found or does not belong to this installment/booking</td></tr>
+    <tr><td>422</td><td>Payment not verified, or invoice already issued</td></tr>
+    <tr><td>500</td><td>PDF generation failure</td></tr>
+  </table>
+
+  <hr class="divider">
+
+  <!-- EP 8: Download -->
+  <p class="section-title" id="ep-download">12 · Download Invoice PDF</p>
+  <div class="endpoint-header">
+    <span class="method-badge get">GET</span>
+    <code>/api/invoices/{invoice_id}/download</code>
+    <span class="ep-desc">Binary PDF response</span>
+  </div>
+  <p>Downloads the PDF file for an invoice. Response is a raw binary PDF — not JSON.</p>
+  <div class="perm">view invoices</div>
+
+  <h3>Path Parameters</h3>
+  <table>
+    <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+    <tr><td><code>invoice_id</code></td><td>integer</td><td>The invoice ID.</td></tr>
+  </table>
+
+  <h3>Success Response — 200 OK</h3>
+  <p>Returns the PDF as a binary download:</p>
+  <table>
+    <tr><th>Header</th><th>Value</th></tr>
+    <tr><td><code>Content-Type</code></td><td><code>application/pdf</code></td></tr>
+    <tr><td><code>Content-Disposition</code></td><td><code>attachment; filename="INV-2026-0055.pdf"</code></td></tr>
+  </table>
+  <div class="note">With Axios set <code>responseType: 'blob'</code> and trigger a download via <code>URL.createObjectURL()</code>. In the browser you can also use a direct <code>&lt;a href="..."&gt;</code> or <code>window.open(url)</code>.</div>
+
+  <h3>Error Responses</h3>
+  <table class="error-table">
+    <tr><th>Status</th><th>Condition</th></tr>
+    <tr><td>403</td><td>User lacks permission</td></tr>
+    <tr><td>404</td><td>Invoice not found, or PDF not yet generated</td></tr>
+  </table>
+
+  <hr class="divider">
+
+  <!-- Status Reference -->
+  <p class="section-title" id="ref-statuses">13 · Status Reference</p>
+
+  <h3>Installment Statuses</h3>
+  <table class="status-table">
+    <tr><th>Value</th><th>Meaning</th></tr>
+    <tr><td><code>pending</code></td><td>No verified payment yet. Due date may be in the future.</td></tr>
+    <tr><td><code>partially_paid</code></td><td>Some verified payments exist but do not fully cover the amount.</td></tr>
+    <tr><td><code>paid</code></td><td>Fully covered by verified payments.</td></tr>
+    <tr><td><code>overdue</code></td><td>Due date has passed with no verified payment covering the balance.</td></tr>
+    <tr><td><code>waived</code></td><td>Manually waived — no payment required.</td></tr>
+  </table>
+
+  <h3>Payment Statuses</h3>
+  <table class="status-table">
+    <tr><th>Value</th><th>Meaning</th></tr>
+    <tr><td><code>pending_verification</code></td><td>Payment recorded, waiting for an authorized user to verify it.</td></tr>
+    <tr><td><code>verified</code></td><td>Payment confirmed. Contributes to the installment's <code>paid_amount</code>.</td></tr>
+    <tr><td><code>rejected</code></td><td>Payment rejected (e.g. bad receipt). Does not contribute to <code>paid_amount</code>.</td></tr>
+    <tr><td><code>refunded</code></td><td>Payment was refunded after verification.</td></tr>
+  </table>
+
+</main>
+
+<button id="top-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+
+<script>
+  // Highlight active sidebar link on scroll
+  const links = document.querySelectorAll('#sidebar a[href^="#"]');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const active = document.querySelector('#sidebar a[href="#' + e.target.id + '"]');
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-10% 0px -80% 0px' });
+  document.querySelectorAll('.section-title[id]').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>

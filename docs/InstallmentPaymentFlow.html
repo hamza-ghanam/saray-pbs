@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Installment Payment Controller – Flow</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', Calibri, Arial, sans-serif;
+    background: #f0f3f8;
+    color: #1a2035;
+    padding: 40px 30px 80px;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 22pt;
+    color: #1F3864;
+    margin-bottom: 6px;
+  }
+  .subtitle {
+    text-align: center;
+    color: #5a6a8a;
+    font-size: 10.5pt;
+    margin-bottom: 50px;
+  }
+
+  /* ── Section headings ── */
+  .section-title {
+    font-size: 13pt;
+    font-weight: 700;
+    color: #1F3864;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin-bottom: 24px;
+    padding-left: 12px;
+    border-left: 4px solid #2E5299;
+  }
+
+  /* ── Shared node styles ── */
+  .node {
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-size: 10pt;
+    font-weight: 600;
+    text-align: center;
+    white-space: nowrap;
+    box-shadow: 0 2px 6px rgba(0,0,0,.12);
+  }
+  .node.start    { background:#1F3864; color:#fff; border-radius:24px; }
+  .node.process  { background:#2E5299; color:#fff; }
+  .node.decision { background:#fff; color:#1F3864; border:2px solid #2E5299; border-radius:4px; transform:rotate(0deg); }
+  .node.success  { background:#1a7f37; color:#fff; }
+  .node.warning  { background:#d97706; color:#fff; }
+  .node.danger   { background:#b91c1c; color:#fff; }
+  .node.neutral  { background:#6b7280; color:#fff; }
+  .node.info     { background:#0369a1; color:#fff; }
+  .node.purple   { background:#7c3aed; color:#fff; }
+  .node.teal     { background:#0f766e; color:#fff; }
+
+  /* ── Arrow ── */
+  .arrow-down {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+  .arrow-down .line { width: 2px; background: #94a3b8; flex-grow: 1; min-height: 28px; }
+  .arrow-down .head { width: 0; height: 0;
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-top: 10px solid #94a3b8;
+  }
+  .arrow-label {
+    font-size: 8.5pt;
+    color: #64748b;
+    background: #f0f3f8;
+    padding: 1px 6px;
+    border-radius: 3px;
+    margin: -2px 0;
+    z-index: 1;
+  }
+
+  /* ════════════════════════════
+     SECTION 1 — Auth / Permission
+  ════════════════════════════ */
+  .auth-flow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    flex-wrap: wrap;
+    margin-bottom: 60px;
+  }
+  .auth-step {
+    display: flex;
+    align-items: center;
+    gap: 0;
+  }
+  .h-arrow {
+    display: flex;
+    align-items: center;
+    width: 50px;
+    position: relative;
+  }
+  .h-arrow::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0;
+    top: 50%;
+    height: 2px;
+    background: #94a3b8;
+    transform: translateY(-50%);
+  }
+  .h-arrow .arrowhead {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0; height: 0;
+    border-top: 6px solid transparent;
+    border-bottom: 6px solid transparent;
+    border-left: 9px solid #94a3b8;
+  }
+  .branch-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    position: relative;
+  }
+  .branch-label {
+    font-size: 8pt;
+    color: #64748b;
+    margin-top: 6px;
+  }
+
+  /* ════════════════════════════
+     SECTION 2 — Endpoints Map
+  ════════════════════════════ */
+  .endpoints-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 60px;
+  }
+  .endpoint-card {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.10);
+    overflow: hidden;
+  }
+  .endpoint-card .card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    font-size: 9pt;
+    font-weight: 700;
+  }
+  .badge-get  { background: #1a7f37; color:#fff; font-size:8pt; font-weight:700; padding:2px 7px; border-radius:3px; }
+  .badge-post { background: #b45309; color:#fff; font-size:8pt; font-weight:700; padding:2px 7px; border-radius:3px; }
+  .endpoint-card .card-body {
+    padding: 10px 14px 14px;
+    font-size: 9pt;
+    color: #374151;
+    line-height: 1.6;
+  }
+  .endpoint-card .card-body code {
+    font-size: 8.5pt;
+    background: #f1f5f9;
+    padding: 1px 5px;
+    border-radius: 3px;
+    display: block;
+    margin-bottom: 6px;
+    word-break: break-all;
+  }
+  .endpoint-card .perm {
+    font-size: 8pt;
+    color: #6b7280;
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .endpoint-card .perm::before { content: '🔑'; font-size: 9pt; }
+
+  /* ════════════════════════════
+     SECTION 3 — Payment Lifecycle
+  ════════════════════════════ */
+  .lifecycle {
+    background: #fff;
+    border-radius: 14px;
+    padding: 36px 40px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.10);
+    margin-bottom: 60px;
+    overflow-x: auto;
+  }
+
+  /* SVG flow */
+  svg.flow { display: block; margin: 0 auto; }
+
+  /* ════════════════════════════
+     SECTION 4 — Installment States
+  ════════════════════════════ */
+  .states-wrapper {
+    background: #fff;
+    border-radius: 14px;
+    padding: 36px 40px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.10);
+    margin-bottom: 60px;
+  }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 24px;
+    justify-content: center;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 9pt;
+    color: #374151;
+  }
+  .legend-dot {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .wrapper { max-width: 1200px; margin: 0 auto; }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+<h1>Installment Payment Controller</h1>
+<p class="subtitle">API Flow &amp; Lifecycle Diagram</p>
+
+<!-- ══════════════════════════════════════════════════
+     SECTION 1 — Every Request Auth + Permission Flow
+══════════════════════════════════════════════════ -->
+<p class="section-title">1 · Request Auth &amp; Permission</p>
+
+<div class="auth-flow">
+
+  <div class="auth-step">
+    <div class="node start">HTTP Request</div>
+  </div>
+
+  <div class="h-arrow"><div class="arrowhead"></div></div>
+
+  <div class="auth-step" style="flex-direction:column; align-items:center; gap:8px;">
+    <div class="node decision" style="font-size:9.5pt;">Bearer token<br>present?</div>
+    <div style="display:flex; align-items:center; gap:6px; margin-top:4px;">
+      <div class="node danger" style="font-size:8.5pt; padding:6px 12px;">401 Unauthenticated</div>
+      <span style="font-size:8pt; color:#b91c1c;">← No</span>
+    </div>
+  </div>
+
+  <div style="display:flex; flex-direction:column; align-items:center;">
+    <div class="h-arrow" style="width:50px;"><div class="arrowhead"></div></div>
+    <span style="font-size:8pt; color:#1a7f37; margin-top:-10px;">Yes</span>
+  </div>
+
+  <div class="auth-step" style="flex-direction:column; align-items:center; gap:8px;">
+    <div class="node decision" style="font-size:9.5pt;">Has required<br>permission?</div>
+    <div style="display:flex; align-items:center; gap:6px; margin-top:4px;">
+      <div class="node danger" style="font-size:8.5pt; padding:6px 12px;">403 Forbidden</div>
+      <span style="font-size:8pt; color:#b91c1c;">← No</span>
+    </div>
+  </div>
+
+  <div style="display:flex; flex-direction:column; align-items:center;">
+    <div class="h-arrow" style="width:50px;"><div class="arrowhead"></div></div>
+    <span style="font-size:8pt; color:#1a7f37; margin-top:-10px;">Yes</span>
+  </div>
+
+  <div class="auth-step">
+    <div class="node decision" style="font-size:9.5pt;">Validate<br>params?</div>
+  </div>
+
+  <div style="display:flex; flex-direction:column; align-items:center;">
+    <div class="h-arrow" style="width:50px;"><div class="arrowhead"></div></div>
+    <span style="font-size:8pt; color:#1a7f37; margin-top:-10px;">Pass</span>
+  </div>
+
+  <div class="auth-step">
+    <div class="node success">Execute Endpoint</div>
+  </div>
+
+</div>
+<div style="text-align:center; margin-top:-36px; margin-bottom:50px; font-size:8.5pt; color:#b91c1c;">
+  Fail → <strong>422 Unprocessable Entity</strong>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════
+     SECTION 2 — Endpoints Map
+══════════════════════════════════════════════════ -->
+<p class="section-title">2 · Endpoints</p>
+<div class="endpoints-grid">
+
+  <div class="endpoint-card">
+    <div class="card-header" style="background:#e8f5e9;">
+      <span class="badge-get">GET</span> List All Installments
+    </div>
+    <div class="card-body">
+      <code>/api/installments</code>
+      Paginated (default 25). Filters: <code>period</code>, <code>due_from</code>, <code>due_to</code>, <code>status</code>, <code>pending_verification</code>, <code>booking_id</code>, <code>project_id</code>.
+      <div class="perm">view installments</div>
+    </div>
+  </div>
+
+  <div class="endpoint-card">
+    <div class="card-header" style="background:#e8f5e9;">
+      <span class="badge-get">GET</span> List by Booking
+    </div>
+    <div class="card-body">
+      <code>/api/bookings/{id}/installments</code>
+      All installments for one booking (not paginated). Optional filter: <code>status</code>.
+      <div class="perm">view installments</div>
+    </div>
+  </div>
+
+  <div class="endpoint-card">
+    <div class="card-header" style="background:#e8f5e9;">
+      <span class="badge-get">GET</span> Show Installment
+    </div>
+    <div class="card-body">
+      <code>/api/bookings/{id}/installments/{id}</code>
+      Full detail of one installment with all payments, verifier and creator info.
+      <div class="perm">view installments</div>
+    </div>
+  </div>
+
+  <div class="endpoint-card">
+    <div class="card-header" style="background:#fff3e0;">
+      <span class="badge-post">POST</span> Record Payment
+    </div>
+    <div class="card-body">
+      <code>/api/bookings/{id}/installments/{id}/payments</code>
+      Body: <code>amount</code>, <code>payment_date</code>, <code>payment_method</code>, <code>reference_number</code>, <code>receipt</code> (file), <code>notes</code>.
+      <div class="perm">record installment payment</div>
+    </div>
+  </div>
+
+  <div class="endpoint-card">
+    <div class="card-header" style="background:#fff3e0;">
+      <span class="badge-post">POST</span> Verify Payment
+    </div>
+    <div class="card-body">
+      <code>/api/.../payments/{id}/verify</code>
+      No body needed. Updates installment <code>paid_amount</code> and recalculates status.
+      <div class="perm">verify installment payment</div>
+    </div>
+  </div>
+
+  <div class="endpoint-card">
+    <div class="card-header" style="background:#fff3e0;">
+      <span class="badge-post">POST</span> Reject Payment
+    </div>
+    <div class="card-body">
+      <code>/api/.../payments/{id}/reject</code>
+      Optional body: <code>reason</code> (max 1000 chars). Stored as <code>rejection_reason</code>.
+      <div class="perm">reject installment payment</div>
+    </div>
+  </div>
+
+  <div class="endpoint-card">
+    <div class="card-header" style="background:#fff3e0;">
+      <span class="badge-post">POST</span> Issue Invoice
+    </div>
+    <div class="card-body">
+      <code>/api/.../payments/{id}/invoice</code>
+      Optional body: <code>vat_rate</code>, <code>notes</code>. Payment must be <code>verified</code>.
+      <div class="perm">issue invoice</div>
+    </div>
+  </div>
+
+  <div class="endpoint-card">
+    <div class="card-header" style="background:#e8f5e9;">
+      <span class="badge-get">GET</span> Download Invoice PDF
+    </div>
+    <div class="card-body">
+      <code>/api/invoices/{id}/download</code>
+      Returns binary PDF. Use <code>responseType: 'blob'</code> in Axios.
+      <div class="perm">view invoices</div>
+    </div>
+  </div>
+
+</div>
+
+
+<!-- ══════════════════════════════════════════════════
+     SECTION 3 — Payment Lifecycle (SVG flowchart)
+══════════════════════════════════════════════════ -->
+<p class="section-title">3 · Payment Lifecycle</p>
+<div class="lifecycle">
+<svg class="flow" width="780" height="620" viewBox="0 0 780 620" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#64748b"/>
+    </marker>
+    <marker id="arr-red" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#b91c1c"/>
+    </marker>
+    <marker id="arr-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#1a7f37"/>
+    </marker>
+    <marker id="arr-purple" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#7c3aed"/>
+    </marker>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+
+  <!-- ── POST /payments ── -->
+  <rect x="255" y="20" width="270" height="50" rx="25" fill="#1F3864" filter="url(#shadow)"/>
+  <text x="390" y="41" text-anchor="middle" fill="#fff" font-size="10" font-weight="700" font-family="Segoe UI,Arial">POST .../installments/{id}/payments</text>
+  <text x="390" y="57" text-anchor="middle" fill="#93c5fd" font-size="9" font-family="Segoe UI,Arial">amount · payment_date · method · receipt · notes</text>
+
+  <!-- arrow down -->
+  <line x1="390" y1="70" x2="390" y2="110" stroke="#64748b" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- ── Record Payment action ── -->
+  <rect x="270" y="110" width="240" height="44" rx="8" fill="#2E5299" filter="url(#shadow)"/>
+  <text x="390" y="128" text-anchor="middle" fill="#fff" font-size="10.5" font-weight="700" font-family="Segoe UI,Arial">RecordInstallmentPaymentAction</text>
+  <text x="390" y="144" text-anchor="middle" fill="#bfdbfe" font-size="8.5" font-family="Segoe UI,Arial">validates · stores receipt · saves payment</text>
+
+  <!-- arrow down -->
+  <line x1="390" y1="154" x2="390" y2="196" stroke="#64748b" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- ── pending_verification status box ── -->
+  <rect x="255" y="196" width="270" height="46" rx="8" fill="#d97706" filter="url(#shadow)"/>
+  <text x="390" y="216" text-anchor="middle" fill="#fff" font-size="11" font-weight="700" font-family="Segoe UI,Arial">Payment Status</text>
+  <text x="390" y="233" text-anchor="middle" fill="#fef3c7" font-size="10.5" font-weight="700" font-family="Consolas,monospace">pending_verification</text>
+
+  <!-- fork: left = verify, right = reject -->
+  <!-- left arrow to verify -->
+  <line x1="280" y1="242" x2="160" y2="310" stroke="#1a7f37" stroke-width="2" marker-end="url(#arr-green)"/>
+  <text x="188" y="278" text-anchor="middle" fill="#1a7f37" font-size="9" font-weight="700" font-family="Segoe UI,Arial">Verify</text>
+
+  <!-- right arrow to reject -->
+  <line x1="500" y1="242" x2="620" y2="310" stroke="#b91c1c" stroke-width="2" marker-end="url(#arr-red)"/>
+  <text x="592" y="278" text-anchor="middle" fill="#b91c1c" font-size="9" font-weight="700" font-family="Segoe UI,Arial">Reject</text>
+
+  <!-- ── Verify box (left) ── -->
+  <rect x="60" y="310" width="200" height="44" rx="8" fill="#1a7f37" filter="url(#shadow)"/>
+  <text x="160" y="328" text-anchor="middle" fill="#fff" font-size="10" font-weight="700" font-family="Segoe UI,Arial">VerifyInstallmentPayment</text>
+  <text x="160" y="344" text-anchor="middle" fill="#bbf7d0" font-size="8.5" font-family="Segoe UI,Arial">updates paid_amount · recalc status</text>
+
+  <!-- ── Reject box (right) ── -->
+  <rect x="520" y="310" width="200" height="44" rx="8" fill="#b91c1c" filter="url(#shadow)"/>
+  <text x="620" y="328" text-anchor="middle" fill="#fff" font-size="10" font-weight="700" font-family="Segoe UI,Arial">RejectInstallmentPayment</text>
+  <text x="620" y="344" text-anchor="middle" fill="#fca5a5" font-size="8.5" font-family="Segoe UI,Arial">stores rejection_reason</text>
+
+  <!-- arrow down from verify -->
+  <line x1="160" y1="354" x2="160" y2="396" stroke="#1a7f37" stroke-width="2" marker-end="url(#arr-green)"/>
+
+  <!-- arrow down from reject -->
+  <line x1="620" y1="354" x2="620" y2="396" stroke="#b91c1c" stroke-width="2" marker-end="url(#arr-red)"/>
+
+  <!-- ── verified status ── -->
+  <rect x="60" y="396" width="200" height="40" rx="8" fill="#1a7f37" filter="url(#shadow)"/>
+  <text x="160" y="413" text-anchor="middle" fill="#fff" font-size="10.5" font-weight="700" font-family="Segoe UI,Arial">Payment Status</text>
+  <text x="160" y="429" text-anchor="middle" fill="#bbf7d0" font-size="10.5" font-weight="700" font-family="Consolas,monospace">verified</text>
+
+  <!-- ── rejected status ── -->
+  <rect x="520" y="396" width="200" height="40" rx="8" fill="#b91c1c" filter="url(#shadow)"/>
+  <text x="620" y="413" text-anchor="middle" fill="#fff" font-size="10.5" font-weight="700" font-family="Segoe UI,Arial">Payment Status</text>
+  <text x="620" y="429" text-anchor="middle" fill="#fca5a5" font-size="10.5" font-weight="700" font-family="Consolas,monospace">rejected</text>
+
+  <!-- arrow from verified down to invoice -->
+  <line x1="160" y1="436" x2="160" y2="478" stroke="#7c3aed" stroke-width="2" marker-end="url(#arr-purple)"/>
+  <text x="167" y="460" fill="#7c3aed" font-size="9" font-weight="700" font-family="Segoe UI,Arial">Issue Invoice</text>
+
+  <!-- ── IssueInvoiceAction ── -->
+  <rect x="40" y="478" width="240" height="44" rx="8" fill="#7c3aed" filter="url(#shadow)"/>
+  <text x="160" y="496" text-anchor="middle" fill="#fff" font-size="10" font-weight="700" font-family="Segoe UI,Arial">IssueInvoiceAction</text>
+  <text x="160" y="512" text-anchor="middle" fill="#e9d5ff" font-size="8.5" font-family="Segoe UI,Arial">generates PDF · stores invoice record</text>
+
+  <!-- arrow down from invoice action -->
+  <line x1="160" y1="522" x2="160" y2="562" stroke="#7c3aed" stroke-width="2" marker-end="url(#arr-purple)"/>
+
+  <!-- ── Invoice stored ── -->
+  <rect x="40" y="562" width="240" height="40" rx="8" fill="#0f766e" filter="url(#shadow)"/>
+  <text x="160" y="579" text-anchor="middle" fill="#fff" font-size="10.5" font-weight="700" font-family="Segoe UI,Arial">Invoice PDF Stored</text>
+  <text x="160" y="595" text-anchor="middle" fill="#99f6e4" font-size="9" font-family="Segoe UI,Arial">GET /invoices/{id}/download → binary PDF</text>
+
+  <!-- installment status side note (right of verify flow) -->
+  <rect x="310" y="396" width="160" height="86" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="390" y="415" text-anchor="middle" fill="#1F3864" font-size="9.5" font-weight="700" font-family="Segoe UI,Arial">Installment Status</text>
+  <text x="390" y="432" text-anchor="middle" fill="#334155" font-size="9" font-family="Segoe UI,Arial">recalculated after each</text>
+  <text x="390" y="447" text-anchor="middle" fill="#334155" font-size="9" font-family="Segoe UI,Arial">payment verification:</text>
+  <text x="390" y="463" text-anchor="middle" fill="#d97706" font-size="9" font-family="Consolas,monospace">pending → partially_paid</text>
+  <text x="390" y="477" text-anchor="middle" fill="#1a7f37" font-size="9" font-family="Consolas,monospace">partially_paid → paid</text>
+
+  <!-- dotted line from verified to side note -->
+  <line x1="260" y1="416" x2="310" y2="440" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5,4" marker-end="url(#arr)"/>
+
+</svg>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════
+     SECTION 4 — Installment Status Machine
+══════════════════════════════════════════════════ -->
+<p class="section-title">4 · Installment Status Machine</p>
+<div class="states-wrapper">
+<svg class="flow" width="760" height="260" viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="sa" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0,10 3.5,0 7" fill="#64748b"/>
+    </marker>
+  </defs>
+
+  <!-- pending -->
+  <rect x="20" y="100" width="130" height="50" rx="8" fill="#d97706"/>
+  <text x="85" y="121" text-anchor="middle" fill="#fff" font-size="10" font-weight="700" font-family="Segoe UI,Arial">pending</text>
+  <text x="85" y="138" text-anchor="middle" fill="#fef3c7" font-size="8" font-family="Segoe UI,Arial">no payment yet</text>
+
+  <!-- partially_paid -->
+  <rect x="230" y="100" width="150" height="50" rx="8" fill="#0369a1"/>
+  <text x="305" y="121" text-anchor="middle" fill="#fff" font-size="10" font-weight="700" font-family="Segoe UI,Arial">partially_paid</text>
+  <text x="305" y="138" text-anchor="middle" fill="#bae6fd" font-size="8" font-family="Segoe UI,Arial">some verified payments</text>
+
+  <!-- paid -->
+  <rect x="460" y="100" width="130" height="50" rx="8" fill="#1a7f37"/>
+  <text x="525" y="121" text-anchor="middle" fill="#fff" font-size="10" font-weight="700" font-family="Segoe UI,Arial">paid</text>
+  <text x="525" y="138" text-anchor="middle" fill="#bbf7d0" font-size="8" font-family="Segoe UI,Arial">fully covered</text>
+
+  <!-- overdue -->
+  <rect x="20" y="190" width="130" height="50" rx="8" fill="#b91c1c"/>
+  <text x="85" y="211" text-anchor="middle" fill="#fff" font-size="10" font-weight="700" font-family="Segoe UI,Arial">overdue</text>
+  <text x="85" y="227" text-anchor="middle" fill="#fca5a5" font-size="8" font-family="Segoe UI,Arial">due date passed, unpaid</text>
+
+  <!-- waived -->
+  <rect x="620" y="145" width="120" height="50" rx="8" fill="#6b7280"/>
+  <text x="680" y="166" text-anchor="middle" fill="#fff" font-size="10" font-weight="700" font-family="Segoe UI,Arial">waived</text>
+  <text x="680" y="182" text-anchor="middle" fill="#e5e7eb" font-size="8" font-family="Segoe UI,Arial">manually set</text>
+
+  <!-- pending → partially_paid -->
+  <line x1="150" y1="122" x2="228" y2="122" stroke="#64748b" stroke-width="2" marker-end="url(#sa)"/>
+  <text x="189" y="113" text-anchor="middle" fill="#475569" font-size="8" font-family="Segoe UI,Arial">payment verified</text>
+  <text x="189" y="123" text-anchor="middle" fill="#475569" font-size="8" font-family="Segoe UI,Arial">(partial)</text>
+
+  <!-- partially_paid → paid -->
+  <line x1="380" y1="122" x2="458" y2="122" stroke="#64748b" stroke-width="2" marker-end="url(#sa)"/>
+  <text x="419" y="113" text-anchor="middle" fill="#475569" font-size="8" font-family="Segoe UI,Arial">payment verified</text>
+  <text x="419" y="123" text-anchor="middle" fill="#475569" font-size="8" font-family="Segoe UI,Arial">(full)</text>
+
+  <!-- pending → overdue -->
+  <line x1="85" y1="150" x2="85" y2="188" stroke="#b91c1c" stroke-width="2" marker-end="url(#sa)"/>
+  <text x="110" y="172" fill="#b91c1c" font-size="8" font-family="Segoe UI,Arial">due date</text>
+  <text x="110" y="182" fill="#b91c1c" font-size="8" font-family="Segoe UI,Arial">passed</text>
+
+  <!-- partially_paid → overdue -->
+  <path d="M 230 150 Q 180 190 152 205" stroke="#b91c1c" stroke-width="2" fill="none" marker-end="url(#sa)"/>
+  <text x="173" y="193" text-anchor="middle" fill="#b91c1c" font-size="8" font-family="Segoe UI,Arial">due date passed</text>
+
+  <!-- overdue → partially_paid (payment recorded) -->
+  <path d="M 152 202 Q 200 170 228 145" stroke="#0369a1" stroke-width="1.5" fill="none" stroke-dasharray="5,3" marker-end="url(#sa)"/>
+  <text x="218" y="168" text-anchor="middle" fill="#0369a1" font-size="7.5" font-family="Segoe UI,Arial">late payment</text>
+
+  <!-- pending → waived -->
+  <path d="M 150 115 Q 400 50 618 162" stroke="#6b7280" stroke-width="1.5" fill="none" stroke-dasharray="5,3" marker-end="url(#sa)"/>
+  <text x="400" y="64" text-anchor="middle" fill="#6b7280" font-size="8" font-family="Segoe UI,Arial">manual waive</text>
+
+  <!-- paid → waived (label at bottom) -->
+  <line x1="590" y1="125" x2="635" y2="148" stroke="#6b7280" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#sa)"/>
+
+  <!-- legend dot for dashed -->
+  <line x1="20" y1="24" x2="46" y2="24" stroke="#6b7280" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <text x="52" y="28" fill="#475569" font-size="8.5" font-family="Segoe UI,Arial">= manual / exceptional transition</text>
+  <line x1="20" y1="46" x2="46" y2="46" stroke="#64748b" stroke-width="2"/>
+  <text x="52" y="50" fill="#475569" font-size="8.5" font-family="Segoe UI,Arial">= automatic transition (system or payment verification)</text>
+</svg>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#d97706"></div> pending</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#0369a1"></div> partially_paid</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#1a7f37"></div> paid</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#b91c1c"></div> overdue</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#6b7280"></div> waived</div>
+</div>
+</div>
+
+</div><!-- /wrapper -->
+</body>
+</html>

@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Broker Commission API – Frontend Reference</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --navy:   #1F3864;
+  --blue:   #2E5299;
+  --green:  #1a7f37;
+  --amber:  #d97706;
+  --red:    #b91c1c;
+  --purple: #7c3aed;
+  --teal:   #0f766e;
+  --sky:    #0369a1;
+  --gray:   #6b7280;
+  --sidebar-w: 252px;
+}
+
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Segoe UI', Calibri, Arial, sans-serif;
+  background: #f0f3f8;
+  color: #1a2035;
+  font-size: 10.5pt;
+  line-height: 1.65;
+}
+
+/* ── Sidebar ── */
+#sidebar {
+  position: fixed; top: 0; left: 0; bottom: 0;
+  width: var(--sidebar-w);
+  background: #1a2035;
+  overflow-y: auto; z-index: 100; padding-bottom: 40px;
+}
+#sidebar .logo {
+  padding: 20px 18px 16px;
+  border-bottom: 1px solid #2d3a55;
+  font-size: 11.5pt; font-weight: 700; color: #e2e8f0; line-height: 1.3;
+}
+#sidebar .logo span { display:block; font-size:8pt; font-weight:400; color:#64748b; margin-top:3px; }
+#sidebar .nav-group-label {
+  font-size:7.5pt; font-weight:700; letter-spacing:.1em;
+  text-transform:uppercase; color:#475569; padding:12px 18px 4px;
+}
+#sidebar a {
+  display:block; padding:6px 18px 6px 24px;
+  font-size:9pt; color:#94a3b8; text-decoration:none;
+  border-left:3px solid transparent; transition:all .15s;
+}
+#sidebar a:hover, #sidebar a.active {
+  color:#e2e8f0; background:rgba(255,255,255,.06); border-left-color:var(--blue);
+}
+.badge-get-sm  { display:inline-block; font-size:7pt; font-weight:700; padding:1px 5px; border-radius:2px; background:var(--green); color:#fff; margin-right:5px; vertical-align:middle; }
+.badge-post-sm { display:inline-block; font-size:7pt; font-weight:700; padding:1px 5px; border-radius:2px; background:#b45309; color:#fff; margin-right:5px; vertical-align:middle; }
+
+/* ── Main ── */
+#main { margin-left: var(--sidebar-w); padding: 48px 52px 100px; max-width: 1100px; }
+
+.page-title    { font-size:24pt; font-weight:700; color:var(--navy); margin-bottom:4px; }
+.page-subtitle { color:#5a6a8a; font-size:10pt; margin-bottom:12px; }
+
+.page-meta {
+  display:flex; gap:24px; flex-wrap:wrap;
+  background:#fff; border-radius:10px;
+  padding:14px 20px; margin:18px 0 50px;
+  box-shadow:0 1px 6px rgba(0,0,0,.08); font-size:9.5pt;
+}
+.meta-item { display:flex; flex-direction:column; gap:2px; }
+.meta-label { font-size:7.5pt; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#94a3b8; }
+
+.section-title {
+  font-size:14pt; font-weight:700; color:var(--navy);
+  text-transform:uppercase; letter-spacing:.05em;
+  padding-left:14px; border-left:4px solid var(--blue);
+  margin:60px 0 24px;
+}
+.section-title:first-of-type { margin-top:0; }
+
+h3 { font-size:11pt; font-weight:700; color:var(--navy); margin:24px 0 8px; }
+p  { margin-bottom:10px; }
+
+.divider { border:none; border-top:2px solid #dde3ee; margin:50px 0; }
+
+.endpoint-header {
+  display:flex; align-items:center; gap:12px;
+  background:#fff; border-radius:10px;
+  padding:14px 18px; margin-bottom:16px;
+  box-shadow:0 1px 6px rgba(0,0,0,.08); flex-wrap:wrap;
+}
+.method-badge { font-size:9pt; font-weight:700; padding:3px 10px; border-radius:4px; color:#fff; flex-shrink:0; }
+.method-badge.get  { background:var(--green); }
+.method-badge.post { background:#b45309; }
+.endpoint-header code { font-size:10pt; font-family:Consolas,'Courier New',monospace; color:var(--navy); background:#f1f5f9; padding:3px 10px; border-radius:5px; }
+.endpoint-header .ep-desc { font-size:9.5pt; color:#475569; margin-left:auto; }
+
+code { font-family:Consolas,'Courier New',monospace; font-size:9.5pt; background:#eef2f9; padding:1px 5px; border-radius:3px; color:#1e3a5f; }
+
+pre {
+  font-family:Consolas,'Courier New',monospace;
+  font-size:9pt; background:#1a2035; color:#e2e8f0;
+  border-radius:8px; padding:16px 20px;
+  white-space:pre-wrap; word-wrap:break-word;
+  margin:10px 0 18px; line-height:1.55;
+}
+pre .key  { color:#93c5fd; }
+pre .str  { color:#86efac; }
+pre .num  { color:#fcd34d; }
+pre .null { color:#94a3b8; }
+pre .cmt  { color:#64748b; font-style:italic; }
+
+table { border-collapse:collapse; width:100%; margin:10px 0 18px; font-size:9.5pt; background:#fff; border-radius:8px; overflow:hidden; box-shadow:0 1px 5px rgba(0,0,0,.07); }
+th { background:var(--blue); color:#fff; text-align:left; padding:8px 12px; font-size:9pt; }
+td { border-bottom:1px solid #e8edf5; padding:7px 12px; vertical-align:top; }
+tr:last-child td { border-bottom:none; }
+tr:nth-child(even) td { background:#f6f8fd; }
+.error-table th { background:#7f1d1d; }
+
+.badge-req { display:inline-block; font-size:7.5pt; font-weight:700; padding:1px 6px; border-radius:3px; color:#fff; background:var(--red); }
+.badge-opt { display:inline-block; font-size:7.5pt; font-weight:700; padding:1px 6px; border-radius:3px; color:#fff; background:var(--sky); }
+
+.note { background:#fffbeb; border-left:4px solid var(--amber); border-radius:0 6px 6px 0; padding:10px 16px; margin:12px 0; font-size:9.5pt; color:#451a03; }
+.info { background:#eff6ff; border-left:4px solid var(--sky); border-radius:0 6px 6px 0; padding:10px 16px; margin:12px 0; font-size:9.5pt; color:#1e3a5f; }
+
+.perm { display:inline-flex; align-items:center; gap:5px; font-size:8.5pt; color:#374151; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:20px; padding:2px 10px; margin:4px 0 12px; }
+
+/* ── Flow nodes ── */
+.flow-wrap { background:#fff; border-radius:14px; padding:30px 24px; box-shadow:0 1px 8px rgba(0,0,0,.08); margin-bottom:40px; overflow-x:auto; }
+svg.flow { display:block; margin:0 auto; }
+
+/* ── Status chips ── */
+.status-chip { display:inline-block; font-size:8.5pt; font-weight:700; padding:2px 10px; border-radius:12px; }
+.s-due            { background:#fef9c3; color:#713f12; }
+.s-partially-paid { background:#dbeafe; color:#1e40af; }
+.s-paid           { background:#d1fae5; color:#065f46; }
+.s-cancelled      { background:#fee2e2; color:#7f1d1d; }
+.s-active         { background:#d1fae5; color:#065f46; }
+.s-expired        { background:#f1f5f9; color:#374151; }
+
+#top-btn { position:fixed; bottom:28px; right:28px; background:var(--blue); color:#fff; border:none; border-radius:50%; width:40px; height:40px; font-size:16px; cursor:pointer; box-shadow:0 2px 10px rgba(0,0,0,.2); display:flex; align-items:center; justify-content:center; z-index:200; }
+#top-btn:hover { background:var(--navy); }
+</style>
+</head>
+<body>
+
+<aside id="sidebar">
+  <div class="logo">Broker Commission API<span>Frontend Reference</span></div>
+  <nav>
+    <div class="nav-group-label">Overview</div>
+    <a href="#overview">Concepts &amp; Flow</a>
+    <a href="#statuses">Status Reference</a>
+
+    <div class="nav-group-label">Rate Endpoints</div>
+    <a href="#ep-rates-list"><span class="badge-get-sm">GET</span>List Rates</a>
+    <a href="#ep-rates-current"><span class="badge-get-sm">GET</span>Current Rate</a>
+    <a href="#ep-rates-store"><span class="badge-post-sm">POST</span>Create Rate</a>
+
+    <div class="nav-group-label">Commission Endpoints</div>
+    <a href="#ep-list"><span class="badge-get-sm">GET</span>List Commissions</a>
+    <a href="#ep-show"><span class="badge-get-sm">GET</span>Show Commission</a>
+    <a href="#ep-payment"><span class="badge-post-sm">POST</span>Record Payment</a>
+  </nav>
+</aside>
+
+<main id="main">
+
+<p class="page-title">Broker Commission API</p>
+<p class="page-subtitle">Complete frontend reference — rate management, commission listing &amp; payment recording</p>
+
+<div class="page-meta">
+  <div class="meta-item">
+    <span class="meta-label">Base URL</span>
+    <span><code>http://localhost:8000/api</code></span>
+  </div>
+  <div class="meta-item">
+    <span class="meta-label">Authentication</span>
+    <span><code>Authorization: Bearer {token}</code> (Sanctum)</span>
+  </div>
+  <div class="meta-item">
+    <span class="meta-label">Date Format</span>
+    <span><code>YYYY-MM-DD</code> for dates, <code>YYYY-MM-DD HH:MM:SS</code> for datetimes</span>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════ -->
+<p class="section-title" id="overview">Concepts &amp; Flow</p>
+
+<h3>How it works</h3>
+<p>There are two separate resources: <strong>Commission Rates</strong> and <strong>Commissions</strong>.</p>
+
+<table>
+  <tr><th>Resource</th><th>What it represents</th></tr>
+  <tr>
+    <td><code>BrokerCommissionRate</code></td>
+    <td>A system-wide percentage rate (e.g. 6%) with a validity window (<code>effective_from</code> → <code>effective_to</code>). Only one rate is active at a time. Creating a new rate automatically closes the previous one.</td>
+  </tr>
+  <tr>
+    <td><code>BrokerCommission</code></td>
+    <td>A specific commission record tied to one booking and one broker. Created automatically when a booking is confirmed. Tracks how much is owed, how much has been paid, and the current payment status.</td>
+  </tr>
+  <tr>
+    <td><code>BrokerCommissionPayment</code></td>
+    <td>An individual cash payment against a commission (partial or full). Multiple payments can be recorded until the commission is fully paid.</td>
+  </tr>
+</table>
+
+<h3>Commission Lifecycle &amp; Rate Timeline</h3>
+
+<div class="flow-wrap">
+<svg class="flow" width="820" height="520" viewBox="0 0 820 520" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a"  markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#64748b"/></marker>
+    <marker id="ag" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#1a7f37"/></marker>
+    <marker id="ar" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#b91c1c"/></marker>
+    <marker id="ab" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0,10 3.5,0 7" fill="#2E5299"/></marker>
+    <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.11"/></filter>
+  </defs>
+
+  <!-- ── RATE TIMELINE (top half) ── -->
+  <text x="30" y="26" fill="#64748b" font-size="9" font-weight="700" font-family="Segoe UI,Arial" text-anchor="start" letter-spacing="1">RATE TIMELINE</text>
+
+  <!-- Rate A (expired) -->
+  <rect x="30"  y="38" width="200" height="52" rx="8" fill="#6b7280" filter="url(#sh)"/>
+  <text x="130" y="58" text-anchor="middle" fill="#fff" font-size="10" font-weight="700" font-family="Segoe UI,Arial">Rate A — 5%</text>
+  <text x="130" y="74" text-anchor="middle" fill="#e5e7eb" font-size="8.5" font-family="Segoe UI,Arial">effective_from: 2025-01-01</text>
+  <text x="130" y="84" text-anchor="middle" fill="#e5e7eb" font-size="8.5" font-family="Segoe UI,Arial">effective_to: 2026-02-28 23:59:59</text>
+
+  <!-- arrow -->
+  <line x1="230" y1="64" x2="268" y2="64" stroke="#64748b" stroke-width="2" marker-end="url(#a)"/>
+  <text x="249" y="57" text-anchor="middle" fill="#64748b" font-size="8" font-family="Segoe UI,Arial">POST /rates</text>
+  <text x="249" y="67" text-anchor="middle" fill="#d97706" font-size="7.5" font-family="Segoe UI,Arial">auto-closes A</text>
+
+  <!-- Rate B (current) -->
+  <rect x="268" y="38" width="220" height="52" rx="8" fill="#1a7f37" filter="url(#sh)"/>
+  <text x="378" y="58" text-anchor="middle" fill="#fff" font-size="10" font-weight="700" font-family="Segoe UI,Arial">Rate B — 6% ← CURRENT</text>
+  <text x="378" y="74" text-anchor="middle" fill="#bbf7d0" font-size="8.5" font-family="Segoe UI,Arial">effective_from: 2026-03-01 00:00:00</text>
+  <text x="378" y="84" text-anchor="middle" fill="#bbf7d0" font-size="8.5" font-family="Segoe UI,Arial">effective_to: null (open-ended)</text>
+
+  <!-- arrow -->
+  <line x1="488" y1="64" x2="526" y2="64" stroke="#64748b" stroke-width="2" marker-end="url(#a)"/>
+  <text x="507" y="57" text-anchor="middle" fill="#64748b" font-size="8" font-family="Segoe UI,Arial">POST /rates</text>
+  <text x="507" y="67" text-anchor="middle" fill="#d97706" font-size="7.5" font-family="Segoe UI,Arial">auto-closes B</text>
+
+  <!-- Rate C (future) -->
+  <rect x="526" y="38" width="220" height="52" rx="8" fill="#0369a1" filter="url(#sh)"/>
+  <text x="636" y="58" text-anchor="middle" fill="#fff" font-size="10" font-weight="700" font-family="Segoe UI,Arial">Rate C — 7% (future)</text>
+  <text x="636" y="74" text-anchor="middle" fill="#bae6fd" font-size="8.5" font-family="Segoe UI,Arial">effective_from: 2026-07-01 00:00:00</text>
+  <text x="636" y="84" text-anchor="middle" fill="#bae6fd" font-size="8.5" font-family="Segoe UI,Arial">effective_to: null</text>
+
+  <!-- ── COMMISSION LIFECYCLE (bottom half) ── -->
+  <line x1="0" y1="118" x2="820" y2="118" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="30" y="140" fill="#64748b" font-size="9" font-weight="700" font-family="Segoe UI,Arial" letter-spacing="1">COMMISSION LIFECYCLE</text>
+
+  <!-- Booking confirmed -->
+  <rect x="30" y="154" width="160" height="48" rx="24" fill="#1F3864" filter="url(#sh)"/>
+  <text x="110" y="174" text-anchor="middle" fill="#fff" font-size="10" font-weight="700" font-family="Segoe UI,Arial">Booking</text>
+  <text x="110" y="190" text-anchor="middle" fill="#93c5fd" font-size="9" font-family="Segoe UI,Arial">confirmed / booked</text>
+
+  <line x1="190" y1="178" x2="228" y2="178" stroke="#64748b" stroke-width="2" marker-end="url(#a)"/>
+  <text x="209" y="170" text-anchor="middle" fill="#64748b" font-size="8" font-family="Segoe UI,Arial">auto-created</text>
+
+  <!-- due -->
+  <rect x="228" y="154" width="130" height="48" rx="8" fill="#d97706" filter="url(#sh)"/>
+  <text x="293" y="175" text-anchor="middle" fill="#fff" font-size="11" font-weight="700" font-family="Segoe UI,Arial">due</text>
+  <text x="293" y="192" text-anchor="middle" fill="#fef3c7" font-size="8.5" font-family="Segoe UI,Arial">nothing paid yet</text>
+
+  <line x1="358" y1="178" x2="396" y2="178" stroke="#1a7f37" stroke-width="2" marker-end="url(#ag)"/>
+  <text x="377" y="170" text-anchor="middle" fill="#1a7f37" font-size="8" font-family="Segoe UI,Arial">partial payment</text>
+
+  <!-- partially_paid -->
+  <rect x="396" y="154" width="150" height="48" rx="8" fill="#2E5299" filter="url(#sh)"/>
+  <text x="471" y="175" text-anchor="middle" fill="#fff" font-size="10.5" font-weight="700" font-family="Segoe UI,Arial">partially_paid</text>
+  <text x="471" y="192" text-anchor="middle" fill="#bfdbfe" font-size="8.5" font-family="Segoe UI,Arial">some payments recorded</text>
+
+  <line x1="546" y1="178" x2="584" y2="178" stroke="#1a7f37" stroke-width="2" marker-end="url(#ag)"/>
+  <text x="565" y="170" text-anchor="middle" fill="#1a7f37" font-size="8" font-family="Segoe UI,Arial">full payment</text>
+
+  <!-- paid -->
+  <rect x="584" y="154" width="130" height="48" rx="8" fill="#1a7f37" filter="url(#sh)"/>
+  <text x="649" y="175" text-anchor="middle" fill="#fff" font-size="11" font-weight="700" font-family="Segoe UI,Arial">paid</text>
+  <text x="649" y="192" text-anchor="middle" fill="#bbf7d0" font-size="8.5" font-family="Segoe UI,Arial">fully settled</text>
+
+  <!-- cancelled branch -->
+  <path d="M 293 202 Q 293 250 180 250" stroke="#b91c1c" stroke-width="1.5" fill="none" stroke-dasharray="5,3" marker-end="url(#ar)"/>
+  <rect x="30" y="228" width="150" height="44" rx="8" fill="#b91c1c" filter="url(#sh)"/>
+  <text x="105" y="248" text-anchor="middle" fill="#fff" font-size="11" font-weight="700" font-family="Segoe UI,Arial">cancelled</text>
+  <text x="105" y="264" text-anchor="middle" fill="#fca5a5" font-size="8.5" font-family="Segoe UI,Arial">booking cancelled</text>
+  <text x="205" y="246" fill="#b91c1c" font-size="8" font-family="Segoe UI,Arial">booking</text>
+  <text x="205" y="256" fill="#b91c1c" font-size="8" font-family="Segoe UI,Arial">cancelled</text>
+
+  <!-- ── PAYMENT DETAIL (bottom) ── -->
+  <line x1="0" y1="296" x2="820" y2="296" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="30" y="318" fill="#64748b" font-size="9" font-weight="700" font-family="Segoe UI,Arial" letter-spacing="1">PAYMENT RECORDING</text>
+
+  <rect x="30"  y="332" width="220" height="50" rx="24" fill="#1F3864" filter="url(#sh)"/>
+  <text x="140" y="353" text-anchor="middle" fill="#fff" font-size="10" font-weight="700" font-family="Segoe UI,Arial">POST .../payments</text>
+  <text x="140" y="370" text-anchor="middle" fill="#93c5fd" font-size="9" font-family="Segoe UI,Arial">amount · date · method · receipt</text>
+
+  <line x1="250" y1="357" x2="288" y2="357" stroke="#64748b" stroke-width="2" marker-end="url(#a)"/>
+
+  <rect x="288" y="332" width="240" height="50" rx="8" fill="#2E5299" filter="url(#sh)"/>
+  <text x="408" y="353" text-anchor="middle" fill="#fff" font-size="10" font-weight="700" font-family="Segoe UI,Arial">RecordBrokerCommission</text>
+  <text x="408" y="370" text-anchor="middle" fill="#bfdbfe" font-size="9" font-family="Segoe UI,Arial">PaymentAction</text>
+
+  <line x1="528" y1="357" x2="566" y2="357" stroke="#64748b" stroke-width="2" marker-end="url(#a)"/>
+
+  <!-- side note: what gets updated -->
+  <rect x="566" y="316" width="224" height="90" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5" filter="url(#sh)"/>
+  <text x="678" y="336" text-anchor="middle" fill="#1F3864" font-size="9.5" font-weight="700" font-family="Segoe UI,Arial">Commission updated</text>
+  <text x="678" y="353" text-anchor="middle" fill="#334155" font-size="9" font-family="Segoe UI,Arial">paid_amount += amount</text>
+  <text x="678" y="368" text-anchor="middle" fill="#334155" font-size="9" font-family="Segoe UI,Arial">remaining_amount recalculated</text>
+  <text x="678" y="383" text-anchor="middle" fill="#d97706" font-size="9" font-family="Consolas,monospace">due → partially_paid</text>
+  <text x="678" y="397" text-anchor="middle" fill="#1a7f37" font-size="9" font-family="Consolas,monospace">partially_paid → paid</text>
+
+  <!-- key fields box -->
+  <rect x="30" y="412" width="520" height="86" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="46" y="430" fill="#1F3864" font-size="9.5" font-weight="700" font-family="Segoe UI,Arial">Key Commission Fields</text>
+  <text x="46" y="448" fill="#334155" font-size="9" font-family="Consolas,monospace">base_amount        = booking price used as calculation base</text>
+  <text x="46" y="463" fill="#334155" font-size="9" font-family="Consolas,monospace">commission_amount  = base_amount × commission_percentage / 100</text>
+  <text x="46" y="478" fill="#334155" font-size="9" font-family="Consolas,monospace">paid_amount        = sum of all recorded payments</text>
+  <text x="46" y="493" fill="#334155" font-size="9" font-family="Consolas,monospace">remaining_amount   = commission_amount − paid_amount</text>
+</svg>
+</div>
+
+
+<!-- ══════════════════════════════════════════════ -->
+<p class="section-title" id="statuses">Status Reference</p>
+
+<h3>Commission Statuses</h3>
+<table>
+  <tr><th>Value</th><th>Badge</th><th>Meaning</th></tr>
+  <tr><td><code>due</code></td><td><span class="status-chip s-due">due</span></td><td>Commission calculated, nothing paid yet.</td></tr>
+  <tr><td><code>partially_paid</code></td><td><span class="status-chip s-partially-paid">partially_paid</span></td><td>At least one payment recorded but commission not fully covered.</td></tr>
+  <tr><td><code>paid</code></td><td><span class="status-chip s-paid">paid</span></td><td>Fully settled — <code>remaining_amount</code> = 0.</td></tr>
+  <tr><td><code>cancelled</code></td><td><span class="status-chip s-cancelled">cancelled</span></td><td>Booking was cancelled; commission void.</td></tr>
+</table>
+
+<h3>Rate Statuses (derived)</h3>
+<p>Rates have no explicit <code>status</code> field — derive it from the dates:</p>
+<table>
+  <tr><th>Condition</th><th>Display as</th></tr>
+  <tr><td><code>effective_to</code> is <code>null</code></td><td><span class="status-chip s-active">Active</span> — currently in use</td></tr>
+  <tr><td><code>effective_to</code> is in the past</td><td><span class="status-chip s-expired">Expired</span></td></tr>
+  <tr><td><code>effective_from</code> is in the future</td><td><span class="status-chip s-partially-paid">Upcoming</span></td></tr>
+</table>
+
+
+<hr class="divider">
+
+<!-- ══════════════════════════════════════════════ -->
+<p class="section-title" id="ep-rates-list">1 · List Commission Rates</p>
+
+<div class="endpoint-header">
+  <span class="method-badge get">GET</span>
+  <code>/api/broker-commissions/rates</code>
+  <span class="ep-desc">Paginated history of all rates</span>
+</div>
+<p>Returns all commission rate records ever created, ordered by most recent <code>effective_from</code> first. Used to display rate history.</p>
+<div class="perm">🔑 manage broker commission rates</div>
+
+<h3>Query Parameters</h3>
+<table>
+  <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
+  <tr><td><code>per_page</code></td><td>integer</td><td>No</td><td>Items per page. Default: <code>15</code>. Max: <code>100</code>.</td></tr>
+</table>
+
+<h3>Success Response — 200 OK</h3>
+<pre>{
+  <span class="key">"current_page"</span>: <span class="num">1</span>,
+  <span class="key">"data"</span>: [
+    {
+      <span class="key">"id"</span>:             <span class="num">2</span>,
+      <span class="key">"percentage"</span>:     <span class="str">"6.00"</span>,
+      <span class="key">"effective_from"</span>: <span class="str">"2026-03-01T00:00:00.000000Z"</span>,
+      <span class="key">"effective_to"</span>:   <span class="null">null</span>,           <span class="cmt">// null = currently active</span>
+      <span class="key">"created_by"</span>:     <span class="num">1</span>,
+      <span class="key">"updated_by"</span>:     <span class="num">1</span>,
+      <span class="key">"created_at"</span>:     <span class="str">"2026-03-01T08:00:00.000000Z"</span>,
+      <span class="key">"updated_at"</span>:     <span class="str">"2026-03-01T08:00:00.000000Z"</span>,
+      <span class="key">"created_by_user"</span>:{ <span class="key">"id"</span>: <span class="num">1</span>, <span class="key">"name"</span>: <span class="str">"Admin"</span> },
+      <span class="key">"updated_by_user"</span>:{ <span class="key">"id"</span>: <span class="num">1</span>, <span class="key">"name"</span>: <span class="str">"Admin"</span> }
+    },
+    {
+      <span class="key">"id"</span>:             <span class="num">1</span>,
+      <span class="key">"percentage"</span>:     <span class="str">"5.00"</span>,
+      <span class="key">"effective_from"</span>: <span class="str">"2025-01-01T00:00:00.000000Z"</span>,
+      <span class="key">"effective_to"</span>:   <span class="str">"2026-02-28T23:59:59.000000Z"</span>  <span class="cmt">// auto-set when rate 2 was created</span>
+    }
+  ],
+  <span class="key">"per_page"</span>: <span class="num">15</span>,
+  <span class="key">"total"</span>:    <span class="num">2</span>
+}</pre>
+
+<h3>Error Responses</h3>
+<table class="error-table">
+  <tr><th>Status</th><th>Condition</th></tr>
+  <tr><td>403</td><td>User lacks <code>manage broker commission rates</code> permission</td></tr>
+</table>
+
+<hr class="divider">
+
+<!-- ══════════════════════════════════════════════ -->
+<p class="section-title" id="ep-rates-current">2 · Get Current Rate</p>
+
+<div class="endpoint-header">
+  <span class="method-badge get">GET</span>
+  <code>/api/broker-commissions/rates/current</code>
+  <span class="ep-desc">The one rate active right now</span>
+</div>
+<p>Returns the single rate whose window covers the current moment (<code>effective_from ≤ now ≤ effective_to OR effective_to IS NULL</code>). Use this to pre-fill or display the active rate in settings screens.</p>
+<div class="perm">🔑 manage broker commission rates</div>
+
+<h3>Success Response — 200 OK</h3>
+<pre>{
+  <span class="key">"id"</span>:             <span class="num">2</span>,
+  <span class="key">"percentage"</span>:     <span class="str">"6.00"</span>,
+  <span class="key">"effective_from"</span>: <span class="str">"2026-03-01T00:00:00.000000Z"</span>,
+  <span class="key">"effective_to"</span>:   <span class="null">null</span>,
+  <span class="key">"created_by_user"</span>:{ <span class="key">"id"</span>: <span class="num">1</span>, <span class="key">"name"</span>: <span class="str">"Admin"</span> },
+  <span class="key">"updated_by_user"</span>:{ <span class="key">"id"</span>: <span class="num">1</span>, <span class="key">"name"</span>: <span class="str">"Admin"</span> }
+}</pre>
+
+<h3>Error Responses</h3>
+<table class="error-table">
+  <tr><th>Status</th><th>Condition</th></tr>
+  <tr><td>403</td><td>User lacks permission</td></tr>
+  <tr><td>404</td><td>No rate has been configured yet</td></tr>
+</table>
+
+<hr class="divider">
+
+<!-- ══════════════════════════════════════════════ -->
+<p class="section-title" id="ep-rates-store">3 · Create a New Rate</p>
+
+<div class="endpoint-header">
+  <span class="method-badge post">POST</span>
+  <code>/api/broker-commissions/rates</code>
+  <span class="ep-desc">Sets a new active rate from a given date</span>
+</div>
+<p>Creates a new commission rate. <strong>Automatically closes the currently active rate</strong> by setting its <code>effective_to</code> to one second before the new rate's <code>effective_from</code>. No manual closing needed.</p>
+<div class="perm">🔑 manage broker commission rates</div>
+
+<h3>Request Body — JSON</h3>
+<table>
+  <tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr>
+  <tr><td><code>percentage</code></td><td>number</td><td><span class="badge-req">Required</span></td><td>Commission rate as a percentage. Must be &gt; 0 and ≤ 100. Example: <code>6.00</code> means 6%.</td></tr>
+  <tr><td><code>effective_from</code></td><td>datetime</td><td><span class="badge-req">Required</span></td><td>When this rate takes effect. Format: <code>YYYY-MM-DD HH:MM:SS</code>. Can be future-dated.</td></tr>
+</table>
+
+<div class="note"><strong>Important:</strong> Setting <code>effective_from</code> in the past will immediately make this the active rate and close any overlapping previous rate. Setting it in the future creates a scheduled rate — the current rate remains active until then.</div>
+
+<h3>Success Response — 201 Created</h3>
+<pre>{
+  <span class="key">"message"</span>: <span class="str">"Broker commission rate created successfully."</span>,
+  <span class="key">"data"</span>: {
+    <span class="key">"id"</span>:             <span class="num">3</span>,
+    <span class="key">"percentage"</span>:     <span class="str">"7.00"</span>,
+    <span class="key">"effective_from"</span>: <span class="str">"2026-07-01T00:00:00.000000Z"</span>,
+    <span class="key">"effective_to"</span>:   <span class="null">null</span>,
+    <span class="key">"created_by_user"</span>:{ <span class="key">"id"</span>: <span class="num">1</span>, <span class="key">"name"</span>: <span class="str">"Admin"</span> },
+    <span class="key">"updated_by_user"</span>:{ <span class="key">"id"</span>: <span class="num">1</span>, <span class="key">"name"</span>: <span class="str">"Admin"</span> }
+  }
+}</pre>
+
+<h3>Error Responses</h3>
+<table class="error-table">
+  <tr><th>Status</th><th>Condition</th></tr>
+  <tr><td>403</td><td>User lacks permission</td></tr>
+  <tr><td>422</td><td>Validation error (missing fields, percentage out of range) or unexpected server error</td></tr>
+</table>
+
+<hr class="divider">
+
+<!-- ══════════════════════════════════════════════ -->
+<p class="section-title" id="ep-list">4 · List Commissions</p>
+
+<div class="endpoint-header">
+  <span class="method-badge get">GET</span>
+  <code>/api/broker-commissions</code>
+  <span class="ep-desc">Paginated, filterable list</span>
+</div>
+<p>Returns all broker commissions with full related data. Ordered by <code>eligible_at</code> descending (most recent first). Each item includes the broker, rate, booking, unit, building, and all payments.</p>
+<div class="perm">🔑 view broker commissions</div>
+
+<h3>Query Parameters</h3>
+<table>
+  <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
+  <tr><td><code>broker_user_id</code></td><td>integer</td><td>No</td><td>Filter by broker (must be a valid user ID).</td></tr>
+  <tr><td><code>status</code></td><td>string</td><td>No</td><td><code>due</code>, <code>partially_paid</code>, <code>paid</code>, <code>cancelled</code></td></tr>
+  <tr><td><code>booking_id</code></td><td>integer</td><td>No</td><td>Filter to a specific booking's commission.</td></tr>
+  <tr><td><code>date_from</code></td><td>YYYY-MM-DD</td><td>No</td><td>Filter commissions with <code>eligible_at</code> on or after this date.</td></tr>
+  <tr><td><code>date_to</code></td><td>YYYY-MM-DD</td><td>No</td><td>Filter commissions with <code>eligible_at</code> on or before this date.</td></tr>
+  <tr><td><code>per_page</code></td><td>integer</td><td>No</td><td>Default: <code>15</code>. Max: <code>100</code>.</td></tr>
+</table>
+
+<div class="info"><strong>Note on <code>date_from</code> / <code>date_to</code>:</strong> These filter on <code>eligible_at</code> — the date the commission became payable (typically when the booking was confirmed), not the payment date.</div>
+
+<h3>Success Response — 200 OK</h3>
+<pre>{
+  <span class="key">"current_page"</span>: <span class="num">1</span>,
+  <span class="key">"data"</span>: [
+    {
+      <span class="key">"id"</span>:                    <span class="num">55</span>,
+      <span class="key">"booking_id"</span>:           <span class="num">175</span>,
+      <span class="key">"broker_user_id"</span>:       <span class="num">12</span>,
+      <span class="key">"commission_rate_id"</span>:   <span class="num">2</span>,
+      <span class="key">"commission_percentage"</span>:<span class="str">"6.00"</span>,
+      <span class="key">"base_amount"</span>:          <span class="str">"850000.00"</span>,    <span class="cmt">// booking price</span>
+      <span class="key">"commission_amount"</span>:    <span class="str">"51000.00"</span>,     <span class="cmt">// base × percentage / 100</span>
+      <span class="key">"paid_amount"</span>:          <span class="str">"25500.00"</span>,
+      <span class="key">"remaining_amount"</span>:     <span class="str">"25500.00"</span>,
+      <span class="key">"status"</span>:               <span class="str">"partially_paid"</span>,
+      <span class="key">"eligible_at"</span>:          <span class="str">"2026-06-01T00:00:00.000000Z"</span>,
+      <span class="key">"calculated_at"</span>:        <span class="str">"2026-06-01T08:30:00.000000Z"</span>,
+      <span class="key">"notes"</span>:                <span class="null">null</span>,
+      <span class="key">"broker"</span>:               { <span class="key">"id"</span>: <span class="num">12</span>, <span class="key">"name"</span>: <span class="str">"Jane Smith"</span> },
+      <span class="key">"rate"</span>:                 { <span class="key">"id"</span>: <span class="num">2</span>, <span class="key">"percentage"</span>: <span class="str">"6.00"</span>, <span class="key">"effective_from"</span>: <span class="str">"2026-03-01..."</span>, <span class="key">"effective_to"</span>: <span class="null">null</span> },
+      <span class="key">"booking"</span>: {
+        <span class="key">"id"</span>: <span class="num">175</span>, <span class="key">"price"</span>: <span class="str">"850000.00"</span>, <span class="key">"status"</span>: <span class="str">"Booked"</span>,
+        <span class="key">"unit"</span>: { <span class="key">"id"</span>: <span class="num">12</span>, <span class="key">"unit_no"</span>: <span class="str">"A-101"</span>, <span class="key">"building"</span>: { <span class="key">"id"</span>: <span class="num">3</span>, <span class="key">"name"</span>: <span class="str">"Tower C"</span> } }
+      },
+      <span class="key">"payments"</span>: [
+        {
+          <span class="key">"id"</span>:               <span class="num">10</span>,
+          <span class="key">"payment_date"</span>:    <span class="str">"2026-06-05"</span>,
+          <span class="key">"amount"</span>:         <span class="str">"25500.00"</span>,
+          <span class="key">"payment_method"</span>: <span class="str">"bank_transfer"</span>,
+          <span class="key">"reference_number"</span>:<span class="str">"TRX-001"</span>,
+          <span class="key">"receipt_path"</span>:   <span class="str">"brokers/commission/receipts/..."</span>,
+          <span class="key">"paid_by"</span>:        <span class="num">1</span>,
+          <span class="key">"created_at"</span>:     <span class="str">"2026-06-05T10:00:00.000000Z"</span>,
+          <span class="key">"paid_by_user"</span>:   { <span class="key">"id"</span>: <span class="num">1</span>, <span class="key">"name"</span>: <span class="str">"Admin"</span> }
+        }
+      ],
+      <span class="key">"payments_count"</span>: <span class="num">1</span>
+    }
+  ],
+  <span class="key">"per_page"</span>: <span class="num">15</span>,
+  <span class="key">"total"</span>: <span class="num">42</span>
+}</pre>
+
+<h3>Error Responses</h3>
+<table class="error-table">
+  <tr><th>Status</th><th>Condition</th></tr>
+  <tr><td>403</td><td>User lacks <code>view broker commissions</code> permission</td></tr>
+  <tr><td>422</td><td>Invalid <code>broker_user_id</code>, <code>booking_id</code>, or unknown status value</td></tr>
+</table>
+
+<hr class="divider">
+
+<!-- ══════════════════════════════════════════════ -->
+<p class="section-title" id="ep-show">5 · Show a Commission</p>
+
+<div class="endpoint-header">
+  <span class="method-badge get">GET</span>
+  <code>/api/broker-commissions/{id}</code>
+  <span class="ep-desc">Full detail of one commission</span>
+</div>
+<p>Returns a single commission with all relations. Identical to the list response for that item, but also includes broker <code>email</code> and payment <code>notes</code>.</p>
+<div class="perm">🔑 view broker commissions</div>
+
+<h3>Path Parameters</h3>
+<table>
+  <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+  <tr><td><code>id</code></td><td>integer</td><td>The broker commission ID.</td></tr>
+</table>
+
+<h3>Extra fields vs. the list endpoint</h3>
+<table>
+  <tr><th>Field</th><th>Where</th><th>Notes</th></tr>
+  <tr><td><code>broker.email</code></td><td><code>broker</code> object</td><td>Not included in the list endpoint.</td></tr>
+  <tr><td><code>payments[].notes</code></td><td>each payment</td><td>Not included in the list endpoint.</td></tr>
+</table>
+
+<h3>Success Response — 200 OK</h3>
+<p>Same shape as a single item from the list, with the additions above. See the list endpoint for the full structure.</p>
+
+<h3>Error Responses</h3>
+<table class="error-table">
+  <tr><th>Status</th><th>Condition</th></tr>
+  <tr><td>403</td><td>User lacks permission</td></tr>
+  <tr><td>404</td><td>Commission not found</td></tr>
+</table>
+
+<hr class="divider">
+
+<!-- ══════════════════════════════════════════════ -->
+<p class="section-title" id="ep-payment">6 · Record a Payment</p>
+
+<div class="endpoint-header">
+  <span class="method-badge post">POST</span>
+  <code>/api/broker-commissions/{id}/payments</code>
+  <span class="ep-desc">Record a partial or full payment</span>
+</div>
+<p>Records a payment against a broker commission. Payments can be partial — record multiple until the commission is fully settled. Updates <code>paid_amount</code>, <code>remaining_amount</code>, and recalculates the commission <code>status</code> automatically.</p>
+<div class="perm">🔑 record broker commission payment</div>
+
+<h3>Path Parameters</h3>
+<table>
+  <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+  <tr><td><code>id</code></td><td>integer</td><td>The broker commission ID.</td></tr>
+</table>
+
+<h3>Request Body — <code>multipart/form-data</code></h3>
+<table>
+  <tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr>
+  <tr><td><code>amount</code></td><td>number</td><td><span class="badge-req">Required</span></td><td>Amount paid. Must be &gt; 0.</td></tr>
+  <tr><td><code>payment_date</code></td><td>date</td><td><span class="badge-req">Required</span></td><td>Date the payment was made. Format: <code>YYYY-MM-DD</code>.</td></tr>
+  <tr><td><code>payment_method</code></td><td>string</td><td><span class="badge-opt">Optional</span></td><td>Free text (e.g. <code>bank_transfer</code>, <code>cheque</code>, <code>cash</code>). Max 255 chars.</td></tr>
+  <tr><td><code>reference_number</code></td><td>string</td><td><span class="badge-opt">Optional</span></td><td>Transaction or cheque reference. Max 255 chars.</td></tr>
+  <tr><td><code>receipt</code></td><td>file</td><td><span class="badge-opt">Optional</span></td><td>Payment receipt upload. Accepted: <code>pdf</code>, <code>jpg</code>, <code>jpeg</code>, <code>png</code>. Max 5 MB.</td></tr>
+  <tr><td><code>notes</code></td><td>string</td><td><span class="badge-opt">Optional</span></td><td>Free-text notes about this payment.</td></tr>
+  <tr><td><code>paid_by</code></td><td>integer</td><td><span class="badge-opt">Optional</span></td><td>User ID of the person who made the payment on behalf of the company. Must exist in <code>users</code> table.</td></tr>
+</table>
+
+<div class="note"><strong>Overpayment:</strong> The action may enforce that <code>amount</code> does not exceed <code>remaining_amount</code>. If it throws a <code>422</code>, show the <code>error</code> message directly to the user.</div>
+
+<h3>Success Response — 201 Created</h3>
+<pre>{
+  <span class="key">"message"</span>: <span class="str">"Broker commission payment recorded successfully."</span>,
+  <span class="key">"payment"</span>: {
+    <span class="key">"id"</span>:               <span class="num">11</span>,
+    <span class="key">"broker_commission_id"</span>: <span class="num">55</span>,
+    <span class="key">"amount"</span>:         <span class="str">"25500.00"</span>,
+    <span class="key">"payment_date"</span>:    <span class="str">"2026-06-09"</span>,
+    <span class="key">"payment_method"</span>: <span class="str">"bank_transfer"</span>,
+    <span class="key">"reference_number"</span>:<span class="str">"TRX-002"</span>,
+    <span class="key">"receipt_path"</span>:   <span class="str">"brokers/commission/receipts/broker_commission_receipt_55_20260609_..."</span>,
+    <span class="key">"notes"</span>:          <span class="null">null</span>,
+    <span class="key">"paid_by"</span>:        <span class="num">1</span>,
+    <span class="key">"created_at"</span>:     <span class="str">"2026-06-09T09:00:00.000000Z"</span>,
+    <span class="key">"paid_by_user"</span>:   { <span class="key">"id"</span>: <span class="num">1</span>, <span class="key">"name"</span>: <span class="str">"Admin"</span> },
+    <span class="key">"commission"</span>: { <span class="cmt">/* full commission object */</span> }
+  },
+  <span class="key">"broker_commission"</span>: {
+    <span class="key">"id"</span>:               <span class="num">55</span>,
+    <span class="key">"paid_amount"</span>:     <span class="str">"51000.00"</span>,
+    <span class="key">"remaining_amount"</span>:<span class="str">"0.00"</span>,
+    <span class="key">"status"</span>:          <span class="str">"paid"</span>,      <span class="cmt">// recalculated</span>
+    <span class="key">"broker"</span>:          { <span class="cmt">/* ... */</span> },
+    <span class="key">"booking"</span>:         { <span class="cmt">/* ... */</span> },
+    <span class="key">"rate"</span>:            { <span class="cmt">/* ... */</span> },
+    <span class="key">"payments"</span>:        [ <span class="cmt">/* all payments including the new one */</span> ]
+  }
+}</pre>
+
+<h3>Error Responses</h3>
+<table class="error-table">
+  <tr><th>Status</th><th>Condition</th></tr>
+  <tr><td>403</td><td>User lacks permission</td></tr>
+  <tr><td>404</td><td>Commission not found</td></tr>
+  <tr><td>422</td><td>Validation error or business rule violation (e.g. overpayment, commission already cancelled)</td></tr>
+  <tr><td>500</td><td>Server error (DB failure). Logged server-side.</td></tr>
+</table>
+
+</main>
+
+<button id="top-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+
+<script>
+  const links = document.querySelectorAll('#sidebar a[href^="#"]');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const a = document.querySelector('#sidebar a[href="#' + e.target.id + '"]');
+        if (a) a.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-10% 0px -80% 0px' });
+  document.querySelectorAll('.section-title[id]').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>

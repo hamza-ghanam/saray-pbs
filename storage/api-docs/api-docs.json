@@ -3898,6 +3898,559 @@
                 ]
             }
         },
+        "/installments": {
+            "get": {
+                "tags": [
+                    "Installment Payments"
+                ],
+                "summary": "List all installments (filterable)",
+                "operationId": "indexInstallments",
+                "parameters": [
+                    {
+                        "name": "period",
+                        "in": "query",
+                        "description": "Shorthand date window for due_date",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "today",
+                                "this_week",
+                                "this_month"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "due_from",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "due_to",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "pending",
+                                "partially_paid",
+                                "paid",
+                                "overdue",
+                                "waived"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "pending_verification",
+                        "in": "query",
+                        "description": "Filter installments that have at least one payment awaiting verification",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "booking_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "project_id",
+                        "in": "query",
+                        "description": "Filter by building/project ID",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 25
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Installments fetched successfully"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/bookings/{booking}/installments": {
+            "get": {
+                "tags": [
+                    "Installment Payments"
+                ],
+                "summary": "List installments for a booking",
+                "operationId": "listBookingInstallments",
+                "parameters": [
+                    {
+                        "name": "booking",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "pending",
+                                "partially_paid",
+                                "paid",
+                                "overdue",
+                                "waived"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Installments fetched successfully. Each installment includes a computed `remaining_amount` field (installment amount minus total verified payments)."
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Booking not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/bookings/{booking}/installments/{installment}": {
+            "get": {
+                "tags": [
+                    "Installment Payments"
+                ],
+                "summary": "Show installment details",
+                "operationId": "showInstallment",
+                "parameters": [
+                    {
+                        "name": "booking",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "installment",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Installment fetched successfully"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Installment not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/bookings/{booking}/installments/{installment}/payments": {
+            "post": {
+                "tags": [
+                    "Installment Payments"
+                ],
+                "summary": "Record a payment for an installment",
+                "operationId": "recordInstallmentPayment",
+                "parameters": [
+                    {
+                        "name": "booking",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "installment",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "amount",
+                                    "payment_date"
+                                ],
+                                "properties": {
+                                    "amount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 50000
+                                    },
+                                    "payment_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-05-22"
+                                    },
+                                    "payment_method": {
+                                        "type": "string",
+                                        "enum": [
+                                            "cash",
+                                            "bank_transfer",
+                                            "cheque",
+                                            "card",
+                                            "other"
+                                        ],
+                                        "nullable": true
+                                    },
+                                    "reference_number": {
+                                        "type": "string",
+                                        "example": "TRX-987654",
+                                        "nullable": true
+                                    },
+                                    "receipt": {
+                                        "description": "Payment receipt file (pdf, jpg, jpeg, png, max 5MB)",
+                                        "type": "string",
+                                        "format": "binary",
+                                        "nullable": true
+                                    },
+                                    "notes": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Payment recorded successfully"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Installment not found"
+                    },
+                    "422": {
+                        "description": "Validation error or business rule violation"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/bookings/{booking}/installments/{installment}/payments/{installmentPayment}/verify": {
+            "post": {
+                "tags": [
+                    "Installment Payments"
+                ],
+                "summary": "Verify an installment payment",
+                "operationId": "verifyInstallmentPayment",
+                "parameters": [
+                    {
+                        "name": "booking",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "installment",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "installmentPayment",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Payment verified successfully"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Payment not found"
+                    },
+                    "422": {
+                        "description": "Business rule violation"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/bookings/{booking}/installments/{installment}/payments/{installmentPayment}/reject": {
+            "post": {
+                "tags": [
+                    "Installment Payments"
+                ],
+                "summary": "Reject an installment payment",
+                "operationId": "rejectInstallmentPayment",
+                "parameters": [
+                    {
+                        "name": "booking",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "installment",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "installmentPayment",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "reason": {
+                                        "description": "Rejection reason. Stored as `rejection_reason` on the payment object; does not overwrite the payment's `notes`.",
+                                        "type": "string",
+                                        "example": "Receipt is unclear.",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Payment rejected successfully. The returned `payment` object includes a `rejection_reason` field containing the supplied reason."
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Payment not found"
+                    },
+                    "422": {
+                        "description": "Business rule violation"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/bookings/{booking}/installments/{installment}/payments/{installmentPayment}/invoice": {
+            "post": {
+                "tags": [
+                    "Installment Payments"
+                ],
+                "summary": "Issue an invoice for a verified installment payment",
+                "operationId": "issueInstallmentPaymentInvoice",
+                "parameters": [
+                    {
+                        "name": "booking",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "installment",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "installmentPayment",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "vat_rate": {
+                                        "description": "VAT percentage, defaults to 0",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 5,
+                                        "nullable": true
+                                    },
+                                    "notes": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Invoice issued successfully"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Payment not found"
+                    },
+                    "422": {
+                        "description": "Business rule violation"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/invoices/{invoice}/download": {
+            "get": {
+                "tags": [
+                    "Installment Payments"
+                ],
+                "summary": "Download invoice PDF",
+                "operationId": "downloadInvoice",
+                "parameters": [
+                    {
+                        "name": "invoice",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Invoice PDF downloaded"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Invoice or PDF not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/otls": {
             "get": {
                 "tags": [
@@ -6232,12 +6785,13 @@
                     {
                         "name": "signable_type",
                         "in": "query",
-                        "description": "Signable type alias (e.g. Booking)",
+                        "description": "Signable type alias. Use 'Booking' for RF/SPA, 'User' for broker agreements.",
                         "required": true,
                         "schema": {
                             "type": "string",
                             "enum": [
-                                "Booking"
+                                "Booking",
+                                "User"
                             ],
                             "example": "Booking"
                         }
@@ -6245,7 +6799,7 @@
                     {
                         "name": "signable_id",
                         "in": "query",
-                        "description": "Signable ID (e.g. booking id)",
+                        "description": "Signable ID (e.g. booking id or user id)",
                         "required": true,
                         "schema": {
                             "type": "integer",
@@ -6255,13 +6809,14 @@
                     {
                         "name": "documentable_type",
                         "in": "query",
-                        "description": "Documentable type alias (RF or SPA)",
+                        "description": "Documentable type alias. RF = ReservationForm, SPA = SPA, UserDoc = broker agreement.",
                         "required": true,
                         "schema": {
                             "type": "string",
                             "enum": [
                                 "RF",
-                                "SPA"
+                                "SPA",
+                                "UserDoc"
                             ],
                             "example": "RF"
                         }
@@ -6269,7 +6824,7 @@
                     {
                         "name": "documentable_id",
                         "in": "query",
-                        "description": "Documentable ID (e.g. ReservationForm id or SPA id)",
+                        "description": "Documentable ID (e.g. ReservationForm id, SPA id, or UserDoc id)",
                         "required": true,
                         "schema": {
                             "type": "integer",
@@ -6279,13 +6834,14 @@
                     {
                         "name": "document_type",
                         "in": "query",
-                        "description": "Document type (RF or SPA). If omitted, it can be inferred from documentable_type.",
+                        "description": "Document type filter. If omitted, defaults to the value of documentable_type.",
                         "required": false,
                         "schema": {
                             "type": "string",
                             "enum": [
                                 "RF",
-                                "SPA"
+                                "SPA",
+                                "BROKER_AGREEMENT"
                             ],
                             "example": "RF"
                         }
@@ -6335,8 +6891,9 @@
                                                         "example": true
                                                     },
                                                     "signature_path": {
+                                                        "description": "URL to the signature image via GET /signatures/{id}/image, or null if no signature submitted yet.",
                                                         "type": "string",
-                                                        "example": "signatures/rf/999_20260128_182010.png",
+                                                        "example": "https://api.example.com/signatures/999/image",
                                                         "nullable": true
                                                     },
                                                     "created_at": {
@@ -6397,13 +6954,13 @@
                                             "properties": {
                                                 "message": {
                                                     "type": "string",
-                                                    "example": "The documentable_type field must be one of RF or SPA."
+                                                    "example": "The documentable_type field must be one of RF, SPA, or UserDoc."
                                                 },
                                                 "errors": {
                                                     "type": "object",
                                                     "example": {
                                                         "documentable_type": [
-                                                            "The documentable_type field must be one of RF or SPA."
+                                                            "The documentable_type field must be one of RF, SPA, or UserDoc."
                                                         ]
                                                     }
                                                 }
@@ -6451,14 +7008,14 @@
                         }
                     },
                     "403": {
-                        "description": "Forbidden",
+                        "description": "Forbidden – user lacks 'view customer' or 'view users' permission",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "error": {
+                                        "message": {
                                             "type": "string",
-                                            "example": "Forbidden"
+                                            "example": "Forbidden."
                                         }
                                     },
                                     "type": "object"
@@ -6643,7 +7200,7 @@
                     "Signing Links"
                 ],
                 "summary": "Download signable document by signing token",
-                "description": "Download the signable document using a valid signing token.\n\n- Public endpoint (no auth).\n- Resolves the SigningLink by SHA-256 hash of the plain token.\n- Allows download only while the signing link is still valid.\n- Returns the original unsigned PDF associated with the document.",
+                "description": "Download the signable document using a valid signing token.\n\n- Public endpoint (no auth).\n- Resolves the SigningLink by SHA-256 hash of the plain token.\n- Allows download only while the signing link is still valid.\n- Returns the original unsigned PDF associated with the document (RF, SPA or Broker Agreement).",
                 "operationId": "df2f741461cf078089835c60b0658bb3",
                 "parameters": [
                     {
@@ -6665,23 +7222,45 @@
                         }
                     },
                     "404": {
-                        "description": "Signing link not found or document file missing",
+                        "description": "Signing link not found, document invalid, or PDF file missing",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "properties": {
-                                        "error": {
-                                            "type": "string",
-                                            "example": "Invalid signing link."
+                                    "oneOf": [
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Invalid signing link."
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Invalid document for this signing link."
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Document file not found."
+                                                }
+                                            },
+                                            "type": "object"
                                         }
-                                    },
-                                    "type": "object"
+                                    ]
                                 }
                             }
                         }
                     },
                     "410": {
-                        "description": "Signing link expired, used, or no longer valid",
+                        "description": "Signing link expired, already used, or withdrawn",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -11271,6 +11850,10 @@
         {
             "name": "Units",
             "description": "Units"
+        },
+        {
+            "name": "Installment Payments",
+            "description": "Installment Payments"
         },
         {
             "name": "OneTime Links",

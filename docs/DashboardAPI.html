@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard API – Frontend Reference</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --navy:   #1F3864;
+  --blue:   #2E5299;
+  --green:  #1a7f37;
+  --amber:  #d97706;
+  --red:    #b91c1c;
+  --purple: #7c3aed;
+  --teal:   #0f766e;
+  --sky:    #0369a1;
+  --gray:   #6b7280;
+  --sidebar-w: 252px;
+}
+
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Segoe UI', Calibri, Arial, sans-serif;
+  background: #f0f3f8;
+  color: #1a2035;
+  font-size: 10.5pt;
+  line-height: 1.65;
+}
+
+/* ── Sidebar ── */
+#sidebar {
+  position: fixed; top: 0; left: 0; bottom: 0;
+  width: var(--sidebar-w);
+  background: #1a2035;
+  overflow-y: auto; z-index: 100;
+  padding-bottom: 40px;
+}
+#sidebar .logo {
+  padding: 20px 18px 16px;
+  border-bottom: 1px solid #2d3a55;
+  font-size: 11.5pt; font-weight: 700; color: #e2e8f0; line-height: 1.3;
+}
+#sidebar .logo span { display:block; font-size:8pt; font-weight:400; color:#64748b; margin-top:3px; }
+#sidebar .nav-group-label {
+  font-size: 7.5pt; font-weight: 700; letter-spacing:.1em;
+  text-transform: uppercase; color: #475569;
+  padding: 12px 18px 4px;
+}
+#sidebar a {
+  display:block; padding:6px 18px 6px 24px;
+  font-size:9pt; color:#94a3b8;
+  text-decoration:none; border-left:3px solid transparent;
+  transition:all .15s;
+}
+#sidebar a:hover, #sidebar a.active {
+  color:#e2e8f0; background:rgba(255,255,255,.06); border-left-color:var(--blue);
+}
+
+/* ── Main ── */
+#main {
+  margin-left: var(--sidebar-w);
+  padding: 48px 52px 100px;
+  max-width: 1100px;
+}
+
+.page-title   { font-size:24pt; font-weight:700; color:var(--navy); margin-bottom:4px; }
+.page-subtitle{ color:#5a6a8a; font-size:10pt; margin-bottom:12px; }
+
+.page-meta {
+  display:flex; gap:24px; flex-wrap:wrap;
+  background:#fff; border-radius:10px;
+  padding:14px 20px; margin:18px 0 50px;
+  box-shadow:0 1px 6px rgba(0,0,0,.08); font-size:9.5pt;
+}
+.meta-item { display:flex; flex-direction:column; gap:2px; }
+.meta-label { font-size:7.5pt; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#94a3b8; }
+
+.section-title {
+  font-size:14pt; font-weight:700; color:var(--navy);
+  text-transform:uppercase; letter-spacing:.05em;
+  padding-left:14px; border-left:4px solid var(--blue);
+  margin: 60px 0 24px;
+}
+.section-title:first-of-type { margin-top:0; }
+
+h3 { font-size:11pt; font-weight:700; color:var(--navy); margin:24px 0 8px; }
+h4 { font-size:10pt; font-weight:700; color:#374151; margin:16px 0 6px; }
+p  { margin-bottom:10px; }
+
+.divider { border:none; border-top:2px solid #dde3ee; margin:50px 0; }
+
+code {
+  font-family: Consolas,'Courier New',monospace;
+  font-size:9.5pt; background:#eef2f9;
+  padding:1px 5px; border-radius:3px; color:#1e3a5f;
+}
+pre {
+  font-family: Consolas,'Courier New',monospace;
+  font-size:9pt; background:#1a2035; color:#e2e8f0;
+  border-radius:8px; padding:16px 20px;
+  white-space:pre-wrap; word-wrap:break-word;
+  margin:10px 0 18px; line-height:1.55;
+}
+pre .key   { color:#93c5fd; }
+pre .str   { color:#86efac; }
+pre .num   { color:#fcd34d; }
+pre .null  { color:#94a3b8; }
+pre .cmt   { color:#64748b; font-style:italic; }
+
+table {
+  border-collapse:collapse; width:100%;
+  margin:10px 0 18px; font-size:9.5pt;
+  background:#fff; border-radius:8px;
+  overflow:hidden; box-shadow:0 1px 5px rgba(0,0,0,.07);
+}
+th { background:var(--blue); color:#fff; text-align:left; padding:8px 12px; font-size:9pt; }
+td { border-bottom:1px solid #e8edf5; padding:7px 12px; vertical-align:top; }
+tr:last-child td { border-bottom:none; }
+tr:nth-child(even) td { background:#f6f8fd; }
+
+.note {
+  background:#fffbeb; border-left:4px solid var(--amber);
+  border-radius:0 6px 6px 0; padding:10px 16px;
+  margin:12px 0; font-size:9.5pt; color:#451a03;
+}
+.role-only {
+  background:#eff6ff; border-left:4px solid var(--sky);
+  border-radius:0 6px 6px 0; padding:10px 16px;
+  margin:12px 0; font-size:9.5pt; color:#1e3a5f;
+}
+
+/* ── Viz chips ── */
+.viz {
+  display:inline-flex; align-items:center; gap:6px;
+  font-size:9pt; font-weight:700; padding:3px 11px;
+  border-radius:20px; white-space:nowrap;
+}
+.viz-number  { background:#dbeafe; color:#1e40af; }
+.viz-money   { background:#d1fae5; color:#065f46; }
+.viz-pct     { background:#fef9c3; color:#713f12; }
+.viz-donut   { background:#ede9fe; color:#4c1d95; }
+.viz-bar     { background:#ffedd5; color:#7c2d12; }
+.viz-hbar    { background:#fce7f3; color:#831843; }
+.viz-table   { background:#e0f2fe; color:#0c4a6e; }
+.viz-alert   { background:#fee2e2; color:#7f1d1d; }
+.viz-badge   { background:#f0fdf4; color:#14532d; }
+.viz-gauge   { background:#f3e8ff; color:#581c87; }
+
+/* ── KPI card mockups ── */
+.kpi-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(210px,1fr));
+  gap:14px; margin:16px 0 28px;
+}
+.kpi-card {
+  background:#fff; border-radius:10px;
+  padding:16px 18px; box-shadow:0 1px 6px rgba(0,0,0,.09);
+  border-top:3px solid var(--blue);
+}
+.kpi-card.green  { border-top-color:var(--green); }
+.kpi-card.amber  { border-top-color:var(--amber); }
+.kpi-card.red    { border-top-color:var(--red); }
+.kpi-card.purple { border-top-color:var(--purple); }
+.kpi-card.teal   { border-top-color:var(--teal); }
+.kpi-card .kpi-label { font-size:8pt; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#64748b; margin-bottom:6px; }
+.kpi-card .kpi-value { font-size:20pt; font-weight:700; color:var(--navy); line-height:1.1; }
+.kpi-card .kpi-sub   { font-size:8pt; color:#94a3b8; margin-top:4px; }
+.kpi-card .kpi-viz   { margin-top:8px; }
+
+/* ── Layout mockup ── */
+.layout-mockup {
+  background:#fff; border-radius:12px;
+  padding:24px; box-shadow:0 1px 8px rgba(0,0,0,.08);
+  margin:16px 0 32px; font-size:9pt;
+}
+.lm-row { display:flex; gap:10px; margin-bottom:10px; }
+.lm-block {
+  border-radius:6px; padding:10px 12px;
+  font-size:8.5pt; font-weight:600;
+  display:flex; align-items:center; justify-content:center;
+  text-align:center; min-height:48px; flex:1;
+}
+.lm-full   { flex:1 0 100%; }
+.lm-2      { flex:2; }
+.lm-3      { flex:3; }
+.lm-kpi    { background:#dbeafe; color:#1e40af; }
+.lm-chart  { background:#ede9fe; color:#4c1d95; }
+.lm-bar    { background:#ffedd5; color:#7c2d12; }
+.lm-table  { background:#e0f2fe; color:#0c4a6e; }
+.lm-alert  { background:#fee2e2; color:#7f1d1d; }
+.lm-hbar   { background:#fce7f3; color:#831843; }
+.lm-filter { background:#f1f5f9; color:#374151; border:1px dashed #cbd5e1; }
+.lm-label  { font-size:7.5pt; opacity:.7; display:block; }
+
+/* ── Role badge ── */
+.role-badge {
+  display:inline-block; font-size:7.5pt; font-weight:700;
+  padding:2px 8px; border-radius:3px;
+  background:#1a2035; color:#e2e8f0; margin:1px;
+}
+
+#top-btn {
+  position:fixed; bottom:28px; right:28px;
+  background:var(--blue); color:#fff; border:none;
+  border-radius:50%; width:40px; height:40px;
+  font-size:16px; cursor:pointer;
+  box-shadow:0 2px 10px rgba(0,0,0,.2);
+  display:flex; align-items:center; justify-content:center; z-index:200;
+}
+#top-btn:hover { background:var(--navy); }
+</style>
+</head>
+<body>
+
+<!-- ═══ SIDEBAR ═══ -->
+<aside id="sidebar">
+  <div class="logo">Dashboard API<span>Frontend Reference</span></div>
+  <nav>
+    <div class="nav-group-label">Overview</div>
+    <a href="#endpoint">Endpoint & Params</a>
+    <a href="#response">Full Response Shape</a>
+    <a href="#visibility">Role Visibility</a>
+    <a href="#layout">Suggested Layout</a>
+
+    <div class="nav-group-label">Sections</div>
+    <a href="#sec-meta">meta</a>
+    <a href="#sec-alerts">alerts</a>
+    <a href="#sec-kpis">kpis</a>
+    <a href="#sec-breakdowns">breakdowns</a>
+    <a href="#sec-queues">queues</a>
+    <a href="#sec-tables">tables</a>
+
+    <div class="nav-group-label">Reference</div>
+    <a href="#formatting">Number Formatting</a>
+    <a href="#colors">Status Colors</a>
+  </nav>
+</aside>
+
+<!-- ═══ MAIN ═══ -->
+<main id="main">
+
+<p class="page-title">Dashboard API</p>
+<p class="page-subtitle">Frontend visualization guide — what to render, how to render it, and for whom</p>
+
+<div class="page-meta">
+  <div class="meta-item">
+    <span class="meta-label">Endpoint</span>
+    <span><code>GET /api/dashboard/overview</code></span>
+  </div>
+  <div class="meta-item">
+    <span class="meta-label">Auth</span>
+    <span><code>Authorization: Bearer {token}</code></span>
+  </div>
+  <div class="meta-item">
+    <span class="meta-label">Cache</span>
+    <span>Response is cached <strong>60 seconds</strong> per user + role + date range + project</span>
+  </div>
+  <div class="meta-item">
+    <span class="meta-label">Default Range</span>
+    <span>Start of current month → now (if no <code>from</code>/<code>to</code> passed)</span>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════ -->
+<p class="section-title" id="endpoint">Endpoint &amp; Parameters</p>
+
+<h3>Query Parameters</h3>
+<table>
+  <tr><th>Param</th><th>Type</th><th>Required</th><th>Description</th></tr>
+  <tr><td><code>from</code></td><td>YYYY-MM-DD</td><td>No</td><td>Start of the reporting window. Defaults to start of current month.</td></tr>
+  <tr><td><code>to</code></td><td>YYYY-MM-DD</td><td>No</td><td>End of the reporting window. Defaults to now. Must be ≥ <code>from</code>.</td></tr>
+  <tr><td><code>project_id</code></td><td>integer</td><td>No</td><td>Scope all metrics to a single building/project. Omit for all projects.</td></tr>
+  <tr><td><code>debug</code></td><td>0 or 1</td><td>No</td><td>Appends a <code>debug</code> key with the resolved params. Only works for users with <code>dashboard.debug</code> permission.</td></tr>
+</table>
+
+<div class="note"><strong>Date range tip:</strong> Always pass both <code>from</code> and <code>to</code> when the user changes the date picker, so the server doesn't fall back to defaults silently. Show the resolved range from <code>data.meta.range</code> in the UI to confirm what period is displayed.</div>
+
+
+<!-- ══════════════════════════════════════════════ -->
+<p class="section-title" id="response">Full Response Shape</p>
+
+<pre><span class="cmt">// GET /api/dashboard/overview?from=2026-06-01&to=2026-06-09</span>
+{
+  <span class="key">"data"</span>: {
+
+    <span class="key">"meta"</span>: {
+      <span class="key">"range"</span>:      { <span class="key">"from"</span>: <span class="str">"2026-06-01"</span>, <span class="key">"to"</span>: <span class="str">"2026-06-09"</span> },
+      <span class="key">"timezone"</span>:   <span class="str">"Asia/Dubai"</span>,
+      <span class="key">"role"</span>:       <span class="str">"CEO"</span>,         <span class="cmt">// current user's role</span>
+      <span class="key">"project_id"</span>: <span class="null">null</span>           <span class="cmt">// null = all projects</span>
+    },
+
+    <span class="key">"kpis"</span>: {
+      <span class="key">"available_units"</span>:                   { <span class="key">"value"</span>: <span class="num">42</span> },
+      <span class="key">"total_booking_value_mtd"</span>:           { <span class="key">"value"</span>: <span class="num">12500000.00</span> },
+      <span class="key">"total_booked_units_value_mtd"</span>:      { <span class="key">"value"</span>: <span class="num">10000000.00</span> },
+      <span class="key">"net_booking_value_mtd"</span>:             { <span class="key">"value"</span>: <span class="num">11800000.00</span> },
+      <span class="key">"average_unit_price_mtd"</span>:            { <span class="key">"value"</span>: <span class="num">850000.00</span> },
+      <span class="key">"cancellation_rate_mtd"</span>:             { <span class="key">"value"</span>: <span class="num">0.0312</span> },     <span class="cmt">// multiply × 100 for %</span>
+      <span class="key">"inventory_absorption_rate"</span>:         { <span class="key">"value"</span>: <span class="num">0.2143</span> },     <span class="cmt">// multiply × 100 for %</span>
+      <span class="key">"units_stuck_in_hold"</span>:               { <span class="key">"value"</span>: <span class="num">3</span> },
+      <span class="key">"installments_overdue"</span>:              { <span class="key">"value"</span>: <span class="num">7</span> },
+      <span class="key">"installments_due_today"</span>:            { <span class="key">"value"</span>: <span class="num">5</span> },
+      <span class="key">"installments_pending_verification"</span>: { <span class="key">"value"</span>: <span class="num">2</span> },
+      <span class="key">"installments_collected_in_period"</span>:  { <span class="key">"value"</span>: <span class="num">350000.00</span> }
+    },
+
+    <span class="key">"breakdowns"</span>: {
+      <span class="key">"units_by_status"</span>: [
+        { <span class="key">"status"</span>: <span class="str">"Available"</span>,  <span class="key">"count"</span>: <span class="num">42</span> },
+        { <span class="key">"status"</span>: <span class="str">"Hold"</span>,        <span class="key">"count"</span>: <span class="num">5</span>  },
+        { <span class="key">"status"</span>: <span class="str">"Booked"</span>,      <span class="key">"count"</span>: <span class="num">18</span> },
+        { <span class="key">"status"</span>: <span class="str">"Completed"</span>,   <span class="key">"count"</span>: <span class="num">30</span> }
+      ],
+      <span class="key">"bookings_by_status"</span>: [
+        { <span class="key">"status"</span>: <span class="str">"Pre-Booked"</span>,  <span class="key">"count"</span>: <span class="num">3</span>  },
+        { <span class="key">"status"</span>: <span class="str">"RF Pending"</span>,  <span class="key">"count"</span>: <span class="num">2</span>  },
+        { <span class="key">"status"</span>: <span class="str">"SPA Pending"</span>, <span class="key">"count"</span>: <span class="num">1</span>  },
+        { <span class="key">"status"</span>: <span class="str">"Booked"</span>,      <span class="key">"count"</span>: <span class="num">15</span> },
+        { <span class="key">"status"</span>: <span class="str">"Completed"</span>,   <span class="key">"count"</span>: <span class="num">8</span>  },
+        { <span class="key">"status"</span>: <span class="str">"Cancelled"</span>,   <span class="key">"count"</span>: <span class="num">2</span>  }
+      ],
+      <span class="key">"top_projects_by_booking_value_mtd"</span>: [
+        {
+          <span class="key">"project"</span>: { <span class="key">"id"</span>: <span class="num">1</span>, <span class="key">"name"</span>: <span class="str">"Tower A"</span> },
+          <span class="key">"total_value"</span>:    <span class="num">5000000.00</span>,
+          <span class="key">"bookings_count"</span>: <span class="num">6</span>
+        }
+      ]
+    },
+
+    <span class="key">"queues"</span>: {                          <span class="cmt">// role-dependent — may be empty array</span>
+      <span class="key">"approvals"</span>: {
+        <span class="key">"bookings"</span>: [
+          {
+            <span class="key">"id"</span>:         <span class="num">101</span>,
+            <span class="key">"status"</span>:     <span class="str">"Pre-Booked"</span>,
+            <span class="key">"total_value"</span>:<span class="num">850000.00</span>,
+            <span class="key">"created_at"</span>: <span class="str">"2026-06-08T10:00:00+04:00"</span>,
+            <span class="key">"unit_id"</span>:    <span class="num">12</span>
+          }
+        ]
+      }
+    },
+
+    <span class="key">"alerts"</span>: [                          <span class="cmt">// role-dependent — may be []</span>
+      { <span class="key">"type"</span>: <span class="str">"stuck_bookings"</span>,                    <span class="key">"count"</span>: <span class="num">2</span>, <span class="key">"threshold_hours"</span>: <span class="num">48</span> },
+      { <span class="key">"type"</span>: <span class="str">"overdue_installments"</span>,              <span class="key">"count"</span>: <span class="num">7</span>  },
+      { <span class="key">"type"</span>: <span class="str">"installments_pending_verification"</span>,  <span class="key">"count"</span>: <span class="num">2</span>  }
+    ],
+
+    <span class="key">"tables"</span>: {                          <span class="cmt">// role-dependent — may have empty arrays</span>
+      <span class="key">"latest_bookings"</span>: [
+        {
+          <span class="key">"id"</span>:         <span class="num">175</span>,
+          <span class="key">"status"</span>:     <span class="str">"Booked"</span>,
+          <span class="key">"total_value"</span>:<span class="num">850000.00</span>,
+          <span class="key">"created_at"</span>: <span class="str">"2026-06-09T07:00:00+04:00"</span>,
+          <span class="key">"unit"</span>: { <span class="key">"id"</span>: <span class="num">12</span>, <span class="key">"unit_no"</span>: <span class="str">"A-101"</span> }
+        }
+      ],
+      <span class="key">"units_needing_attention"</span>: [
+        {
+          <span class="key">"id"</span>:               <span class="num">25</span>,
+          <span class="key">"unit_no"</span>:          <span class="str">"B-204"</span>,
+          <span class="key">"status"</span>:           <span class="str">"Hold"</span>,
+          <span class="key">"status_changed_at"</span>:<span class="str">"2026-06-01T09:00:00+04:00"</span>,
+          <span class="key">"project_id"</span>:       <span class="num">3</span>
+        }
+      ]
+    }
+  }
+}</pre>
+
+
+<!-- ══════════════════════════════════════════════ -->
+<p class="section-title" id="visibility">Role Visibility</p>
+
+<p>The <code>data.meta.role</code> field tells you the current user's role. Use it to show or hide sections:</p>
+
+<table>
+  <tr><th>Section</th><th>Visible to</th><th>Notes</th></tr>
+  <tr>
+    <td><code>kpis</code></td>
+    <td>All roles</td>
+    <td>Always present. Render for everyone.</td>
+  </tr>
+  <tr>
+    <td><code>breakdowns</code></td>
+    <td>All roles</td>
+    <td>Always present. Render for everyone.</td>
+  </tr>
+  <tr>
+    <td><code>alerts</code></td>
+    <td><span class="role-badge">CEO</span> <span class="role-badge">CSO</span> <span class="role-badge">COO</span> <span class="role-badge">CRM Officer</span> <span class="role-badge">System Maintenance</span></td>
+    <td>Array will be <code>[]</code> for other roles — simply hide the section when empty.</td>
+  </tr>
+  <tr>
+    <td><code>queues.approvals.bookings</code></td>
+    <td><span class="role-badge">CEO</span> <span class="role-badge">CSO</span> <span class="role-badge">COO</span> <span class="role-badge">CRM Officer</span> <span class="role-badge">System Maintenance</span></td>
+    <td>CEO sees only bookings missing CEO approval. CSO sees only bookings missing CSO approval. COO/CRM see all pipeline bookings.</td>
+  </tr>
+  <tr>
+    <td><code>tables</code></td>
+    <td><span class="role-badge">CEO</span> <span class="role-badge">CSO</span> <span class="role-badge">COO</span> <span class="role-badge">CRM Officer</span> <span class="role-badge">System Maintenance</span></td>
+    <td>Arrays will be <code>[]</code> for other roles.</td>
+  </tr>
+</table>
+
+<div class="role-only"><strong>Rule of thumb:</strong> check <code>data.meta.role</code> on page load and hide entire sections (not just their data) when the role doesn't apply — avoid showing empty cards or tables with "No data" for sections the user is never intended to see.</div>
+
+
+<!-- ══════════════════════════════════════════════ -->
+<p class="section-title" id="layout">Suggested Page Layout</p>
+
+<div class="layout-mockup">
+  <div style="font-size:8pt;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;margin-bottom:14px;">Page wireframe (top → bottom)</div>
+
+  <div class="lm-row">
+    <div class="lm-block lm-filter lm-full">
+      Date range picker &nbsp;|&nbsp; Project filter &nbsp;|&nbsp; Apply button
+      <span class="lm-label">reads meta.range to show resolved dates</span>
+    </div>
+  </div>
+
+  <div class="lm-row">
+    <div class="lm-block lm-alert lm-full" style="min-height:36px;">
+      Alerts strip — one banner per alert (role-dependent, hidden when alerts = [])
+      <span class="lm-label">stuck_bookings · overdue_installments · installments_pending_verification</span>
+    </div>
+  </div>
+
+  <div class="lm-row">
+    <div class="lm-block lm-kpi">Available Units</div>
+    <div class="lm-block lm-kpi">Total Booking Value</div>
+    <div class="lm-block lm-kpi">Net Booking Value</div>
+    <div class="lm-block lm-kpi">Avg Unit Price</div>
+  </div>
+  <div class="lm-row">
+    <div class="lm-block lm-kpi">Cancellation Rate</div>
+    <div class="lm-block lm-kpi">Absorption Rate</div>
+    <div class="lm-block lm-kpi">Units Stuck in Hold</div>
+    <div class="lm-block lm-kpi" style="border-top:3px solid #0f766e;">Collected in Period</div>
+  </div>
+  <div class="lm-row">
+    <div class="lm-block lm-kpi" style="border-top:3px solid #b91c1c;">Overdue Installments</div>
+    <div class="lm-block lm-kpi" style="border-top:3px solid #d97706;">Due Today</div>
+    <div class="lm-block lm-kpi" style="border-top:3px solid #d97706;">Pending Verification</div>
+    <div class="lm-block" style="background:#f8fafc;flex:1;"></div>
+  </div>
+
+  <div class="lm-row">
+    <div class="lm-block lm-chart lm-2" style="min-height:200px;">Units by Status<span class="lm-label">Donut chart</span></div>
+    <div class="lm-block lm-bar lm-3" style="min-height:200px;">Bookings by Status<span class="lm-label">Vertical bar chart</span></div>
+  </div>
+
+  <div class="lm-row">
+    <div class="lm-block lm-hbar lm-full" style="min-height:160px;">Top Projects by Booking Value<span class="lm-label">Horizontal bar chart — sorted descending</span></div>
+  </div>
+
+  <div class="lm-row" style="opacity:.5;font-style:italic;">
+    <div class="lm-block lm-alert lm-full" style="min-height:30px;font-size:8pt;">↓ Role-gated sections below (CEO / CSO / COO / CRM Officer / System Maintenance only)</div>
+  </div>
+
+  <div class="lm-row">
+    <div class="lm-block lm-table lm-full" style="min-height:140px;">Approval Queue<span class="lm-label">Data table — queues.approvals.bookings · max 15 rows · action button per row</span></div>
+  </div>
+
+  <div class="lm-row">
+    <div class="lm-block lm-table lm-2" style="min-height:160px;">Latest Bookings<span class="lm-label">Data table · max 10 rows</span></div>
+    <div class="lm-block lm-table lm-2" style="min-height:160px;">Units Needing Attention<span class="lm-label">Data table · max 10 rows</span></div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════ -->
+<p class="section-title" id="sec-meta">Section: meta</p>
+
+<p>Informational only — use it to drive the UI, not display it directly.</p>
+
+<table>
+  <tr><th>Field</th><th>Use in UI</th></tr>
+  <tr><td><code>meta.range.from</code> / <code>meta.range.to</code></td><td>Show the resolved date range in the header (e.g. "Jun 1 – Jun 9, 2026") so the user always sees what period the numbers represent.</td></tr>
+  <tr><td><code>meta.timezone</code></td><td>Display in a tooltip on the date range ("All times in Asia/Dubai"). Useful for teams across time zones.</td></tr>
+  <tr><td><code>meta.role</code></td><td>Drive role-based section visibility. Store in component state — don't re-fetch just for this.</td></tr>
+  <tr><td><code>meta.project_id</code></td><td>Reflect the active project filter in the UI. <code>null</code> = all projects.</td></tr>
+</table>
+
+
+<!-- ══════════════════════════════════════════════ -->
+<p class="section-title" id="sec-alerts">Section: alerts</p>
+
+<div class="role-only"><strong>Role-gated:</strong> CEO · CSO · COO · CRM Officer · System Maintenance only. Hide this section entirely when <code>alerts</code> is <code>[]</code>.</div>
+
+<p>Render as a horizontal strip of dismissible banners at the top of the page, one per alert. Each alert has a <code>type</code> and a <code>count</code>.</p>
+
+<table>
+  <tr><th>type</th><th>Visualization</th><th>Copy suggestion</th><th>Color</th></tr>
+  <tr>
+    <td><code>stuck_bookings</code></td>
+    <td><span class="viz viz-alert">⚠ Alert Banner</span></td>
+    <td>"<strong>{count}</strong> booking{s} stuck in pipeline for more than {threshold_hours}h"</td>
+    <td>Amber / warning</td>
+  </tr>
+  <tr>
+    <td><code>overdue_installments</code></td>
+    <td><span class="viz viz-alert">⚠ Alert Banner</span></td>
+    <td>"<strong>{count}</strong> installment{s} overdue — action required"</td>
+    <td>Red / danger</td>
+  </tr>
+  <tr>
+    <td><code>installments_pending_verification</code></td>
+    <td><span class="viz viz-alert">ℹ Alert Banner</span></td>
+    <td>"<strong>{count}</strong> payment{s} awaiting verification"</td>
+    <td>Blue / info</td>
+  </tr>
+</table>
+
+<div class="note">Each banner should link to the relevant management page — e.g. <code>stuck_bookings</code> → booking pipeline, <code>overdue_installments</code> → <code>GET /api/installments?status=overdue</code>.</div>
+
+
+<!-- ══════════════════════════════════════════════ -->
+<p class="section-title" id="sec-kpis">Section: kpis</p>
+
+<p>All KPIs follow the same shape: <code>{ "value": number }</code>. Render as <strong>stat cards</strong> in a responsive grid (4 columns on desktop, 2 on tablet, 1 on mobile).</p>
+
+<h3>Booking KPIs</h3>
+<div class="kpi-grid">
+  <div class="kpi-card green">
+    <div class="kpi-label">Available Units</div>
+    <div class="kpi-value">42</div>
+    <div class="kpi-sub">kpis.available_units.value</div>
+    <div class="kpi-viz"><span class="viz viz-number">Big Number</span></div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">Total Booking Value</div>
+    <div class="kpi-value">AED 12.5M</div>
+    <div class="kpi-sub">kpis.total_booking_value_mtd.value<br>Booked + Completed in period</div>
+    <div class="kpi-viz"><span class="viz viz-money">Currency Card</span></div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">Net Booking Value</div>
+    <div class="kpi-value">AED 11.8M</div>
+    <div class="kpi-sub">kpis.net_booking_value_mtd.value<br>Total minus cancelled value</div>
+    <div class="kpi-viz"><span class="viz viz-money">Currency Card</span></div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">Avg Unit Price</div>
+    <div class="kpi-value">AED 850K</div>
+    <div class="kpi-sub">kpis.average_unit_price_mtd.value</div>
+    <div class="kpi-viz"><span class="viz viz-money">Currency Card</span></div>
+  </div>
+  <div class="kpi-card amber">
+    <div class="kpi-label">Cancellation Rate</div>
+    <div class="kpi-value">3.1%</div>
+    <div class="kpi-sub">kpis.cancellation_rate_mtd.value × 100<br>Red if &gt; 10%</div>
+    <div class="kpi-viz"><span class="viz viz-pct">Percentage + Color Rule</span></div>
+  </div>
+  <div class="kpi-card purple">
+    <div class="kpi-label">Absorption Rate</div>
+    <div class="kpi-value">21.4%</div>
+    <div class="kpi-sub">kpis.inventory_absorption_rate.value × 100<br>Booked ÷ Available</div>
+    <div class="kpi-viz"><span class="viz viz-gauge">Gauge / Progress bar</span></div>
+  </div>
+  <div class="kpi-card amber">
+    <div class="kpi-label">Units Stuck in Hold</div>
+    <div class="kpi-value">3</div>
+    <div class="kpi-sub">kpis.units_stuck_in_hold.value<br>Hold &gt; 7 days — amber if &gt; 0</div>
+    <div class="kpi-viz"><span class="viz viz-number">Number + Warning Color</span></div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">Booked Units Value</div>
+    <div class="kpi-value">AED 10M</div>
+    <div class="kpi-sub">kpis.total_booked_units_value_mtd.value<br>Status = Booked only</div>
+    <div class="kpi-viz"><span class="viz viz-money">Currency Card</span></div>
+  </div>
+</div>
+
+<h3>Installment KPIs</h3>
+<div class="kpi-grid">
+  <div class="kpi-card teal">
+    <div class="kpi-label">Collected in Period</div>
+    <div class="kpi-value">AED 350K</div>
+    <div class="kpi-sub">kpis.installments_collected_in_period.value<br>Verified payments in date range</div>
+    <div class="kpi-viz"><span class="viz viz-money">Currency Card</span></div>
+  </div>
+  <div class="kpi-card red">
+    <div class="kpi-label">Overdue Installments</div>
+    <div class="kpi-value">7</div>
+    <div class="kpi-sub">kpis.installments_overdue.value<br>Always red when &gt; 0</div>
+    <div class="kpi-viz"><span class="viz viz-number">Number + Red Badge</span></div>
+  </div>
+  <div class="kpi-card amber">
+    <div class="kpi-label">Due Today</div>
+    <div class="kpi-value">5</div>
+    <div class="kpi-sub">kpis.installments_due_today.value<br>Unpaid installments due today</div>
+    <div class="kpi-viz"><span class="viz viz-number">Number + Amber Badge</span></div>
+  </div>
+  <div class="kpi-card amber">
+    <div class="kpi-label">Pending Verification</div>
+    <div class="kpi-value">2</div>
+    <div class="kpi-sub">kpis.installments_pending_verification.value<br>Amber when &gt; 0</div>
+    <div class="kpi-viz"><span class="viz viz-badge">Number + Badge</span></div>
+  </div>
+</div>
+
+<h3>KPI Color Rules</h3>
+<table>
+  <tr><th>KPI</th><th>Neutral</th><th>Warning</th><th>Danger</th></tr>
+  <tr><td><code>available_units</code></td><td>Any value</td><td>—</td><td>0 (no units left)</td></tr>
+  <tr><td><code>cancellation_rate_mtd</code></td><td>&lt; 5%</td><td>5–10%</td><td>&gt; 10%</td></tr>
+  <tr><td><code>units_stuck_in_hold</code></td><td>0</td><td>&gt; 0</td><td>—</td></tr>
+  <tr><td><code>installments_overdue</code></td><td>0</td><td>—</td><td>&gt; 0 (always red)</td></tr>
+  <tr><td><code>installments_due_today</code></td><td>0</td><td>&gt; 0</td><td>—</td></tr>
+  <tr><td><code>installments_pending_verification</code></td><td>0</td><td>&gt; 0</td><td>—</td></tr>
+  <tr><td><code>inventory_absorption_rate</code></td><td>&gt; 30%</td><td>10–30%</td><td>&lt; 10%</td></tr>
+</table>
+
+
+<!-- ══════════════════════════════════════════════ -->
+<p class="section-title" id="sec-breakdowns">Section: breakdowns</p>
+
+<h3>breakdowns.units_by_status <span class="viz viz-donut" style="vertical-align:middle;margin-left:8px;">Donut Chart</span></h3>
+<p>Array of <code>{ status, count }</code>. Render as a <strong>donut chart</strong>. Each slice = one unit status.</p>
+<table>
+  <tr><th>status value</th><th>Suggested color</th></tr>
+  <tr><td>Available</td><td style="background:#d1fae5;color:#065f46;">Green #1a7f37</td></tr>
+  <tr><td>Hold</td><td style="background:#fef9c3;color:#713f12;">Amber #d97706</td></tr>
+  <tr><td>Pre-Hold</td><td style="background:#fff7ed;color:#7c2d12;">Light Amber</td></tr>
+  <tr><td>Booked</td><td style="background:#dbeafe;color:#1e40af;">Blue #2E5299</td></tr>
+  <tr><td>Completed</td><td style="background:#ede9fe;color:#4c1d95;">Purple #7c3aed</td></tr>
+  <tr><td>Pending</td><td style="background:#f1f5f9;color:#374151;">Gray</td></tr>
+</table>
+<div class="note">Show the total unit count in the donut center. On hover/click of a slice, show the status name + count + percentage of total.</div>
+
+<h3>breakdowns.bookings_by_status <span class="viz viz-bar" style="vertical-align:middle;margin-left:8px;">Vertical Bar Chart</span></h3>
+<p>Array of <code>{ status, count }</code>. Render as a <strong>vertical bar chart</strong>. X-axis = booking status, Y-axis = count. The status order in the response follows the pipeline progression: Pre-Booked → RF Pending → SPA Pending → Booked → Completed → Cancelled.</p>
+<table>
+  <tr><th>status value</th><th>Meaning</th><th>Suggested color</th></tr>
+  <tr><td>Pre-Booked</td><td>Early pipeline stage</td><td style="background:#e0f2fe;">Sky blue</td></tr>
+  <tr><td>RF Pending</td><td>Reservation form awaiting signature</td><td style="background:#dbeafe;">Blue</td></tr>
+  <tr><td>SPA Pending</td><td>Sales &amp; Purchase Agreement pending</td><td style="background:#ede9fe;">Purple</td></tr>
+  <tr><td>Booked</td><td>Fully booked</td><td style="background:#d1fae5;">Green</td></tr>
+  <tr><td>Completed</td><td>Deal closed</td><td style="background:#bbf7d0;">Dark green</td></tr>
+  <tr><td>Cancelled</td><td>Cancelled</td><td style="background:#fee2e2;">Red</td></tr>
+</table>
+
+<h3>breakdowns.top_projects_by_booking_value_mtd <span class="viz viz-hbar" style="vertical-align:middle;margin-left:8px;">Horizontal Bar Chart</span></h3>
+<p>Array of up to <strong>5 projects</strong>, sorted by <code>total_value</code> descending. Each item: <code>project.name</code>, <code>total_value</code>, <code>bookings_count</code>.</p>
+<p>Render as a <strong>horizontal bar chart</strong> — project name on the Y-axis, bar width = <code>total_value</code>. Show both the formatted currency value and booking count as bar labels.</p>
+<div class="note">If <code>project_id</code> is set in the filter, this chart will show only that project (1 bar). Consider hiding it or replacing it with a single project summary card in that case.</div>
+
+
+<!-- ══════════════════════════════════════════════ -->
+<p class="section-title" id="sec-queues">Section: queues.approvals.bookings</p>
+
+<div class="role-only"><strong>Role-gated:</strong> CEO · CSO · COO · CRM Officer · System Maintenance. The array is <code>[]</code> for other roles — hide the section.</div>
+
+<p>Up to <strong>15 bookings</strong> needing an approval action. Render as a <strong>compact data table</strong> with an action button on each row.</p>
+
+<table>
+  <tr><th>Field</th><th>Column label</th><th>How to render</th></tr>
+  <tr><td><code>id</code></td><td>Booking #</td><td>Link to booking detail page</td></tr>
+  <tr><td><code>status</code></td><td>Status</td><td>Colored badge (see booking status colors above)</td></tr>
+  <tr><td><code>total_value</code></td><td>Value</td><td>Formatted currency (AED)</td></tr>
+  <tr><td><code>created_at</code></td><td>Created</td><td>Relative time ("3 days ago") + full date tooltip</td></tr>
+  <tr><td><code>unit_id</code></td><td>Unit</td><td>Link to unit detail (fetch unit_no separately if needed)</td></tr>
+  <tr><td>—</td><td>Action</td><td>"Review" button → navigate to booking detail page</td></tr>
+</table>
+
+<div class="note"><strong>CEO vs CSO behavior:</strong> The server already filters the queue by role — CEO sees only bookings missing CEO approval, CSO sees only bookings missing CSO approval. No additional frontend filtering needed.</div>
+
+
+<!-- ══════════════════════════════════════════════ -->
+<p class="section-title" id="sec-tables">Section: tables</p>
+
+<div class="role-only"><strong>Role-gated:</strong> CEO · CSO · COO · CRM Officer · System Maintenance. Arrays are <code>[]</code> for other roles.</div>
+
+<h3>tables.latest_bookings <span class="viz viz-table" style="vertical-align:middle;margin-left:8px;">Data Table</span></h3>
+<p>Most recent 10 bookings across all pipeline stages. Render as a table side-by-side with <em>Units Needing Attention</em>.</p>
+<table>
+  <tr><th>Field</th><th>Column label</th><th>How to render</th></tr>
+  <tr><td><code>id</code></td><td>Booking #</td><td>Clickable link to booking detail</td></tr>
+  <tr><td><code>unit.unit_no</code></td><td>Unit</td><td>Plain text</td></tr>
+  <tr><td><code>status</code></td><td>Status</td><td>Colored badge</td></tr>
+  <tr><td><code>total_value</code></td><td>Value</td><td>Formatted currency</td></tr>
+  <tr><td><code>created_at</code></td><td>Date</td><td>Relative time + tooltip with full date</td></tr>
+</table>
+
+<h3>tables.units_needing_attention <span class="viz viz-table" style="vertical-align:middle;margin-left:8px;">Data Table</span></h3>
+<p>Up to 10 units in <code>Pending</code>, <code>Pre-Hold</code>, or <code>Hold</code> status — the "needs action" states.</p>
+<table>
+  <tr><th>Field</th><th>Column label</th><th>How to render</th></tr>
+  <tr><td><code>unit_no</code></td><td>Unit</td><td>Clickable link to unit detail</td></tr>
+  <tr><td><code>status</code></td><td>Status</td><td>Colored badge (amber for Hold/Pre-Hold, gray for Pending)</td></tr>
+  <tr><td><code>status_changed_at</code></td><td>In status since</td><td>Relative time — highlight red if Hold &gt; 7 days (correlates with <code>units_stuck_in_hold</code> KPI)</td></tr>
+  <tr><td><code>project_id</code></td><td>Project</td><td>Map to project name if available in app state</td></tr>
+</table>
+
+
+<!-- ══════════════════════════════════════════════ -->
+<p class="section-title" id="formatting">Number Formatting</p>
+
+<table>
+  <tr><th>Type</th><th>Raw value</th><th>Display as</th><th>Notes</th></tr>
+  <tr><td>Currency (large)</td><td><code>12500000.00</code></td><td><code>AED 12.5M</code></td><td>≥ 1M → M suffix; ≥ 1K → K suffix</td></tr>
+  <tr><td>Currency (small)</td><td><code>850000.00</code></td><td><code>AED 850,000</code></td><td>Comma-separated, 0 decimal places</td></tr>
+  <tr><td>Rate / percentage</td><td><code>0.0312</code></td><td><code>3.1%</code></td><td>Multiply × 100, round to 1 decimal place</td></tr>
+  <tr><td>Rate / percentage</td><td><code>0.2143</code></td><td><code>21.4%</code></td><td>Same rule</td></tr>
+  <tr><td>Count</td><td><code>42</code></td><td><code>42</code></td><td>No formatting needed</td></tr>
+  <tr><td>Date</td><td><code>"2026-06-09T07:00:00+04:00"</code></td><td><code>Jun 9, 2026</code> or relative</td><td>Use app timezone (<code>meta.timezone</code>)</td></tr>
+</table>
+
+<div class="note">Suggested JS: <code>Intl.NumberFormat('en-AE', { style: 'currency', currency: 'AED', maximumFractionDigits: 0 })</code> for currency cards. For M/K shorthand, implement a custom formatter.</div>
+
+
+<!-- ══════════════════════════════════════════════ -->
+<p class="section-title" id="colors">Status Colors — Quick Reference</p>
+
+<h3>Booking Statuses</h3>
+<table>
+  <tr><th>Status</th><th>Badge color</th><th>Hex</th></tr>
+  <tr><td>Pre-Booked</td><td style="background:#e0f2fe;color:#0c4a6e;">Sky</td><td><code>#0369a1</code></td></tr>
+  <tr><td>RF Pending</td><td style="background:#dbeafe;color:#1e40af;">Blue</td><td><code>#2E5299</code></td></tr>
+  <tr><td>SPA Pending</td><td style="background:#ede9fe;color:#4c1d95;">Purple</td><td><code>#7c3aed</code></td></tr>
+  <tr><td>Booked</td><td style="background:#d1fae5;color:#065f46;">Green</td><td><code>#1a7f37</code></td></tr>
+  <tr><td>Completed</td><td style="background:#bbf7d0;color:#14532d;">Dark Green</td><td><code>#15803d</code></td></tr>
+  <tr><td>Cancelled</td><td style="background:#fee2e2;color:#7f1d1d;">Red</td><td><code>#b91c1c</code></td></tr>
+</table>
+
+<h3>Unit Statuses</h3>
+<table>
+  <tr><th>Status</th><th>Badge color</th><th>Hex</th></tr>
+  <tr><td>Available</td><td style="background:#d1fae5;color:#065f46;">Green</td><td><code>#1a7f37</code></td></tr>
+  <tr><td>Hold</td><td style="background:#fef9c3;color:#713f12;">Amber</td><td><code>#d97706</code></td></tr>
+  <tr><td>Pre-Hold</td><td style="background:#fff7ed;color:#7c2d12;">Light Amber</td><td><code>#f59e0b</code></td></tr>
+  <tr><td>Booked</td><td style="background:#dbeafe;color:#1e40af;">Blue</td><td><code>#2E5299</code></td></tr>
+  <tr><td>Completed</td><td style="background:#ede9fe;color:#4c1d95;">Purple</td><td><code>#7c3aed</code></td></tr>
+  <tr><td>Pending</td><td style="background:#f1f5f9;color:#374151;">Gray</td><td><code>#6b7280</code></td></tr>
+</table>
+
+</main>
+
+<button id="top-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+
+<script>
+  const links = document.querySelectorAll('#sidebar a[href^="#"]');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const a = document.querySelector('#sidebar a[href="#' + e.target.id + '"]');
+        if (a) a.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-10% 0px -80% 0px' });
+  document.querySelectorAll('.section-title[id], h3[id]').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>

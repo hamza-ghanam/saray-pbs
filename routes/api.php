@@ -25,6 +25,7 @@ use App\Http\Controllers\TranslateController;
 use App\Http\Controllers\SignedDocumentsController;
 use App\Http\Controllers\BrokerCommissionController;
 use App\Http\Controllers\GeneralSettingController;
+use App\Http\Controllers\InstallmentPaymentController;
 
 //Index
 Route::get('/', function () {
@@ -134,6 +135,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/bookings/{booking}/dld', [DldDocumentController::class, 'store']);
 });
 
+// Installment Payments
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/installments', [InstallmentPaymentController::class, 'index']);
+    Route::get('/bookings/{booking}/installments', [InstallmentPaymentController::class, 'listInstallments']);
+    Route::get('/bookings/{booking}/installments/{installment}', [InstallmentPaymentController::class, 'showInstallment']);
+    Route::post('/bookings/{booking}/installments/{installment}/payments', [InstallmentPaymentController::class, 'recordPayment']);
+    Route::post('/bookings/{booking}/installments/{installment}/payments/{installmentPayment}/verify', [InstallmentPaymentController::class, 'verifyPayment']);
+    Route::post('/bookings/{booking}/installments/{installment}/payments/{installmentPayment}/reject', [InstallmentPaymentController::class, 'rejectPayment']);
+    Route::post('/bookings/{booking}/installments/{installment}/payments/{installmentPayment}/invoice', [InstallmentPaymentController::class, 'issueInvoice']);
+});
 
 // Unit Hold
 Route::middleware('auth:sanctum')->group(function () {
@@ -248,4 +259,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('general-settings', GeneralSettingController::class);
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+
+    Route::get('/invoices/{invoice}/download', [InstallmentPaymentController::class, 'downloadInvoice']);
 });
