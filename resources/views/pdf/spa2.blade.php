@@ -159,6 +159,13 @@
             padding-right: 5px;
         }
 
+        .borderless-right {
+            border-right: none;
+        }
+
+        .borderless-left {
+            border-left: none;
+        }
     </style>
 </head>
 <body>
@@ -327,12 +334,12 @@
 
     <table class="contract-table">
         <tr>
-            <td class="en">
+            <td class="en borderless-right">
                 <b>1. Effective Date:</b>
                 {{ \Carbon\Carbon::now()->format('d-M-Y') }}
             </td>
             <td class="separator"></td>
-            <td class="ar">
+            <td class="ar borderless-left">
                 <b>1. تاريخ بدء السريان:</b>
                 {{ \Carbon\Carbon::now()->locale('ar')->isoFormat('D-MMM-YYYY') }}&nbsp;
             </td>
@@ -362,14 +369,14 @@
     </table>
     <table class="contract-table">
         <tr>
-            <th class="left-th" style="width: 27%;">3. Purchasers</th>
+            <th class="left-th borderless-right" style="width: 27%;">3. Purchasers</th>
             <td class="centred-text" colspan="2">&nbsp;</td>
-            <th class="rtl-text right-th" style="width: 27%;">3. المشترون</th>
+            <th class="rtl-text right-th borderless-left" style="width: 27%;">3. المشترون</th>
         </tr>
         <tr>
-            <th class="left-th" style="text-decoration: underline;">For individuals:</th>
+            <th class="left-th borderless-right" style="text-decoration: underline;">For individuals:</th>
             <td class="centred-text" colspan="2">&nbsp;</td>
-            <th class="rtl-text right-th" style="text-decoration: underline;">بالنسبة للأفراد:</th>
+            <th class="rtl-text right-th borderless-left" style="text-decoration: underline;">بالنسبة للأفراد:</th>
         </tr>
         @foreach ($customerInfos as $index => $customerInfo)
 
@@ -444,9 +451,9 @@
 
         <!-- Corporations -->
         <tr>
-            <th class="left-th" style="text-decoration: underline;">For corporations:</th>
+            <th class="left-th borderless-right" style="text-decoration: underline;">For corporations:</th>
             <td class="centred-text" colspan="2">N/A</td>
-            <th class="rtl-text right-th" style="text-decoration: underline;">بالنسبة للشركات:</th>
+            <th class="rtl-text right-th borderless-left" style="text-decoration: underline;">بالنسبة للشركات:</th>
         </tr>
         <tr>
             <th class="left-th">Nationality:</th>
@@ -489,9 +496,9 @@
             <th class="rtl-text right-th">البريد الإلكتروني:</th>
         </tr>
         <tr>
-            <th class="left-th">4. Property Details</th>
+            <th class="left-th borderless-right">4. Property Details</th>
             <td class="centred-text" colspan="2">&nbsp;</td>
-            <th class="rtl-text right-th">4. بيانات العقار:</th>
+            <th class="rtl-text right-th borderless-left">4. بيانات العقار:</th>
         </tr>
         <tr>
             <th class="left-th">Relevant Unit No</th>
@@ -553,11 +560,11 @@
 
         @if($unit->building->project_no == 4058)
             <tr>
-                <th class="left-th">
+                <th class="left-th borderless-right">
                     7.1. Escrow Account
                 </th>
                 <td class="centred-text" colspan="2"></td>
-                <th class="rtl-text right-th">7.1. حساب الضمان:</th>
+                <th class="rtl-text right-th borderless-left">7.1. حساب الضمان:</th>
             </tr>
             <tr>
                 <td class="left-th">
@@ -628,11 +635,11 @@
         @endif
 
         <tr>
-            <th class="left-th">
+            <th class="left-th borderless-right">
                 7.2. Corporate Account
             </th>
             <td class="centred-text" colspan="2"></td>
-            <th class="rtl-text right-th">7.2. حساب الشركات:</th>
+            <th class="rtl-text right-th borderless-left">7.2. حساب الشركات:</th>
         </tr>
         <tr>
             <td class="left-th">
@@ -923,11 +930,11 @@
             </td>
         </tr>
         <tr>
-            <th class="en">
+            <th class="en borderless-right">
                 1. INTERPRETATION
             </th>
             <td class="separator"></td>
-            <th class="ar">
+            <th class="ar borderless-left">
                 1. التفسير
             </th>
         </tr>
@@ -1935,11 +1942,11 @@
         </tr>
         <!-- 2 -->
         <tr>
-            <th class="en">
+            <th class="en borderless-right">
                 2. THE SALE
             </th>
             <td class="separator"></td>
-            <th class="ar">
+            <th class="ar borderless-left">
                 2- البيع
             </th>
         </tr>
@@ -1968,11 +1975,11 @@
         </tr>
 
         <tr>
-            <th class="en">
+            <th class="en borderless-right">
                 3. Purchase Price and Payment
             </th>
             <td class="separator"></td>
-            <th class="ar">
+            <th class="ar borderless-left">
                 3- سعر الشراء ودفعه
             </th>
         </tr>
@@ -2080,11 +2087,11 @@
         </tr>
 
         <tr>
-            <th class="en">4. Possession and
+            <th class="en borderless-right">4. Possession and
                 Risk
             </th>
             <td class="separator"></td>
-            <th class="ar">4- الحيازة والمخاطر
+            <th class="ar borderless-left">4- الحيازة والمخاطر
             </th>
         </tr>
 
@@ -2267,11 +2274,11 @@
         </tr>
 
         <tr>
-            <th class="left-th section-heading" style="width:49%; text-align:justify; padding:10px;">5. Transfer of
+            <th class="left-th section-heading borderless-right" style="width:49%; text-align:justify; padding:10px;">5. Transfer of
                 Title
             </th>
             <td class="separator"></td>
-            <th class="rtl-text right-th spaced-text section-heading"
+            <th class="rtl-text right-th spaced-text section-heading borderless-left"
                 style="width:49%; text-align:justify; padding:10px;">5- نقل سند الملكية
             </th>
         </tr>
@@ -2378,11 +2385,11 @@
         </tr>
 
         <tr>
-            <th class="left-th section-heading" style="width:49%; text-align:justify; padding:10px;">6. Purchaser’s
+            <th class="left-th section-heading borderless-right" style="width:49%; text-align:justify; padding:10px;">6. Purchaser’s
                 Acknowledgements and Undertakings
             </th>
             <td class="separator"></td>
-            <th class="rtl-text right-th spaced-text section-heading"
+            <th class="rtl-text right-th spaced-text section-heading borderless-left"
                 style="width:49%; text-align:justify; padding:10px;">6- إقرارات وتعهدات المشتري
             </th>
         </tr>
@@ -2678,11 +2685,11 @@
         </tr>
 
         <tr>
-            <th class="en">7. Seller’s General
+            <th class="en borderless-right">7. Seller’s General
                 Covenants
             </th>
             <td class="separator"></td>
-            <th class="ar">7- التعهدات العامة للبائع
+            <th class="ar borderless-left">7- التعهدات العامة للبائع
             </th>
         </tr>
 
@@ -2785,11 +2792,11 @@
         </tr>
 
         <tr>
-            <th class="left-th section-heading" style="width:49%; text-align:justify; padding:10px;">8. The STRATA
+            <th class="left-th section-heading borderless-right" style="width:49%; text-align:justify; padding:10px;">8. The STRATA
                 SCHEME
             </th>
             <td class="separator"></td>
-            <th class="rtl-text right-th spaced-text section-heading"
+            <th class="rtl-text right-th spaced-text section-heading borderless-left"
                 style="width:49%; text-align:justify; padding:10px;">8- قواعد الملكية المشتركة
             </th>
         </tr>
@@ -2975,9 +2982,9 @@
         </tr>
 
         <tr>
-            <th class="left-th section-heading" style="width:49%; text-align:justify; padding:10px;">9. VIEWING</th>
+            <th class="left-th section-heading borderless-right" style="width:49%; text-align:justify; padding:10px;">9. VIEWING</th>
             <td class="separator"></td>
-            <th class="rtl-text right-th spaced-text section-heading"
+            <th class="rtl-text right-th spaced-text section-heading borderless-left"
                 style="width:49%; text-align:justify; padding:10px;">9- المعاينة
             </th>
         </tr>
@@ -3068,11 +3075,11 @@
         </tr>
 
         <tr>
-            <th class="left-th section-heading" style="width:49%; text-align:justify; padding:10px;">10. Default and
+            <th class="left-th section-heading borderless-right" style="width:49%; text-align:justify; padding:10px;">10. Default and
                 Termination
             </th>
             <td class="separator"></td>
-            <th class="rtl-text right-th spaced-text section-heading"
+            <th class="rtl-text right-th spaced-text section-heading borderless-left"
                 style="width:49%; text-align:justify; padding:10px;">10- الإخلال وفسخ الاتفاقية
             </th>
         </tr>
@@ -3316,10 +3323,10 @@
         </tr>
 
         <tr>
-            <th class="left-th section-heading" style="width:49%; text-align:justify; padding:10px;">11. Force Majeure
+            <th class="left-th section-heading borderless-right" style="width:49%; text-align:justify; padding:10px;">11. Force Majeure
             </th>
             <td class="separator"></td>
-            <th class="rtl-text right-th spaced-text section-heading"
+            <th class="rtl-text right-th spaced-text section-heading borderless-left"
                 style="width:49%; text-align:justify; padding:10px;">11- القوة القاهرة
             </th>
         </tr>
@@ -3376,9 +3383,9 @@
         </tr>
 
         <tr>
-            <th class="left-th section-heading" style="width:49%; text-align:justify; padding:10px;">12. General</th>
+            <th class="left-th section-heading borderless-right" style="width:49%; text-align:justify; padding:10px;">12. General</th>
             <td class="separator"></td>
-            <th class="rtl-text right-th spaced-text section-heading"
+            <th class="rtl-text right-th spaced-text section-heading borderless-left"
                 style="width:49%; text-align:justify; padding:10px;">12- شروط عامة
             </th>
         </tr>
@@ -3635,9 +3642,9 @@
         </tr>
 
         <tr>
-            <th class="en section-heading" style="width:49%; text-align:justify; padding:10px;">13. Notices</th>
+            <th class="en section-heading borderless-right" style="width:49%; text-align:justify; padding:10px;">13. Notices</th>
             <td class="separator"></td>
-            <th class="ar section-heading">13- الإخطارات
+            <th class="ar section-heading borderless-left">13- الإخطارات
             </th>
         </tr>
 
@@ -3687,11 +3694,11 @@
         </tr>
 
         <tr>
-            <th class="en section-heading" style="width:49%; text-align:justify; padding:10px;">14. Governing Law
+            <th class="en section-heading borderless-right" style="width:49%; text-align:justify; padding:10px;">14. Governing Law
                 and Jurisdiction
             </th>
             <td class="separator"></td>
-            <th class="ar section-heading">14- القانون النافذ والاختصاص القضائي
+            <th class="ar section-heading borderless-left">14- القانون النافذ والاختصاص القضائي
             </th>
         </tr>
 
@@ -3709,11 +3716,11 @@
         </tr>
 
         <tr>
-            <th class="en section-heading" style="width:49%; text-align:justify; padding:10px;">15. Effective
+            <th class="en section-heading borderless-right" style="width:49%; text-align:justify; padding:10px;">15. Effective
                 Date
             </th>
             <td class="separator"></td>
-            <th class="ar section-heading">15- تاريخ بدء السريان
+            <th class="ar section-heading borderless-left">15- تاريخ بدء السريان
             </th>
         </tr>
 
