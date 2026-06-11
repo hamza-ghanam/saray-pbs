@@ -808,7 +808,7 @@
                         height="30" alt="{{ $company['name'] }} Signature"/>
                 </h4>
                 <h4 style="unicode-bidi: embed;">التاريخ:&nbsp;&nbsp;
-                    &nbsp;{{ optional($companySignedAt)->locale('ar')->isoFormat('D-MMM-YYYY') }}&nbsp;
+                    &nbsp;{{ $companySignedAt ? $companySignedAt->locale('ar')->isoFormat('D-MMM-YYYY') : '' }}&nbsp;
                 </h4>
             </td>
         </tr>
@@ -3794,7 +3794,7 @@
                         height="30" alt="{{ $company['name'] }} Signature"/>
                 </h4>
                 <h4 style="unicode-bidi: embed;">التاريخ:&nbsp;&nbsp;
-                    &nbsp;{{ optional($companySignedAt)->locale('ar')->isoFormat('D-MMM-YYYY') }}&nbsp;
+                    &nbsp;{{ $companySignedAt ? $companySignedAt->locale('ar')->isoFormat('D-MMM-YYYY') : '' }}&nbsp;
                 </h4>
                 <h4>الاسم: <img src="{{ public_path('images/black_line.svg') }}" width="255" height="2" alt="___"/></h4>
                 <h4>شاهد: <img src="{{ public_path('images/black_line.svg') }}" width="255" height="2" alt="___"/></h4>
@@ -4469,7 +4469,7 @@
                          height="30" alt="{{ $company['name'] }} Signature"/>
                 </h4>
                 <h4 style="unicode-bidi: embed;">التاريخ:&nbsp;&nbsp;
-                    &nbsp;{{ optional($companySignedAt)->locale('ar')->isoFormat('D-MMM-YYYY') }}&nbsp;
+                    &nbsp;{{ $companySignedAt ? $companySignedAt->locale('ar')->isoFormat('D-MMM-YYYY') : '' }}&nbsp;
                 </h4>
                 <br/>
                 <h4>الاسم: <img src="{{ public_path('images/black_line.svg') }}" width="255" height="2" alt="___"/></h4>
