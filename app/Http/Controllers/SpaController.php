@@ -20,7 +20,6 @@ use App\Models\Unit;
 use App\Models\GeneralSetting;
 use App\Services\PaymentPlanService;
 use App\Services\PdfService;
-use App\Services\TranslationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -36,12 +35,10 @@ use Symfony\Component\HttpFoundation\Response;
 class SpaController extends Controller
 {
     protected PaymentPlanService $paymentPlanService;
-    protected TranslationService $translationService;
 
-    public function __construct(PaymentPlanService $paymentPlanService, TranslationService $translationService)
+    public function __construct(PaymentPlanService $paymentPlanService)
     {
         $this->paymentPlanService = $paymentPlanService;
-        $this->translationService = $translationService;
     }
 
     /**
@@ -148,12 +145,6 @@ class SpaController extends Controller
             $escrow  = GeneralSetting::getGroup('escrow');
 
             $building = $booking->unit->building;
-            $buildingTranslations = $building
-                ? $this->translationService->translateMultiple([
-                    'name'     => $building->name,
-                    'location' => $building->location,
-                ])
-                : ['name' => null, 'location' => null];
 
             $spaData = [
                 'booking'            => $booking,
@@ -162,8 +153,8 @@ class SpaController extends Controller
                 'installments'       => $booking->installments,
                 'unit'               => $booking->unit,
                 'companySignedAt'    => $companySignedAt,
-                'buildingNameAr'     => $buildingTranslations['name'],
-                'buildingLocationAr' => $buildingTranslations['location'],
+                'buildingNameAr'     => $building?->name_ar,
+                'buildingLocationAr' => $building?->location_ar,
                 'company'            => $company,
                 'bank'               => $bank,
                 'escrow'             => $escrow,

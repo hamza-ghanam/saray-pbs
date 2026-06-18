@@ -9,7 +9,7 @@ class Building extends Model
 {
     use SoftDeletes;
 
-    protected $fillable = ['name', 'location', 'status', 'ecd', 'added_by_id', 'image_path', 'plot_no', 'project_no'];
+    protected $fillable = ['name', 'name_ar', 'location', 'location_ar', 'status', 'ecd', 'added_by_id', 'image_path', 'plot_no', 'project_no'];
 
     protected $casts = [
         'added_by_id' => 'integer',

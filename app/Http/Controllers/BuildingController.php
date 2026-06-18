@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Building;
 use App\Services\ImageService;
+use App\Services\TranslationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -208,6 +209,13 @@ class BuildingController extends Controller
         $data = $validator->validated();
         $data['added_by_id'] = $user->id;
 
+        $translations = app(TranslationService::class)->translateMultiple([
+            'name'     => $data['name'],
+            'location' => $data['location'],
+        ]);
+        $data['name_ar']     = $translations['name']     ?? $data['name'];
+        $data['location_ar'] = $translations['location'] ?? $data['location'];
+
         // If an image was uploaded, store it on the 'public' disk
         if ($request->hasFile('image')) {
             $data['image_path'] = $request->file('image')
@@ -325,6 +333,16 @@ class BuildingController extends Controller
 
         $building = Building::findOrFail($id);
         $data = $request->only(['name', 'location', 'status', 'ecd', 'plot_no', 'project_no']);
+
+        if (isset($data['name']) || isset($data['location'])) {
+            $toTranslate = [
+                'name'     => $data['name']     ?? $building->name,
+                'location' => $data['location'] ?? $building->location,
+            ];
+            $translations = app(TranslationService::class)->translateMultiple($toTranslate);
+            if (isset($data['name']))     $data['name_ar']     = $translations['name']     ?? $data['name'];
+            if (isset($data['location'])) $data['location_ar'] = $translations['location'] ?? $data['location'];
+        }
 
         // If there's a new image, delete the old one and store the new
         if ($request->hasFile('image')) {

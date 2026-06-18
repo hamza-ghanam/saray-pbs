@@ -3,9 +3,6 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Cache;
-use Stichoza\GoogleTranslate\Exceptions\LargeTextException;
-use Stichoza\GoogleTranslate\Exceptions\RateLimitException;
-use Stichoza\GoogleTranslate\Exceptions\TranslationRequestException;
 use Stichoza\GoogleTranslate\GoogleTranslate;
 
 class TranslationService
@@ -18,27 +15,30 @@ class TranslationService
         protected string $source = 'en'
     ) {}
 
-    public function translate(string $text): string
+    public function translate(string $text): ?string
     {
-        $key = $this->cacheKey($text);
+        $cacheKey = $this->cacheKey($text);
+        $cached = Cache::get($cacheKey);
 
-        return Cache::remember($key, self::CACHE_TTL, function () use ($text) {
+        if ($cached !== null) {
+            return $cached;
+        }
+
+        try {
             $tr = new GoogleTranslate($this->target);
             $tr->setSource($this->source);
-            return $tr->translate($text);
-        });
+            $result = $tr->translate($text);
+            Cache::put($cacheKey, $result, self::CACHE_TTL);
+            return $result;
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
-    /**
-     * @throws LargeTextException
-     * @throws RateLimitException
-     * @throws TranslationRequestException
-     */
     public function translateMultiple(array $texts): array
     {
         $keys = array_keys($texts);
 
-        // Return cached values immediately; collect which ones need a real API call
         $out = [];
         $missing = [];
 
@@ -57,19 +57,24 @@ class TranslationService
             return $out;
         }
 
-        // Single API call for all uncached texts
-        $tr = new GoogleTranslate($this->target);
-        $tr->setSource($this->source);
+        try {
+            $tr = new GoogleTranslate($this->target);
+            $tr->setSource($this->source);
 
-        $delimiter = "|||__||__|||";
-        $joined = implode($delimiter, array_values($missing));
-        $translated = $tr->translate($joined);
-        $parts = explode($delimiter, $translated);
+            $delimiter = "|||__||__|||";
+            $joined = implode($delimiter, array_values($missing));
+            $translated = $tr->translate($joined);
+            $parts = explode($delimiter, $translated);
 
-        foreach (array_keys($missing) as $i => $key) {
-            $value = $parts[$i] ?? null;
-            $out[$key] = $value;
-            Cache::put($this->cacheKey($missing[$key]), $value, self::CACHE_TTL);
+            foreach (array_keys($missing) as $i => $key) {
+                $value = $parts[$i] ?? null;
+                $out[$key] = $value;
+                Cache::put($this->cacheKey($missing[$key]), $value, self::CACHE_TTL);
+            }
+        } catch (\Throwable) {
+            foreach (array_keys($missing) as $key) {
+                $out[$key] = null;
+            }
         }
 
         return $out;
