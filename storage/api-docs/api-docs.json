@@ -371,6 +371,7 @@
                     "Bookings"
                 ],
                 "summary": "Delete a booking and reset its unit to Available",
+                "description": "Soft-deletes the booking and resets the unit status to Available. Associated CustomerInfo records are preserved — they are detached from this booking but not deleted, as a customer may be linked to other bookings.",
                 "operationId": "destroyBooking",
                 "parameters": [
                     {
@@ -387,7 +388,7 @@
                 ],
                 "responses": {
                     "204": {
-                        "description": "Booking deleted successfully, unit status reset to Available"
+                        "description": "Booking deleted successfully, unit status reset to Available. CustomerInfo records are preserved."
                     },
                     "403": {
                         "description": "Forbidden — user lacks deletion permission",
@@ -611,7 +612,7 @@
                     "Bookings"
                 ],
                 "summary": "Book a unit with multiple customers and status Pre-Booked",
-                "description": "Book a unit by creating one Booking and multiple CustomerInfo records",
+                "description": "Each entry in `customers` can be either an **existing** customer (pass `id` only) or a **new** customer (omit `id`, provide all required fields). Both types can be mixed in the same request.",
                 "operationId": "5c506914f01cb885d4e38f9806bcd14b",
                 "requestBody": {
                     "required": true,
@@ -669,10 +670,115 @@
                                         "example": "Customer requests early handover."
                                     },
                                     "customers": {
-                                        "description": "List of customers. Each customer may optionally include an Emirates ID file and/or Emirates ID number.",
+                                        "description": "List of customers to attach to this booking. Send `id` to reuse an existing customer; omit `id` and provide all fields to create a new one. Both can be mixed in the same array.",
                                         "type": "array",
                                         "items": {
-                                            "$ref": "#/components/schemas/CustomerInfo"
+                                            "properties": {
+                                                "id": {
+                                                    "description": "ID of an existing customer. When provided, all other fields are ignored.",
+                                                    "type": "integer",
+                                                    "example": 5,
+                                                    "nullable": true
+                                                },
+                                                "name": {
+                                                    "properties": {
+                                                        "en": {
+                                                            "type": "string",
+                                                            "example": "John Smith"
+                                                        },
+                                                        "ar": {
+                                                            "type": "string",
+                                                            "example": "جون سميث"
+                                                        }
+                                                    },
+                                                    "type": "object",
+                                                    "nullable": true
+                                                },
+                                                "nationality": {
+                                                    "properties": {
+                                                        "en": {
+                                                            "type": "string",
+                                                            "example": "British"
+                                                        },
+                                                        "ar": {
+                                                            "type": "string",
+                                                            "example": "بريطاني"
+                                                        }
+                                                    },
+                                                    "type": "object",
+                                                    "nullable": true
+                                                },
+                                                "address": {
+                                                    "properties": {
+                                                        "en": {
+                                                            "type": "string",
+                                                            "example": "123 Palm Jumeirah"
+                                                        },
+                                                        "ar": {
+                                                            "type": "string",
+                                                            "example": "123 نخلة جميرا"
+                                                        }
+                                                    },
+                                                    "type": "object",
+                                                    "nullable": true
+                                                },
+                                                "passport_number": {
+                                                    "type": "string",
+                                                    "example": "A1234567",
+                                                    "nullable": true
+                                                },
+                                                "birth_date": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "1990-01-01",
+                                                    "nullable": true
+                                                },
+                                                "gender": {
+                                                    "type": "string",
+                                                    "example": "male",
+                                                    "nullable": true
+                                                },
+                                                "issuance_date": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2020-01-01",
+                                                    "nullable": true
+                                                },
+                                                "expiry_date": {
+                                                    "type": "string",
+                                                    "format": "date",
+                                                    "example": "2030-01-01",
+                                                    "nullable": true
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "format": "email",
+                                                    "example": "john@example.com",
+                                                    "nullable": true
+                                                },
+                                                "phone_number": {
+                                                    "type": "string",
+                                                    "example": "+971501234567",
+                                                    "nullable": true
+                                                },
+                                                "emirates_id_number": {
+                                                    "type": "string",
+                                                    "example": "784-1990-1234567-1",
+                                                    "nullable": true
+                                                },
+                                                "upload_token": {
+                                                    "description": "Token from the passport pre-upload endpoint (new customers only)",
+                                                    "type": "string",
+                                                    "nullable": true
+                                                },
+                                                "emirates_id": {
+                                                    "description": "Emirates ID file (new customers only)",
+                                                    "type": "string",
+                                                    "format": "binary",
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     }
                                 },
@@ -2985,8 +3091,8 @@
                 "tags": [
                     "Customers"
                 ],
-                "summary": "List all customers with related booking, unit, and building",
-                "description": "Get a paginated list of all customers with their booking and unit/building info.",
+                "summary": "List all customers with related bookings, units, and buildings",
+                "description": "A customer may be linked to multiple bookings. Each item in `data` includes a `bookings` array instead of a single `booking` object.",
                 "operationId": "d24c98cfc85221a6db093404890518c7",
                 "parameters": [
                     {
@@ -3048,48 +3154,62 @@
                                                         "type": "string",
                                                         "example": "Syrian Arab Republic"
                                                     },
-                                                    "booking": {
-                                                        "properties": {
-                                                            "id": {
-                                                                "type": "integer",
-                                                                "example": 42
-                                                            },
-                                                            "status": {
-                                                                "type": "string",
-                                                                "example": "Pre-Booked"
-                                                            },
-                                                            "unit": {
-                                                                "properties": {
-                                                                    "id": {
-                                                                        "type": "integer",
-                                                                        "example": 12
-                                                                    },
-                                                                    "unit_no": {
-                                                                        "type": "string",
-                                                                        "example": "A-203"
-                                                                    },
-                                                                    "building": {
-                                                                        "properties": {
-                                                                            "id": {
-                                                                                "type": "integer",
-                                                                                "example": 3
-                                                                            },
-                                                                            "name": {
-                                                                                "type": "string",
-                                                                                "example": "Sunrise Tower"
-                                                                            },
-                                                                            "location": {
-                                                                                "type": "string",
-                                                                                "example": "Downtown"
-                                                                            }
-                                                                        },
-                                                                        "type": "object"
-                                                                    }
+                                                    "bookings": {
+                                                        "description": "All bookings this customer is linked to",
+                                                        "type": "array",
+                                                        "items": {
+                                                            "properties": {
+                                                                "id": {
+                                                                    "type": "integer",
+                                                                    "example": 42
                                                                 },
-                                                                "type": "object"
-                                                            }
-                                                        },
-                                                        "type": "object"
+                                                                "status": {
+                                                                    "type": "string",
+                                                                    "example": "Pre-Booked"
+                                                                },
+                                                                "pivot": {
+                                                                    "properties": {
+                                                                        "requires_signature": {
+                                                                            "description": "Whether this customer must sign documents for this booking",
+                                                                            "type": "boolean",
+                                                                            "example": true
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                },
+                                                                "unit": {
+                                                                    "properties": {
+                                                                        "id": {
+                                                                            "type": "integer",
+                                                                            "example": 12
+                                                                        },
+                                                                        "unit_no": {
+                                                                            "type": "string",
+                                                                            "example": "A-203"
+                                                                        },
+                                                                        "building": {
+                                                                            "properties": {
+                                                                                "id": {
+                                                                                    "type": "integer",
+                                                                                    "example": 3
+                                                                                },
+                                                                                "name": {
+                                                                                    "type": "string",
+                                                                                    "example": "Sunrise Tower"
+                                                                                },
+                                                                                "location": {
+                                                                                    "type": "string",
+                                                                                    "example": "Downtown"
+                                                                                }
+                                                                            },
+                                                                            "type": "object"
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        }
                                                     }
                                                 },
                                                 "type": "object"
@@ -3112,19 +3232,91 @@
                 ]
             }
         },
+        "/customers/list": {
+            "get": {
+                "tags": [
+                    "Customers"
+                ],
+                "summary": "Lightweight customer list for dropdowns",
+                "description": "Returns all non-deleted customers with only the fields needed for a dropdown (id, name, email, passport_number). No pagination - intended for select inputs.",
+                "operationId": "3127be09abf529857902c00f4ac4908b",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Filter by name (en/ar) or passport number",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "John"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Customer list for dropdown",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer",
+                                                "example": 5
+                                            },
+                                            "name": {
+                                                "properties": {
+                                                    "en": {
+                                                        "type": "string",
+                                                        "example": "John Smith"
+                                                    },
+                                                    "ar": {
+                                                        "type": "string",
+                                                        "example": "جون سميث"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            },
+                                            "email": {
+                                                "type": "string",
+                                                "example": "john@example.com"
+                                            },
+                                            "passport_number": {
+                                                "type": "string",
+                                                "example": "A1234567"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/customers/{id}": {
             "get": {
                 "tags": [
                     "Customers"
                 ],
-                "summary": "Retrieve a customer and their associated booking, unit, and building",
-                "description": "Get a specific customer's full details, including their booking, unit, and building.",
+                "summary": "Get a single customer with full booking details",
+                "description": "Returns the customer record along with every booking they are linked to. Each booking includes its unit, building, payment plan, installments, booking-level approvals, SPA (with approvals), and reservation form (with approvals). The `pivot.requires_signature` flag indicates whether this customer must sign documents for that specific booking.",
                 "operationId": "e855c356319ac04f04e4eabfc941fa1a",
                 "parameters": [
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "ID of the customer",
+                        "description": "Customer ID",
                         "required": true,
                         "schema": {
                             "type": "integer",
@@ -3143,9 +3335,18 @@
                                             "type": "integer",
                                             "example": 101
                                         },
-                                        "name": {
+                                        "name_en": {
                                             "type": "string",
                                             "example": "John Smith"
+                                        },
+                                        "name_ar": {
+                                            "type": "string",
+                                            "example": "جون سميث"
+                                        },
+                                        "email": {
+                                            "type": "string",
+                                            "format": "email",
+                                            "example": "john@example.com"
                                         },
                                         "passport_number": {
                                             "type": "string",
@@ -3164,104 +3365,157 @@
                                             "type": "string",
                                             "example": "Syrian Arab Republic"
                                         },
-                                        "booking": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 42
-                                                },
-                                                "status": {
-                                                    "type": "string",
-                                                    "example": "Pre-Booked"
-                                                },
-                                                "discount": {
-                                                    "type": "number",
-                                                    "format": "float",
-                                                    "example": 5
-                                                },
-                                                "unit": {
-                                                    "properties": {
-                                                        "id": {
-                                                            "type": "integer",
-                                                            "example": 12
+                                        "bookings": {
+                                            "description": "All bookings this customer is linked to",
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 42
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "Pre-Booked"
+                                                    },
+                                                    "discount": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 5
+                                                    },
+                                                    "pivot": {
+                                                        "properties": {
+                                                            "requires_signature": {
+                                                                "description": "Whether this customer must sign documents for this booking",
+                                                                "type": "boolean",
+                                                                "example": true
+                                                            }
                                                         },
-                                                        "unit_no": {
-                                                            "type": "string",
-                                                            "example": "A-203"
+                                                        "type": "object"
+                                                    },
+                                                    "unit": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 12
+                                                            },
+                                                            "unit_no": {
+                                                                "type": "string",
+                                                                "example": "A-203"
+                                                            },
+                                                            "building": {
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "integer",
+                                                                        "example": 3
+                                                                    },
+                                                                    "name": {
+                                                                        "type": "string",
+                                                                        "example": "Sunrise Tower"
+                                                                    },
+                                                                    "location": {
+                                                                        "type": "string",
+                                                                        "example": "Downtown"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            }
                                                         },
-                                                        "building": {
+                                                        "type": "object"
+                                                    },
+                                                    "payment_plan": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 5
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "Standard Plan"
+                                                            }
+                                                        },
+                                                        "type": "object",
+                                                        "nullable": true
+                                                    },
+                                                    "installments": {
+                                                        "description": "Payment installments for this booking",
+                                                        "type": "array",
+                                                        "items": {
                                                             "properties": {
                                                                 "id": {
                                                                     "type": "integer",
-                                                                    "example": 3
+                                                                    "example": 1
                                                                 },
-                                                                "name": {
-                                                                    "type": "string",
-                                                                    "example": "Sunrise Tower"
+                                                                "amount": {
+                                                                    "type": "number",
+                                                                    "format": "float",
+                                                                    "example": 50000
                                                                 },
-                                                                "location": {
+                                                                "due_date": {
                                                                     "type": "string",
-                                                                    "example": "Downtown"
+                                                                    "format": "date",
+                                                                    "example": "2026-09-01"
+                                                                },
+                                                                "status": {
+                                                                    "type": "string",
+                                                                    "example": "Pending"
                                                                 }
                                                             },
                                                             "type": "object"
                                                         }
                                                     },
-                                                    "type": "object"
-                                                },
-                                                "payment_plan": {
-                                                    "properties": {
-                                                        "id": {
-                                                            "type": "integer",
-                                                            "example": 5
-                                                        },
-                                                        "name": {
-                                                            "type": "string",
-                                                            "example": "Standard Plan"
+                                                    "approvals": {
+                                                        "description": "Booking-level approvals",
+                                                        "type": "array",
+                                                        "items": {
+                                                            "$ref": "#/components/schemas/Approval"
                                                         }
                                                     },
-                                                    "type": "object"
-                                                },
-                                                "approvals": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "$ref": "#/components/schemas/Approval"
+                                                    "spa": {
+                                                        "description": "Sales and Purchase Agreement",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 7
+                                                            },
+                                                            "status": {
+                                                                "type": "string",
+                                                                "example": "Pending"
+                                                            },
+                                                            "approvals": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "$ref": "#/components/schemas/Approval"
+                                                                }
+                                                            }
+                                                        },
+                                                        "type": "object",
+                                                        "nullable": true
+                                                    },
+                                                    "reservation_form": {
+                                                        "description": "Reservation form associated with the booking",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 3
+                                                            },
+                                                            "status": {
+                                                                "type": "string",
+                                                                "example": "Signed"
+                                                            },
+                                                            "approvals": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "$ref": "#/components/schemas/Approval"
+                                                                }
+                                                            }
+                                                        },
+                                                        "type": "object",
+                                                        "nullable": true
                                                     }
                                                 },
-                                                "spa": {
-                                                    "properties": {
-                                                        "status": {
-                                                            "type": "string",
-                                                            "example": "Pending"
-                                                        },
-                                                        "approvals": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "$ref": "#/components/schemas/Approval"
-                                                            }
-                                                        }
-                                                    },
-                                                    "type": "object",
-                                                    "nullable": true
-                                                },
-                                                "reservation_form": {
-                                                    "properties": {
-                                                        "status": {
-                                                            "type": "string",
-                                                            "example": "Signed"
-                                                        },
-                                                        "approvals": {
-                                                            "type": "array",
-                                                            "items": {
-                                                                "$ref": "#/components/schemas/Approval"
-                                                            }
-                                                        }
-                                                    },
-                                                    "type": "object",
-                                                    "nullable": true
-                                                }
-                                            },
-                                            "type": "object"
+                                                "type": "object"
+                                            }
                                         }
                                     },
                                     "type": "object"
@@ -3269,11 +3523,11 @@
                             }
                         }
                     },
-                    "404": {
-                        "description": "Customer not found"
-                    },
                     "403": {
                         "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Customer not found"
                     }
                 },
                 "security": [
@@ -6232,12 +6486,13 @@
                     {
                         "name": "signable_type",
                         "in": "query",
-                        "description": "Signable type alias (e.g. Booking)",
+                        "description": "Signable type alias. Use 'Booking' for RF/SPA, 'User' for broker agreements.",
                         "required": true,
                         "schema": {
                             "type": "string",
                             "enum": [
-                                "Booking"
+                                "Booking",
+                                "User"
                             ],
                             "example": "Booking"
                         }
@@ -6245,7 +6500,7 @@
                     {
                         "name": "signable_id",
                         "in": "query",
-                        "description": "Signable ID (e.g. booking id)",
+                        "description": "Signable ID (e.g. booking id or user id)",
                         "required": true,
                         "schema": {
                             "type": "integer",
@@ -6255,13 +6510,14 @@
                     {
                         "name": "documentable_type",
                         "in": "query",
-                        "description": "Documentable type alias (RF or SPA)",
+                        "description": "Documentable type alias. RF = ReservationForm, SPA = SPA, UserDoc = broker agreement.",
                         "required": true,
                         "schema": {
                             "type": "string",
                             "enum": [
                                 "RF",
-                                "SPA"
+                                "SPA",
+                                "UserDoc"
                             ],
                             "example": "RF"
                         }
@@ -6269,7 +6525,7 @@
                     {
                         "name": "documentable_id",
                         "in": "query",
-                        "description": "Documentable ID (e.g. ReservationForm id or SPA id)",
+                        "description": "Documentable ID (e.g. ReservationForm id, SPA id, or UserDoc id)",
                         "required": true,
                         "schema": {
                             "type": "integer",
@@ -6279,13 +6535,14 @@
                     {
                         "name": "document_type",
                         "in": "query",
-                        "description": "Document type (RF or SPA). If omitted, it can be inferred from documentable_type.",
+                        "description": "Document type filter. If omitted, defaults to the value of documentable_type.",
                         "required": false,
                         "schema": {
                             "type": "string",
                             "enum": [
                                 "RF",
-                                "SPA"
+                                "SPA",
+                                "BROKER_AGREEMENT"
                             ],
                             "example": "RF"
                         }
@@ -6335,8 +6592,9 @@
                                                         "example": true
                                                     },
                                                     "signature_path": {
+                                                        "description": "URL to the signature image via GET /signatures/{id}/image, or null if no signature submitted yet.",
                                                         "type": "string",
-                                                        "example": "signatures/rf/999_20260128_182010.png",
+                                                        "example": "https://api.example.com/signatures/999/image",
                                                         "nullable": true
                                                     },
                                                     "created_at": {
@@ -6397,13 +6655,13 @@
                                             "properties": {
                                                 "message": {
                                                     "type": "string",
-                                                    "example": "The documentable_type field must be one of RF or SPA."
+                                                    "example": "The documentable_type field must be one of RF, SPA, or UserDoc."
                                                 },
                                                 "errors": {
                                                     "type": "object",
                                                     "example": {
                                                         "documentable_type": [
-                                                            "The documentable_type field must be one of RF or SPA."
+                                                            "The documentable_type field must be one of RF, SPA, or UserDoc."
                                                         ]
                                                     }
                                                 }
@@ -6451,14 +6709,14 @@
                         }
                     },
                     "403": {
-                        "description": "Forbidden",
+                        "description": "Forbidden – user lacks 'view customer' or 'view users' permission",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "error": {
+                                        "message": {
                                             "type": "string",
-                                            "example": "Forbidden"
+                                            "example": "Forbidden."
                                         }
                                     },
                                     "type": "object"
@@ -6643,7 +6901,7 @@
                     "Signing Links"
                 ],
                 "summary": "Download signable document by signing token",
-                "description": "Download the signable document using a valid signing token.\n\n- Public endpoint (no auth).\n- Resolves the SigningLink by SHA-256 hash of the plain token.\n- Allows download only while the signing link is still valid.\n- Returns the original unsigned PDF associated with the document.",
+                "description": "Download the signable document using a valid signing token.\n\n- Public endpoint (no auth).\n- Resolves the SigningLink by SHA-256 hash of the plain token.\n- Allows download only while the signing link is still valid.\n- Returns the original unsigned PDF associated with the document (RF, SPA or Broker Agreement).",
                 "operationId": "df2f741461cf078089835c60b0658bb3",
                 "parameters": [
                     {
@@ -6665,23 +6923,45 @@
                         }
                     },
                     "404": {
-                        "description": "Signing link not found or document file missing",
+                        "description": "Signing link not found, document invalid, or PDF file missing",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "properties": {
-                                        "error": {
-                                            "type": "string",
-                                            "example": "Invalid signing link."
+                                    "oneOf": [
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Invalid signing link."
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Invalid document for this signing link."
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        {
+                                            "properties": {
+                                                "error": {
+                                                    "type": "string",
+                                                    "example": "Document file not found."
+                                                }
+                                            },
+                                            "type": "object"
                                         }
-                                    },
-                                    "type": "object"
+                                    ]
                                 }
                             }
                         }
                     },
                     "410": {
-                        "description": "Signing link expired, used, or no longer valid",
+                        "description": "Signing link expired, already used, or withdrawn",
                         "content": {
                             "application/json": {
                                 "schema": {

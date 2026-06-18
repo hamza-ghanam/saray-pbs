@@ -54,7 +54,7 @@ final readonly class SendForSignatureAction
         }
 
         $recipients = $booking->customerInfos
-            ->where('requires_signature', true)
+            ->filter(fn($c) => (bool) ($c->pivot->requires_signature ?? true))
             ->map(fn($c) => ['email' => $c->email, 'name' => $c->name_en ?? null])
             ->filter(fn($r) => !empty($r['email']))
             ->unique('email')

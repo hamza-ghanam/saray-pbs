@@ -63,7 +63,7 @@ final class UploadCustomerSignatureAction
         $customerId = (int) $request->integer('customer_id');
 
         $customer = $booking->customerInfos->first(function ($customerInfo) use ($customerId) {
-            return (bool) $customerInfo->requires_signature
+            return (bool) ($customerInfo->pivot->requires_signature ?? true)
                 && (int) $customerInfo->id === $customerId;
         });
 

@@ -57,7 +57,9 @@ class Booking extends Model
 
     public function customerInfos()
     {
-        return $this->hasMany(CustomerInfo::class);
+        return $this->belongsToMany(CustomerInfo::class)
+            ->withPivot('requires_signature')
+            ->withTimestamps();
     }
 
     public function reservationForm()

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Mappers\BilingualFieldsMapper;
 use App\Models\Approval;
 use App\Models\Booking;
+use App\Models\CustomerInfo;
 use App\Models\GeneralSetting;
 use App\Models\PaymentPlan;
 use App\Models\Unit;
@@ -627,6 +628,7 @@ class BookingController extends Controller
      * @OA\Post(
      *     path="/bookings/book-unit",
      *     summary="Book a unit with multiple customers and status Pre-Booked",
+     *     description="Each entry in `customers` can be either an **existing** customer (pass `id` only) or a **new** customer (omit `id`, provide all required fields). Both types can be mixed in the same request.",
      *     tags={"Bookings"},
      *     security={{"sanctum":{}}},
      *     @OA\RequestBody(
@@ -661,12 +663,27 @@ class BookingController extends Controller
      *                     description="User ID of the source of sale"
      *                 ),
      *                 @OA\Property(property="notes", type="string", example="Customer requests early handover."),
-     *
      *                 @OA\Property(
      *                     property="customers",
      *                     type="array",
-     *                     description="List of customers. Each customer may optionally include an Emirates ID file and/or Emirates ID number.",
-     *                     @OA\Items(ref="#/components/schemas/CustomerInfo")
+     *                     description="List of customers to attach to this booking. Send `id` to reuse an existing customer; omit `id` and provide all fields to create a new one. Both can be mixed in the same array.",
+     *                     @OA\Items(
+     *                         type="object",
+     *                         @OA\Property(property="id", type="integer", nullable=true, example=5, description="ID of an existing customer. When provided, all other fields are ignored."),
+     *                         @OA\Property(property="name", type="object", nullable=true, @OA\Property(property="en", type="string", example="John Smith"), @OA\Property(property="ar", type="string", example="جون سميث")),
+     *                         @OA\Property(property="nationality", type="object", nullable=true, @OA\Property(property="en", type="string", example="British"), @OA\Property(property="ar", type="string", example="بريطاني")),
+     *                         @OA\Property(property="address", type="object", nullable=true, @OA\Property(property="en", type="string", example="123 Palm Jumeirah"), @OA\Property(property="ar", type="string", example="123 نخلة جميرا")),
+     *                         @OA\Property(property="passport_number", type="string", nullable=true, example="A1234567"),
+     *                         @OA\Property(property="birth_date", type="string", format="date", nullable=true, example="1990-01-01"),
+     *                         @OA\Property(property="gender", type="string", nullable=true, example="male"),
+     *                         @OA\Property(property="issuance_date", type="string", format="date", nullable=true, example="2020-01-01"),
+     *                         @OA\Property(property="expiry_date", type="string", format="date", nullable=true, example="2030-01-01"),
+     *                         @OA\Property(property="email", type="string", format="email", nullable=true, example="john@example.com"),
+     *                         @OA\Property(property="phone_number", type="string", nullable=true, example="+971501234567"),
+     *                         @OA\Property(property="emirates_id_number", type="string", nullable=true, example="784-1990-1234567-1"),
+     *                         @OA\Property(property="upload_token", type="string", nullable=true, description="Token from the passport pre-upload endpoint (new customers only)"),
+     *                         @OA\Property(property="emirates_id", type="string", format="binary", nullable=true, description="Emirates ID file (new customers only)")
+     *                     )
      *                 )
      *             )
      *         )
@@ -700,7 +717,7 @@ class BookingController extends Controller
             'customers.*.emirates_id_number.regex' => 'The Emirates ID number format must be: 123-4567-8901234-4',
         ];
 
-        $validated = $request->validate([
+        $validator = Validator::make($request->all(), [
             'unit_id' => 'required|integer|exists:units,id',
             'eoi_amount' => 'required|numeric|min:1',
             'payment_plan_id' => 'nullable|integer|exists:payment_plans,id',
@@ -736,42 +753,71 @@ class BookingController extends Controller
 
             'agency_com_agent' => 'nullable|string|max:255',
 
-            'customers' => 'required|array|min:1',
-            'customers.*.name' => 'required|array',
-            'customers.*.name.en' => 'required|string|max:255',
-            'customers.*.name.ar' => 'required|string|max:255',
+            'customers'                        => 'required|array|min:1',
+            'customers.*.id'                   => 'nullable|integer|exists:customer_infos,id',
 
-            'customers.*.address' => 'required|array',
-            'customers.*.address.en' => 'required|string|max:255',
-            'customers.*.address.ar' => 'required|string|max:255',
-
-            'customers.*.nationality' => 'required|array',
-            'customers.*.nationality.en' => 'required|string|max:255',
-            'customers.*.nationality.ar' => 'required|string|max:255',
-
-            'customers.*.passport_number' => 'required|string|max:50',
-            'customers.*.birth_date' => 'required|date',
-            'customers.*.gender' => 'required|string|max:10',
-            'customers.*.issuance_date' => 'required|date',
-            'customers.*.expiry_date' => 'required|date',
-            'customers.*.email' => 'required|email|max:255',
-            'customers.*.phone_number' => 'required|string|max:20',
-
-            'customers.*.emirates_id_number' => [
+            // Required only for new customers (no id) — enforced in the after hook below
+            'customers.*.name'                 => 'nullable|array',
+            'customers.*.name.en'              => 'nullable|string|max:255',
+            'customers.*.name.ar'              => 'nullable|string|max:255',
+            'customers.*.address'              => 'nullable|array',
+            'customers.*.address.en'           => 'nullable|string|max:255',
+            'customers.*.address.ar'           => 'nullable|string|max:255',
+            'customers.*.nationality'          => 'nullable|array',
+            'customers.*.nationality.en'       => 'nullable|string|max:255',
+            'customers.*.nationality.ar'       => 'nullable|string|max:255',
+            'customers.*.passport_number'      => 'nullable|string|max:50',
+            'customers.*.birth_date'           => 'nullable|date',
+            'customers.*.gender'               => 'nullable|string|max:10',
+            'customers.*.issuance_date'        => 'nullable|date',
+            'customers.*.expiry_date'          => 'nullable|date',
+            'customers.*.email'                => 'nullable|email|max:255',
+            'customers.*.phone_number'         => 'nullable|string|max:20',
+            'customers.*.emirates_id_number'   => [
                 'nullable',
                 'string',
                 function ($attribute, $value, $fail) {
                     $digits = preg_replace('/\D/', '', $value);
-
                     if (strlen($digits) !== 15) {
                         $fail('The Emirates ID must contain 15 digits.');
                     }
-                }
+                },
             ],
-
-            'customers.*.upload_token' => 'nullable|string',
-            'customers.*.emirates_id' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'customers.*.upload_token'         => 'nullable|string',
+            'customers.*.emirates_id'          => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
         ], $messages);
+
+        $validator->after(function ($v) use ($request) {
+            $newCustomerRequired = [
+                'name.en', 'name.ar',
+                'address.en', 'address.ar',
+                'nationality.en', 'nationality.ar',
+                'passport_number', 'birth_date', 'gender',
+                'issuance_date', 'expiry_date',
+                'email', 'phone_number',
+            ];
+
+            foreach ($request->input('customers', []) as $i => $customer) {
+                if (!empty($customer['id'])) {
+                    continue; // existing customer — no other fields required
+                }
+
+                foreach ($newCustomerRequired as $field) {
+                    if (empty(Arr::get($customer, $field))) {
+                        $v->errors()->add(
+                            "customers.$i.$field",
+                            "The customers.$i.$field field is required when not referencing an existing customer."
+                        );
+                    }
+                }
+            }
+        });
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $validated = $validator->validated();
 
         // 1. Retrieve unit & check status
         $unit = Unit::findOrFail($validated['unit_id']);
@@ -815,10 +861,15 @@ class BookingController extends Controller
                 ? round($basePrice * (1 - $discountPct / 100), 2)
                 : $basePrice;
 
-            $validatedCustomers = $validated['customers'];
+            $validatedCustomers = $request->input('customers', []);
             $passportPaths = [];
 
+            // Collect passport upload tokens for new customers only
             foreach ($validatedCustomers as $index => $customer) {
+                if (!empty($customer['id'])) {
+                    continue; // existing customer — no passport upload
+                }
+
                 $token = Arr::get($customer, 'upload_token');
 
                 if ($token) {
@@ -828,7 +879,6 @@ class BookingController extends Controller
                         ->first();
 
                     if (!$upload) {
-                        // نحاول نجيب اسم العميل بالإنجليزي من الـ object
                         $customerName = '';
 
                         if (isset($customer['name'])) {
@@ -851,44 +901,46 @@ class BookingController extends Controller
                 }
             }
 
-            // 5. Create Booking (customer_info_id removed)
+            // 5. Create Booking
             $booking = Booking::create([
-                'unit_id' => $unit->id,
-                'payment_plan_id' => $paymentPlan->id,
-                'status' => 'Pre-Booked',
-                'discount' => $discountPct,
-                'price' => $bookingPrice,
-                'receipt_path' => $receiptPath,
-                'created_by' => $user->id,
-                'notes' => $validated['notes'] ?? null,
-
-                'agent_id' => $validated['agent_id'] ?? null,
-                'sale_source_id' => $validated['sale_source_id'] ?? null,
-                'agency_com_agent' => $validated['agency_com_agent'] ?? null,
-
-                'eoi_amount' => $validated['eoi_amount'] ?? null,
+                'unit_id'            => $unit->id,
+                'payment_plan_id'    => $paymentPlan->id,
+                'status'             => 'Pre-Booked',
+                'discount'           => $discountPct,
+                'price'              => $bookingPrice,
+                'receipt_path'       => $receiptPath,
+                'created_by'         => $user->id,
+                'notes'              => $validated['notes'] ?? null,
+                'agent_id'           => $validated['agent_id'] ?? null,
+                'sale_source_id'     => $validated['sale_source_id'] ?? null,
+                'agency_com_agent'   => $validated['agency_com_agent'] ?? null,
+                'eoi_amount'         => $validated['eoi_amount'] ?? null,
             ]);
 
-            // 6. Create CustomerInfo entries
+            // 6. Attach existing customers / create new ones
             foreach ($validatedCustomers as $index => $customer) {
+                if (!empty($customer['id'])) {
+                    // Existing customer — just attach to this booking
+                    $booking->customerInfos()->attach((int) $customer['id'], ['requires_signature' => true]);
+                    continue;
+                }
+
+                // New customer
                 if (!empty($customer['emirates_id_number'])) {
                     $digits = preg_replace('/\D/', '', $customer['emirates_id_number']);
 
                     if (strlen($digits) === 15) {
-                        $formatted = substr($digits, 0, 3) . '-' .
+                        $customer['emirates_id_number'] = substr($digits, 0, 3) . '-' .
                             substr($digits, 3, 4) . '-' .
                             substr($digits, 7, 7) . '-' .
                             substr($digits, 14, 1);
-
-                        $customer['emirates_id_number'] = $formatted;
                     }
                 }
 
-                // نختار فقط الحقول الخاصة بـ CustomerInfo
                 $customerData = Arr::only($customer, [
-                    'name',          // array: ['en' => ..., 'ar' => ...] => يروح للـ mutator
-                    'nationality',   // array
-                    'address',       // array
+                    'name',
+                    'nationality',
+                    'address',
                     'passport_number',
                     'birth_date',
                     'gender',
@@ -899,26 +951,26 @@ class BookingController extends Controller
                     'emirates_id_number',
                 ]);
 
-                $bookingCustomer = $booking->customerInfos()->create($customerData);
+                $bookingCustomer = CustomerInfo::create($customerData);
+                $booking->customerInfos()->attach($bookingCustomer->id, ['requires_signature' => true]);
 
                 if (isset($passportPaths[$index])) {
                     $bookingCustomer->docs()->create([
                         'customer_info_id' => $bookingCustomer->id,
-                        'doc_type' => 'passport',
-                        'file_path' => $passportPaths[$index],
+                        'doc_type'         => 'passport',
+                        'file_path'        => $passportPaths[$index],
                     ]);
                 }
 
                 $eidFile = $request->file("customers.$index.emirates_id");
 
-                // Emirates ID file upload.
                 if ($eidFile) {
                     $eidPath = $eidFile->store('emirates_ids', 'local');
 
                     $bookingCustomer->docs()->create([
                         'customer_info_id' => $bookingCustomer->id,
-                        'doc_type' => 'emirates_id',
-                        'file_path' => $eidPath,
+                        'doc_type'         => 'emirates_id',
+                        'file_path'        => $eidPath,
                     ]);
                 }
             }
@@ -1473,6 +1525,7 @@ class BookingController extends Controller
      * @OA\Delete(
      *     path="/bookings/{id}",
      *     summary="Delete a booking and reset its unit to Available",
+     *     description="Soft-deletes the booking and resets the unit status to Available. Associated CustomerInfo records are preserved — they are detached from this booking but not deleted, as a customer may be linked to other bookings.",
      *     operationId="destroyBooking",
      *     tags={"Bookings"},
      *     security={{"sanctum":{}}},
@@ -1485,7 +1538,7 @@ class BookingController extends Controller
      *     ),
      *     @OA\Response(
      *         response=204,
-     *         description="Booking deleted successfully, unit status reset to Available"
+     *         description="Booking deleted successfully, unit status reset to Available. CustomerInfo records are preserved."
      *     ),
      *     @OA\Response(
      *         response=403,
@@ -1524,13 +1577,8 @@ class BookingController extends Controller
                 Storage::disk('local')->delete($booking->receipt_path);
             }
 
-            // Optional: Delete all customer document files
-            foreach ($booking->customerInfos as $customer) {
-                $customer->docs()->delete();
-            }
-
-            // Delete related CustomerInfo records
-            $booking->customerInfos()->delete();
+            // Detach customers from this booking (CustomerInfo records are preserved)
+            $booking->customerInfos()->detach();
 
             // Reset unit status
             if ($booking->unit) {
@@ -2221,7 +2269,7 @@ class BookingController extends Controller
         }
 
         $customerInfos = $booking->customerInfos
-            ->filter(fn ($customer) => (bool) ($customer->requires_signature ?? true))
+            ->filter(fn ($customer) => (bool) ($customer->pivot->requires_signature ?? true))
             ->values();
 
         $emails = $customerInfos
@@ -2260,7 +2308,7 @@ class BookingController extends Controller
                     ? ($customer->name['en'] ?? $customer->name['ar'] ?? null)
                     : $customer->name,
                 'email' => $customer->email,
-                'requires_signature' => (bool) ($customer->requires_signature ?? true),
+                'requires_signature' => (bool) ($customer->pivot->requires_signature ?? true),
                 'signed' => !empty($signedLink),
                 'signing_link' => $effectiveLink ? [
                     'id' => $effectiveLink->id,

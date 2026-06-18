@@ -26,7 +26,6 @@ class CustomerInfo extends Model
         'email',
         'phone_number',
         'document_path',
-        'booking_id',         // if exists
         'emirates_id_number',
     ];
 
@@ -103,9 +102,11 @@ class CustomerInfo extends Model
         $this->attributes['nationality_ar'] = $value['ar'] ?? '';
     }
 
-    public function booking()
+    public function bookings()
     {
-        return $this->belongsTo(Booking::class);
+        return $this->belongsToMany(Booking::class)
+            ->withPivot('requires_signature')
+            ->withTimestamps();
     }
 
     public function docs()

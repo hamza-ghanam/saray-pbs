@@ -40,7 +40,7 @@ readonly class FinalizeSignedDocumentService
 
         $requiredEmails = $this->normaliseEmails(
             $booking->customerInfos
-                ->where('requires_signature', true)
+                ->filter(fn($c) => (bool) ($c->pivot->requires_signature ?? true))
                 ->pluck('email')
         );
 

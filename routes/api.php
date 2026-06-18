@@ -106,6 +106,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/customers', [CustomerInfoController::class, 'index']);
+    Route::get('/customers/list', [CustomerInfoController::class, 'list']);
     Route::get('/customers/{id}', [CustomerInfoController::class, 'show']);
 });
 
